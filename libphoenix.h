@@ -52,6 +52,9 @@ typedef s64 offs_t;
 typedef unsigned int size_t;
 typedef unsigned long long time_t;
 
+#define MSECS_TO_TIME_T(msecs) ((msecs)*((time_t)10e6))
+#define SECS_TO_TIME_T(secs)   ((secs)*((time_t)10e9))
+
 typedef struct _oid_t {
 	u32 port;
 	u64 id;
@@ -86,6 +89,16 @@ extern void *memcpy(void *dst, const void *src, size_t len);
 extern void *memset(void *s, int c, size_t n);
 
 extern void *memmove(void *str1, const void *str2, size_t n);
+
+extern unsigned int strlen(const char *s);
+
+extern unsigned int strlen(const char *s);
+
+extern int strcmp(const char *s1, const char *s2);
+
+extern int strncmp(const char *s1, const char *s2, unsigned int count);
+
+extern char *strcpy(char *dest, const char *src);
 
 
 /* Specific functions for I/O */
@@ -214,6 +227,9 @@ extern void free(void *ptr);
 extern void *realloc(void *ptr, size_t size);
 
 
+extern void *malloc(size_t size);
+
+
 /*
  * Process management
  */
@@ -228,7 +244,7 @@ extern void ph_execle(const char *path, ...);
 extern int ph_exit(int code);
 
 
-extern void ph_beginthread(void *arg, void *stack);
+extern void ph_beginthread(void (*start)(void *), unsigned int priority, void *arg);
 
 
 extern void ph_exitthread(void);
@@ -247,10 +263,23 @@ extern void ph_setintr(unsigned int intr, int (*handler)(void));
  */
 
 
-extern void ph_send(void *ctx);
+typedef enum _msgtype_t {
+	MSG_NOTIFY, MSG_NORMAL
+} msgtype_t;
 
 
-extern void ph_recv(void *ctx);
+typedef enum _msgop_t {
+	MSG_READ, MSG_WRITE, MSG_DEVCTL
+} msgop_t;
+
+
+extern int ph_send(u32 port, msgop_t op, void *data, size_t size, msgtype_t type, void *rdata, size_t rsize);
+
+
+extern int ph_recv(u32 port, void *data, size_t size, msgtype_t *type, msgop_t *op, size_t *rsize, unsigned int *sender);
+
+
+extern int ph_respond(u32 port, int err, void *data, size_t size);
 
 
 /*
@@ -309,6 +338,9 @@ extern void ph_dispose(unsigned int h);
 
 
 extern int ph_gettime(void);
+
+
+extern time_t ph_sleep(time_t timeout);
 
 
 #endif
