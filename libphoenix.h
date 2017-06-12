@@ -100,6 +100,9 @@ extern int strncmp(const char *s1, const char *s2, unsigned int count);
 
 extern char *strcpy(char *dest, const char *src);
 
+extern unsigned int strtoul(char *nptr, char **endptr, int base);
+
+extern int strtol(char *nptr, char **endptr, int base);
 
 /* Specific functions for I/O */
 

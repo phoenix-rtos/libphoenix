@@ -6,7 +6,9 @@ CFLAGS = -c -Wall -I. -I../../libphoenix -O2 -g
 
 AR = i386-pc-phoenix-ar
 
-SRCS = _start.c debug.c process.c
+SRCS = _start.c process.c memcpy.c memset.c strcmp.c strcpy.c strlen.c \
+  strtol.c strtoul.c syscall.c
+
 OBJS = $(SRCS:.c=.o)
 
 
