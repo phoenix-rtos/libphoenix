@@ -213,6 +213,8 @@ static inline void outl(void *addr, u32 l)
 
 /* syscalls numbers */
 #define	SYS_debug	0
+#define	SYS_threadCreate	9
+#define	SYS_threadExit	10
 #define	SYS_send	12
 #define	SYS_recv	13
 #define	SYS_respond	14
@@ -230,6 +232,8 @@ SYSCALL_HEADER(int, respond, u32 port, int err, void *data, size_t size);
 SYSCALL_HEADER(handle_t, mutex, void);
 SYSCALL_HEADER(void, lock, handle_t);
 SYSCALL_HEADER(void, unlock, handle_t);
+SYSCALL_HEADER(void, threadCreate, void (*start)(void *), unsigned int priority, void *arg);
+SYSCALL_HEADER(void, threadExit, void);
 
 
 #define ph_syscall(NUMBER, ...) _ph_syscall_ ## NUMBER (__VA_ARGS__)
