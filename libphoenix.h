@@ -64,6 +64,16 @@ typedef struct _oid_t {
 typedef u32 handle_t;
 
 
+typedef enum _msgtype_t {
+	MSG_NOTIFY, MSG_NORMAL
+} msgtype_t;
+
+
+typedef enum _msgop_t {
+	MSG_READ, MSG_WRITE, MSG_DEVCTL
+} msgop_t;
+
+
 /* Aliases used by applications */
 
 
@@ -202,9 +212,19 @@ static inline void outl(void *addr, u32 l)
 }
 
 /* syscalls numbers */
-#define	SYS_debug 0
+#define	SYS_debug	0
+#define	SYS_send	12
+#define	SYS_recv	13
+#define	SYS_respond	14
 
-extern void _ph_syscall_SYS_debug(const char *message);
+#define SYSCALL_HEADER(return_value, name, ...)			\
+	extern return_value _ph_syscall_SYS_ ## name (__VA_ARGS__)
+
+SYSCALL_HEADER(void, debug, const char *message);
+SYSCALL_HEADER(int, send, u32 port, msgop_t op, void *data, size_t size, msgtype_t type, void *rdata, size_t rsize);
+SYSCALL_HEADER(int, recv, u32 port, void *data, size_t size, msgtype_t *type, msgop_t *op, size_t *rsize, unsigned int *sender);
+SYSCALL_HEADER(int, respond, u32 port, int err, void *data, size_t size);
+
 
 #define ph_syscall(NUMBER, ...) _ph_syscall_ ## NUMBER (__VA_ARGS__)
 
@@ -270,16 +290,6 @@ extern void ph_setintr(unsigned int intr, int (*handler)(void));
 /*
  * Message passing
  */
-
-
-typedef enum _msgtype_t {
-	MSG_NOTIFY, MSG_NORMAL
-} msgtype_t;
-
-
-typedef enum _msgop_t {
-	MSG_READ, MSG_WRITE, MSG_DEVCTL
-} msgop_t;
 
 
 extern int ph_send(u32 port, msgop_t op, void *data, size_t size, msgtype_t type, void *rdata, size_t rsize);
