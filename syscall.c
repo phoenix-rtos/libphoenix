@@ -21,5 +21,7 @@ SYSCALL_WRAPPER(int, respond, u32 port, int err, void *data, size_t size);
 SYSCALL_WRAPPER(handle_t, mutex, void);
 SYSCALL_WRAPPER(void, lock, handle_t mutex);
 SYSCALL_WRAPPER(void, unlock, handle_t mutex);
+SYSCALL_WRAPPER(void, gettime, time_t *time);
+SYSCALL_WRAPPER(void, sleep, time_t *timeout);
 
 #pragma GCC diagnostic pop
