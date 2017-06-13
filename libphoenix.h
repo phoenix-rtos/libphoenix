@@ -216,6 +216,9 @@ static inline void outl(void *addr, u32 l)
 #define	SYS_send	12
 #define	SYS_recv	13
 #define	SYS_respond	14
+#define	SYS_mutex	15
+#define	SYS_lock	16
+#define	SYS_unlock	17
 
 #define SYSCALL_HEADER(return_value, name, ...)			\
 	extern return_value _ph_syscall_SYS_ ## name (__VA_ARGS__)
@@ -224,6 +227,9 @@ SYSCALL_HEADER(void, debug, const char *message);
 SYSCALL_HEADER(int, send, u32 port, msgop_t op, void *data, size_t size, msgtype_t type, void *rdata, size_t rsize);
 SYSCALL_HEADER(int, recv, u32 port, void *data, size_t size, msgtype_t *type, msgop_t *op, size_t *rsize, unsigned int *sender);
 SYSCALL_HEADER(int, respond, u32 port, int err, void *data, size_t size);
+SYSCALL_HEADER(handle_t, mutex, void);
+SYSCALL_HEADER(void, lock, handle_t);
+SYSCALL_HEADER(void, unlock, handle_t);
 
 
 #define ph_syscall(NUMBER, ...) _ph_syscall_ ## NUMBER (__VA_ARGS__)

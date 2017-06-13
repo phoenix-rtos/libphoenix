@@ -16,5 +16,8 @@ SYSCALL_WRAPPER(void, debug, const char *message);
 SYSCALL_WRAPPER(int, send, u32 port, msgop_t op, void *data, size_t size, msgtype_t type, void *rdata, size_t rsize);
 SYSCALL_WRAPPER(int, recv, u32 port, void *data, size_t size, msgtype_t *type, msgop_t *op, size_t *rsize, unsigned int *sender);
 SYSCALL_WRAPPER(int, respond, u32 port, int err, void *data, size_t size);
+SYSCALL_WRAPPER(handle_t, mutex, void);
+SYSCALL_WRAPPER(void, lock, handle_t mutex);
+SYSCALL_WRAPPER(void, unlock, handle_t mutex);
 
 #pragma GCC diagnostic pop
