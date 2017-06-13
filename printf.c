@@ -104,14 +104,14 @@ static inline u32 printf_fracToU32(float frac, int float_frac_len, float *overfl
 static char *printf_sprintf_int(char *out, u64 num64, u32 flags, int min_number_len, int float_frac_len)
 {
 	const char *digits = (flags & FLAG_LARGE_DIGITS) ? "0123456789ABCDEF" : "0123456789abcdef",
-		*prefix = (flags & FLAG_LARGE_DIGITS) ? "0X" : "0x";
+		*prefix = (flags & FLAG_LARGE_DIGITS) ? "X0" : "x0";
 	char tmp_buf[32];
 	char sign = 0;
 	char *tmp = tmp_buf;
 
 	if ((flags & FLAG_NULLMARK) && num64 == 0) {
-		memcpy(out, "(nil)", 6);
-		return out;
+		memcpy(out, "(nil)", 5);
+		return out + 5;
 	}
 
 	if (flags & FLAG_FLOAT) {
@@ -190,10 +190,6 @@ static char *printf_sprintf_int(char *out, u64 num64, u32 flags, int min_number_
 		*tmp++ = '0';
 	}
 	else if (flags & FLAG_HEX) {
-		if (flags & FLAG_ALTERNATE) {
-			memcpy(tmp, prefix, 2);
-			tmp += 2;
-		}
 		if (flags & FLAG_64BIT) {
 			int i;
 
@@ -211,6 +207,10 @@ static char *printf_sprintf_int(char *out, u64 num64, u32 flags, int min_number_
 				*tmp++ = digits[num32 & 0x0f];
 				num32 >>= 4;
 			}
+		}
+		if (flags & FLAG_ALTERNATE) {
+			memcpy(tmp, prefix, 2);
+			tmp += 2;
 		}
 	}
 	else {
@@ -253,14 +253,14 @@ static char *printf_sprintf_int(char *out, u64 num64, u32 flags, int min_number_
 	return out;
 }
 
-#define GET_UNSIGNED(flags, number, args) do {		\
+#define GET_UNSIGNED(number, flags, args) do {		\
 		if ((flags) & FLAG_64BIT)		\
 			(number) = va_arg((args), u64);	\
 		else					\
 			(number) = va_arg((args), u32);	\
 	} while (0)
 
-#define GET_SIGNED(flags, number, args) do {		\
+#define GET_SIGNED(number, flags, args) do {		\
 		if ((flags) & FLAG_64BIT)		\
 			(number) = va_arg((args), s64);	\
 		else					\
@@ -423,8 +423,8 @@ int ph_printf(const char *fmt, ...)
 	err = vsprintf(s, fmt, ap);
 	va_end(ap);
 
-	if (err == 0)
-		err = ph_syscall(SYS_debug, s);
+	if (err > 1)
+		ph_syscall(SYS_debug, s);
 
 	return err;
 }
