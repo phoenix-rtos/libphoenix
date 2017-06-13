@@ -201,12 +201,12 @@ static inline void outl(void *addr, u32 l)
 	return;
 }
 
-enum { /* syscalls numbers */
-	SYS_debug,
-};
+/* syscalls numbers */
+#define	SYS_debug 0
 
-int ph_syscall(int number, ...);
+extern void _ph_syscall_SYS_debug(const char *message);
 
+#define ph_syscall(NUMBER, ...) _ph_syscall_ ## NUMBER (__VA_ARGS__)
 
 /*
  * Debug

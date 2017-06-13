@@ -2,11 +2,12 @@
 #
 
 CC = i386-pc-phoenix-gcc
-CFLAGS = -c -Wall -I. -I../../libphoenix -O2 -g
+CFLAGS = -c -Wall -I. -I../../libphoenix -O2 \
+  -nostartfiles -nostdlib -fomit-frame-pointer -fno-strength-reduce -ffreestanding
 
 AR = i386-pc-phoenix-ar
 
-SRCS = _start.c process.c memcpy.c memset.c strcmp.c strcpy.c strlen.c \
+SRCS = _start.c process.c printf.c memcpy.c memset.c strcmp.c strcpy.c strlen.c \
   strtol.c strtoul.c syscall.c
 
 OBJS = $(SRCS:.c=.o)

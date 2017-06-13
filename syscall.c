@@ -1,8 +1,12 @@
-int ph_syscall(int number, ...)
+#include "libphoenix.h"
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreturn-type"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+void _ph_syscall_SYS_debug(const char *message)
 {
-	int result;
-	__asm__ volatile ("movl %0, %%eax; int $0x80;"
-			  :"=a" (result)
-			  :"" (number));
-	return result;
+	__asm__ volatile ("int $0x80;"
+			  :
+			  :"ra" (SYS_debug));
 }
+#pragma GCC diagnostic pop
