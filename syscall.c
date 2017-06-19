@@ -13,6 +13,8 @@
 	}
 
 SYSCALL_WRAPPER(void, debug, const char *message);
+SYSCALL_WRAPPER(void *, mmap, void *vaddr, size_t size, int prot, int flags, oid_t oid, offs_t offs);
+SYSCALL_WRAPPER(int, munmap, void *vaddr, size_t size);
 SYSCALL_WRAPPER(void, threadCreate, void (*start)(void *), unsigned int priority, void *arg);
 SYSCALL_WRAPPER(void, threadExit, void);
 SYSCALL_WRAPPER(int, send, u32 port, msgop_t op, void *data, size_t size, msgtype_t type, void *rdata, size_t rsize);

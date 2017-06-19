@@ -213,6 +213,8 @@ static inline void outl(void *addr, u32 l)
 
 /* syscalls numbers */
 #define	SYS_debug	0
+#define	SYS_mmap	1
+#define	SYS_munmap	2
 #define	SYS_threadCreate	9
 #define	SYS_threadExit	10
 #define	SYS_send	12
@@ -228,6 +230,8 @@ static inline void outl(void *addr, u32 l)
 	extern return_value _ph_syscall_SYS_ ## name (__VA_ARGS__)
 
 SYSCALL_HEADER(void, debug, const char *message);
+SYSCALL_HEADER(void *, mmap, void *vaddr, size_t size, int prot, int flags, oid_t oid, offs_t offs);
+SYSCALL_HEADER(int, munmap, void *vaddr, size_t size);
 SYSCALL_HEADER(int, send, u32 port, msgop_t op, void *data, size_t size, msgtype_t type, void *rdata, size_t rsize);
 SYSCALL_HEADER(int, recv, u32 port, void *data, size_t size, msgtype_t *type, msgop_t *op, size_t *rsize, unsigned int *sender);
 SYSCALL_HEADER(int, respond, u32 port, int err, void *data, size_t size);
