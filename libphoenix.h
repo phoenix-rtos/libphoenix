@@ -226,25 +226,9 @@ static inline void outl(void *addr, u32 l)
 #define	SYS_gettime	23
 #define	SYS_sleep	24
 
-#define SYSCALL_HEADER(return_value, name, ...)			\
-	extern return_value _ph_syscall_SYS_ ## name (__VA_ARGS__)
 
-SYSCALL_HEADER(void, debug, const char *message);
-SYSCALL_HEADER(void *, mmap, void *vaddr, size_t size, int prot, int flags, oid_t oid, offs_t offs);
-SYSCALL_HEADER(int, munmap, void *vaddr, size_t size);
-SYSCALL_HEADER(int, send, u32 port, msgop_t op, void *data, size_t size, msgtype_t type, void *rdata, size_t rsize);
-SYSCALL_HEADER(int, recv, u32 port, void *data, size_t size, msgtype_t *type, msgop_t *op, size_t *rsize, unsigned int *sender);
-SYSCALL_HEADER(int, respond, u32 port, int err, void *data, size_t size);
-SYSCALL_HEADER(handle_t, mutex, void);
-SYSCALL_HEADER(void, lock, handle_t);
-SYSCALL_HEADER(void, unlock, handle_t);
-SYSCALL_HEADER(void, threadCreate, void (*start)(void *), unsigned int priority, void *arg);
-SYSCALL_HEADER(void, threadExit, void);
-SYSCALL_HEADER(void, gettime, time_t *time);
-SYSCALL_HEADER(void, sleep, time_t *timeout);
+extern int ph_syscall(unsigned int number, ...);
 
-
-#define ph_syscall(NUMBER, ...) _ph_syscall_ ## NUMBER (__VA_ARGS__)
 
 /*
  * Debug

@@ -14,6 +14,8 @@
  * %LICENSE%
  */
 
+#if 0
+
 #define __ASSEMBLY__
 
 #include "cpu.h"
@@ -169,3 +171,18 @@ INTRDEF(_interrupts_syscall)
 
 	iret
 .size _interrupts_syscall, .-_interrupts_syscall
+
+#endif
+
+	.globl ph_syscall
+	.type ph_syscall, @function
+ph_syscall:
+        .cfi_startproc simple
+        popl %eax 		/* take return address */
+	xchgl (%esp), %eax	/* exchange with call number */
+        int $0x80		/* to the kernel! */
+	pushl (%esp)		/* balance stack */
+        ret			/* that's it */
+        .cfi_endproc
+	.size ph_syscall, .-ph_syscall
+
