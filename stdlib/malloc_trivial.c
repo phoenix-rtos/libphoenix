@@ -57,7 +57,7 @@ struct chunk {
 	listnode_t listnode;
 	size_t size; /* net, only user available space */
 	int free; /* flag */
-	unsigned char contents[0] __attribute__((aligned));
+	unsigned char contents[0];
 };
 
 struct page_set {
