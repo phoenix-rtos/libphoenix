@@ -67,7 +67,6 @@ ifneq (, $(findstring armv7, $(TARGET)))
 	ARFLAGS = -r
 
 	LD = $(CROSS)ld
-
 	LDFLAGS = -nostdlib -e _start --section-start .init=8000000 -Tbss=20000000 -z max-page-size=0x10
 	GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 	LIBS = $(GCCLIB)
