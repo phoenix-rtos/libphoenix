@@ -127,7 +127,7 @@ static struct page_set *alloc_page_set(size_t size)
 	oid_t dummy = { 0, 0 };
 	size_t page_set_total_size = PAGE_CEIL(offsetof(struct page_set, first_chunk.contents) + size);
 	struct page_set *result = mmap(NULL, page_set_total_size, PROT_READ | PROT_WRITE,
-					  MAP_PRIVATE | MAP_ANONYMOUS, dummy, 0);
+				       MAP_PRIVATE | MAP_ANONYMOUS, dummy, 0);
 	if (!result) /* out of memory */
 		return NULL;
 
@@ -142,7 +142,8 @@ static struct page_set *alloc_page_set(size_t size)
 	return result;
 }
 
-static void update_max_free_chunk_size(struct page_set *page_set)
+/* update max free chunk size in page_set structure */
+static void update_page_set(struct page_set *page_set)
 {
 	size_t max_free_chunk_size = 0;
 	listnode_t *current_node;
@@ -171,7 +172,7 @@ static void *cut_chunk(struct page_set *page_set, struct chunk *chunk, size_t si
 		lib_listInsertAfter(&page_set->chunks, &chunk->listnode, &remainder->listnode);
 	}
 	chunk->free = 0;
-	update_max_free_chunk_size(page_set);
+	update_page_set(page_set);
 	return chunk->contents;
 }
 
@@ -211,7 +212,8 @@ void *malloc(size_t size)
 	return result;
 }
 
-static void try_to_coalesce_next_chunk(struct page_set *page_set, struct chunk *first_chunk)
+/* Check and coalesce if possible first_chunk and its successor */
+static void coalesce(struct page_set *page_set, struct chunk *first_chunk)
 {
 	struct chunk *next_chunk;
 
@@ -231,14 +233,13 @@ static void try_to_coalesce_next_chunk(struct page_set *page_set, struct chunk *
 static void release_chunk(struct page_set *page_set, struct chunk *chunk)
 {
 	chunk->free = 1;
-	try_to_coalesce_next_chunk(page_set, chunk);
-	try_to_coalesce_next_chunk(page_set,
-				   lib_listof(struct chunk, listnode, chunk->listnode.prev));
+	coalesce(page_set, chunk);
+	coalesce(page_set, lib_listof(struct chunk, listnode, chunk->listnode.prev));
 	if (lib_listSize(&page_set->chunks) == 1) {
 		lib_listRemove(&malloc_common.page_sets, &page_set->listnode);
 		munmap(page_set, page_set->total_size);
 	} else {
-		update_max_free_chunk_size(page_set);
+		update_page_set(page_set);
 	}
 }
 
@@ -284,17 +285,15 @@ void *realloc(void *ptr, size_t size)
 	if (current_chunk->size >= size) {
 		current_chunk->free = 1; /* to satisfy cut */
 		result = cut_chunk(page_set, current_chunk, size);
-		try_to_coalesce_next_chunk(page_set,
-					   lib_listof(struct chunk, listnode,
-						      current_chunk->listnode.next));
-		update_max_free_chunk_size(page_set);
+		coalesce(page_set, lib_listof(struct chunk, listnode, current_chunk->listnode.next));
+		update_page_set(page_set);
 	} else if (next_chunk = lib_listof(struct chunk, listnode, current_chunk->listnode.next),
 		   next_chunk && next_chunk->free &&
 		   current_chunk->size + sizeof(struct chunk) + next_chunk->size >= size) {
 		current_chunk->free = 1; /* to satisfy coalesce and cut */
-		try_to_coalesce_next_chunk(page_set, current_chunk);
+		coalesce(page_set, current_chunk);
 		result = cut_chunk(page_set, current_chunk, size);
-		update_max_free_chunk_size(page_set);
+		update_page_set(page_set);
 	} else {
 		result = allocate(size);
 		if (result) {
