@@ -16,6 +16,7 @@
 #include "stdio.h"
 #include "string.h"
 #include "stdarg.h"
+#include "sys/debug.h"
 
 
 /* Flags used for printing */
@@ -423,7 +424,7 @@ int printf(const char *fmt, ...)
 	va_end(ap);
 
 	if (err > 1)
-		syscalls_debug(s);
+		debug(s);
 
 	return err;
 }

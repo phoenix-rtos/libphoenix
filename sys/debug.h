@@ -13,8 +13,8 @@
  * %LICENSE%
  */
 
-#infdef _DEBUG_H_
-#define _DEBUG_H_
+#ifndef _LIBPHOENIX_SYS_DEBUG_H_
+#define _LIBPHOENIX_SYS_DEBUG_H_
 
 #include ARCH
 
