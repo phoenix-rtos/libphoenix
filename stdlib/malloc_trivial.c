@@ -13,7 +13,6 @@
  * %LICENSE%
  */
 
-#include ARCH
 #include "assert.h"
 #include "stdlib.h"
 #include "sys/list.h"
