@@ -1,9 +1,9 @@
 /*
  * Phoenix-RTOS
  *
- * Native API
+ * libphoenix
  *
- * Process management
+ * sys/debug
  *
  * Copyright 2017 Phoenix Systems
  * Author: Pawel Pisarczyk
@@ -13,11 +13,13 @@
  * %LICENSE%
  */
 
-#include "libphoenix.h"
+#infdef _DEBUG_H_
+#define _DEBUG_H_
+
+#include ARCH
 
 
-int ph_exit(int code)
-{
-	for (;;);
-	return EOK;
-}
+extern void debug(char *s);
+
+
+#endif

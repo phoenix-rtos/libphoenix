@@ -1,9 +1,9 @@
 /*
  * Phoenix-RTOS
  *
- * Operating system kernel
+ * libphoenix
  *
- * Standard routines - doubly-linked list
+ * Doubly-linked list
  *
  * Copyright 2017 Phoenix Systems
  * Author: Jakub Sejdak
@@ -13,7 +13,6 @@
  * %LICENSE%
  */
 
-#include "libphoenix.h"
 #include "list.h"
 
 

@@ -1,21 +1,20 @@
 /*
  * Phoenix-RTOS
  *
- * Operating system kernel
+ * libphoenix
  *
- * Standard routines - printf
+ * printf, sprintf
  *
- * Copyright 2012, 2014, 2016 Phoenix Systems
- * Copyright 2001, 2005-2006 Pawel Pisarczyk
- * Author: Pawel Pisarczyk, Pawel Kolodziej, Pawel Krezolek
+ * Copyright 2017 Phoenix Systems
+ * Author: Pawel Pisarczyk
  *
  * This file is part of Phoenix-RTOS.
  *
  * %LICENSE%
  */
 
-#include "libphoenix.h"
-
+#include "stdio.h"
+#include "string.h"
 #include "stdarg.h"
 
 
@@ -268,7 +267,7 @@ static char *printf_sprintf_int(char *out, u64 num64, u32 flags, int min_number_
 	} while (0)
 
 
-static int vsprintf(char *out, const char *format, va_list args)
+int vsprintf(char *out, const char *format, va_list args)
 {
 	char * const out_start = out;
 
@@ -413,7 +412,7 @@ static int vsprintf(char *out, const char *format, va_list args)
 }
 
 
-int ph_printf(const char *fmt, ...)
+int printf(const char *fmt, ...)
 {
 	int err;
 	va_list ap;
@@ -424,7 +423,7 @@ int ph_printf(const char *fmt, ...)
 	va_end(ap);
 
 	if (err > 1)
-		ph_syscall(SYS_debug, s);
+		syscalls_debug(s);
 
 	return err;
 }

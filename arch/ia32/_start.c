@@ -1,9 +1,9 @@
 /*
  * Phoenix-RTOS
  *
- * Native API
+ * libphoenix
  *
- * Entrypoint
+ * Entrypoint (ia32)
  *
  * Copyright 2017 Phoenix Systems
  * Author: Pawel Pisarczyk
@@ -13,7 +13,8 @@
  * %LICENSE%
  */
 
-#include "libphoenix.h"
+#include ARCH
+#include "stdlib.h"
 
 
 extern int main(int argc, char **argv);
@@ -21,5 +22,5 @@ extern int main(int argc, char **argv);
 
 void _start(void)
 {
-	ph_exit(main(1, 0));
+	exit(main(1, 0));
 }

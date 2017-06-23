@@ -3,18 +3,21 @@
  *
  * libphoenix
  *
- * inttypes.h
+ * arch/ia32/syscalls
  *
  * Copyright 2017 Phoenix Systems
- * Author: Pawel Pisarczyk
+ * Author; Pawel Pisarczyk
  *
  * This file is part of Phoenix-RTOS.
  *
  * %LICENSE%
  */
 
-#ifndef _LIBPHOENIX_INTTYPES_H_
-#define _LIBPHOENIX_INTTYPES_H_
+#ifndef _ARCH_SYSCALLS_H_
+#define _ARCH_SYSCALLS_H_
+
+
+extern int syscalls_debug(char *s);
 
 
 #endif

@@ -1,9 +1,9 @@
 /*
  * Phoenix-RTOS
  *
- * Native API
+ * libphoenix
  *
- * Debug routines
+ * Entrypoint (armv7)
  *
  * Copyright 2017 Phoenix Systems
  * Author: Pawel Pisarczyk
@@ -13,11 +13,14 @@
  * %LICENSE%
  */
 
-#include "libphoenix.h"
+#include ARCH
+#include "stdlib.h"
 
 
-void ph_printf(const char *fmt, ...)
+extern int main(int argc, char **argv);
+
+
+void _start(void)
 {
-	__asm__ volatile ("movl $0, %%eax; int $0x80;"::);
-	return;
+	exit(main(1, 0));
 }

@@ -1,4 +1,27 @@
 /*
+ * Phoenix-RTOS
+ *
+ * libphoenix
+ *
+ * stdlib/malloc
+ *
+ * Copyright 2017 Phoenix Systems
+ * Author: Pawel Pisarczyk
+ *
+ * This file is part of Phoenix-RTOS.
+ *
+ * %LICENSE%
+ */
+
+#include ARCH
+#include "assert.h"
+#include "stdlib.h"
+#include "sys/list.h"
+#include "sys/threads.h"
+#include "sys/mman.h"
+
+
+/*
  * global data: list of page_sets protected by mutex if application is multi-threaded
  * data structures: page_set contains list of chunks
  *
@@ -24,15 +47,6 @@
  * 1. malloc(nmemb*size);
  * 2. memset().
  */
-
-#include "libphoenix.h"
-#include "list.h"
-
-#define assert(expr) do {						\
-		ph_printf("Assertion failed in file %s:%d, function %s.\n", \
-			  __FILE__, __LINE__, __func__);		\
-		ph_exit(1);						\
-	} while (0)
 
 static int page_set_fit(listnode_t *page_set_node, listnode_t *request_node);
 static int chunk_fit(listnode_t *chunk_node, listnode_t *request_node);
@@ -89,22 +103,10 @@ static inline size_t ALIGN_CEIL(size_t size)
 	return result * __BIGGEST_ALIGNMENT__;
 }
 
-static inline void lock(void)
-{
-	if (g.mutex)
-		ph_lock(g.mutex);
-}
-
-static inline void unlock(void)
-{
-	if (g.mutex)
-		ph_lock(g.mutex);
-}
 
 void malloc_threads_init(void)
 {
-	if (!g.mutex)
-		g.mutex = ph_mutex();
+	mutex(&g.mutex);
 }
 
 static int page_set_fit(listnode_t *page_set_node, listnode_t *request_node)
@@ -133,7 +135,7 @@ static struct page_set *alloc_page_set(size_t size)
 {
 	oid_t dummy = { 0, 0 };
 	size_t page_set_total_size = PAGE_CEIL(offsetof(struct page_set, first_chunk.contents) + size);
-	struct page_set *result = ph_mmap(NULL, page_set_total_size, PROT_READ | PROT_WRITE,
+	struct page_set *result = mmap(NULL, page_set_total_size, PROT_READ | PROT_WRITE,
 					  MAP_PRIVATE | MAP_ANONYMOUS, dummy, 0);
 	if (!result) /* out of memory */
 		return NULL;
@@ -210,9 +212,9 @@ void *malloc(size_t size)
 
 	size = ALIGN_CEIL(size);
 
-	lock();
+	lock(g.mutex);
 	result = allocate(size);
-	unlock();
+	unlock(g.mutex);
 	return result;
 }
 
@@ -241,7 +243,7 @@ static void release_chunk(struct page_set *page_set, struct chunk *chunk)
 				   lib_listof(struct chunk, listnode, chunk->listnode.prev));
 	if (lib_listSize(&page_set->chunks) == 1) {
 		lib_listRemove(&g.page_sets, &page_set->listnode);
-		ph_munmap(page_set, page_set->total_size);
+		munmap(page_set, page_set->total_size);
 	} else {
 		update_max_free_chunk_size(page_set);
 	}
@@ -255,11 +257,11 @@ void free(void *ptr)
 	if (!ptr)
 		return;
 
-	lock();
+	lock(g.mutex);
 	freed_chunk = chunk_of_contents(ptr);
 	page_set = page_set_of_chunk(freed_chunk);
 	release_chunk(page_set, freed_chunk);
-	unlock();
+	unlock(g.mutex);
 }
 
 void *realloc(void *ptr, size_t size)
@@ -279,7 +281,7 @@ void *realloc(void *ptr, size_t size)
 
 	size = ALIGN_CEIL(size);
 
-	lock();
+	lock(g.mutex);
 	current_chunk = chunk_of_contents(ptr);
 	page_set = page_set_of_chunk(current_chunk);
 	if (current_chunk->size >= size) {
@@ -303,7 +305,7 @@ void *realloc(void *ptr, size_t size)
 			release_chunk(page_set, current_chunk);
 		}
 	}
-	unlock();
+	unlock(g.mutex);
 	return result;
 }
 
@@ -316,10 +318,10 @@ void *calloc(size_t nmemb, size_t size)
 
 	size = ALIGN_CEIL(nmemb * size);
 
-	lock();
+	lock(g.mutex);
 	result = allocate(size);
 	if (result)
 		memset(result, 0, size);
-	unlock();
+	unlock(g.mutex);
 	return result;
 }

@@ -1,4 +1,20 @@
-#include "libphoenix.h"
+/*
+ * Phoenix-RTOS
+ *
+ * libphoenix
+ *
+ * strtoul, strtol
+ *
+ * Copyright 2017 Phoenix Systems
+ * Author: Pawel Pisarczyk, Jakub Sejdak
+ *
+ * This file is part of Phoenix-RTOS.
+ *
+ * %LICENSE%
+ */
+
+#include ARCH
+
 
 static int isDigit(char c)
 {
@@ -52,4 +68,17 @@ unsigned int strtoul(char *nptr, char **endptr, int base)
 	}
 
 	return v;
+}
+
+
+int strtol(char *nptr, char **endptr, int base)
+{
+	int sign = 1;
+
+	if (*nptr == '-') {
+		sign = -1;
+		++nptr;
+	}
+
+	return sign * strtoul(nptr, endptr, base);
 }

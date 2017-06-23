@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * inttypes.h
+ * limits.h
  *
  * Copyright 2017 Phoenix Systems
  * Author: Pawel Pisarczyk
@@ -13,8 +13,12 @@
  * %LICENSE%
  */
 
-#ifndef _LIBPHOENIX_INTTYPES_H_
-#define _LIBPHOENIX_INTTYPES_H_
+#ifndef _LIBPHOENIX_LIMITS_H_
+#define _LIBPHOENIX_LIMITS_H_
 
+#include ARCH
+
+
+#define UINT32_MAX 0xffffffff
 
 #endif
