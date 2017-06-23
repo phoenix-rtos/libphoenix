@@ -14,10 +14,7 @@
  */
 
 #ifndef _LIBPHOENIX_ARCH_ARMV7_ARCH_H_
-#define _LIBPHOENIX_ARCH_ARNV7_ARCH_H_
-
-#include "errno.h"
-#include "arch/armv7/syscalls.h"
+#define _LIBPHOENIX_ARCH_ARMV7_ARCH_H_
 
 
 #define NULL (void *)0
