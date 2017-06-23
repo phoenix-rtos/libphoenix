@@ -6,7 +6,7 @@
  * stdlib/malloc
  *
  * Copyright 2017 Phoenix Systems
- * Author: Pawel Pisarczyk
+ * Author: Andrzej Asztemborski
  *
  * This file is part of Phoenix-RTOS.
  *
