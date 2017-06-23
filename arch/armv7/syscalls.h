@@ -13,11 +13,8 @@
  * %LICENSE%
  */
 
-#ifndef _ARCH_SYSCALLS_H_
-#define _ARCH_SYSCALLS_H_
-
-
-extern int syscalls_debug(char *s);
+#ifndef _LIBPHOENIX_ARCH_ARMV7_SYSCALLS_H_
+#define _LIBPHOENIX_ARCH_ARMV7_SYSCALLS_H_
 
 
 #endif

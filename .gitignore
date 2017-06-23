@@ -1,4 +1,4 @@
 *.o
 *.d
 *.d.*
-libphoenix.a
+*.a
