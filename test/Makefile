@@ -1,11 +1,11 @@
 #
-# Makefile for libphoenix (stdlib)
+# Makefile for libphoenix (test)
 #
 # Copyright 2017 Phoenix Systems
 # Author: Pawel Pisarczyk
 #
 
-SRCS = strtoul.c malloc_dl.c
+SRCS = test.c
 OBJS = $(SRCS:.c=.o)
 
 

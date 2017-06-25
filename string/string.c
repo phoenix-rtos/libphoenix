@@ -21,7 +21,7 @@
 
 #ifndef STRCMP
 #define STRCMP
-static inline int strcmp(const char *s1, const char *s2)
+int strcmp(const char *s1, const char *s2)
 {
 	const char *p;
 	unsigned int k;
@@ -45,7 +45,7 @@ static inline int strcmp(const char *s1, const char *s2)
 /* FIXME it should return -K or +K or 0  */
 #ifndef STRNCMP
 #define STRNCMP
-static inline int strncmp(const char *s1, const char *s2, unsigned int count)
+int strncmp(const char *s1, const char *s2, unsigned int count)
 {
 	const char *p;
 	unsigned int k = 0;
@@ -66,7 +66,7 @@ static inline int strncmp(const char *s1, const char *s2, unsigned int count)
 
 #ifndef STRLEN
 #define STRLEN
-static inline unsigned int strlen(const char *s)
+unsigned int strlen(const char *s)
 {
 	unsigned int k;
 	
@@ -78,7 +78,7 @@ static inline unsigned int strlen(const char *s)
 
 #ifndef STRCPY
 #define STRCPY
-static inline char *strcpy(char *dest, const char *src)
+char *strcpy(char *dest, const char *src)
 {
 	unsigned int i = 0;
 
@@ -93,7 +93,7 @@ static inline char *strcpy(char *dest, const char *src)
 
 #ifndef STRNCPY
 #define STRNCPY
-static inline char *strncpy(char *dest, const char *src, size_t n)
+char *strncpy(char *dest, const char *src, size_t n)
 {
 	int i = 0;
 
