@@ -144,15 +144,18 @@ static inline int strcmp(const char *s1, const char *s2)
 		ldrb r3, [r1], #1; \
 		ldrb r4, [r2], #1; \
 		cmp r3, #0; \
-		beq 3f; \
+		beq 2f; \
 		cmp r3, r4; \
 		beq 1b; \
-		blo 2f; \
+		blo 3f; \
 		mov %0, #1; \
-		b 3f; \
+		b 4f; \
 	2: \
+		cmp r4, #0; \
+		beq 4f; \
+	3: \
 		mov %0, #-1; \
-	3: "
+	4: "
 	: "+r" (res)
 	: "r" (s1), "r" (s2)
 	: "r1", "r2", "r3", "r4", "cc");
@@ -170,23 +173,26 @@ static inline int strncmp(const char *s1, const char *s2, unsigned int count)
 	(" \
 		mov r1, %1; \
 		mov r2, %2; \
-		mov r3, %3; \
+		mov r5, %3; \
 	1: \
+		cmp r5, #0; \
+		beq 4f; \
+		sub r5, #1; \
+		ldrb r3, [r1], #1; \
+		ldrb r4, [r2], #1; \
 		cmp r3, #0; \
-		beq 3f; \
-		sub r3, #1; \
-		ldrb r4, [r1], #1; \
-		ldrb r5, [r2], #1; \
-		cmp r4, #0; \
-		beq 3f; \
-		cmp r4, r5; \
+		beq 2f; \
+		cmp r3, r4; \
 		beq 1b; \
-		blo 2f; \
+		blo 3f; \
 		mov %0, #1; \
-		b 3f; \
+		b 4f; \
 	2: \
+		cmp r4, #0; \
+		beq 4f; \
+	3: \
 		mov %0, #-1; \
-	3: "
+	4: "
 	: "+r" (res)
 	: "r" (s1), "r" (s2), "r" (count)
 	: "r1", "r2", "r3", "r4", "r5", "cc");
