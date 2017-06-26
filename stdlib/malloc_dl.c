@@ -14,105 +14,135 @@
  */
 
 #include "assert.h"
+#include "stdio.h"
 #include "stdlib.h"
 #include "sys/list.h"
 #include "sys/threads.h"
 #include "sys/mman.h"
 
 
-typedef struct _malloc_arena_t {
-	struct _malloc_arena_t *next;
-	struct _malloc_arena_t *prev;
+typedef struct _malloc_heap_t {
+	struct _malloc_heap_t *next;
+	struct _malloc_heap_t *prev;
+	struct _malloc_chunk_t *chunks;
 	size_t freesz;
-	size_t *size;
-} malloc_arena_t;
+	size_t size;
+} malloc_heap_t;
 
 
 typedef struct _malloc_chunk_t {
 	size_t size;
 	struct _malloc_chunk_t *next;
 	struct _malloc_chunk_t *prev;
+	malloc_heap_t *h;
 	u8 data[];
 } malloc_chunk_t;
 
 
 struct {
-	malloc_arena_t *freearenas;
-	malloc_arena_t *usedarenas;
-	malloc_chunk_t *bins[64];
+	malloc_heap_t *freeheaps;
+	malloc_heap_t *usedheaps;
+	u32 sbinmap;
+	u32 lbinmap;
+	malloc_chunk_t *sbins[32];
+	malloc_chunk_t *lbins[32];
 
-	size_t maxsz;
 	size_t allocsz;
 	size_t freesz;
 
-	handle_t lock;
+	handle_t mutex;
 } malloc_common;
 
-#if 0
-void *_malloc_allocchunk(size_t size)
-{
-	u8 idx;
 
-	idx = _malloc_getidx(size);
+static inline unsigned int malloc_getlidx(unsigned int s)
+{
+	unsigned int x = (s >> 8), i, k;
+
+	if (x == 0)
+		i = 0;
+	else if (x > 0xffff)
+		i = 32 - 1;
+	else {
+		k = (unsigned) sizeof(x) * __CHAR_BIT__ - 1 - (unsigned)__builtin_clz(x);
+		i = (unsigned int)((k << 1) + ((s >> (k + (8 - 1)) & 1)));
+	}
+
+	return i;
+}
+
+
+static inline unsigned int malloc_getsidx(unsigned int s)
+{
+	return (s >> 3);
+}
+
+#if 0
+void *malloc_allocsmall(unsigned int s)
+{
+	unsigned int idx = malloc_getsidx(s);
+	unsigned int binmap = malloc_common.sbinmap & ~((1 << idx) - 1);
+	malloc_chunk_t *ch;
+	malloc_heap_t *h;
 
 	/* Find first chunk suitable for size */
-	for (; (malloc_common.bins[idx] == NULL) && (idx < sizeof(malloc_common.bins) / sizeof(malloc_chunk_t *)); idx++);
-
+	if (binmap)
+		idx = getFirstBit(binmap);
+		
 printf("idx=%d\n", idx);
 
-	if (idx >= sizeof(malloc_common.bins) / sizeof(malloc_chunk_t *))
-		idx = _malloc_getidx(size);
-
-	if ((ch = malloc_common.bins[idx]) == NULL) {
-		LIST_REMOVE(&malloc_common.bins[idx], ch);
-		ch->arena->freesz -= (1 << idx) + 2 * sizeof(size_t);
-	}
-	else {
-		a = _malloc_arenaCreate(1 << _malloc_getidx(size));
-		LIST_ADD(&malloc_common.freearenas, a);
-		LIST_ADD(&malloc_common.bin[idx], a->chunks);
-		ch = malloc_common.bin[idx];
-		LIST_REMOVE(&malloc_common.bins[idx], ch);
+	lock(malloc_common.mutex);
+	if ((ch = malloc_common.sbins[idx]) == NULL) {
+		h = _malloc_newheap(idx << 3);
+		LIST_ADD(&malloc_common.freeheaps, h);
+		LIST_ADD(&malloc_common.sbins[idx], h->chunks);
+		ch = malloc_common.sbins[idx];
+		malloc_common.sbinmap |= (1 << idx);
 	}
 
+	LIST_REMOVE(&malloc_common.sbins[idx], ch);
+	ch->h->freesz -= ((idx << 3) + 2 * sizeof(size_t));
 	_malloc_split(ch);
 	
-	if (ch->arena->freesz == 0) {
-		LIST_REMOVE(&malloc_common.freearenas, ch->arena);
-		LIST_ADD(&malloc_common.usedarenas, ch->arena);
+	if (ch->h->freesz == 0) {
+		LIST_REMOVE(&malloc_common.freeheaps, ch->h);
+		LIST_ADD(&malloc_common.usedheaps, ch->h);
+		malloc_common.sbinmap &= ~(1 << idx);
 	}
 
-	return b;
+	/* Mark chunk allocated */
+	ch->size = (idx << 3) | 1;
+	*(size_t *)(ch + sizeof(size_t) + (idx << 3)) = (idx << 3);
+
+	unlock(malloc_common.mutex);
+
+	return (ch + sizeof(size_t));
+}
+
+
+void *malloc(size_t size)
+{
+	/* Allocate small chunk */
+	if (malloc_getsidx(size) < 32)
+		return malloc_allocsmall(size);
+
+	/* Allocate large chunk */
+	return NULL;
+
 }
 #endif
-
-
-#define NTREEBINS  64
-#define TREEBIN_SHIFT 8
-
-#define compute_tree_index(S, I)\
-{\
-  unsigned int X = S >> TREEBIN_SHIFT;\
-  if (X == 0)\
-    I = 0;\
-  else if (X > 0xFFFF)\
-    I = NTREEBINS-1;\
-  else {\
-    unsigned int K = (unsigned) sizeof(X)*__CHAR_BIT__ - 1 - (unsigned) __builtin_clz(X); \
-    I =  (unsigned int)((K << 1) + ((S >> (K + (TREEBIN_SHIFT-1)) & 1)));\
-  }\
-}
-
 
 void _malloc_init(void)
 {
 	unsigned int i;
 
 	malloc_common.allocsz = 0;
+	malloc_common.sbinmap = 0;
+	malloc_common.lbinmap = 0;
 
-	compute_tree_index(1024, i);
+	for (i = 0; i < 32; i++) {
+		malloc_common.sbins[i] = NULL;
+		malloc_common.lbins[i] = NULL;
+	}
 
-	printf("Compute tree index: %d\n", i);
-
-
+	return;
 }

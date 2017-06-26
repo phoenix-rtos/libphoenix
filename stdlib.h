@@ -146,4 +146,8 @@ extern size_t wcstombs(char *str, const wchar_t *pwcs, size_t n);
 extern int wctomb(char *str, wchar_t wchar);
 
 
+/* malloc constructor */
+extern void _malloc_init(void);
+
+
 #endif
