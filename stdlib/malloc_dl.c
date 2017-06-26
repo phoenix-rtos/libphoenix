@@ -87,6 +87,9 @@ printf("idx=%d\n", idx);
 #endif
 
 
+#define NTREEBINS  64
+#define TREEBIN_SHIFT 8
+
 #define compute_tree_index(S, I)\
 {\
   unsigned int X = S >> TREEBIN_SHIFT;\
@@ -96,7 +99,7 @@ printf("idx=%d\n", idx);
     I = NTREEBINS-1;\
   else {\
     unsigned int K = (unsigned) sizeof(X)*__CHAR_BIT__ - 1 - (unsigned) __builtin_clz(X); \
-    I =  (bindex_t)((K << 1) + ((S >> (K + (TREEBIN_SHIFT-1)) & 1)));\
+    I =  (unsigned int)((K << 1) + ((S >> (K + (TREEBIN_SHIFT-1)) & 1)));\
   }\
 }
 
@@ -106,5 +109,10 @@ void _malloc_init(void)
 	unsigned int i;
 
 	malloc_common.allocsz = 0;
+
+	compute_tree_index(1024, i);
+
+	printf("Compute tree index: %d\n", i);
+
 
 }

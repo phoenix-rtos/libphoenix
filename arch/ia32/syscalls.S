@@ -26,8 +26,9 @@ sym:
 
 
 #define SYSCALL(sn) \
-	movl sn, %eax; \
-	int $0x80;
+	movl $sn, %eax; \
+	int $0x80; \
+	ret;
 
 
 SYSCALLDEF(debug)
@@ -48,3 +49,8 @@ SYSCALLDEF(munmap)
 SYSCALLDEF(beginthread)
 	SYSCALL(8);
 .size beginthread, .-beginthread
+
+
+SYSCALLDEF(exit)
+	SYSCALL(9);
+.size exit, .-exit
