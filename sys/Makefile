@@ -5,7 +5,7 @@
 # Author: Pawel Pisarczyk
 #
 
-SRCS = list.c
+SRCS = list.c rb.c
 OBJS = $(SRCS:.c=.o)
 
 
