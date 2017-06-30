@@ -6,7 +6,7 @@
  * Doubly-linked list
  *
  * Copyright 2017 Phoenix Systems
- * Author: Jakub Sejdak
+ * Author: Jakub Sejdak, Pawel Pisarczyk
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -19,57 +19,29 @@
 #include ARCH
 
 
-#define lib_listof(type, node_field, node) ({					\
-	int _off = (int) &(((type *) 0)->node_field);				\
-	(type *) ((node == NULL) ? NULL : ((void *) node - _off));	\
-})
+#define LIST_ADD(list, i) { \
+	if (*(list) == NULL) { \
+		i->next = i; \
+		i->prev = i; \
+		(*(list)) = i; \
+	} \
+	else { \
+		i->prev = (*(list))->prev; \
+		(*(list))->prev->next = i; \
+		i->next = (*list); \
+		(*(list))->prev = i; \
+	} \
+}
 
 
-typedef struct _listnode_t {
-	struct _listnode_t *next;
-	struct _listnode_t *prev;
-} listnode_t;
-
-
-typedef int (*listcomp_t)(listnode_t *n1, listnode_t *n2);
-
-
-typedef struct _list_t {
-	listnode_t *head;
-	listnode_t *tail;
-	listcomp_t compare;
-	size_t size;
-} list_t;
-
-
-extern void lib_listInit(list_t *list, listcomp_t compare);
-
-
-extern void lib_listInsertAfter(list_t *list, listnode_t *prev, listnode_t *node);
-
-
-extern void lib_listInsertBefore(list_t *list, listnode_t *next, listnode_t *node);
-
-
-extern void lib_listAppend(list_t *list, listnode_t *node);
-
-
-extern void lib_listPrepend(list_t *list, listnode_t *node);
-
-
-extern void lib_listRemove(list_t *list, listnode_t *node);
-
-
-extern listnode_t *lib_listFind(list_t *list, listnode_t *node);
-
-
-extern listnode_t *lib_listHead(list_t *list);
-
-
-extern listnode_t *lib_listTail(list_t *list);
-
-
-extern size_t lib_listSize(list_t *list);
+#define  LIST_REMOVE(list, i) { \
+	i->prev->next = i->next; \
+	i->next->prev = i->prev; \
+	if ((i->next == i) && (i->prev == i)) \
+		(*(list)) = NULL; \
+	else if (i == (*(list))) \
+		(*(list)) = i->next; \
+}
 
 
 #endif

@@ -63,6 +63,9 @@ typedef struct _oid_t {
 typedef u32 handle_t;
 
 
+#define SIZE_PAGE 0x1000
+
+
 #include "string.h"
 
 

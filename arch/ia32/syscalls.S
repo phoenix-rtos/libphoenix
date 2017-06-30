@@ -46,9 +46,24 @@ SYSCALLDEF(munmap)
 .size munmap, .-munmap
 
 
+SYSCALLDEF(vfork)
+	SYSCALL(3);
+.size vfork, .-vfork
+
+
 SYSCALLDEF(beginthread)
 	SYSCALL(8);
 .size beginthread, .-beginthread
+
+
+SYSCALLDEF(lock)
+	SYSCALL(16);
+.size lock, .-lock
+
+
+SYSCALLDEF(unlock)
+	SYSCALL(17);
+.size unlock, .-unlock
 
 
 SYSCALLDEF(exit)

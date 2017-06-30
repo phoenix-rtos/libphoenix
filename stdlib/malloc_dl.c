@@ -76,7 +76,23 @@ static inline unsigned int malloc_getsidx(unsigned int s)
 	return (s >> 3);
 }
 
-#if 0
+
+malloc_heap_t *_malloc_newheap(size_t size)
+{
+	malloc_heap_t *h;
+
+printf("befoe mmap\n");
+	h = mmap(NULL, max(size, SIZE_PAGE * 2), PROT_WRITE, MAP_ANONYMOUS, NULL, 0);
+
+	return h;
+}
+
+
+void _malloc_split(malloc_chunk_t *chunk)
+{
+}
+
+
 void *malloc_allocsmall(unsigned int s)
 {
 	unsigned int idx = malloc_getsidx(s);
@@ -86,13 +102,18 @@ void *malloc_allocsmall(unsigned int s)
 
 	/* Find first chunk suitable for size */
 	if (binmap)
-		idx = getFirstBit(binmap);
-		
-printf("idx=%d\n", idx);
+		idx = __builtin_ctz(binmap);
 
 	lock(malloc_common.mutex);
 	if ((ch = malloc_common.sbins[idx]) == NULL) {
-		h = _malloc_newheap(idx << 3);
+
+printf("cdsdfds\n");
+
+		if ((h = _malloc_newheap(idx << 3)) == NULL) {
+			unlock(malloc_common.mutex);
+			return NULL;
+		}
+
 		LIST_ADD(&malloc_common.freeheaps, h);
 		LIST_ADD(&malloc_common.sbins[idx], h->chunks);
 		ch = malloc_common.sbins[idx];
@@ -129,7 +150,7 @@ void *malloc(size_t size)
 	return NULL;
 
 }
-#endif
+
 
 void _malloc_init(void)
 {

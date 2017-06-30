@@ -28,7 +28,7 @@
 #define MAP_ANONYMOUS  4
 
 
-extern void *mmap(void *vaddr, size_t size, int prot, int flags, oid_t oid, offs_t offs);
+extern void *mmap(void *vaddr, size_t size, int prot, int flags, oid_t *oid, offs_t offs);
 
 
 extern int munmap(void *vaddr, size_t size);
