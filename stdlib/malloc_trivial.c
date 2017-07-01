@@ -19,8 +19,6 @@
 #include "sys/threads.h"
 #include "sys/mman.h"
 
-#include "malloc_trivial.h"
-
 /*
  * global data: list of page_sets protected by mutex if application is multi-threaded
  * data structures: page_set contains list of chunks
@@ -48,10 +46,15 @@
  * 2. memset().
  */
 
-static int page_set_fit(listnode_t *page_set_node, listnode_t *request_node);
-static int chunk_fit(listnode_t *chunk_node, listnode_t *request_node);
+static int _page_set_fit(listnode_t *page_set_node, listnode_t *request_node);
+static int _chunk_fit(listnode_t *chunk_node, listnode_t *request_node);
 
-struct malloc_common malloc_common = { .page_sets = { .compare = page_set_fit } };
+struct malloc_common {
+	handle_t mutex;
+	list_t page_sets;
+};
+
+struct malloc_common malloc_common;
 
 struct chunk {
 	listnode_t listnode;
@@ -70,17 +73,19 @@ struct page_set {
 
 #define offsetof(type, member)  __builtin_offsetof (type, member)
 #define chunk_of_contents(ptr) ((struct chunk *)((void *)(ptr) - offsetof(struct chunk, contents)))
-static struct page_set *page_set_of_chunk(struct chunk *chunk)
+
+static struct page_set *_page_set_of_chunk(struct chunk *chunk)
 {
 	listnode_t *current = &chunk->listnode;
 	struct chunk *first;
-	while (current)
+	while (current->prev)
 		current = current->prev;
 	first = lib_listof(struct chunk, listnode, current);
 	return (struct page_set *)((void *)first - offsetof(struct page_set, first_chunk));
 }
 
 #define PAGE_SIZE	0x100
+#define MAP_FAILED	((void *)-1)
 
 static inline size_t PAGE_CEIL(size_t size)
 {
@@ -100,7 +105,7 @@ static inline size_t ALIGN_CEIL(size_t size)
 	return result * __BIGGEST_ALIGNMENT__;
 }
 
-static int page_set_fit(listnode_t *page_set_node, listnode_t *request_node)
+static int _page_set_fit(listnode_t *page_set_node, listnode_t *request_node)
 {
 	struct page_set *set = lib_listof(struct page_set, listnode, page_set_node),
 		*request = lib_listof(struct page_set, listnode, request_node);
@@ -111,28 +116,28 @@ static int page_set_fit(listnode_t *page_set_node, listnode_t *request_node)
 	return 1;
 }
 
-static int chunk_fit(listnode_t *chunk_node, listnode_t *request_node)
+static int _chunk_fit(listnode_t *chunk_node, listnode_t *request_node)
 {
 	struct chunk *chunk = lib_listof(struct chunk, listnode, chunk_node),
 		*request = lib_listof(struct chunk, listnode, request_node);
 
-	if (chunk->size >= request->size)
+	if (chunk->free && chunk->size >= request->size)
 		return 0;
 
 	return 1;
 }
 
-static struct page_set *alloc_page_set(size_t size)
+static struct page_set *_alloc_page_set(size_t size)
 {
 	oid_t dummy = { 0, 0 };
 	size_t page_set_total_size = PAGE_CEIL(offsetof(struct page_set, first_chunk.contents) + size);
 	struct page_set *result = mmap(NULL, page_set_total_size, PROT_READ | PROT_WRITE,
-				       MAP_PRIVATE | MAP_ANONYMOUS, dummy, 0);
-	if (!result) /* out of memory */
+				       MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	if (result == MAP_FAILED) /* out of memory */
 		return NULL;
 
 	result->total_size = page_set_total_size;
-	lib_listInit(&result->chunks, chunk_fit);
+	lib_listInit(&result->chunks, _chunk_fit);
 	lib_listAppend(&result->chunks, &result->first_chunk.listnode);
 	result->first_chunk.size = result->max_free_chunk_size =
 		page_set_total_size - offsetof(struct page_set, first_chunk.contents);
@@ -143,7 +148,7 @@ static struct page_set *alloc_page_set(size_t size)
 }
 
 /* update max free chunk size in page_set structure */
-static void update_page_set(struct page_set *page_set)
+static void _update_page_set(struct page_set *page_set)
 {
 	size_t max_free_chunk_size = 0;
 	listnode_t *current_node;
@@ -159,31 +164,31 @@ static void update_page_set(struct page_set *page_set)
 	page_set->max_free_chunk_size = max_free_chunk_size;
 }
 
-static void *cut_chunk(struct page_set *page_set, struct chunk *chunk, size_t size)
+static void *_cut_chunk(struct page_set *page_set, struct chunk *chunk, size_t size)
 {
 	struct chunk *remainder;
 
 	assert(chunk->free);
 	if (chunk->size > size + sizeof(struct chunk) + ALIGN_CEIL(1)) {
-		chunk->size = size;
 		remainder = (struct chunk *)(chunk->contents + size);
 		remainder->size = chunk->size - size - sizeof(struct chunk);
 		remainder->free = 1;
 		lib_listInsertAfter(&page_set->chunks, &chunk->listnode, &remainder->listnode);
+		chunk->size = size;
 	}
 	chunk->free = 0;
-	update_page_set(page_set);
+	_update_page_set(page_set);
 	return chunk->contents;
 }
 
-static void *allocate(size_t size) {
+static void *_allocate(size_t size) {
 	struct page_set page_set_requested = { .max_free_chunk_size = size }, *page_set_found;
 	struct chunk chunk_requested = { .size = size }, *chunk_found;
 
 	page_set_found = lib_listof(struct page_set, listnode,
 				    lib_listFind(&malloc_common.page_sets, &page_set_requested.listnode));
 	if (!page_set_found) {
-		page_set_found = alloc_page_set(size);
+		page_set_found = _alloc_page_set(size);
 		if (!page_set_found) { /* out of memory */
 			return NULL;
 		}
@@ -191,8 +196,8 @@ static void *allocate(size_t size) {
 
 	chunk_found = lib_listof(struct chunk, listnode,
 				 lib_listFind(&page_set_found->chunks, &chunk_requested.listnode));
-	assert(chunk);
-	return cut_chunk(page_set_found, chunk_found, size);
+	assert(chunk_found);
+	return _cut_chunk(page_set_found, chunk_found, size);
 }
 
 void *malloc(size_t size)
@@ -207,13 +212,13 @@ void *malloc(size_t size)
 	if (!malloc_common.mutex)
 		mutex(&malloc_common.mutex);
 	lock(malloc_common.mutex);
-	result = allocate(size);
+	result = _allocate(size);
 	unlock(malloc_common.mutex);
 	return result;
 }
 
 /* Check and coalesce if possible first_chunk and its successor */
-static void coalesce(struct page_set *page_set, struct chunk *first_chunk)
+static void _coalesce(struct page_set *page_set, struct chunk *first_chunk)
 {
 	struct chunk *next_chunk;
 
@@ -230,16 +235,16 @@ static void coalesce(struct page_set *page_set, struct chunk *first_chunk)
 	}
 }
 
-static void release_chunk(struct page_set *page_set, struct chunk *chunk)
+static void _release_chunk(struct page_set *page_set, struct chunk *chunk)
 {
 	chunk->free = 1;
-	coalesce(page_set, chunk);
-	coalesce(page_set, lib_listof(struct chunk, listnode, chunk->listnode.prev));
+	_coalesce(page_set, chunk);
+	_coalesce(page_set, lib_listof(struct chunk, listnode, chunk->listnode.prev));
 	if (lib_listSize(&page_set->chunks) == 1) {
 		lib_listRemove(&malloc_common.page_sets, &page_set->listnode);
 		munmap(page_set, page_set->total_size);
 	} else {
-		update_page_set(page_set);
+		_update_page_set(page_set);
 	}
 }
 
@@ -255,8 +260,8 @@ void free(void *ptr)
 		mutex(&malloc_common.mutex);
 	lock(malloc_common.mutex);
 	freed_chunk = chunk_of_contents(ptr);
-	page_set = page_set_of_chunk(freed_chunk);
-	release_chunk(page_set, freed_chunk);
+	page_set = _page_set_of_chunk(freed_chunk);
+	_release_chunk(page_set, freed_chunk);
 	unlock(malloc_common.mutex);
 }
 
@@ -281,24 +286,24 @@ void *realloc(void *ptr, size_t size)
 		mutex(&malloc_common.mutex);
 	lock(malloc_common.mutex);
 	current_chunk = chunk_of_contents(ptr);
-	page_set = page_set_of_chunk(current_chunk);
+	page_set = _page_set_of_chunk(current_chunk);
 	if (current_chunk->size >= size) {
 		current_chunk->free = 1; /* to satisfy cut */
-		result = cut_chunk(page_set, current_chunk, size);
-		coalesce(page_set, lib_listof(struct chunk, listnode, current_chunk->listnode.next));
-		update_page_set(page_set);
+		result = _cut_chunk(page_set, current_chunk, size);
+		_coalesce(page_set, lib_listof(struct chunk, listnode, current_chunk->listnode.next));
+		_update_page_set(page_set);
 	} else if (next_chunk = lib_listof(struct chunk, listnode, current_chunk->listnode.next),
 		   next_chunk && next_chunk->free &&
 		   current_chunk->size + sizeof(struct chunk) + next_chunk->size >= size) {
 		current_chunk->free = 1; /* to satisfy coalesce and cut */
-		coalesce(page_set, current_chunk);
-		result = cut_chunk(page_set, current_chunk, size);
-		update_page_set(page_set);
+		_coalesce(page_set, current_chunk);
+		result = _cut_chunk(page_set, current_chunk, size);
+		_update_page_set(page_set);
 	} else {
-		result = allocate(size);
+		result = _allocate(size);
 		if (result) {
 			memcpy(result, current_chunk, current_chunk->size);
-			release_chunk(page_set, current_chunk);
+			_release_chunk(page_set, current_chunk);
 		}
 	}
 	unlock(malloc_common.mutex);
@@ -317,9 +322,14 @@ void *calloc(size_t nmemb, size_t size)
 	if (!malloc_common.mutex)
 		mutex(&malloc_common.mutex);
 	lock(malloc_common.mutex);
-	result = allocate(size);
+	result = _allocate(size);
 	if (result)
 		memset(result, 0, size);
 	unlock(malloc_common.mutex);
 	return result;
+}
+
+void _malloc_init(void)
+{
+	malloc_common.page_sets.compare = _page_set_fit;
 }

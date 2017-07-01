@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * sys/rb
+ * sys/rb - red, black tree implementation
  *
  * Copyright 2017 Phoenix Systems
  * Author: Jakub Sejdak
