@@ -33,10 +33,6 @@ extern double cos(double x);
 extern double sin(double x);
 
 
-/* Returns the tangent of an angle of x radians. */
-extern double tan(double x);
-
-
 /* Returns the principal value of the arc cosine of x, expressed in radians. */
 extern double acos(double x);
 
