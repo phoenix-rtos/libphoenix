@@ -372,7 +372,7 @@ int vsprintf(char *out, const char *format, va_list args)
 			break;
 
 		case 'p':
-			flags |= (FLAG_ALTERNATE | FLAG_HEX | FLAG_NULLMARK);
+			flags |= (FLAG_HEX | FLAG_NULLMARK | FLAG_ZERO);
 			if (sizeof(void *) == sizeof(u64))
 				flags |= FLAG_64BIT;
 			min_number_len = sizeof(void *) * 2;
