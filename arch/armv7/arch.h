@@ -17,6 +17,9 @@
 #define _LIBPHOENIX_ARCH_ARMV7_ARCH_H_
 
 
+#define __LITTLE_ENDIAN
+
+
 #define NULL (void *)0
 
 

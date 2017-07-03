@@ -5,7 +5,7 @@
 # Copyright 2001, 2005-2006 Pawel Pisarczyk
 #
 
-SRCS = trig.c power.c round.c misc.c #hyper.c exp.c
+SRCS = trig.c power.c round.c misc.c exp.c #hyper.c
 OBJS = $(SRCS:.c=.o)
 
 

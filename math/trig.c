@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * cos, sin, tan, acos, asin, atan
+ * cos, sin, acos, asin, atan
  *
  * Copyright 2017 Phoenix Systems
  * Author: Aleksander Kaminski
