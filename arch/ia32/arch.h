@@ -52,6 +52,7 @@ typedef s64 offs_t;
 
 typedef unsigned int size_t;
 typedef unsigned long long time_t;
+typedef unsigned int useconds_t;
 
 
 typedef struct _oid_t {

@@ -423,7 +423,7 @@ int printf(const char *fmt, ...)
 	err = vsprintf(s, fmt, ap);
 	va_end(ap);
 
-	if (err > 1)
+	if (err > 0)
 		debug(s);
 
 	return err;

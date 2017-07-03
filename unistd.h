@@ -22,4 +22,7 @@
 extern int vfork(void);
 
 
+extern int usleep(useconds_t usecs);
+
+
 #endif

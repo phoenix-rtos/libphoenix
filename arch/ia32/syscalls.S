@@ -51,6 +51,16 @@ SYSCALLDEF(vfork)
 .size vfork, .-vfork
 
 
+SYSCALLDEF(execle)
+	SYSCALL(4);
+.size execle, .-execle
+
+
+SYSCALLDEF(usleep)
+	SYSCALL(6);
+.size usleep, .-usleep
+
+
 SYSCALLDEF(beginthread)
 	SYSCALL(8);
 .size beginthread, .-beginthread
