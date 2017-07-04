@@ -2,3 +2,7 @@
 *.d
 *.d.*
 *.a
+.vscode
+.idea
+CMakeLists.txt
+cmake-build-debug/
