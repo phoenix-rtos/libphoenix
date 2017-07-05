@@ -90,7 +90,7 @@ double frexp(double x, int* exp)
 
 
 /* WARNING: Assumes IEEE 754 double-precision binary floating-point format */
-double ldexp(double x, int exp) /* TODO - not tested */
+double ldexp(double x, int exp)
 {
 	conv_t *conv = (conv_t *)&x;
 	int exponent = 0;
@@ -147,13 +147,26 @@ double ldexp(double x, int exp) /* TODO - not tested */
 	return x;
 }
 
-#if 0
-double exp(double x)
+
+double exp(double x) /* TODO - not tested */
 {
-	return 0;
+	double res, powx;
+	int strong, i;
+
+	strong = 1;
+	res = 1;
+	powx = x;
+
+	for (i = 0; i < 11; ++i) { /* TODO pick number of iterations */
+		res += powx / strong;
+		strong *= strong + 1;
+		powx *= x;
+	}
+
+	return res;
 }
 
-
+#if 0
 double log(double x)
 {
 	return 0;
