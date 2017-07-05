@@ -116,6 +116,7 @@ static inline u32 format_fracToU32(float frac, int float_frac_len, float *overfl
 
 static void format_sprintf_num(void *ctx, feedfunc feed, u64 num64, u32 flags, int min_number_len, int float_frac_len)
 {
+	int i;
 	const char *digits = (flags & FLAG_LARGE_DIGITS) ? "0123456789ABCDEF" : "0123456789abcdef",
 			*prefix = (flags & FLAG_LARGE_DIGITS) ? "X0" : "x0";
 	char tmp_buf[32];
@@ -124,7 +125,7 @@ static void format_sprintf_num(void *ctx, feedfunc feed, u64 num64, u32 flags, i
 
 	if ((flags & FLAG_NULLMARK) && num64 == 0) {
 		const char *s = "(nil)";
-		for(int i = 0; i < strlen(s); i++)
+		for(i = 0; i < strlen(s); i++)
 			feed(ctx, s[i]);
 	}
 
@@ -268,6 +269,8 @@ static void format_sprintf_num(void *ctx, feedfunc feed, u64 num64, u32 flags, i
 
 void format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 {
+	int i;
+
 	for (;;) {
 		char fmt = *format++;
 
@@ -351,7 +354,7 @@ void format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 				if (s == NULL)
 					s = "(null)";
 
-				for(int i = 0; i < strlen(s); i++)
+				for(i = 0; i < strlen(s); i++)
 					feed(ctx, s[i]);
 
 				break;

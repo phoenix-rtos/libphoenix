@@ -148,6 +148,7 @@ double ldexp(double x, int exp)
 }
 
 
+/* Uses Maclaurin series to calculate value of e^x */
 double exp(double x) /* TODO - not tested */
 {
 	double res, powx;
