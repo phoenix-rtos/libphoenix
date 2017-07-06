@@ -13,7 +13,7 @@
  * %LICENSE%
  */
 
-#include "assert.h"
+#include ARCH
 #include "stdio.h"
 #include "stdlib.h"
 #include "sys/list.h"
@@ -21,31 +21,30 @@
 #include "sys/mman.h"
 
 
-typedef struct _malloc_heap_t {
-	struct _malloc_heap_t *next;
-	struct _malloc_heap_t *prev;
-	struct _malloc_chunk_t *chunks;
+#define CHUNK_USED      1
+
+
+typedef struct _heap_t {
 	size_t freesz;
 	size_t size;
-} malloc_heap_t;
+	u8 space[];
+} heap_t;
 
 
-typedef struct _malloc_chunk_t {
+typedef struct _chunk_t {
+	size_t prevSize;
 	size_t size;
-	struct _malloc_chunk_t *next;
-	struct _malloc_chunk_t *prev;
-	malloc_heap_t *h;
-	u8 data[];
-} malloc_chunk_t;
+	heap_t *heap;
+	struct _chunk_t *next;
+	struct _chunk_t *prev;
+} chunk_t;
 
 
 struct {
-	malloc_heap_t *freeheaps;
-	malloc_heap_t *usedheaps;
 	u32 sbinmap;
 	u32 lbinmap;
-	malloc_chunk_t *sbins[32];
-	malloc_chunk_t *lbins[32];
+	chunk_t *sbins[32];
+	chunk_t *lbins[32];
 
 	size_t allocsz;
 	size_t freesz;
@@ -54,116 +53,147 @@ struct {
 } malloc_common;
 
 
-static inline unsigned int malloc_getlidx(unsigned int s)
+static inline unsigned int malloc_getsidx(size_t size)
 {
-	unsigned int x = (s >> 8), i, k;
+	return (size + 7) >> 3;
+}
+
+
+static inline unsigned int malloc_getlidx(size_t size)
+{
+	unsigned int x = (size >> 8), k;
 
 	if (x == 0)
-		i = 0;
-	else if (x > 0xffff)
-		i = 32 - 1;
-	else {
-		k = (unsigned) sizeof(x) * __CHAR_BIT__ - 1 - (unsigned)__builtin_clz(x);
-		i = (unsigned int)((k << 1) + ((s >> (k + (8 - 1)) & 1)));
-	}
+		return 0;
 
-	return i;
+	if (x > 0xffff)
+		return 31;
+
+	k = sizeof(x) * __CHAR_BIT__ - 1 - __builtin_clz(x);
+	return (k << 1) + (size >> (k + (8 - 1)) & 1);
 }
 
 
-static inline unsigned int malloc_getsidx(unsigned int s)
+static void _malloc_heapInit(heap_t *heap, size_t size)
 {
-	return (s >> 3);
+	heap->freesz = size;
+	heap->size = size;
 }
 
 
-malloc_heap_t *_malloc_newheap(size_t size)
+static heap_t *_malloc_heapAlloc(size_t chunkSize)
 {
-	malloc_heap_t *h;
+	size_t heapSize = max(chunkSize + sizeof(heap_t), SIZE_PAGE);
+	heap_t *heap = mmap(NULL, heapSize, PROT_WRITE, MAP_ANONYMOUS, NULL, 0);
+	if (heap == NULL)
+		return NULL;
 
-printf("befoe mmap\n");
-	h = mmap(NULL, max(size, SIZE_PAGE * 2), PROT_WRITE, MAP_ANONYMOUS, NULL, 0);
-
-	return h;
+	_malloc_heapInit(heap, heapSize - sizeof(heap_t));
+	return heap;
 }
 
 
-void _malloc_split(malloc_chunk_t *chunk)
+static void _malloc_heapSplit(heap_t *heap)
 {
 }
 
 
-void *malloc_allocsmall(unsigned int s)
+static void _malloc_chunkInit(chunk_t *chunk, heap_t *heap, size_t prevSize, size_t size)
 {
-	unsigned int idx = malloc_getsidx(s);
+	chunk->prevSize = prevSize;
+	chunk->size = size;
+	chunk->heap = heap;
+	chunk->next = NULL;
+	chunk->prev = NULL;
+}
+
+
+static void _malloc_chunkSplit(chunk_t *chunk, size_t size)
+{
+	if (chunk->size == size)
+		return;
+}
+
+
+static void *malloc_allocSmall(size_t size)
+{
+	unsigned int idx = malloc_getsidx(size);
 	unsigned int binmap = malloc_common.sbinmap & ~((1 << idx) - 1);
-	malloc_chunk_t *ch;
-	malloc_heap_t *h;
+	size_t chunkSize = idx << 3;
+	chunk_t *chunk;
+	heap_t *heap;
 
-	/* Find first chunk suitable for size */
+	/* Find first chunk suitable for size. */
 	if (binmap)
 		idx = __builtin_ctz(binmap);
 
 	lock(malloc_common.mutex);
-	if ((ch = malloc_common.sbins[idx]) == NULL) {
-
-printf("cdsdfds\n");
-
-		if ((h = _malloc_newheap(idx << 3)) == NULL) {
+	if ((chunk = malloc_common.sbins[idx]) == NULL) {
+		if ((heap = _malloc_heapAlloc(chunkSize)) == NULL) {
 			unlock(malloc_common.mutex);
 			return NULL;
 		}
 
-		LIST_ADD(&malloc_common.freeheaps, h);
-		LIST_ADD(&malloc_common.sbins[idx], h->chunks);
-		ch = malloc_common.sbins[idx];
+		chunk = (chunk_t *) heap->space;
+		_malloc_chunkInit(chunk, heap, 0, chunkSize);
+		_malloc_heapSplit(heap);
+
+		LIST_ADD(&malloc_common.sbins[idx], chunk);
 		malloc_common.sbinmap |= (1 << idx);
 	}
 
-	LIST_REMOVE(&malloc_common.sbins[idx], ch);
-	ch->h->freesz -= ((idx << 3) + 2 * sizeof(size_t));
-	_malloc_split(ch);
-	
-	if (ch->h->freesz == 0) {
-		LIST_REMOVE(&malloc_common.freeheaps, ch->h);
-		LIST_ADD(&malloc_common.usedheaps, ch->h);
+	LIST_REMOVE(&malloc_common.sbins[idx], chunk);
+	if (malloc_common.sbins[idx] == NULL)
 		malloc_common.sbinmap &= ~(1 << idx);
-	}
 
-	/* Mark chunk allocated */
-	ch->size = (idx << 3) | 1;
-	*(size_t *)(ch + sizeof(size_t) + (idx << 3)) = (idx << 3);
+	_malloc_chunkSplit(chunk, chunkSize);
+	chunk->heap->freesz -= chunkSize;
+
+	/* Mark chunk as used. */
+	chunk->size |= CHUNK_USED;
+	if ((u32) chunk->heap->space + chunk->heap->size > (u32) chunk + chunkSize)
+		*((size_t *) ((u32) chunk + chunkSize)) |= CHUNK_USED;
 
 	unlock(malloc_common.mutex);
+	return (void *) ((u32) chunk + 2 * sizeof(size_t) + sizeof(heap_t *));
+}
 
-	return (ch + sizeof(size_t));
+
+static void *malloc_allocLarge(size_t size)
+{
+	return NULL;
 }
 
 
 void *malloc(size_t size)
 {
-	/* Allocate small chunk */
-	if (malloc_getsidx(size) < 32)
-		return malloc_allocsmall(size);
+	if (size == 0)
+		return NULL;
 
-	/* Allocate large chunk */
-	return NULL;
+	/* Smallest allocable size is 16. */
+	size = max(size + sizeof(chunk_t), 16);
 
+	if (size <= 248)
+		return malloc_allocSmall(size);
+
+	return malloc_allocLarge(size);
 }
 
 
 void _malloc_init(void)
 {
-	unsigned int i;
+	int i;
 
 	malloc_common.allocsz = 0;
+	malloc_common.freesz = 0;
 	malloc_common.sbinmap = 0;
 	malloc_common.lbinmap = 0;
 
-	for (i = 0; i < 32; i++) {
+	for (i = 0; i < 32; ++i) {
 		malloc_common.sbins[i] = NULL;
 		malloc_common.lbins[i] = NULL;
 	}
 
-	return;
+	// TODO: Initialize mutex.
+	//mutex_init(&malloc_common.mutex);
 }
