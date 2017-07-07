@@ -33,12 +33,12 @@ double pow(double base, double exponent) /* TODO testing */
 
 	if (base < 0 && !isInteger(exponent)) {
 		/* TODO: errno EDOM */
-		return -1;
+		return NAN;
 	}
 
 	if (base == 0 && exponent == 0) {
 		/* TODO: errno EDOM */
-		return -1;
+		return NAN;
 	}
 
 	if (base == 0)
@@ -89,7 +89,7 @@ double sqrt(double x) /* TODO testing */
 
 	if (x < 0) {
 		/* TODO: errno EDOM */
-		return 0;
+		return NAN;
 	}
 
 	y = (x > 1) ? x / 2 : x * 2;

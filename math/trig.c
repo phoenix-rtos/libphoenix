@@ -77,7 +77,7 @@ double acos(double x) /* TODO testing */
 
 	if (x > 1.0 || x < -1.0) {
 		/* TODO: errno EDOM */
-		return 0;
+		return NAN;
 	}
 
 	y = M_PI_2;

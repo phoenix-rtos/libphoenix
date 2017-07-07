@@ -37,8 +37,6 @@ static void normalizeSub(double *x, int *exp)
 {
 	conv_t *conv = (conv_t *)x;
 
-	if (conv->i.exponent != 0)
-		return;
 	if (conv->i.mantisa == 0)
 		return;
 
@@ -70,6 +68,68 @@ static void normalizeSub(double *x, int *exp)
 }
 
 
+static void createSub(double *x, int exp)
+{
+	conv_t *conv = (conv_t *)&x;
+
+	if (exp < -51) {
+		*x = 0.0;
+		return;
+	}
+	else if (exp > 0) {
+		return;
+	}
+
+	/* Subnormals have explicit MSB bit */
+	conv->i.mantisa >>= 1;
+	conv->i.mantisa |= (1LL << 52);
+	exp += 1;
+
+	if (exp <= -26) {
+		conv->i.mantisa >>= 26;
+		exp += 26;
+	}
+
+	if (exp <= -13) {
+		conv->i.mantisa >>= 13;
+		exp += 13;
+	}
+
+	if (exp <= -8) {
+		conv->i.mantisa >>= 8;
+		exp += 8;
+	}
+
+	while (exp < 0) {
+		conv->i.mantisa >>= 1;
+		++exp;
+	}
+
+	if (conv->i.mantisa == 0)
+		*x = 0.0;
+}
+
+
+/* Uses Clay S. Turner's Fast Binary Logarithm Algorithm */
+static u32 log2(u32 x)
+{
+	u32 y = 0, b = 1 << 30;
+	u64 z = x;
+	int i;
+
+	for (i = 0; i < 31; ++i) {
+		z = (z * z) >> 31;
+		if (z & (2LL << 31)) {
+			z >>= 1;
+			y |= b;
+		}
+		b >>= 1;
+	}
+
+	return y;
+}
+
+
 /* WARNING: Assumes IEEE 754 double-precision binary floating-point format */
 double frexp(double x, int* exp)
 {
@@ -80,7 +140,8 @@ double frexp(double x, int* exp)
 	if (x == 0.0)
 		return 0.0;
 
-	normalizeSub(&x, exp);
+	if (conv->i.exponent == 0)
+		normalizeSub(&x, exp);
 
 	*exp += conv->i.exponent - 1022;
 	conv->i.exponent = 1022;
@@ -98,7 +159,8 @@ double ldexp(double x, int exp)
 	if (x == 0.0)
 		return 0.0;
 
-	normalizeSub(&x, &exponent);
+	if (conv->i.exponent == 0)
+		normalizeSub(&x, &exponent);
 
 	exponent += conv->i.exponent + exp;
 
@@ -109,36 +171,8 @@ double ldexp(double x, int exp)
 
 	/* If result is subnormal */
 	if (exponent < 0) {
-		if (exponent < -51)
-			return 0.0;
-
-		/* Subnormals have explicit MSB bit */
-		conv->i.mantisa >>= 1;
-		conv->i.mantisa |= (1LL << 52);
-		exponent += 1;
-
-		if (exponent <= -26) {
-			conv->i.mantisa >>= 26;
-			exponent += 26;
-		}
-
-		if (exponent <= -13) {
-			conv->i.mantisa >>= 13;
-			exponent += 13;
-		}
-
-		if (exponent <= -8) {
-			conv->i.mantisa >>= 8;
-			exponent += 8;
-		}
-
-		while (exponent < 0) {
-			conv->i.mantisa >>= 1;
-			++exponent;
-		}
-
-		if (conv->i.mantisa == 0)
-			conv->i.sign = 0;
+		createSub(&x, exponent);
+		conv->i.exponent = 0;
 	}
 	else {
 		conv->i.exponent = exponent;
@@ -167,19 +201,61 @@ double exp(double x) /* TODO - not tested */
 	return res;
 }
 
-#if 0
+
+/* Uses ln(x) = log2(x) / log2(e) and
+ * log2(x) = log2(M * 2^E) = log2(M) + E identities
+ * WARNING: Assumes IEEE 754 double-precision binary floating-point format */
 double log(double x)
 {
-	return 0;
+	conv_t *conv = (conv_t *)&x;
+	int exp = 0;
+	u32 tmp;
+
+	if (x < 0) {
+		/* TODO errno EDOM */
+		return NAN;
+	}
+	else if (x == 0) {
+		/* TODO errno ERANGE */
+		return -HUGE_VAL;
+	}
+	else if (x == 1) {
+		return 0.0;
+	}
+
+	exp = conv->i.exponent - 1023;
+
+	if (conv->i.exponent == 0)
+		normalizeSub(&x, &exp);
+
+	tmp = conv->i.mantisa >> 21;
+	if (conv->i.mantisa & 0x1fffff)
+		++tmp;
+	tmp |= (1 << 31);
+	tmp = log2(tmp);
+	conv->i.mantisa = (u64)tmp << 21;
+
+	normalizeSub(&x, &exp);
+
+	if (1023 + exp <= 0) {
+		createSub(&x, exp + conv->i.exponent);
+		conv->i.exponent = 0;
+	}
+	else {
+		conv->i.exponent = 1023;
+	}
+
+	return (x + exp - 1) / M_LOG2E;
 }
 
 
+/* Uses log10(x) = ln(x) / ln(10) identity */
 double log10(double x)
 {
-	return 0;
+	return log(x) / M_LN10;
 }
 
-
+#if 0
 double modf(double x, double* intpart)
 {
 	return 0;
