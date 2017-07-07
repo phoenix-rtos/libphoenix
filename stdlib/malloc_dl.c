@@ -14,7 +14,6 @@
  */
 
 #include ARCH
-#include <stddef.h>
 #include "stdio.h"
 #include "stdlib.h"
 #include "sys/list.h"
@@ -156,7 +155,7 @@ static void *malloc_allocSmall(size_t size)
 		*((size_t *) ((u32) chunk + chunkSize)) |= CHUNK_USED;
 
 	unlock(malloc_common.mutex);
-	return (u8 *) chunk + offsetof(chunk_t, next);
+	return (void *) ((u32) chunk + 2 * sizeof(size_t) + sizeof(heap_t *));
 }
 
 

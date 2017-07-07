@@ -17,7 +17,6 @@
 #define _LIBPHOENIX_STDLIB_H_
 
 #include ARCH
-#include <stddef.h>
 
 
 typedef struct {
@@ -30,6 +29,9 @@ typedef struct {
   long int quot;
   long int rem;
 } ldiv_t;
+
+
+typedef s16 wchar_t;
 
 
 /* Converts the string pointed to, by the argument str to a floating-point number (type double). */
