@@ -255,9 +255,75 @@ double log10(double x)
 	return log(x) / M_LN10;
 }
 
-#if 0
+
 double modf(double x, double* intpart)
 {
-	return 0;
+	conv_t *conv = (conv_t *)&x;
+	double tmp = x;
+	int exp = conv->i.exponent - 1023;
+	u64 m, mask = 0xfffffffffffffLL;
+
+	if (exp > 52) {
+		*intpart = x;
+		return conv->i.sign? -0.0 : 0.0;
+	}
+	else if (exp < 0) {
+		*intpart = conv->i.sign? -0.0 : 0.0;
+		return x;
+	}
+
+	conv->i.mantisa = conv->i.mantisa & ~(mask >> exp);
+	*intpart = x;
+	x = tmp;
+
+	m = conv->i.mantisa;
+	m &= mask >> exp;
+
+	if (m == 0) {
+		return 0.0;
+	}
+
+	conv->i.mantisa = m & mask;
+	normalizeSub(&x, &exp);
+
+	conv->i.exponent = exp + 1023;
+
+	return x;
 }
-#endif
+
+
+double ceil(double x)
+{
+	double tmp;
+
+	x = modf(x, &tmp);
+
+	if (x != 0.0)
+		tmp += 1.0;
+
+	return tmp;
+}
+
+
+double floor(double x)
+{
+	double tmp;
+
+	modf(x, &tmp);
+
+	return tmp;
+}
+
+
+double fmod(double numer, double denom) /* TODO testing */
+{
+	double result, tquot;
+
+	if (denom == 0)
+		return 0.0;
+
+	modf(numer / denom, &tquot);
+	result = tquot * denom;
+
+	return numer - result;
+}
