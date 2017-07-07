@@ -83,7 +83,7 @@ static void _malloc_heapInit(heap_t *heap, size_t size)
 
 static heap_t *_malloc_heapAlloc(size_t chunkSize)
 {
-	size_t heapSize = max(chunkSize + sizeof(heap_t), SIZE_PAGE);
+	size_t heapSize = ((chunkSize + SIZE_PAGE - 1) / SIZE_PAGE) * SIZE_PAGE;
 	heap_t *heap = mmap(NULL, heapSize, PROT_WRITE, MAP_ANONYMOUS, NULL, 0);
 	if (heap == NULL)
 		return NULL;
