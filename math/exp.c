@@ -15,147 +15,7 @@
 
 #include ARCH
 #include "consts.h"
-
-
-typedef union {
-		struct {
-#ifdef __LITTLE_ENDIAN
-			u64 mantisa:52;
-			u16 exponent:11;
-			u8 sign:1;
-#else
-			u8 sign:1;
-			u16 exponent:11;
-			u64 mantisa:52;
-#endif
-		} i;
-		double d;
-} conv_t;
-
-
-static void normalizeSub(double *x, int *exp)
-{
-	conv_t *conv = (conv_t *)x;
-
-	if (conv->i.mantisa == 0)
-		return;
-
-	while (!(conv->i.mantisa & 0xffffff0000000LL)) {
-		conv->i.mantisa <<= 24;
-		*exp -= 24;
-	}
-
-	while (!(conv->i.mantisa & 0xff00000000000LL)) {
-		conv->i.mantisa <<= 8;
-		*exp -= 8;
-	}
-
-	while (!(conv->i.mantisa & 0xf000000000000LL)) {
-		conv->i.mantisa <<= 4;
-		*exp -= 4;
-	}
-
-	while (!(conv->i.mantisa & 0x8000000000000LL)) {
-		conv->i.mantisa <<= 1;
-		*exp -= 1;
-	}
-
-	/* Subnormals have explicit MSB bit, have to remove it */
-	conv->i.mantisa <<= 1;
-	*exp -= 1;
-
-	conv->i.exponent = 1;
-}
-
-
-static void createSub(double *x, int exp)
-{
-	conv_t *conv = (conv_t *)&x;
-
-	if (exp < -51) {
-		*x = 0.0;
-		return;
-	}
-	else if (exp > 0) {
-		return;
-	}
-
-	/* Subnormals have explicit MSB bit */
-	conv->i.mantisa >>= 1;
-	conv->i.mantisa |= (1LL << 52);
-	exp += 1;
-
-	if (exp <= -26) {
-		conv->i.mantisa >>= 26;
-		exp += 26;
-	}
-
-	if (exp <= -13) {
-		conv->i.mantisa >>= 13;
-		exp += 13;
-	}
-
-	if (exp <= -8) {
-		conv->i.mantisa >>= 8;
-		exp += 8;
-	}
-
-	while (exp < 0) {
-		conv->i.mantisa >>= 1;
-		++exp;
-	}
-
-	if (conv->i.mantisa == 0)
-		*x = 0.0;
-}
-
-
-static double quickPow(double x, int e)
-{
-	double res;
-	unsigned int eabs;
-
-	if (e == 0)
-		return 1.0;
-	else if (e == 1)
-		return x;
-
-	eabs = (e < 0) ? -e : e;
-	res = 1.0;
-
-	while (eabs != 0) {
-		if (eabs & 1) {
-			if (e > 0)
-				res *= x;
-			else
-				res /= x;
-		}
-		x *= x;
-		eabs >>= 1;
-	}
-
-	return res;
-}
-
-
-/* Uses Clay S. Turner's Fast Binary Logarithm Algorithm */
-static u32 log2(u32 x)
-{
-	u32 y = 0, b = 1 << 30;
-	u64 z = x;
-	int i;
-
-	for (i = 0; i < 31; ++i) {
-		z = (z * z) >> 31;
-		if (z & (2LL << 31)) {
-			z >>= 1;
-			y |= b;
-		}
-		b >>= 1;
-	}
-
-	return y;
-}
+#include "common.h"
 
 
 /* WARNING: Assumes IEEE 754 double-precision binary floating-point format */
@@ -355,7 +215,7 @@ double floor(double x)
 }
 
 
-double fmod(double numer, double denom) /* TODO testing */
+double fmod(double numer, double denom)
 {
 	double result, tquot;
 

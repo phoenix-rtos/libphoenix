@@ -16,12 +16,7 @@
 #include ARCH
 #include "../math.h"
 #include "../limits.h"
-
-
-static int isInteger(double x)
-{
-	return floor(x) == x;
-}
+#include "common.h"
 
 
 /* Uses quick powering method when base is positive and exponent is integer.
