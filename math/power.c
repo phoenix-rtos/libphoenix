@@ -44,7 +44,7 @@ double pow(double base, double exponent) /* TODO testing */
 
 	result = 1;
 
-	if (exponent > 0 && isInteger(exponent) && exponent <= UINT32_MAX) {
+	if (exponent > 0 && isInteger(exponent) && exponent <= INT_MAX) {
 		while (exp > 0) {
 			if (exp & 1) {
 				if (exponent > 0)
