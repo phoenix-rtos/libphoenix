@@ -110,6 +110,34 @@ static void createSub(double *x, int exp)
 }
 
 
+static double quickPow(double x, int e)
+{
+	double res;
+	unsigned int eabs;
+
+	if (e == 0)
+		return 1.0;
+	else if (e == 1)
+		return x;
+
+	eabs = (e < 0) ? -e : e;
+	res = 1.0;
+
+	while (eabs != 0) {
+		if (eabs & 1) {
+			if (e > 0)
+				res *= x;
+			else
+				res /= x;
+		}
+		x *= x;
+		eabs >>= 1;
+	}
+
+	return res;
+}
+
+
 /* Uses Clay S. Turner's Fast Binary Logarithm Algorithm */
 static u32 log2(u32 x)
 {
@@ -179,26 +207,6 @@ double ldexp(double x, int exp)
 	}
 
 	return x;
-}
-
-
-/* Uses Maclaurin series to calculate value of e^x */
-double exp(double x) /* TODO - not tested */
-{
-	double res, powx;
-	int strong, i;
-
-	strong = 1;
-	res = 1;
-	powx = x;
-
-	for (i = 0; i < 11; ++i) { /* TODO pick number of iterations */
-		res += powx / strong;
-		strong *= strong + 1;
-		powx *= x;
-	}
-
-	return res;
 }
 
 
@@ -289,6 +297,38 @@ double modf(double x, double* intpart)
 	conv->i.exponent = exp + 1023;
 
 	return x;
+}
+
+
+/* Uses quick powering and Maclaurin series to calculate value of e^x */
+double exp(double x)
+{
+	double res, resi, powx, e, strong;
+	int i;
+
+	if (x > 710.0)
+		return HUGE_VAL;
+
+	/* Get floor of exponent */
+	x = modf(x, &e);
+
+	/* Calculate most of the result */
+	resi = quickPow(M_E, (int)e);
+
+	/* Calculate rest of the result using Maclaurin series */
+	strong = 1.0;
+	powx = x;
+	res = 1.0;
+
+	for (i = 2; i < 13; ++i) {
+		if (powx == 0.0)
+			break;
+		res += powx / strong;
+		strong *= i;
+		powx *= x;
+	}
+
+	return res * resi;
 }
 
 
