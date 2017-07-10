@@ -17,7 +17,7 @@
 #include "consts.h"
 #include "common.h"
 
-
+#if 0
 /* Calculates value of cosine using Maclaurin series. */
 double cos(double x) /* TODO testing */
 {
@@ -83,7 +83,7 @@ double asin(double x) /* TODO testing */
 	return M_PI_2 - acos(x);
 }
 
-#if 0
+
 double atan(double x)
 {
 	return 0;
