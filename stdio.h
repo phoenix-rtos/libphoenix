@@ -21,10 +21,15 @@
 #include "stdarg.h"
 
 
-
-typedef int FILE;
-
 typedef offs_t fpos_t;
+
+
+typedef struct _FILE {
+	u32 port;
+	char *buff;
+	size_t buffsz;
+	size_t pos;
+} FILE;
 
 
 /* Closes the stream. All buffers are flushed. */
