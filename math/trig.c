@@ -15,21 +15,9 @@
 
 #include ARCH
 #include "consts.h"
+#include "common.h"
 
-
-static double trig_normalizeArg(double x) /* TODO testing */
-{
-	int k;
-
-	if (x < -M_PI || x > M_PI) {
-		k = (int)(x / (2 * M_PI));
-		x = x - k * 2 * M_PI;
-	}
-
-	return x;
-}
-
-
+#if 0
 /* Calculates value of cosine using Maclaurin series. */
 double cos(double x) /* TODO testing */
 {
@@ -95,7 +83,7 @@ double asin(double x) /* TODO testing */
 	return M_PI_2 - acos(x);
 }
 
-#if 0
+
 double atan(double x)
 {
 	return 0;

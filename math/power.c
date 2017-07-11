@@ -16,25 +16,14 @@
 #include ARCH
 #include "../math.h"
 #include "../limits.h"
+#include "common.h"
 
-
-static int isInteger(double x)
-{
-	return floor(x) == x;
-}
-
-
-/* Uses quick powering method when base is positive and exponent is integer.
- * In other case Maclaurin series are used */
+#if 0
+/* Uses a^x = e^(x * ln(a)) identity */
 double pow(double base, double exponent) /* TODO testing */
 {
-	double loga, logapow, exppow, result;
-	unsigned int strong, i, exp = (unsigned int)exponent;
-
-	if (base < 0 && !isInteger(exponent)) {
-		/* TODO: errno EDOM */
-		return NAN;
-	}
+	double res;
+	int e;
 
 	if (base == 0 && exponent == 0) {
 		/* TODO: errno EDOM */
@@ -47,36 +36,32 @@ double pow(double base, double exponent) /* TODO testing */
 	if (exponent == 0)
 		return 1.0;
 
-	result = 1;
+	if (base < 0) {
+		if (!isInteger(exponent)) {
+			/* TODO: errno EDOM */
+			return NAN;
+		}
 
-	if (exponent > 0 && isInteger(exponent) && exponent <= UINT32_MAX) {
-		while (exp > 0) {
-			if (exp & 1) {
-				if (exponent > 0)
-					result *= base;
-				else
-					result /= base;
-			}
-			base *= base;
-			exp >>= 1;
+		res = 1.0;
+
+		while (exponent != 0.0) {
+			if (exponent > INT_MAX)
+				e = INT_MAX;
+			else if (exponent < INT_MIN)
+				e = INT_MIN;
+			else
+				e = (int)exponent;
+
+			res *= quickPow(base, e);
+			exponent -= e;
 		}
 	}
 	else {
-		loga = log(base);
-		logapow = loga;
-		exppow = exponent;
-		strong = 2;
-
-		for (i = 0; i < 9; ++i) { /* TODO pick number of iterations */
-			result += logapow * exppow / strong;
-
-			logapow = logapow * loga;
-			exppow = exppow * exponent;
-			strong = strong * (i + 3);
-		}
+		exponent *= log(base);
+		res = exp(exponent);
 	}
 
-	return result;
+	return res;
 }
 
 
@@ -102,3 +87,4 @@ double sqrt(double x) /* TODO testing */
 
 	return y;
 }
+#endif

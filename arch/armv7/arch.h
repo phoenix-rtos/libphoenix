@@ -64,6 +64,7 @@ typedef u32 handle_t;
 
 
 #include "string.h"
+#include "limits.h"
 
 
 #endif
