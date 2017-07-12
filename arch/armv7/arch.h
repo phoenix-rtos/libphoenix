@@ -66,5 +66,6 @@ typedef u32 handle_t;
 #include "string.h"
 #include "limits.h"
 
+#define SIZE_PAGE 0x100
 
 #endif
