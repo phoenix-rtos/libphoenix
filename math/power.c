@@ -18,22 +18,22 @@
 #include "../limits.h"
 #include "common.h"
 
-#if 0
 /* Uses a^x = e^(x * ln(a)) identity */
-double pow(double base, double exponent) /* TODO testing */
+double pow(double base, double exponent)
 {
-	double res;
+	double res = 1.0;
 	int e;
 
-	if (base == 0 && exponent == 0) {
-		/* TODO: errno EDOM */
-		return NAN;
+	if (base == 0.0) {
+		if (exponent == 0.0) {
+			/* TODO: errno EDOM */
+			return NAN;
+		}
+		else {
+			return 0.0;
+		}
 	}
-
-	if (base == 0)
-		return 0.0;
-
-	if (exponent == 0)
+	else if (exponent == 0.0)
 		return 1.0;
 
 	if (base < 0) {
@@ -41,8 +41,6 @@ double pow(double base, double exponent) /* TODO testing */
 			/* TODO: errno EDOM */
 			return NAN;
 		}
-
-		res = 1.0;
 
 		while (exponent != 0.0) {
 			if (exponent > INT_MAX)
@@ -64,7 +62,7 @@ double pow(double base, double exponent) /* TODO testing */
 	return res;
 }
 
-
+#if 0
 /* Calculates value of square root using Newtons method to
  * solve f(y) = y^2 - x = 0 for y, where x is input value */
 double sqrt(double x) /* TODO testing */

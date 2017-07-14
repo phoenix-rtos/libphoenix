@@ -168,13 +168,14 @@ int isInteger(double x)
 	conv_t *conv = (conv_t *)&x;
 	int exp = conv->i.exponent - 1023;
 	u64 mask = 0xfffffffffffffLL;
+	u64 m;
 
 	if (exp > 52)
 		return x;
 	else if (exp < 0)
 		return conv->i.sign? -0.0 : 0.0;
 
-	conv->i.mantisa = conv->i.mantisa & ~(mask >> exp);
+	m = conv->i.mantisa & ~(mask >> exp);
 
-	return x;
+	return m == conv->i.mantisa;
 }
