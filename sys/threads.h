@@ -19,13 +19,13 @@
 #include ARCH
 
 
-extern int mutex(handle_t *h);
+static inline int mutex(handle_t *h) { return 0; }
 
 
-extern int lock(handle_t h);
+static inline int lock(handle_t h) { return 0; }
 
 
-extern int unlock(handle_t h);
+static inline int unlock(handle_t h) { return 0; }
 
 
 extern void beginthread(void (*start)(void *), unsigned int priority, void *arg);

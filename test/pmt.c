@@ -11,17 +11,6 @@
 
 /* #include "libphoenix.h" */
 
-int mutex(handle_t *h) {
-	return 0;
-}
-
-int lock(handle_t h) {
-	return 0;
-}
-
-int unlock(handle_t h) {
-	return 0;
-}
 
 int main(int argc, char *argv[]) {
 	int i, ops, count, size, max_size;
