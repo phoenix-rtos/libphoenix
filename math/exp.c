@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * exp, frexp, ldexp, log, log10, modf
+ * exp, frexp, ldexp, log, log10, modf, ceil, floor, fmod, fabs
  *
  * Copyright 2017 Phoenix Systems
  * Author: Aleksander Kaminski
@@ -226,4 +226,10 @@ double fmod(double numer, double denom)
 	result = tquot * denom;
 
 	return numer - result;
+}
+
+
+double fabs(double x)
+{
+	return x < 0.0 ? -x : x;
 }
