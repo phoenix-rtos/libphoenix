@@ -68,14 +68,10 @@
 #define M_SQRT1_2 0.70710678118654752440
 
 
-# define HUGE_VAL \
-	(((union { unsigned long long __l; double __d; }) \
-	{ __l: 0x7ff0000000000000ULL }).__d)
+#define HUGE_VAL __builtin_huge_val()
 
 
-#define NAN \
-	(((union { unsigned long __l; float __d; }) \
-	{ __l: 0x7fc00000UL }).__d)
+#define NAN __builtin_nanf("")
 
 
 #endif
