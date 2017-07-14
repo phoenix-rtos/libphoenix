@@ -231,5 +231,9 @@ double fmod(double numer, double denom)
 
 double fabs(double x)
 {
-	return x < 0.0 ? -x : x;
+	conv_t *conv = (conv_t *)&x;
+
+	conv->i.sign = 0;
+
+	return x;
 }

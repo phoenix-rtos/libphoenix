@@ -18,6 +18,7 @@
 #include "../limits.h"
 #include "common.h"
 
+
 /* Uses a^x = e^(x * ln(a)) identity */
 double pow(double base, double exponent)
 {
@@ -61,6 +62,7 @@ double pow(double base, double exponent)
 
 	return res;
 }
+
 
 /* Uses sqrt(x) = x^(1/2) indentity */
 double sqrt(double x) /* TODO testing */
