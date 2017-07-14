@@ -62,27 +62,16 @@ double pow(double base, double exponent)
 	return res;
 }
 
-#if 0
-/* Calculates value of square root using Newtons method to
- * solve f(y) = y^2 - x = 0 for y, where x is input value */
+/* Uses sqrt(x) = x^(1/2) indentity */
 double sqrt(double x) /* TODO testing */
 {
-	double y;
-	int i;
-
-	if (x < 0) {
+	if (x < 0.0) {
 		/* TODO: errno EDOM */
-		return NAN;
+		return -NAN;
+	}
+	else if (x == 0.0) {
+		return 0.0;
 	}
 
-	y = (x > 1) ? x / 2 : x * 2;
-
-	if (y == 0)
-		return 0;
-
-	for (i = 0; i < 12; ++i) /* TODO pick number of iterations */
-		y = y - ((y * y - x) / (2 * y));
-
-	return y;
+	return pow(x, 0.5);
 }
-#endif
