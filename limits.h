@@ -94,13 +94,13 @@
 #endif
 
 
-#ifndef LONG_LONG_MIN
-#define LONG_LONG_MIN LONG_MIN
+#ifndef LONG_LONG_MAX
+#define LONG_LONG_MAX 0x7fffffffffffffffll
 #endif
 
 
-#ifndef LONG_LONG_MAX
-#define LONG_LONG_MAX LONG_MAX
+#ifndef LONG_LONG_MIN
+#define LONG_LONG_MIN (-LONG_LONG_MAX - 1)
 #endif
 
 
@@ -108,13 +108,9 @@
 #define ULONG_MAX UINT_MAX
 #endif
 
-#ifndef ULONG_LONG_MIN
-#define ULONG_LONG_MIN ULONG_MIN
-#endif
-
 
 #ifndef ULONG_LONG_MAX
-#define ULONG_LONG_MAX ULONG_MAX
+#define ULONG_LONG_MAX (LONG_LONG_MAX * 2ULL + 1)
 #endif
 
 
