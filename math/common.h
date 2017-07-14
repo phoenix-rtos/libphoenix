@@ -46,9 +46,6 @@ extern double quickPow(double x, int e);
 extern u32 log2(u32 x);
 
 
-extern double trig_normalizeArg(double x);
-
-
 extern int isInteger(double x);
 
 

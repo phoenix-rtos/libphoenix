@@ -150,19 +150,6 @@ u32 log2(u32 x)
 }
 
 
-double trig_normalizeArg(double x) /* TODO testing */
-{
-	int k;
-
-	if (x < -M_PI || x > M_PI) {
-		k = (int)(x / (2 * M_PI));
-		x = x - k * 2 * M_PI;
-	}
-
-	return x;
-}
-
-
 int isInteger(double x)
 {
 	conv_t *conv = (conv_t *)&x;
