@@ -22,12 +22,13 @@
 #include "sys/mman.h"
 
 
-#define CHUNK_USED                  1
-#define CHUNK_MIN_SIZE              16
-#define CHUNK_SMALLBIN_MAX_SIZE     248
+#define CHUNK_USED					1
+#define CHUNK_MIN_SIZE				16
+#define CHUNK_SMALLBIN_MAX_SIZE		248
 
-#define CEIL(value, size)           ((((value) + (size) - 1) / (size)) * (size))
-#define FLOOR(value, size)          (((value) / (size)) * (size))
+#define CEIL(value, size)			((((value) + (size) - 1) / (size)) * (size))
+#define FLOOR(value, size)			(((value) / (size)) * (size))
+
 
 typedef struct _heap_t {
 	size_t size;
@@ -200,7 +201,6 @@ static void *malloc_allocSmall(size_t size)
 	chunk_t *chunk;
 	heap_t *heap;
 
-	/* Find first chunk suitable for size. */
 	if (binmap)
 		idx = __builtin_ctz(binmap);
 	else if (malloc_common.lbinmap)
@@ -219,7 +219,6 @@ static void *malloc_allocSmall(size_t size)
 	_malloc_chunkRemove(chunk);
 	chunk->heap->freesz -= chunkSize;
 
-	/* Mark chunk as used. */
 	chunk->size |= CHUNK_USED;
 	if ((u32) chunk + chunkSize + sizeof(size_t) <= (u32) chunk->heap + chunk->heap->size)
 		((chunk_t *) ((u32) chunk + chunkSize))->prevSize = chunk->size;
