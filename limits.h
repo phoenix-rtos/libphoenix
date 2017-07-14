@@ -94,8 +94,27 @@
 #endif
 
 
+#ifndef LONG_LONG_MIN
+#define LONG_LONG_MIN LONG_MIN
+#endif
+
+
+#ifndef LONG_LONG_MAX
+#define LONG_LONG_MAX LONG_MAX
+#endif
+
+
 #ifndef ULONG_MAX
 #define ULONG_MAX UINT_MAX
+#endif
+
+#ifndef ULONG_LONG_MIN
+#define ULONG_LONG_MIN ULONG_MIN
+#endif
+
+
+#ifndef ULONG_LONG_MAX
+#define ULONG_LONG_MAX ULONG_MAX
 #endif
 
 

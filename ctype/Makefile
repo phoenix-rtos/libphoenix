@@ -5,7 +5,7 @@
 # Copyright 2001, 2005-2006 Pawel Pisarczyk
 #
 
-SRCS = printf.c sprintf.c format.c scanf.c
+SRCS = ctype.c
 OBJS = $(SRCS:.c=.o)
 
 

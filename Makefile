@@ -14,7 +14,7 @@ TARGET = ia32-qemu
 VERSION = 0.2
 SRCDIR := $(CURDIR)
 
-SUBSYSTEMS = math stdio stdlib string sys
+SUBSYSTEMS = math stdio stdlib string sys ctype
 
 LIB = libphoenix.a
 

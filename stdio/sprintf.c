@@ -23,9 +23,9 @@ typedef struct _sprintf_ctx_t {
 } sprintf_ctx_t;
 
 
-static void sprintf_feed(void *b, char c)
+static void sprintf_feed(void *context, char c)
 {
-	sprintf_ctx_t* ctx = (sprintf_ctx_t *)b;
+	sprintf_ctx_t* ctx = (sprintf_ctx_t *)context;
 
 	ctx->buff[ctx->n++] = c;
 }

@@ -5,7 +5,7 @@
 # Author: Pawel Pisarczyk
 #
 
-SRCS = strtoul.c malloc_dl.c
+SRCS = strtoul.c strtoull.c malloc_dl.c
 OBJS = $(SRCS:.c=.o)
 
 

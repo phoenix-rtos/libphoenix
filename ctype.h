@@ -64,7 +64,7 @@ extern int isxdigit(int c);
 
 
 /* This function converts uppercase letters to lowercase. */
-extern int tolower(int c)
+extern int tolower(int c);
 
 
 /* This function converts lowercase letters to uppercase. */

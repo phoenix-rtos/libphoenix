@@ -25,9 +25,9 @@ typedef struct _printf_ctx_t {
 } printf_ctx_t;
 
 
-static void printf_feed(void *b, char c)
+static void printf_feed(void *context, char c)
 {
-	printf_ctx_t* ctx = (printf_ctx_t *)b;
+	printf_ctx_t* ctx = (printf_ctx_t *)context;
 
 	ctx->buff[ctx->n++] = c;
 	ctx->buff[ctx->n] = '\0';

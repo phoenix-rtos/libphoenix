@@ -58,6 +58,14 @@ extern long int strtol(const char *str, char **endptr, int base);
 extern unsigned long int strtoul(const char *str, char **endptr, int base);
 
 
+/* Converts the string pointed to, by the argument str to a long long integer (type long long int). */
+extern long long int strtoll(const char *nptr, char **endptr, int base);
+
+
+/* Converts the string pointed to, by the argument str to an unsigned long long integer (type unsigned long long int). */
+extern unsigned long long int strtoull(const char *nptr, char **endptr, int base);
+
+
 /* Allocates the requested memory and returns a pointer to it. */
 extern void *calloc(size_t nitems, size_t size);
 
