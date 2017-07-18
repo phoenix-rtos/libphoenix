@@ -14,8 +14,8 @@
  */
 
 #include ARCH
-#include "stdio.h"
 #include "stdlib.h"
+#include "limits.h"
 #include "sys/list.h"
 #include "sys/rb.h"
 #include "sys/threads.h"
@@ -310,6 +310,22 @@ void *malloc(size_t size)
 		ptr = malloc_allocLarge(size);
 	unlock(malloc_common.mutex);
 
+	return ptr;
+}
+
+
+void *calloc(size_t nitems, size_t size)
+{
+	void *ptr;
+	u64 allocSize = nitems * size;
+
+	if (allocSize > UINT_MAX)
+		return NULL;
+
+	if ((ptr = malloc((size_t) allocSize)) == NULL)
+		return NULL;
+
+	memset(ptr, 0, (size_t) allocSize);
 	return ptr;
 }
 
