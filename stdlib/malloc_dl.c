@@ -66,10 +66,14 @@ static int malloc_cmp(rbnode_t *n1, rbnode_t *n2)
 	chunk_t *e1 = lib_treeof(chunk_t, node, n1);
 	chunk_t *e2 = lib_treeof(chunk_t, node, n2);
 
-	if (e1 == e2)
-		return 0;
+	if (e1->size == e2->size) {
+		if (e1 == e2)
+			return 0;
 
-	return (e1 > e2) ? 1 : -1;
+		return (e1 > e2) ? 1 : -1;
+	}
+
+	return (e1->size > e2->size) ? 1 : -1;
 }
 
 
@@ -196,7 +200,7 @@ static void *malloc_allocSmall(size_t size)
 {
 	unsigned int idx = malloc_getsidx(size);
 	unsigned int binmap = malloc_common.sbinmap & ~((1 << idx) - 1);
-	size_t chunkSize = idx << 3;
+	size_t targetSize = idx << 3;
 	size_t idxSize;
 	chunk_t *chunk;
 	heap_t *heap;
@@ -215,13 +219,13 @@ static void *malloc_allocSmall(size_t size)
 		_malloc_chunkSplit(chunk, idxSize);
 	}
 
-	_malloc_chunkSplit(chunk, chunkSize);
+	_malloc_chunkSplit(chunk, targetSize);
 	_malloc_chunkRemove(chunk);
-	chunk->heap->freesz -= chunkSize;
+	chunk->heap->freesz -= chunk->size;
 
 	chunk->size |= CHUNK_USED;
-	if ((u32) chunk + chunkSize + sizeof(size_t) <= (u32) chunk->heap + chunk->heap->size)
-		((chunk_t *) ((u32) chunk + chunkSize))->prevSize = chunk->size;
+	if ((u32) chunk + chunk->size + sizeof(size_t) <= (u32) chunk->heap + chunk->heap->size)
+		((chunk_t *) ((u32) chunk + chunk->size))->prevSize = chunk->size;
 
 	return (void *) ((u32) chunk + 2 * sizeof(size_t) + sizeof(heap_t *));
 }
