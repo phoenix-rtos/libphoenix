@@ -282,10 +282,10 @@ static void *malloc_allocLarge(size_t size)
 {
 	/* Lookup table to speed-up operation reverse to malloc_getlidx(). */
 	static const size_t lookup[32] = {
-		    383,     511,     767,    1023,    1535,    2047,     3071,       4095,
-		   6143,    8191,   12287,   16383,   24575,   32767,    49151,      65535,
-		  98303,  131071,  196607,  262143,  393215,  524287,   786431,    1048575,
-		1572863, 2097151, 3145727, 4194303, 6291455, 8388607, 12582911, 4294967295
+		   0x17f,    0x1ff,    0x2ff,    0x3ff,    0x5ff,    0x7ff,    0xbff,      0xfff,
+		  0x17ff,   0x1fff,   0x2fff,   0x3fff,   0x5fff,   0x7fff,   0xbfff,     0xffff,
+		 0x17fff,  0x1ffff,  0x2ffff,  0x3ffff,  0x5ffff,  0x7ffff,  0xbffff,    0xfffff,
+		0x17ffff, 0x1fffff, 0x2fffff, 0x3fffff, 0x5fffff, 0x7fffff, 0xbfffff, 0xffffffff
 	};
 
 	unsigned int binmap = malloc_common.lbinmap;
