@@ -122,6 +122,36 @@ static inline unsigned int malloc_getlidx(size_t size)
 }
 
 
+static inline int _malloc_chunkIsFirst(chunk_t *chunk)
+{
+	return (chunk->prevSize == 0);
+}
+
+
+static inline int _malloc_chunkIsLast(chunk_t *chunk)
+{
+	return ((u32) chunk + chunk->size + sizeof(chunk_t) <= (u32) chunk->heap + chunk->heap->size);
+}
+
+
+static inline chunk_t *_malloc_chunkPrev(chunk_t *chunk)
+{
+	if (_malloc_chunkIsFirst(chunk))
+		return NULL;
+
+	return (chunk_t *) ((u32) chunk - (chunk->prevSize & ~CHUNK_USED));
+}
+
+
+static inline chunk_t *_malloc_chunkNext(chunk_t *chunk)
+{
+	if (_malloc_chunkIsLast(chunk))
+		return NULL;
+
+	return (chunk_t *) ((u32) chunk + chunk->size);
+}
+
+
 static void _malloc_chunkInit(chunk_t *chunk, heap_t *heap, size_t prevSize, size_t size)
 {
 	chunk->prevSize = prevSize;
@@ -194,6 +224,35 @@ static void _malloc_chunkSplit(chunk_t *chunk, size_t size)
 
 static void _malloc_chunkJoin(chunk_t *chunk)
 {
+	chunk_t *it = chunk;
+	chunk_t *sibling;
+
+	/* Join with the previous chunks. */
+	while (!_malloc_chunkIsFirst(it) && (it->prevSize & CHUNK_USED) == 0) {
+		sibling = _malloc_chunkPrev(it);
+		_malloc_chunkRemove(sibling);
+		_malloc_chunkRemove(it);
+
+		sibling->size += it->size;
+		_malloc_chunkAdd(sibling);
+		it = sibling;
+	}
+
+	if (!_malloc_chunkIsLast(it))
+		_malloc_chunkNext(it)->prevSize = it->size;
+
+	/* Join with the following chunks. */
+	while (!_malloc_chunkIsLast(it) && (_malloc_chunkNext(it)->size & CHUNK_USED) == 0) {
+		sibling = _malloc_chunkNext(it);
+		_malloc_chunkRemove(it);
+		_malloc_chunkRemove(sibling);
+
+		it->size += sibling->size;
+		_malloc_chunkAdd(it);
+	}
+
+	if (!_malloc_chunkIsFirst(it))
+		_malloc_chunkNext(it)->prevSize = it->size;
 }
 
 
@@ -257,8 +316,8 @@ static void *malloc_allocLarge(size_t size)
 	chunk->heap->freesz -= size;
 
 	chunk->size |= CHUNK_USED;
-	if ((u32) chunk + chunk->size + sizeof(size_t) <= (u32) chunk->heap + chunk->heap->size)
-		((chunk_t *) ((u32) chunk + chunk->size))->prevSize = chunk->size;
+	if (!_malloc_chunkIsLast(chunk))
+		_malloc_chunkNext(chunk)->prevSize = chunk->size;
 
 	return (void *) ((u32) chunk + 2 * sizeof(size_t) + sizeof(heap_t *));
 }
@@ -292,8 +351,8 @@ static void *malloc_allocSmall(size_t size)
 	chunk->heap->freesz -= chunk->size;
 
 	chunk->size |= CHUNK_USED;
-	if ((u32) chunk + chunk->size + sizeof(size_t) <= (u32) chunk->heap + chunk->heap->size)
-		((chunk_t *) ((u32) chunk + chunk->size))->prevSize = chunk->size;
+	if (!_malloc_chunkIsLast(chunk))
+		_malloc_chunkNext(chunk)->prevSize = chunk->size;
 
 	return (void *) ((u32) chunk + 2 * sizeof(size_t) + sizeof(heap_t *));
 }
@@ -348,8 +407,8 @@ void free(void *ptr)
 	chunk = (chunk_t *) ((u32) ptr + 2 * sizeof(size_t) + sizeof(heap_t *));
 	heap = chunk->heap;
 	chunk->size &= ~CHUNK_USED;
-	if ((u32) chunk + chunk->size + sizeof(size_t) <= (u32) chunk->heap + chunk->heap->size)
-		((chunk_t *) ((u32) chunk + chunk->size))->prevSize = chunk->size;
+	if (!_malloc_chunkIsLast(chunk))
+		_malloc_chunkNext(chunk)->prevSize = chunk->size;
 
 	heap->freesz += chunk->size;
 	_malloc_chunkAdd(chunk);
