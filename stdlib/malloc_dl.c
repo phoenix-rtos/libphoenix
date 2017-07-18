@@ -192,6 +192,11 @@ static void _malloc_chunkSplit(chunk_t *chunk, size_t size)
 }
 
 
+static void _malloc_chunkJoin(chunk_t *chunk)
+{
+}
+
+
 static void _malloc_heapInit(heap_t *heap, size_t size)
 {
 	heap->size = size;
@@ -252,8 +257,8 @@ static void *malloc_allocLarge(size_t size)
 	chunk->heap->freesz -= size;
 
 	chunk->size |= CHUNK_USED;
-	if ((u32) chunk + size + sizeof(size_t) <= (u32) chunk->heap + chunk->heap->size)
-		((chunk_t *) ((u32) chunk + size))->prevSize = chunk->size;
+	if ((u32) chunk + chunk->size + sizeof(size_t) <= (u32) chunk->heap + chunk->heap->size)
+		((chunk_t *) ((u32) chunk + chunk->size))->prevSize = chunk->size;
 
 	return (void *) ((u32) chunk + 2 * sizeof(size_t) + sizeof(heap_t *));
 }
@@ -327,6 +332,36 @@ void *calloc(size_t nitems, size_t size)
 
 	memset(ptr, 0, (size_t) allocSize);
 	return ptr;
+}
+
+
+void free(void *ptr)
+{
+	chunk_t *chunk;
+	heap_t *heap;
+
+	if (ptr == NULL)
+		return;
+
+	lock(malloc_common.mutex);
+
+	chunk = (chunk_t *) ((u32) ptr + 2 * sizeof(size_t) + sizeof(heap_t *));
+	heap = chunk->heap;
+	chunk->size &= ~CHUNK_USED;
+	if ((u32) chunk + chunk->size + sizeof(size_t) <= (u32) chunk->heap + chunk->heap->size)
+		((chunk_t *) ((u32) chunk + chunk->size))->prevSize = chunk->size;
+
+	heap->freesz += chunk->size;
+	_malloc_chunkAdd(chunk);
+	_malloc_chunkJoin(chunk);
+
+	if (heap->freesz == heap->spaceSize) {
+		chunk = (chunk_t *) heap->space;
+		_malloc_chunkRemove(chunk);
+		munmap(heap, heap->size);
+	}
+
+	unlock(malloc_common.mutex);
 }
 
 
