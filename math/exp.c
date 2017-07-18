@@ -18,7 +18,6 @@
 #include "common.h"
 
 
-/* WARNING: Assumes IEEE 754 double-precision binary floating-point format */
 double frexp(double x, int* exp)
 {
 	conv_t *conv = (conv_t *)&x;
@@ -38,7 +37,6 @@ double frexp(double x, int* exp)
 }
 
 
-/* WARNING: Assumes IEEE 754 double-precision binary floating-point format */
 double ldexp(double x, int exp)
 {
 	conv_t *conv = (conv_t *)&x;
@@ -71,8 +69,7 @@ double ldexp(double x, int exp)
 
 
 /* Uses ln(x) = log2(x) / log2(e) and
- * log2(x) = log2(M * 2^E) = log2(M) + E identities
- * WARNING: Assumes IEEE 754 double-precision binary floating-point format */
+ * log2(x) = log2(M * 2^E) = log2(M) + E identities */
 double log(double x)
 {
 	conv_t *conv = (conv_t *)&x;

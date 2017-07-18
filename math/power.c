@@ -65,7 +65,7 @@ double pow(double base, double exponent)
 
 
 /* Uses sqrt(x) = x^(1/2) indentity */
-double sqrt(double x) /* TODO testing */
+double sqrt(double x)
 {
 	if (x < 0.0) {
 		/* TODO: errno EDOM */

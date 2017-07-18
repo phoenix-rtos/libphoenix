@@ -158,9 +158,9 @@ int isInteger(double x)
 	u64 m;
 
 	if (exp > 52)
-		return x;
+		return 1;
 	else if (exp < 0)
-		return conv->i.sign? -0.0 : 0.0;
+		return 0;
 
 	m = conv->i.mantisa & ~(mask >> exp);
 
