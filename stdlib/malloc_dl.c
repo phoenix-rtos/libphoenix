@@ -77,6 +77,30 @@ static int malloc_cmp(rbnode_t *n1, rbnode_t *n2)
 }
 
 
+static int malloc_find(rbnode_t *n1, rbnode_t *n2)
+{
+	chunk_t *e1 = lib_treeof(chunk_t, node, n1);
+	chunk_t *e1_left = lib_treeof(chunk_t, node, n1->left);
+	chunk_t *e1_right = lib_treeof(chunk_t, node, n1->right);
+	chunk_t *e2 = lib_treeof(chunk_t, node, n2);
+
+	if (e1->size == e2->size)
+		return 0;
+
+	if (e1->size > e2->size) {
+		if (e1_left != NULL && e1_left->size >= e2->size)
+			return 1;
+
+		return 0;
+	}
+
+	if (e1_right != NULL && e1_right->size >= e2->size)
+		return -1;
+
+	return 0;
+}
+
+
 static inline unsigned int malloc_getsidx(size_t size)
 {
 	return (size + 7) >> 3;
@@ -192,7 +216,46 @@ static heap_t *_malloc_heapAlloc(size_t size)
 
 static void *malloc_allocLarge(size_t size)
 {
-	return NULL;
+	/* Lookup table to speed-up operation reverse to malloc_getlidx(). */
+	static const size_t lookup[32] = {
+			383,     511,     767,    1023,    1535,    2047,     3071,       4095,
+			6143,    8191,   12287,   16383,   24575,   32767,    49151,      65535,
+			98303,  131071,  196607,  262143,  393215,  524287,   786431,    1048575,
+			1572863, 2097151, 3145727, 4194303, 6291455, 8388607, 12582911, 4294967295
+	};
+
+	unsigned int binmap = malloc_common.lbinmap;
+	unsigned int idx = malloc_getlidx(size);
+	heap_t *heap;
+	chunk_t *chunk = NULL;
+	chunk_t t;
+	t.size = size;
+
+	while (idx < 32 && binmap != 0) {
+		chunk = lib_treeof(chunk_t, node, lib_rbFindEx(malloc_common.lbins[idx].root, &t.node, malloc_find));
+		if (chunk != NULL)
+			break;
+
+		binmap = malloc_common.lbinmap & ~((1 << ++idx) - 1);
+	}
+
+	if (chunk == NULL) {
+		idx = malloc_getlidx(size);
+		if ((heap = _malloc_heapAlloc(lookup[idx])) == NULL)
+			return NULL;
+
+		chunk = (chunk_t *) heap->space;
+	}
+
+	_malloc_chunkSplit(chunk, size);
+	_malloc_chunkRemove(chunk);
+	chunk->heap->freesz -= size;
+
+	chunk->size |= CHUNK_USED;
+	if ((u32) chunk + size + sizeof(size_t) <= (u32) chunk->heap + chunk->heap->size)
+		((chunk_t *) ((u32) chunk + size))->prevSize = chunk->size;
+
+	return (void *) ((u32) chunk + 2 * sizeof(size_t) + sizeof(heap_t *));
 }
 
 
