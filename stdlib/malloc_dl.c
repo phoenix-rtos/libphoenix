@@ -148,7 +148,7 @@ static inline chunk_t *_malloc_chunkNext(chunk_t *chunk)
 	if (_malloc_chunkIsLast(chunk))
 		return NULL;
 
-	return (chunk_t *) ((u32) chunk + chunk->size);
+	return (chunk_t *) ((u32) chunk + (chunk->size & ~CHUNK_USED));
 }
 
 
@@ -209,15 +209,14 @@ static void _malloc_chunkSplit(chunk_t *chunk, size_t size)
 		return;
 
 	sibling = (chunk_t *) ((u32) chunk + size);
-	_malloc_chunkInit(sibling, chunk->heap, size, FLOOR(chunk->size - size, 8));
-
-	_malloc_chunkRemove(chunk);
-	chunk->size = size;
-	_malloc_chunkAdd(chunk);
+	_malloc_chunkInit(sibling, chunk->heap, size, chunk->size - size);
 
 	if (sibling->size < CHUNK_MIN_SIZE)
 		return;
 
+	_malloc_chunkRemove(chunk);
+	chunk->size = size;
+	_malloc_chunkAdd(chunk);
 	_malloc_chunkAdd(sibling);
 }
 
