@@ -128,9 +128,9 @@ static inline int _malloc_chunkIsFirst(chunk_t *chunk)
 }
 
 
-static inline int _malloc_chunkIsLast(chunk_t *chunk)
+static inline int _malloc_chunkIsLast(chunk_t *chunk, size_t size)
 {
-	return ((u32) chunk + chunk->size + sizeof(chunk_t) > (u32) chunk->heap + chunk->heap->size);
+	return ((u32) chunk + size + sizeof(chunk_t) > (u32) chunk->heap + chunk->heap->size);
 }
 
 
@@ -145,7 +145,7 @@ static inline chunk_t *_malloc_chunkPrev(chunk_t *chunk)
 
 static inline chunk_t *_malloc_chunkNext(chunk_t *chunk)
 {
-	if (_malloc_chunkIsLast(chunk))
+	if (_malloc_chunkIsLast(chunk, chunk->size))
 		return NULL;
 
 	return (chunk_t *) ((u32) chunk + (chunk->size & ~CHUNK_USED));
@@ -208,6 +208,9 @@ static void _malloc_chunkSplit(chunk_t *chunk, size_t size)
 	if (chunk->size == size)
 		return;
 
+	if (_malloc_chunkIsLast(chunk, size))
+		return;
+
 	sibling = (chunk_t *) ((u32) chunk + size);
 	_malloc_chunkInit(sibling, chunk->heap, size, chunk->size - size);
 
@@ -237,11 +240,11 @@ static void _malloc_chunkJoin(chunk_t *chunk)
 		it = sibling;
 	}
 
-	if (!_malloc_chunkIsLast(it))
+	if (!_malloc_chunkIsLast(it, it->size))
 		_malloc_chunkNext(it)->prevSize = it->size;
 
 	/* Join with the following chunks. */
-	while (!_malloc_chunkIsLast(it) && (_malloc_chunkNext(it)->size & CHUNK_USED) == 0) {
+	while (!_malloc_chunkIsLast(it, it->size) && (_malloc_chunkNext(it)->size & CHUNK_USED) == 0) {
 		sibling = _malloc_chunkNext(it);
 		_malloc_chunkRemove(it);
 		_malloc_chunkRemove(sibling);
@@ -315,7 +318,7 @@ static void *malloc_allocLarge(size_t size)
 	chunk->heap->freesz -= size;
 
 	chunk->size |= CHUNK_USED;
-	if (!_malloc_chunkIsLast(chunk))
+	if (!_malloc_chunkIsLast(chunk, chunk->size))
 		_malloc_chunkNext(chunk)->prevSize = chunk->size;
 
 	return (void *) ((u32) chunk + 2 * sizeof(size_t) + sizeof(heap_t *));
@@ -350,7 +353,7 @@ static void *malloc_allocSmall(size_t size)
 	chunk->heap->freesz -= chunk->size;
 
 	chunk->size |= CHUNK_USED;
-	if (!_malloc_chunkIsLast(chunk))
+	if (!_malloc_chunkIsLast(chunk, chunk->size))
 		_malloc_chunkNext(chunk)->prevSize = chunk->size;
 
 	return (void *) ((u32) chunk + 2 * sizeof(size_t) + sizeof(heap_t *));
@@ -406,7 +409,7 @@ void free(void *ptr)
 	chunk = (chunk_t *) ((u32) ptr - 2 * sizeof(size_t) - sizeof(heap_t *));
 	heap = chunk->heap;
 	chunk->size &= ~CHUNK_USED;
-	if (!_malloc_chunkIsLast(chunk))
+	if (!_malloc_chunkIsLast(chunk, chunk->size))
 		_malloc_chunkNext(chunk)->prevSize = chunk->size;
 
 	heap->freesz += chunk->size;
