@@ -240,9 +240,6 @@ static void _malloc_chunkJoin(chunk_t *chunk)
 		it = sibling;
 	}
 
-	if (!_malloc_chunkIsLast(it, it->size))
-		_malloc_chunkNext(it)->prevSize = it->size;
-
 	/* Join with the following chunks. */
 	while (!_malloc_chunkIsLast(it, it->size) && (_malloc_chunkNext(it)->size & CHUNK_USED) == 0) {
 		sibling = _malloc_chunkNext(it);
@@ -253,7 +250,7 @@ static void _malloc_chunkJoin(chunk_t *chunk)
 		_malloc_chunkAdd(it);
 	}
 
-	if (!_malloc_chunkIsFirst(it))
+	if (!_malloc_chunkIsLast(it, it->size))
 		_malloc_chunkNext(it)->prevSize = it->size;
 }
 
