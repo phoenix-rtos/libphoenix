@@ -130,7 +130,7 @@ static inline int _malloc_chunkIsFirst(chunk_t *chunk)
 
 static inline int _malloc_chunkIsLast(chunk_t *chunk)
 {
-	return ((u32) chunk + chunk->size + sizeof(chunk_t) <= (u32) chunk->heap + chunk->heap->size);
+	return ((u32) chunk + chunk->size + sizeof(chunk_t) > (u32) chunk->heap + chunk->heap->size);
 }
 
 
