@@ -404,7 +404,7 @@ void free(void *ptr)
 
 	lock(malloc_common.mutex);
 
-	chunk = (chunk_t *) ((u32) ptr + 2 * sizeof(size_t) + sizeof(heap_t *));
+	chunk = (chunk_t *) ((u32) ptr - 2 * sizeof(size_t) - sizeof(heap_t *));
 	heap = chunk->heap;
 	chunk->size &= ~CHUNK_USED;
 	if (!_malloc_chunkIsLast(chunk))
