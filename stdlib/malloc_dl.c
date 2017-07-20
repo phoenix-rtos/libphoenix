@@ -81,7 +81,6 @@ static int malloc_find(rbnode_t *n1, rbnode_t *n2)
 {
 	chunk_t *e1 = lib_treeof(chunk_t, node, n1);
 	chunk_t *e1_left = lib_treeof(chunk_t, node, n1->left);
-	chunk_t *e1_right = lib_treeof(chunk_t, node, n1->right);
 	chunk_t *e2 = lib_treeof(chunk_t, node, n2);
 
 	if (e1->size == e2->size)
