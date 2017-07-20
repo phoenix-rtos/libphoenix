@@ -6,7 +6,7 @@
  * syscalls (armv7)
  *
  * Copyright 2017 Phoenix Systems
- * Author; Pawel Pisarczyk
+ * Author; Pawel Pisarczyk, Aleksander Kaminski
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -25,7 +25,8 @@ sym:
 
 
 #define SYSCALL(sn) \
-	nop;
+	svc $sn; \
+	blx lr;
 
 
 SYSCALLDEF(debug)
@@ -41,6 +42,26 @@ SYSCALLDEF(mmap)
 SYSCALLDEF(munmap)
 	SYSCALL(2);
 .size munmap, .-munmap
+
+
+SYSCALLDEF(vfork)
+	SYSCALL(3);
+.size vfork, .-vfork
+
+
+SYSCALLDEF(execle)
+	SYSCALL(4);
+.size execle, .-execle
+
+
+SYSCALLDEF(exit)
+	SYSCALL(5);
+.size exit, .-exit
+
+
+SYSCALLDEF(usleep)
+	SYSCALL(6);
+.size usleep, .-usleep
 
 
 SYSCALLDEF(beginthread)

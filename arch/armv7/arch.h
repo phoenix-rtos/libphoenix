@@ -49,6 +49,7 @@ typedef long long s64;
 
 typedef unsigned int size_t;
 typedef unsigned long long time_t;
+typedef unsigned int useconds_t;
 
 
 typedef u64 offs_t;
