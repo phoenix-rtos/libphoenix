@@ -94,10 +94,7 @@ static int malloc_find(rbnode_t *n1, rbnode_t *n2)
 		return 0;
 	}
 
-	if (e1_right != NULL && e1_right->size >= e2->size)
-		return -1;
-
-	return 0;
+	return -1;
 }
 
 
