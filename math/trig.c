@@ -21,20 +21,18 @@
 double cos(double x)
 {
 	int i;
-	double res, xn, xpow, strong, sign = 1.0;
+	double res, xn, xpow, strong, sign = -1.0;
 
 	/* Normalize argument to -2*PI < x < 2*PI */
 	x = fmod(x, 2.0 * M_PI);
 
 	/* Normalize further to -PI < x < PI */
-	if (x > M_PI) {
+	if (x > M_PI)
 		x -= M_PI;
-		sign = -1.0;
-	}
-	else if (x < -M_PI) {
+	else if (x < -M_PI)
 		x += M_PI;
-		sign = -1.0;
-	}
+	else
+		sign = 1.0;
 
 	res = 1.0;
 	xpow = x * x;
