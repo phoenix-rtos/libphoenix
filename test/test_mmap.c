@@ -21,6 +21,7 @@
 
 void test_mmap(void)
 {
+#if 0
 	struct {
 		void *vaddr;
 		size_t size;
@@ -56,6 +57,7 @@ size = (unsigned long long)(1 << 16) * rand_r(&seed) / RAND_MAX;
 		vaddr -= 4096 * 16;
 	}
 	printf("\n");
+#endif
 }
 
 
