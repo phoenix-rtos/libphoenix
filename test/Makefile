@@ -5,11 +5,11 @@
 # Author: Pawel Pisarczyk
 #
 
-SRCS = test.c
+SRCS = test_malloc.c
 OBJS = $(SRCS:.c=.o)
 
 
-all: check $(ARCH)
+all: check test_mmap test_malloc
 
 
 check:
@@ -37,8 +37,12 @@ check:
 -include .depend
 
 
-$(ARCH): $(OBJS)
-	$(SIL)$(AR) $(ARFLAGS) $(ARCH) $(OBJS) 2>/dev/null
+test_mmap: test_mmap.o
+	$(SIL)$(LD) $(LDFLAGS) -o test_mmap test_mmap.o ../$(LIB) $(GCCLIB)
+
+
+test_malloc: test_malloc.o
+	$(SIL)$(LD) $(LDFLAGS) -o test_malloc test_malloc.o ../$(LIB) $(GCCLIB)
 
 
 depend: check
@@ -46,7 +50,7 @@ depend: check
 
 
 clean: check
-	$(SIL)rm -f core *.o $(ARCH)
+	$(SIL)rm -f core *.o test_mmap test_malloc
 
 
 .PHONY: clean

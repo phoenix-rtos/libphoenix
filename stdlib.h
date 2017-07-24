@@ -19,6 +19,9 @@
 #include ARCH
 
 
+#define RAND_MAX   2147483647
+
+
 typedef struct {
   int quot;
   int rem;
@@ -124,6 +127,10 @@ extern long int labs(long int x);
 
 /* Divides numer (numerator) by denom (denominator). */
 extern ldiv_t ldiv(long int numer, long int denom);
+
+
+/* Returns a pseudo-random number in the range of 0 to RAND_MAX (reentrant version) */
+extern int rand_r(unsigned int *seed);
 
 
 /* Returns a pseudo-random number in the range of 0 to RAND_MAX. */

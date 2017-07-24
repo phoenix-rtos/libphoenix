@@ -6,7 +6,7 @@
  * stdlib/malloc (Doug Lea)
  *
  * Copyright 2017 Phoenix Systems
- * Author: Pawel Pisarczyk
+ * Author: Jakub Sejdak
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -22,9 +22,9 @@
 #include "sys/mman.h"
 
 
-#define CHUNK_USED					1
-#define CHUNK_MIN_SIZE				16
-#define CHUNK_SMALLBIN_MAX_SIZE		248
+#define CHUNK_USED                 1
+#define CHUNK_MIN_SIZE             16
+#define CHUNK_SMALLBIN_MAX_SIZE    248
 
 #define CEIL(value, size)			((((value) + (size) - 1) / (size)) * (size))
 #define FLOOR(value, size)			(((value) / (size)) * (size))

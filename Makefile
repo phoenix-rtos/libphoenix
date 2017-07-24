@@ -39,9 +39,8 @@ ifneq (, $(findstring ia32, $(TARGET)))
 	ARFLAGS = -r
 
 	LD = $(CROSS)ld
-	LDFLAGS = -m elf_i386 -e _start --section-start .init=$(VADDR) -Ttext $(TADDR) $(LIBDIRS)
+	LDFLAGS = -m elf_i386
 	GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
- 	LIBS = $(GCCLIB)
 
 	OBJCOPY = $(CROSS)objcopy
 	OBJDUMP = $(CROSS)objdump
@@ -69,7 +68,6 @@ ifneq (, $(findstring armv7, $(TARGET)))
 	LD = $(CROSS)ld
 	LDFLAGS = -nostdlib -e _start --section-start .init=8000000 -Tbss=20000000 -z max-page-size=0x10
 	GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
-	LIBS = $(GCCLIB)
 
 	OBJCOPY = $(CROSS)objcopy
 	OBJDUMP = $(CROSS)objdump
@@ -79,10 +77,10 @@ endif
 ARCH = code.a
 ARCHS := $(shell for i in $(SUBDIRS); do echo "$$i/$(ARCH)"; done)
 
-export SIL CC CFLAGS MKDEP MKDEPFLAGS AR ARFLAGS ARCH TARGET OBJDUMP
+export SIL TARGET LIB CC CFLAGS MKDEP MKDEPFLAGS AR ARFLAGS LD GCCLIB ARCH OBJDUMP
 
 
-all: subsystems $(OBJS) $(LIB)
+all: subsystems $(OBJS) $(LIB) tests
 
 
 .c.o:
@@ -122,10 +120,22 @@ $(LIB): $(ARCHS) $(OBJS)
 	@(echo "";\
 	echo "=> libphoenix for [$(TARGET)] has been created";\
 	echo "")
+	
+
+tests:
+	@d=`pwd`;\
+	echo "\033[1;32mCOMPILE test\033[0m";\
+	if ! cd test; then\
+		exit 1;\
+	fi;\
+	if ! make; then\
+		exit 1;\
+	fi;\
+	cd $$d;\
 
 
 depend:
-	@for i in $(SUBDIRS); do\
+	@for i in $(SUBDIRS) test; do\
 		d=`pwd`;\
 		echo "DEPEND $$i";\
 		if ! cd $$i; then\
@@ -139,9 +149,9 @@ depend:
 
 
 clean:
-	@rm -f core *.o $(BIN)
+	@rm -f core *.o $(LIB)
 	@rm -f ../*.elf ../*.img ../*.flash ../*.cmd
-	@for i in $(SUBDIRS); do\
+	@for i in $(SUBDIRS) test; do\
 		d=`pwd`;\
 		echo "CLEAN $$i";\
 		if ! cd $$i; then\
