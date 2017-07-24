@@ -15,7 +15,6 @@
 
 #include "assert.h"
 #include "stdlib.h"
-#include "sys/list.h"
 #include "sys/threads.h"
 #include "sys/mman.h"
 
@@ -26,13 +25,12 @@
  * malloc steps:
  * 1. find the first chunk large enough to fit aligned size;
  * 2. if no such chunk exists, mmap new page_set with appropriate size;
- * #if 0 2a. check if new mmap'ed page_set can be coalesced with any existing; #endif
  * 3. cut off new chunk from the one found or mmap'ed and return its contents to the user.
  *
  * free steps:
  * 1. find chunk based on address;
  * 2. set it free and check if it can be coalesced with any neighbour;
- * 3. check if changes performed allows parent page_set #if 0 (or part of it) #endif to be munmap'ed;
+ * 3. check if changes performed allows parent page_set to be munmap'ed;
  *
  * realloc steps:
  * 0. check if realloc(NULL, size) or realloc(ptr, 0)
@@ -45,6 +43,99 @@
  * 1. malloc(nmemb*size);
  * 2. memset().
  */
+
+typedef struct listnode {
+	struct listnode *prev, *next;
+} listnode_t;
+
+typedef struct list {
+	struct listnode *head, *tail;
+	int (*compare)(struct listnode *a, struct listnode *b);
+	size_t size;
+} list_t;
+
+#define LIST_OF(container, field, instance)				\
+	((container *)((unsigned char *)instance - (__builtin_offsetof(container, field))))
+
+#define LIST_INIT(list, cmp_func) do {		\
+		(list)->head = NULL;		\
+		(list)->tail = NULL;		\
+		(list)->compare = (cmp_func);	\
+		(list)->size = 0;		\
+	} while (0)
+
+#define LIST_INSERT_AFTER(list, previous, toinsert) do {	\
+		(toinsert)->prev = (previous);			\
+		if ((previous)->next == NULL) {			\
+			(toinsert)->next = NULL;		\
+			(list)->tail = (toinsert);		\
+		} else {					\
+			(toinsert)->next = (previous)->next;	\
+			(previous)->next->prev = (toinsert);	\
+		}						\
+		(previous)->next = (toinsert);			\
+		++(list)->size;					\
+	} while (0)
+
+#define LIST_INSERT_BEFORE(list, successor, toinsert) do {	\
+		(toinsert)->next = (successor);			\
+		if ((successor)->prev == NULL) {		\
+			(toinsert)->prev = NULL;		\
+			(list)->head = (toinsert);		\
+		} else {					\
+			(toinsert)->prev = (successor)->prev;	\
+			(successor)->prev->next = (toinsert);	\
+		}						\
+		(successor)->prev = (toinsert);			\
+		++(list)->size;					\
+	} while (0)
+
+#define LIST_PREPEND(list, toinsert) do {				\
+		if ((list)->head == NULL) {				\
+			(list)->head = (toinsert);			\
+			(list)->tail = (toinsert);			\
+			(toinsert)->prev = NULL;			\
+			(toinsert)->next = NULL;			\
+			++(list)->size;					\
+		} else {						\
+			LIST_INSERT_BEFORE((list), (list)->head, (toinsert)); \
+		}							\
+	} while (0)
+
+#define LIST_APPEND(list, toinsert) do {				\
+		if ((list)->tail == NULL)				\
+			LIST_PREPEND((list), (toinsert));		\
+		else							\
+			LIST_INSERT_AFTER((list), (list)->tail, (toinsert)); \
+	} while (0)
+
+#define LIST_REMOVE(list, todelete) do {				\
+		if ((todelete)->prev == NULL) {				\
+			(list)->head = (todelete)->next;		\
+			if ((list)->head != NULL)			\
+				(list)->head->prev = NULL;		\
+		} else							\
+			(todelete)->prev->next = (todelete)->next;	\
+		if ((todelete)->next == NULL) {				\
+			(list)->tail = (todelete)->prev;		\
+			if ((list)->tail != NULL)			\
+				(list)->tail->next = NULL;		\
+		} else							\
+			(todelete)->next->prev = (todelete)->prev;	\
+		--(list)->size;						\
+	} while (0)
+
+#define LIST_FIND(list, tofind, found) do {				\
+		listnode_t *it = (list)->head;				\
+		for (it = (list)->head; it != NULL; it = it->next) {	\
+			if ((list)->compare(it, (tofind)) == 0)		\
+				break;					\
+		}							\
+		(found) = it;						\
+	} while (0)
+
+
+
 
 static int _page_set_fit(listnode_t *page_set_node, listnode_t *request_node);
 static int _chunk_fit(listnode_t *chunk_node, listnode_t *request_node);
@@ -80,11 +171,11 @@ static struct page_set *_page_set_of_chunk(struct chunk *chunk)
 	struct chunk *first;
 	while (current->prev)
 		current = current->prev;
-	first = lib_listof(struct chunk, listnode, current);
+	first = LIST_OF(struct chunk, listnode, current);
 	return (struct page_set *)((void *)first - offsetof(struct page_set, first_chunk));
 }
 
-#define PAGE_SIZE	0x100
+#define PAGE_SIZE	0x1000
 #define MAP_FAILED	((void *)-1)
 
 static inline size_t PAGE_CEIL(size_t size)
@@ -107,8 +198,8 @@ static inline size_t ALIGN_CEIL(size_t size)
 
 static int _page_set_fit(listnode_t *page_set_node, listnode_t *request_node)
 {
-	struct page_set *set = lib_listof(struct page_set, listnode, page_set_node),
-		*request = lib_listof(struct page_set, listnode, request_node);
+	struct page_set *set = LIST_OF(struct page_set, listnode, page_set_node),
+		*request = LIST_OF(struct page_set, listnode, request_node);
 
 	if (set->max_free_chunk_size >= request->max_free_chunk_size)
 		return 0;
@@ -118,8 +209,8 @@ static int _page_set_fit(listnode_t *page_set_node, listnode_t *request_node)
 
 static int _chunk_fit(listnode_t *chunk_node, listnode_t *request_node)
 {
-	struct chunk *chunk = lib_listof(struct chunk, listnode, chunk_node),
-		*request = lib_listof(struct chunk, listnode, request_node);
+	struct chunk *chunk = LIST_OF(struct chunk, listnode, chunk_node),
+		*request = LIST_OF(struct chunk, listnode, request_node);
 
 	if (chunk->free && chunk->size >= request->size)
 		return 0;
@@ -132,18 +223,18 @@ static struct page_set *_alloc_page_set(size_t size)
 	oid_t dummy = { 0, 0 };
 	size_t page_set_total_size = PAGE_CEIL(offsetof(struct page_set, first_chunk.contents) + size);
 	struct page_set *result = mmap(NULL, page_set_total_size, PROT_READ | PROT_WRITE,
-				       MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+				       MAP_PRIVATE | MAP_ANONYMOUS, &dummy, 0);
 	if (result == MAP_FAILED) /* out of memory */
 		return NULL;
 
 	result->total_size = page_set_total_size;
-	lib_listInit(&result->chunks, _chunk_fit);
-	lib_listAppend(&result->chunks, &result->first_chunk.listnode);
+	LIST_INIT(&result->chunks, _chunk_fit);
+	LIST_APPEND(&result->chunks, &result->first_chunk.listnode);
 	result->first_chunk.size = result->max_free_chunk_size =
 		page_set_total_size - offsetof(struct page_set, first_chunk.contents);
 	result->first_chunk.free = 1;
 
-	lib_listAppend(&malloc_common.page_sets, &result->listnode);
+	LIST_APPEND(&malloc_common.page_sets, &result->listnode);
 	return result;
 }
 
@@ -154,9 +245,9 @@ static void _update_page_set(struct page_set *page_set)
 	listnode_t *current_node;
 	struct chunk *current_chunk;
 
-	for (current_node = lib_listHead(&page_set->chunks); current_node;
+	for (current_node = page_set->chunks.head; current_node;
 	     current_node = current_node->next) {
-		current_chunk = lib_listof(struct chunk, listnode, current_node);
+		current_chunk = LIST_OF(struct chunk, listnode, current_node);
 		if (current_chunk->free && max_free_chunk_size < current_chunk->size)
 			max_free_chunk_size = current_chunk->size;
 	}
@@ -173,7 +264,7 @@ static void *_cut_chunk(struct page_set *page_set, struct chunk *chunk, size_t s
 		remainder = (struct chunk *)(chunk->contents + size);
 		remainder->size = chunk->size - size - sizeof(struct chunk);
 		remainder->free = 1;
-		lib_listInsertAfter(&page_set->chunks, &chunk->listnode, &remainder->listnode);
+		LIST_INSERT_AFTER(&page_set->chunks, &chunk->listnode, &remainder->listnode);
 		chunk->size = size;
 	}
 	chunk->free = 0;
@@ -184,19 +275,22 @@ static void *_cut_chunk(struct page_set *page_set, struct chunk *chunk, size_t s
 static void *_allocate(size_t size) {
 	struct page_set page_set_requested = { .max_free_chunk_size = size }, *page_set_found;
 	struct chunk chunk_requested = { .size = size }, *chunk_found;
+	listnode_t *page_set_node_found, *chunk_node_found;
 
-	page_set_found = lib_listof(struct page_set, listnode,
-				    lib_listFind(&malloc_common.page_sets, &page_set_requested.listnode));
-	if (!page_set_found) {
+	LIST_FIND(&malloc_common.page_sets, &page_set_requested.listnode, page_set_node_found);
+
+	if (!page_set_node_found) {
 		page_set_found = _alloc_page_set(size);
 		if (!page_set_found) { /* out of memory */
 			return NULL;
 		}
+	} else {
+		page_set_found = LIST_OF(struct page_set, listnode, page_set_node_found);
 	}
 
-	chunk_found = lib_listof(struct chunk, listnode,
-				 lib_listFind(&page_set_found->chunks, &chunk_requested.listnode));
-	assert(chunk_found);
+	LIST_FIND(&page_set_found->chunks, &chunk_requested.listnode, chunk_node_found);
+	assert(chunk_node_found);
+	chunk_found = LIST_OF(struct chunk, listnode, chunk_node_found);
 	return _cut_chunk(page_set_found, chunk_found, size);
 }
 
@@ -225,12 +319,12 @@ static void _coalesce(struct page_set *page_set, struct chunk *first_chunk)
 	if (!first_chunk)
 		return;
 
-	next_chunk = lib_listof(struct chunk, listnode, first_chunk->listnode.next);
+	next_chunk = LIST_OF(struct chunk, listnode, first_chunk->listnode.next);
 	if (!next_chunk)
 		return;
 
 	if (first_chunk->free && next_chunk->free) {
-		lib_listRemove(&page_set->chunks, &next_chunk->listnode);
+		LIST_REMOVE(&page_set->chunks, &next_chunk->listnode);
 		first_chunk->size += next_chunk->size + sizeof(struct chunk);
 	}
 }
@@ -239,9 +333,9 @@ static void _release_chunk(struct page_set *page_set, struct chunk *chunk)
 {
 	chunk->free = 1;
 	_coalesce(page_set, chunk);
-	_coalesce(page_set, lib_listof(struct chunk, listnode, chunk->listnode.prev));
-	if (lib_listSize(&page_set->chunks) == 1) {
-		lib_listRemove(&malloc_common.page_sets, &page_set->listnode);
+	_coalesce(page_set, LIST_OF(struct chunk, listnode, chunk->listnode.prev));
+	if (page_set->chunks.size == 1) {
+		LIST_REMOVE(&malloc_common.page_sets, &page_set->listnode);
 		munmap(page_set, page_set->total_size);
 	} else {
 		_update_page_set(page_set);
@@ -290,9 +384,9 @@ void *realloc(void *ptr, size_t size)
 	if (current_chunk->size >= size) {
 		current_chunk->free = 1; /* to satisfy cut */
 		result = _cut_chunk(page_set, current_chunk, size);
-		_coalesce(page_set, lib_listof(struct chunk, listnode, current_chunk->listnode.next));
+		_coalesce(page_set, LIST_OF(struct chunk, listnode, current_chunk->listnode.next));
 		_update_page_set(page_set);
-	} else if (next_chunk = lib_listof(struct chunk, listnode, current_chunk->listnode.next),
+	} else if (next_chunk = LIST_OF(struct chunk, listnode, current_chunk->listnode.next),
 		   next_chunk && next_chunk->free &&
 		   current_chunk->size + sizeof(struct chunk) + next_chunk->size >= size) {
 		current_chunk->free = 1; /* to satisfy coalesce and cut */
