@@ -201,7 +201,7 @@ static void _malloc_chunkSplit(chunk_t *chunk, size_t size)
 {
 	chunk_t *sibling;
 
-	if (chunk->size == size)
+	if (chunk->size <= size + CHUNK_MIN_SIZE)
 		return;
 
 	if (_malloc_chunkIsLast(chunk, size))
@@ -209,9 +209,6 @@ static void _malloc_chunkSplit(chunk_t *chunk, size_t size)
 
 	sibling = (chunk_t *) ((u32) chunk + size);
 	_malloc_chunkInit(sibling, chunk->heap, size, chunk->size - size);
-
-	if (sibling->size < CHUNK_MIN_SIZE)
-		return;
 
 	_malloc_chunkRemove(chunk);
 	chunk->size = size;
