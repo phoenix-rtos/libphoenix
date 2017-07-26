@@ -18,6 +18,8 @@
 #include "sys/threads.h"
 #include "sys/mman.h"
 
+#include ARCH
+
 /*
  * global data: list of page_sets protected by mutex if application is multi-threaded
  * data structures: page_set contains list of chunks
@@ -175,11 +177,10 @@ static struct page_set *_page_set_of_chunk(struct chunk *chunk)
 	return (struct page_set *)((void *)first - offsetof(struct page_set, first_chunk));
 }
 
-#define PAGE_SIZE	0x1000
 #define MAP_FAILED	((void *)-1)
 
 #define CEIL_POWOF2(x, roundto) (((x) + (roundto) - 1) & ~((roundto) - 1))
-#define PAGE_CEIL(x) CEIL_POWOF2((x), PAGE_SIZE)
+#define PAGE_CEIL(x) CEIL_POWOF2((x), SIZE_PAGE)
 #define ALIGN_CEIL(x) CEIL_POWOF2((x), __BIGGEST_ALIGNMENT__)
 
 static int _page_set_fit(listnode_t *page_set_node, listnode_t *request_node)
