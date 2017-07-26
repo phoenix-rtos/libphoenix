@@ -23,7 +23,7 @@
 
 
 #define CHUNK_USED                 1
-#define CHUNK_MIN_SIZE             16
+#define CHUNK_MIN_SIZE             __builtin_offsetof(chunk_t, node)
 #define CHUNK_SMALLBIN_MAX_SIZE    248
 
 #define CEIL(value, size)			((((value) + (size) - 1) / (size)) * (size))
