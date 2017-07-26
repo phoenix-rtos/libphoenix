@@ -232,7 +232,7 @@ static void _update_page_set(struct page_set *page_set)
 	listnode_t *current_node;
 	struct chunk *current_chunk;
 
-	for (current_node = page_set->chunks.head; current_node;
+	for (current_node = page_set->chunks.head; current_node != NULL;
 	     current_node = current_node->next) {
 		current_chunk = LIST_OF(struct chunk, listnode, current_node);
 		if (current_chunk->free && max_free_chunk_size < current_chunk->size)
@@ -266,9 +266,9 @@ static void *_allocate(size_t size) {
 
 	LIST_FIND(&malloc_common.page_sets, &page_set_requested.listnode, page_set_node_found);
 
-	if (!page_set_node_found) {
+	if (page_set_node_found == NULL) {
 		page_set_found = _alloc_page_set(size);
-		if (!page_set_found) { /* out of memory */
+		if (page_set_found == NULL) { /* out of memory */
 			return NULL;
 		}
 	} else {
@@ -276,7 +276,7 @@ static void *_allocate(size_t size) {
 	}
 
 	LIST_FIND(&page_set_found->chunks, &chunk_requested.listnode, chunk_node_found);
-	assert(chunk_node_found);
+	assert(chunk_node_found != NULL);
 	chunk_found = LIST_OF(struct chunk, listnode, chunk_node_found);
 	return _cut_chunk(page_set_found, chunk_found, size);
 }
@@ -285,13 +285,11 @@ void *malloc(size_t size)
 {
 	void *result;
 
-	if (!size)
+	if (size == 0)
 		return NULL;
 
 	size = ALIGN_CEIL(size);
 
-	if (!malloc_common.mutex)
-		mutex(&malloc_common.mutex);
 	lock(malloc_common.mutex);
 	result = _allocate(size);
 	unlock(malloc_common.mutex);
@@ -303,11 +301,11 @@ static void _coalesce(struct page_set *page_set, struct chunk *first_chunk)
 {
 	struct chunk *next_chunk;
 
-	if (!first_chunk)
+	if (first_chunk == NULL)
 		return;
 
 	next_chunk = LIST_OF(struct chunk, listnode, first_chunk->listnode.next);
-	if (!next_chunk)
+	if (next_chunk == NULL)
 		return;
 
 	if (first_chunk->free && next_chunk->free) {
@@ -334,11 +332,9 @@ void free(void *ptr)
 	struct chunk *freed_chunk;
 	struct page_set *page_set;
 
-	if (!ptr)
+	if (ptr == NULL)
 		return;
 
-	if (!malloc_common.mutex)
-		mutex(&malloc_common.mutex);
 	lock(malloc_common.mutex);
 	freed_chunk = chunk_of_contents(ptr);
 	page_set = _page_set_of_chunk(freed_chunk);
@@ -353,18 +349,16 @@ void *realloc(void *ptr, size_t size)
 	struct page_set *page_set;
 
 
-	if (!ptr)
+	if (ptr == NULL)
 		return malloc(size);
 
-	if (!size) {
+	if (size == 0) {
 		free(ptr);
 		return NULL;
 	}
 
 	size = ALIGN_CEIL(size);
 
-	if (!malloc_common.mutex)
-		mutex(&malloc_common.mutex);
 	lock(malloc_common.mutex);
 	current_chunk = chunk_of_contents(ptr);
 	page_set = _page_set_of_chunk(current_chunk);
@@ -374,7 +368,7 @@ void *realloc(void *ptr, size_t size)
 		_coalesce(page_set, LIST_OF(struct chunk, listnode, current_chunk->listnode.next));
 		_update_page_set(page_set);
 	} else if (next_chunk = LIST_OF(struct chunk, listnode, current_chunk->listnode.next),
-		   next_chunk && next_chunk->free &&
+		   next_chunk != NULL && next_chunk->free &&
 		   current_chunk->size + sizeof(struct chunk) + next_chunk->size >= size) {
 		current_chunk->free = 1; /* to satisfy coalesce and cut */
 		_coalesce(page_set, current_chunk);
@@ -382,7 +376,7 @@ void *realloc(void *ptr, size_t size)
 		_update_page_set(page_set);
 	} else {
 		result = _allocate(size);
-		if (result) {
+		if (result != NULL) {
 			memcpy(result, current_chunk, current_chunk->size);
 			_release_chunk(page_set, current_chunk);
 		}
@@ -395,16 +389,14 @@ void *calloc(size_t nmemb, size_t size)
 {
 	void *result;
 
-	if (!nmemb || !size)
+	if (nmemb == 0 || size == 0)
 		return NULL;
 
 	size = ALIGN_CEIL(nmemb * size);
 
-	if (!malloc_common.mutex)
-		mutex(&malloc_common.mutex);
 	lock(malloc_common.mutex);
 	result = _allocate(size);
-	if (result)
+	if (result != NULL)
 		memset(result, 0, size);
 	unlock(malloc_common.mutex);
 	return result;
@@ -413,4 +405,5 @@ void *calloc(size_t nmemb, size_t size)
 void _malloc_init(void)
 {
 	malloc_common.page_sets.compare = _page_set_fit;
+	mutex(&malloc_common.mutex);
 }
