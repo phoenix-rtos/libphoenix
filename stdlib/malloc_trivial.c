@@ -178,23 +178,9 @@ static struct page_set *_page_set_of_chunk(struct chunk *chunk)
 #define PAGE_SIZE	0x1000
 #define MAP_FAILED	((void *)-1)
 
-static inline size_t PAGE_CEIL(size_t size)
-{
-	size_t result = size / PAGE_SIZE;
-	if (size % PAGE_SIZE)
-		++result;
-
-	return result * PAGE_SIZE;
-}
-
-static inline size_t ALIGN_CEIL(size_t size)
-{
-	size_t result = size / __BIGGEST_ALIGNMENT__;
-	if (size % __BIGGEST_ALIGNMENT__)
-		++result;
-
-	return result * __BIGGEST_ALIGNMENT__;
-}
+#define CEIL_POWOF2(x, roundto) (((x) + (roundto) - 1) & ~((roundto) - 1))
+#define PAGE_CEIL(x) CEIL_POWOF2((x), PAGE_SIZE)
+#define ALIGN_CEIL(x) CEIL_POWOF2((x), __BIGGEST_ALIGNMENT__)
 
 static int _page_set_fit(listnode_t *page_set_node, listnode_t *request_node)
 {
