@@ -9,7 +9,7 @@ SRCS = test_malloc.c
 OBJS = $(SRCS:.c=.o)
 
 
-all: check test_mmap test_malloc
+all: check test_mmap test_malloc test_str2num
 
 
 check:
@@ -43,6 +43,10 @@ test_mmap: test_mmap.o
 
 test_malloc: test_malloc.o
 	$(SIL)$(LD) $(LDFLAGS) -o test_malloc test_malloc.o ../$(LIB) $(GCCLIB)
+
+
+test_str2num: test_str2num.o
+	$(SIL)$(LD) $(LDFLAGS) -o test_str2num test_str2num.o ../$(LIB) $(GCCLIB)
 
 
 depend: check

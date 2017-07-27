@@ -24,8 +24,9 @@ unsigned int strtoul(char *nptr, char **endptr, int base)
 	if (base == 16 && nptr[0] == '0' && nptr[1] == 'x')
 		nptr += 2;
 
-	if (*endptr != NULL)
+	if (endptr != NULL) {
 		*endptr = nptr;
+	}
 
 	while (isdigit(*nptr)) {
 		t = *nptr - '0';
@@ -45,7 +46,7 @@ unsigned int strtoul(char *nptr, char **endptr, int base)
 
 		v = (v * base) + t;
 
-		if (*endptr != NULL)
+		if (endptr != NULL)
 			*endptr = nptr;
 
 		++nptr;
