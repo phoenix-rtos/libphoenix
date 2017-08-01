@@ -60,8 +60,8 @@ ifneq (, $(findstring armv7, $(TARGET)))
 	CFLAGS += -Wall -Wstrict-prototypes -I$(SRCDIR) -nostartfiles -nostdlib\
 		-mcpu=cortex-m3 -mthumb \
 		-fomit-frame-pointer -ffreestanding\
-		-DVERSION=\"$(VERSION)\" -DARCH=\"arch/armv7/arch.h\" -DNOMMU \
-		-fPIC -msingle-pic-base
+		-fpic -fpie -msingle-pic-base\
+		-DVERSION=\"$(VERSION)\" -DARCH=\"arch/armv7/arch.h\" -DNOMMU
 
 	AR = $(CROSS)ar
 	ARFLAGS = -r
