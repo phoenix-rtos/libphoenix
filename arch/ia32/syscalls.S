@@ -66,6 +66,11 @@ SYSCALLDEF(beginthread)
 .size beginthread, .-beginthread
 
 
+SYSCALLDEF(send)
+	SYSCALL(13);
+.size send, .-send
+
+
 SYSCALLDEF(lock)
 	SYSCALL(16);
 .size lock, .-lock
