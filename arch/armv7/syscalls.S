@@ -75,10 +75,10 @@ SYSCALLDEF(send)
 
 
 SYSCALLDEF(lock)
-	SYSCALL(9);
+	SYSCALL(16);
 .size lock, .-lock
 
 
 SYSCALLDEF(unlock)
-	SYSCALL(10);
+	SYSCALL(17);
 .size unlock, .-unlock
