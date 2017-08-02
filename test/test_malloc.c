@@ -35,7 +35,7 @@ void test_malloc(void)
 		i = (unsigned long long)(sizeof(buff) / sizeof(buff[0]) - 1) * rand_r(&seed) / RAND_MAX;
 
 		if (buff[i] != NULL) {
-			//free(buff[i]);
+			free(buff[i]);
 			buff[i] = NULL;
 		}
 
@@ -56,7 +56,7 @@ int main(void)
 	printf("test_malloc: Starting, main is at %p\n", main);
 	test_malloc();
 
-for (;;);
+	for (;;);
 
 	return 0;
 }

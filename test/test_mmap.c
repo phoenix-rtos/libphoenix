@@ -66,7 +66,7 @@ int main(void)
 	printf("test_mmap: Starting, main is at %p\n", main);
 	test_mmap();
 
-for (;;);
+	for (;;);
 
 	return 0;
 }

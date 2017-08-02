@@ -1,15 +1,15 @@
 #
-# Makefile for libphoenix (test)
+# Makefile for libphoenix (sys)
 #
 # Copyright 2017 Phoenix Systems
 # Author: Pawel Pisarczyk
 #
 
-SRCS = test_malloc.c
+SRCS = pthread.c
 OBJS = $(SRCS:.c=.o)
 
 
-all: check test_mmap test_malloc test_threads test_str2num
+all: check $(ARCH)
 
 
 check:
@@ -37,20 +37,8 @@ check:
 -include .depend
 
 
-test_mmap: test_mmap.o
-	$(SIL)$(LD) $(LDFLAGS) -o test_mmap test_mmap.o ../$(LIB) $(GCCLIB)
-
-
-test_malloc: test_malloc.o
-	$(SIL)$(LD) $(LDFLAGS) -o test_malloc test_malloc.o ../$(LIB) $(GCCLIB)
-
-
-test_threads: test_threads.o
-	$(SIL)$(LD) $(LDFLAGS) -o test_threads test_threads.o ../$(LIB) $(GCCLIB)
-
-
-test_str2num: test_str2num.o
-	$(SIL)$(LD) $(LDFLAGS) -o test_str2num test_str2num.o ../$(LIB) $(GCCLIB)
+$(ARCH): $(OBJS)
+	$(SIL)$(AR) $(ARFLAGS) $(ARCH) $(OBJS) 2>/dev/null
 
 
 depend: check
@@ -58,7 +46,7 @@ depend: check
 
 
 clean: check
-	$(SIL)rm -f core *.o test_mmap test_malloc
+	$(SIL)rm -f core *.o $(ARCH)
 
 
 .PHONY: clean

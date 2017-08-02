@@ -56,31 +56,61 @@ SYSCALLDEF(execle)
 .size execle, .-execle
 
 
-SYSCALLDEF(usleep)
+SYSCALLDEF(exit)
+	SYSCALL(5);
+.size exit, .-exit
+
+
+SYSCALLDEF(waitpid)
 	SYSCALL(6);
-.size usleep, .-usleep
+.size waitpid, .-waitpid
+
+
+SYSCALLDEF(getpid)
+	SYSCALL(7);
+.size getpid, .-getpid
+
+
+SYSCALLDEF(getppid)
+	SYSCALL(8);
+.size getppid, .-getppid
 
 
 SYSCALLDEF(beginthread)
-	SYSCALL(8);
+	SYSCALL(9);
 .size beginthread, .-beginthread
 
 
-SYSCALLDEF(send)
-	SYSCALL(13);
-.size send, .-send
+SYSCALLDEF(endthread)
+	SYSCALL(10);
+.size endthread, .-endthread
+
+
+SYSCALLDEF(usleep)
+	SYSCALL(11);
+.size usleep, .-usleep
+
+
+SYSCALLDEF(mutex)
+	SYSCALL(12);
+.size mutex, .-mutex
 
 
 SYSCALLDEF(lock)
-	SYSCALL(16);
+	SYSCALL(13);
 .size lock, .-lock
 
 
 SYSCALLDEF(unlock)
-	SYSCALL(17);
+	SYSCALL(14);
 .size unlock, .-unlock
 
 
-SYSCALLDEF(exit)
-	SYSCALL(9);
-.size exit, .-exit
+SYSCALLDEF(interrupt)
+	SYSCALL(22);
+.size interrupt, .-interrupt
+
+
+SYSCALLDEF(send)
+	SYSCALL(23);
+.size send, .-send

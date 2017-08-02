@@ -28,7 +28,7 @@ static inline int lock(handle_t h) { return 0; }
 static inline int unlock(handle_t h) { return 0; }
 
 
-extern void beginthread(void (*start)(void *), unsigned int priority, void *arg);
+extern void beginthread(void (*start)(void *), unsigned int priority, void *stack, void *arg);
 
 
 extern void endthread(void);

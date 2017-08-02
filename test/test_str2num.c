@@ -25,26 +25,25 @@ int test_str2num(void)
 	const unsigned long int lu = 4000000000U;
 	const unsigned long long int llu = 18000000000000000000U;
 
-	if(strtol("-100", NULL, 10) != i1)
+	if (strtol("-100", NULL, 10) != i1)
 		return -1;
-	if(strtol("100", NULL, 10) != i2)
+	if (strtol("100", NULL, 10) != i2)
 		return -1;
-	if(strtoll("-2000000000", NULL, 10) != li1)
+	if (strtoll("-2000000000", NULL, 10) != li1)
 		return -1;
-	if(strtoll("2000000000", NULL, 10) != li2)
+	if (strtoll("2000000000", NULL, 10) != li2)
 		return -1;
-    if(strtoll("-9000000000000000000", NULL, 10) != lli1)
-        return -1;
-    if(strtoll("9000000000000000000", NULL, 10) != lli2)
-        return -1;
+	if (strtoll("-9000000000000000000", NULL, 10) != lli1)
+		return -1;
+	if (strtoll("9000000000000000000", NULL, 10) != lli2)
+		return -1;
 
-    if(strtoul("40000", NULL, 10) != u)
-        return -1;
-    if(strtoull("4000000000", NULL, 10) != lu)
-        return -1;
-    if(strtoull("18000000000000000000", NULL, 10) != llu)
-        return -1;
-
+	if (strtoul("40000", NULL, 10) != u)
+		return -1;
+	if (strtoull("4000000000", NULL, 10) != lu)
+		return -1;
+	if (strtoull("18000000000000000000", NULL, 10) != llu)
+		return -1;
 
 	return 0;
 }

@@ -20,22 +20,22 @@
 
 
 #ifndef CHAR_BIT
-#define CHAR_BIT 8
+#define CHAR_BIT    8
 #endif
 
 
 #ifndef SCHAR_MIN
-#define SCHAR_MIN -128
+#define SCHAR_MIN    -128
 #endif
 
 
 #ifndef SCHAR_MAX
-#define SCHAR_MAX 127
+#define SCHAR_MAX    127
 #endif
 
 
 #ifndef UCHAR_MAX
-#define UCHAR_MAX 255
+#define UCHAR_MAX    255
 #endif
 
 
@@ -112,6 +112,9 @@
 #ifndef ULONG_LONG_MAX
 #define ULONG_LONG_MAX (LONG_LONG_MAX * 2ULL + 1)
 #endif
+
+
+#define PTHREAD_STACK_MIN   256
 
 
 #endif
