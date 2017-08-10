@@ -5,7 +5,7 @@
 # Author: Pawel Pisarczyk
 #
 
-SRCS =
+SRCS = time.c
 OBJS = $(SRCS:.c=.o)
 
 

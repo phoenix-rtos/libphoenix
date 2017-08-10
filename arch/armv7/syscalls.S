@@ -112,3 +112,7 @@ SYSCALLDEF(interrupt)
 SYSCALLDEF(send)
 	SYSCALL(23);
 .size send, .-send
+
+SYSCALLDEF(gettime)
+	SYSCALL(25);
+.size gettime, .-gettime

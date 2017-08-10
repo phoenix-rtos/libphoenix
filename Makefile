@@ -14,7 +14,7 @@ TARGET = armv7-stm32-tiramisu
 VERSION = 0.2
 SRCDIR := $(CURDIR)
 
-SUBSYSTEMS = math stdio stdlib string sys ctype
+SUBSYSTEMS = math stdio stdlib string sys ctype time
 
 LIB = libphoenix.a
 
