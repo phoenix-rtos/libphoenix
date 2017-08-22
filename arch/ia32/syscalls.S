@@ -124,3 +124,8 @@ SYSCALLDEF(lookup)
 SYSCALLDEF(gettime)
 	SYSCALL(26);
 .size gettime, .-gettime
+
+
+SYSCALLDEF(keepidle)
+	SYSCALL(27)
+.size keepidle, .-keepidle
