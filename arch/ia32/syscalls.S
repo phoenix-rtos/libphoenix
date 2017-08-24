@@ -114,3 +114,18 @@ SYSCALLDEF(interrupt)
 SYSCALLDEF(send)
 	SYSCALL(23);
 .size send, .-send
+
+
+SYSCALLDEF(lookup)
+	SYSCALL(25);
+.size lookup, .-lookup
+
+
+SYSCALLDEF(gettime)
+	SYSCALL(26);
+.size gettime, .-gettime
+
+
+SYSCALLDEF(keepidle)
+	SYSCALL(27)
+.size keepidle, .-keepidle

@@ -14,7 +14,7 @@ TARGET = ia32-qemu
 VERSION = 0.2
 SRCDIR := $(CURDIR)
 
-SUBSYSTEMS = math stdio stdlib string sys ctype
+SUBSYSTEMS = math stdio stdlib string sys ctype time
 
 LIB = libphoenix.a
 
@@ -51,7 +51,7 @@ endif
 ifneq (, $(findstring armv7, $(TARGET)))
 	CROSS ?= arm-phoenix-
 	SUBDIRS = arch/armv7 $(SUBSYSTEMS)
-	
+
 	MKDEP = $(CROSS)gcc -MM
 	MKDEPFLAGS = $(CFLAGS)
 
@@ -116,13 +116,13 @@ subsystems:
 
 $(LIB): $(ARCHS) $(OBJS)
 	@echo "\033[1;34mLD $@\033[0m"
-	
+
 	$(AR) $(ARFLAGS) -o $(LIB) $(OBJS) $(shell for i in $(SUBDIRS); do k=`echo $$i | sed 's/\//\\\\\//g'`; $(AR) -t $$i/$(ARCH) | sed "s/^/$$k\//"; done;)
 
 	@(echo "";\
 	echo "=> libphoenix for [$(TARGET)] has been created";\
 	echo "")
-	
+
 
 tests:
 	@d=`pwd`;\
@@ -152,7 +152,6 @@ depend:
 
 clean:
 	@rm -f core *.o $(LIB)
-	@rm -f ../*.elf ../*.img ../*.flash ../*.cmd
 	@for i in $(SUBDIRS) test; do\
 		d=`pwd`;\
 		echo "CLEAN $$i";\

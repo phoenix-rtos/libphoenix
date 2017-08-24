@@ -22,5 +22,7 @@ extern int main(int argc, char **argv);
 
 void _start(void)
 {
+	_malloc_init();
+
 	exit(main(1, 0));
 }

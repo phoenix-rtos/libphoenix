@@ -28,7 +28,7 @@ extern int lock(handle_t h);
 extern int unlock(handle_t h);
 
 
-extern void beginthread(void (*start)(void *), unsigned int priority, void *stack, void *arg);
+extern int beginthread(void (*start)(void *), unsigned int priority, void *stack, void *arg);
 
 
 extern void endthread(void);

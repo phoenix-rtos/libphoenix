@@ -18,4 +18,11 @@
 
 #include ARCH
 
+#define SECS_TO_USECS_T(secs) (1000000ULL * (secs))
+#define MSECS_TO_USECS_T(msecs) (1000ULL * (msecs))
+
+extern int gettime(time_t *tp);
+
+extern time_t time(time_t *tp);
+
 #endif
