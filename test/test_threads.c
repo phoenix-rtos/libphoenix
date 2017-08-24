@@ -33,7 +33,7 @@ void thread1(void *arg)
 		lock(h);
 		printf("\b%c", m[i++ % 4]);
 		unlock(h);
-		usleep(100);
+		usleep(100000);
 	}
 }
 
@@ -52,7 +52,7 @@ int main(void)
 		lock(h);
 		printf(".");
 		unlock(h);
-		usleep(1000);
+		usleep(1000000);
 	}
 
 	return 0;
