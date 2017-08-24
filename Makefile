@@ -8,8 +8,8 @@
 
 SIL ?= @
 
-TARGET = armv7-stm32-tiramisu
-#TARGET = ia32-qemu
+#TARGET = armv7-stm32-tiramisu
+TARGET = ia32-qemu
 
 VERSION = 0.2
 SRCDIR := $(CURDIR)
@@ -30,7 +30,7 @@ ifneq (, $(findstring ia32, $(TARGET)))
 
 	CC = $(CROSS)gcc
 
-	CFLAGS += -Wall -Wstrict-prototypes -I$(SRCDIR) -nostartfiles -nostdlib\
+	CFLAGS += -O2 -Wall -Wstrict-prototypes -I$(SRCDIR) -nostartfiles -nostdlib\
 		-m32 -mtune=generic -mno-mmx -mno-sse\
 		-fomit-frame-pointer -fno-strength-reduce -ffreestanding\
 		-DVERSION=\"$(VERSION)\" -DARCH=\"arch/ia32/arch.h\"
@@ -69,7 +69,7 @@ ifneq (, $(findstring armv7, $(TARGET)))
 	LD = $(CROSS)ld
 	LDFLAGS = -nostdlib -e _start --section-start .init=8000000 -Tbss=20000000 -z max-page-size=0x10
 	GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
-#GCCLIB := ../$(GCCLIB)
+GCCLIB := ../$(GCCLIB)
 
 	OBJCOPY = $(CROSS)objcopy
 	OBJDUMP = $(CROSS)objdump
