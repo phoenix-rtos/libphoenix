@@ -107,4 +107,20 @@ char *strncpy(char *dest, const char *src, size_t n)
 #endif
 
 
+#ifndef __MEMMOVE
+#define __MEMMOVE
+void memmove(void *dest, void *src, size_t n)
+{
+	int i;
+
+	if (dest < src)
+		for (i = 0; i < n; ++i)
+			((char *)dest)[i] = ((char *)src)[i];
+	else
+		for (i = n; i > 0; --i)
+			((char *)dest)[i] = ((char *)src)[i];
+}
+#endif
+
+
 #endif

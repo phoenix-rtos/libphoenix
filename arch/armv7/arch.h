@@ -29,6 +29,7 @@
 #define __STRNCMP
 #define __STRCPY
 #define __STRNCPY
+#define __MEMMOVE
 
 
 #define max(a, b) ({ \

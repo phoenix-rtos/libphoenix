@@ -17,7 +17,7 @@
 #include "arch.h"
 
 
-void memcpy(void *dst, const void *src, unsigned int l)
+void memcpy(void *dst, const void *src, size_t l)
 {
 	__asm__ volatile
 	(" \
@@ -41,6 +41,62 @@ void memcpy(void *dst, const void *src, unsigned int l)
 		strbne r2, [r4], #1; \
 		subsne r1, #1; \
 		bne 2b"
+	:
+	: "r" (dst), "r" (src), "r" (l)
+	: "r1", "r2", "r3", "r4", "memory", "cc");
+}
+
+
+void memmove(void *dst, const void *src, size_t l)
+{
+	__asm__ volatile
+	(" \
+		mov r1, %2; \
+		mov r3, %1; \
+		mov r4, %0; \
+		orr r2, r3, r4; \
+		cmp %0, %1; \
+		bhs 3f; \
+		ands r2, #3; \
+		bne 2f; \
+	1: \
+		cmp r1, #4; \
+		ittt hs; \
+		ldrhs r2, [r3], #4; \
+		strhs r2, [r4], #4; \
+		subshs r1, #4; \
+		bhs 1b; \
+	2: \
+		cmp r1, #0; \
+		ittt ne; \
+		ldrbne r2, [r3], #1; \
+		strbne r2, [r4], #1; \
+		subsne r1, #1; \
+		bne 2b; \
+		b 8f; \
+	3: \
+		ands r2, #3; \
+		bne 6f; \
+		cmp r1, #4; \
+		blo 6f; \
+	4: \
+		subs r1, #4; \
+		blo 5f; \
+		ldr r2, [r3, r1]; \
+		str r2, [r4, r1]; \
+		b 4b; \
+	5: \
+		add r1, #4; \
+	6: \
+		cmp r1, #0; \
+		beq 8f; \
+	7: \
+		subs r1, #1; \
+		blo 8f; \
+		ldrb r2, [r3, r1]; \
+		strb r2, [r4, r1]; \
+		b 7b; \
+	8:"
 	:
 	: "r" (dst), "r" (src), "r" (l)
 	: "r1", "r2", "r3", "r4", "memory", "cc");
@@ -78,7 +134,7 @@ int memcmp(const void *ptr1, const void *ptr2, size_t num)
 }
 
 
-void memset(void *dst, u8 v, unsigned int l)
+void memset(void *dst, u8 v, size_t l)
 {
 	__asm__ volatile
 	(" \
@@ -159,7 +215,7 @@ int strcmp(const char *s1, const char *s2)
 }
 
 
-int strncmp(const char *s1, const char *s2, unsigned int count)
+int strncmp(const char *s1, const char *s2, size_t count)
 {
 	int res = 0;
 
