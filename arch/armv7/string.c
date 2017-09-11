@@ -13,12 +13,11 @@
  * %LICENSE%
  */
 
-#ifndef _LIBPHOENIX_ARCH_ARMV7_STRING_H_
-#define _LIBPHOENIX_ARCH_ARMV7_STRING_H_
+
+#include "arch.h"
 
 
-#define MEMCPY
-static inline void memcpy(void *dst, const void *src, unsigned int l)
+void memcpy(void *dst, const void *src, unsigned int l)
 {
 	__asm__ volatile
 	(" \
@@ -48,8 +47,7 @@ static inline void memcpy(void *dst, const void *src, unsigned int l)
 }
 
 
-#define MEMCMP
-static inline int memcmp(const void *ptr1, const void *ptr2, size_t num)
+int memcmp(const void *ptr1, const void *ptr2, size_t num)
 {
 	int res = 0;
 
@@ -80,8 +78,7 @@ static inline int memcmp(const void *ptr1, const void *ptr2, size_t num)
 }
 
 
-#define MEMSET
-static inline void memset(void *dst, u8 v, unsigned int l)
+void memset(void *dst, u8 v, unsigned int l)
 {
 	__asm__ volatile
 	(" \
@@ -110,8 +107,7 @@ static inline void memset(void *dst, u8 v, unsigned int l)
 }
 
 
-#define STRLEN
-static inline unsigned int strlen(const char *s)
+unsigned int strlen(const char *s)
 {
 	unsigned int k = 0;
 
@@ -131,8 +127,7 @@ static inline unsigned int strlen(const char *s)
 }
 
 
-#define STRCMP
-static inline int strcmp(const char *s1, const char *s2)
+int strcmp(const char *s1, const char *s2)
 {
 	int res = 0;
 
@@ -164,8 +159,7 @@ static inline int strcmp(const char *s1, const char *s2)
 }
 
 
-#define STRNCMP
-static inline int strncmp(const char *s1, const char *s2, unsigned int count)
+int strncmp(const char *s1, const char *s2, unsigned int count)
 {
 	int res = 0;
 
@@ -201,8 +195,7 @@ static inline int strncmp(const char *s1, const char *s2, unsigned int count)
 }
 
 
-#define STRCPY
-static inline char *strcpy(char *dest, const char *src)
+char *strcpy(char *dest, const char *src)
 {
 	__asm__ volatile
 	(" \
@@ -222,8 +215,7 @@ static inline char *strcpy(char *dest, const char *src)
 }
 
 
-#define STRNCPY
-static inline char *strncpy(char *dest, const char *src, size_t n)
+char *strncpy(char *dest, const char *src, size_t n)
 {
 	__asm__ volatile
 	(" \
@@ -246,6 +238,3 @@ static inline char *strncpy(char *dest, const char *src, size_t n)
 
 	return dest;
 }
-
-
-#endif

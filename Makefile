@@ -57,7 +57,7 @@ ifneq (, $(findstring armv7, $(TARGET)))
 
 	CC = $(CROSS)gcc
 
-	CFLAGS += -Wall -Wstrict-prototypes -I$(SRCDIR) -nostartfiles -nostdlib\
+	CFLAGS += -O2 -Wall -Wstrict-prototypes -g -I$(SRCDIR) -nostartfiles -nostdlib\
 		-mcpu=cortex-m3 -mthumb \
 		-fomit-frame-pointer -ffreestanding\
 		-fpic -fpie -msingle-pic-base\
@@ -69,7 +69,7 @@ ifneq (, $(findstring armv7, $(TARGET)))
 	LD = $(CROSS)ld
 	LDFLAGS = -nostdlib -e _start --section-start .init=8000000 -Tbss=20000000 -z max-page-size=0x10
 	GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
-GCCLIB := ../$(GCCLIB)
+#GCCLIB := ../$(GCCLIB)
 
 	OBJCOPY = $(CROSS)objcopy
 	OBJDUMP = $(CROSS)objdump

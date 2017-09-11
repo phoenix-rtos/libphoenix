@@ -16,6 +16,7 @@
 #include ARCH
 #include "stdlib.h"
 #include "limits.h"
+#include "string.h"
 #include "sys/list.h"
 #include "sys/rb.h"
 #include "sys/threads.h"

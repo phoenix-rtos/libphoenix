@@ -13,12 +13,8 @@
  * %LICENSE%
  */
 
-#ifndef _LIBPHOENIX_ARCH_IA32_STRING_H_
-#define _LIBPHOENIX_ARCH_IA32_STRING_H_
 
-
-#define MEMCPY
-static inline void memcpy(void *to, const void *from, unsigned int n)
+void memcpy(void *to, const void *from, unsigned int n)
 {
 	__asm__ volatile
 	(" \
@@ -38,8 +34,7 @@ static inline void memcpy(void *to, const void *from, unsigned int n)
 }
 
 
-#define MEMSET
-static inline void memset(void *where, u8 v, unsigned int n)
+void memset(void *where, u8 v, unsigned int n)
 {
 	__asm__ volatile
 	(" \
@@ -61,11 +56,8 @@ static inline void memset(void *where, u8 v, unsigned int n)
 		movl %2, %%edi; \
 		rep; stosl; \
 		movl %%edx, %%ecx; \
-		rep; stosb"	
+		rep; stosb"
 	: "+d" (n)
 	: "m" (v), "m" (where)
 	: "eax", "ebx", "cc", "ecx", "edi" ,"memory");
 }
-
-
-#endif
