@@ -24,6 +24,8 @@
 
 
 #define NULL (void *)0
+#define __MEMCPY
+#define __MEMSET
 
 
 #define max(a, b) ({ \

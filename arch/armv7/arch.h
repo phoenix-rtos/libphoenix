@@ -21,6 +21,15 @@
 
 
 #define NULL (void *)0
+#define __MEMCPY
+#define __MEMCMP
+#define __MEMSET
+#define __STRLEN
+#define __STRCMP
+#define __STRNCMP
+#define __STRCPY
+#define __STRNCPY
+#define __MEMMOVE
 
 
 #define max(a, b) ({ \
@@ -63,8 +72,6 @@ typedef struct _oid_t {
 
 typedef u32 handle_t;
 
-
-#include "string.h"
 #include "limits.h"
 
 #define SIZE_PAGE 0x100

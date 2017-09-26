@@ -6,7 +6,7 @@
 #
 
 ASMS = syscalls.S
-SRCS = _start.c
+SRCS = _start.c string.c
 
 
 OBJS = $(SRCS:.c=.o) $(ASMS:.S=.o)

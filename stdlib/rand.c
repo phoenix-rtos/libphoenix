@@ -15,6 +15,7 @@
 
 #include ARCH
 
+unsigned int __randseed;
 
 int rand_r (unsigned int *seed)
 {
@@ -38,4 +39,16 @@ int rand_r (unsigned int *seed)
 	*seed = next;
 
 	return result;
+}
+
+
+int rand(void)
+{
+	return rand_r(&__randseed);
+}
+
+
+void srand(unsigned int seed)
+{
+	__randseed = seed;
 }

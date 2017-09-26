@@ -19,8 +19,8 @@
 #include ARCH
 
 
-#ifndef STRCMP
-#define STRCMP
+#ifndef __STRCMP
+#define __STRCMP
 int strcmp(const char *s1, const char *s2)
 {
 	const char *p;
@@ -43,8 +43,8 @@ int strcmp(const char *s1, const char *s2)
 
 
 /* FIXME it should return -K or +K or 0  */
-#ifndef STRNCMP
-#define STRNCMP
+#ifndef __STRNCMP
+#define __STRNCMP
 int strncmp(const char *s1, const char *s2, unsigned int count)
 {
 	const char *p;
@@ -64,8 +64,8 @@ int strncmp(const char *s1, const char *s2, unsigned int count)
 #endif
 
 
-#ifndef STRLEN
-#define STRLEN
+#ifndef __STRLEN
+#define __STRLEN
 unsigned int strlen(const char *s)
 {
 	unsigned int k;
@@ -76,8 +76,8 @@ unsigned int strlen(const char *s)
 #endif
 
 
-#ifndef STRCPY
-#define STRCPY
+#ifndef __STRCPY
+#define __STRCPY
 char *strcpy(char *dest, const char *src)
 {
 	unsigned int i = 0;
@@ -91,8 +91,8 @@ char *strcpy(char *dest, const char *src)
 #endif
 
 
-#ifndef STRNCPY
-#define STRNCPY
+#ifndef __STRNCPY
+#define __STRNCPY
 char *strncpy(char *dest, const char *src, size_t n)
 {
 	int i = 0;
@@ -103,6 +103,22 @@ char *strncpy(char *dest, const char *src, size_t n)
 	} while (i < n && src[i - 1] != '\0'); 
 
 	return dest;
+}
+#endif
+
+
+#ifndef __MEMMOVE
+#define __MEMMOVE
+void memmove(void *dest, void *src, size_t n)
+{
+	int i;
+
+	if (dest < src)
+		for (i = 0; i < n; ++i)
+			((char *)dest)[i] = ((char *)src)[i];
+	else
+		for (i = n; i > 0; --i)
+			((char *)dest)[i] = ((char *)src)[i];
 }
 #endif
 
