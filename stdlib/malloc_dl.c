@@ -261,7 +261,7 @@ static heap_t *_malloc_heapAlloc(size_t size)
 {
 	size_t heapSize = CEIL(sizeof(heap_t) + size, SIZE_PAGE);
 	heap_t *heap = mmap(NULL, heapSize, PROT_WRITE, MAP_ANONYMOUS, NULL, 0);
-	if (heap == NULL)
+	if (heap == -1)
 		return NULL;
 
 	_malloc_heapInit(heap, heapSize);
