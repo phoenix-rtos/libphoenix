@@ -22,7 +22,6 @@
 #include "sys/threads.h"
 #include "sys/mman.h"
 
-
 #define CHUNK_USED                 1
 #define CHUNK_MIN_SIZE             __builtin_offsetof(chunk_t, node)
 #define CHUNK_SMALLBIN_MAX_SIZE    248
@@ -197,23 +196,27 @@ static void _malloc_chunkRemove(chunk_t *chunk)
 	malloc_common.lbinmap &= ~(1 << idx);
 }
 
+static inline int _malloc_chunkCanSplit(chunk_t *chunk, size_t size)
+{
+	return !(chunk->size <= size + CHUNK_MIN_SIZE || _malloc_chunkIsLast(chunk, size));
+}
 
 static void _malloc_chunkSplit(chunk_t *chunk, size_t size)
 {
 	chunk_t *sibling;
 
-	if (chunk->size <= size + CHUNK_MIN_SIZE)
+/*	if (chunk->size <= size + CHUNK_MIN_SIZE)
 		return;
 
 	if (_malloc_chunkIsLast(chunk, size))
 		return;
-
+*/
 	sibling = (chunk_t *) ((u32) chunk + size);
 	_malloc_chunkInit(sibling, chunk->heap, size, chunk->size - size);
 
 	_malloc_chunkRemove(chunk);
 	chunk->size = size;
-	_malloc_chunkAdd(chunk);
+/*	_malloc_chunkAdd(chunk); */
 	_malloc_chunkAdd(sibling);
 }
 
@@ -304,8 +307,11 @@ static void *malloc_allocLarge(size_t size)
 		chunk = (chunk_t *) heap->space;
 	}
 
-	_malloc_chunkSplit(chunk, size);
-	_malloc_chunkRemove(chunk);
+	if (_malloc_chunkCanSplit(chunk, size))
+		_malloc_chunkSplit(chunk, size);
+	else
+		_malloc_chunkRemove(chunk);
+
 	chunk->heap->freesz -= size;
 
 	chunk->size |= CHUNK_USED;
@@ -336,11 +342,18 @@ static void *malloc_allocSmall(size_t size)
 			return NULL;
 
 		chunk = (chunk_t *) heap->space;
-		_malloc_chunkSplit(chunk, idxSize);
+
+		if (_malloc_chunkCanSplit(chunk, idxSize)) {
+			_malloc_chunkSplit(chunk, idxSize);
+			_malloc_chunkAdd(chunk);
+		}
 	}
 
-	_malloc_chunkSplit(chunk, targetSize);
-	_malloc_chunkRemove(chunk);
+	if (_malloc_chunkCanSplit(chunk, targetSize))
+		_malloc_chunkSplit(chunk, targetSize);
+	else
+		_malloc_chunkRemove(chunk);
+
 	chunk->heap->freesz -= chunk->size;
 
 	chunk->size |= CHUNK_USED;
