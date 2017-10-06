@@ -25,13 +25,17 @@ check:
 	@(file=`echo $< | sed "s/\.c/\.o/"`; \
 	datasz=0;\
 	textsz=0;\
+	rodatasz=0;\
 	for i in `$(OBJDUMP) -t $$file | grep -e " O " | awk '{ print $$4 }'`; do \
 		datasz=`echo $$(($$datasz + 0x$$i))`;\
 	done; \
+	for i in `$(OBJDUMP) -t $$file | grep -e " O " | grep ".rodata" | awk '{ print $$5 }'`; do \
+                rodatasz=`echo $$(($$rodatasz + 0x$$i))`;\
+        done; \
 	for i in `$(OBJDUMP) -t $$file | grep -e "F" | awk '{ print $$5 }'`; do \
 		textsz=`echo $$(($$textsz + 0x$$i))`;\
 	done;\
-	echo "data=$$datasz\t text=$$textsz")
+	echo "data=$$datasz\t text=$$textsz\t rodata=$$rodatasz")
 
 
 -include .depend
