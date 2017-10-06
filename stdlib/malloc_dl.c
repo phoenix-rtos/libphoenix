@@ -22,9 +22,12 @@
 #include "sys/threads.h"
 #include "sys/mman.h"
 
-#define CHUNK_USED                 1
-#define CHUNK_MIN_SIZE             __builtin_offsetof(chunk_t, node)
-#define CHUNK_SMALLBIN_MAX_SIZE    248
+#define CHUNK_PUSED                1
+#define CHUNK_CUSED                2
+
+#define CHUNK_OVERHEAD             (sizeof(size_t) + sizeof(heap_t*))
+#define CHUNK_MIN_SIZE             (__builtin_offsetof(chunk_t, node) + sizeof(size_t))
+#define CHUNK_SMALLBIN_MAX_SIZE    (256 - CHUNK_OVERHEAD)
 
 #define CEIL(value, size)			((((value) + (size) - 1) / (size)) * (size))
 #define FLOOR(value, size)			(((value) / (size)) * (size))
@@ -39,12 +42,14 @@ typedef struct _heap_t {
 
 
 typedef struct _chunk_t {
-	size_t prevSize;
+/*	size_t prevSize; This is a foot field of the previous chunk! */
 	size_t size;
 	heap_t *heap;
+
+	/* Following fields are used only when the chunk is free */
 	struct _chunk_t *next;
 	struct _chunk_t *prev;
-	rbnode_t node;
+	rbnode_t node; /* Only used for big chunks */
 } __attribute__ ((packed)) chunk_t;
 
 
@@ -61,19 +66,28 @@ struct {
 } malloc_common;
 
 
+static inline size_t malloc_chunkSize(chunk_t *chunk)
+{
+	return chunk->size & ~(CHUNK_CUSED | CHUNK_PUSED);
+}
+
+
 static int malloc_cmp(rbnode_t *n1, rbnode_t *n2)
 {
 	chunk_t *e1 = lib_treeof(chunk_t, node, n1);
 	chunk_t *e2 = lib_treeof(chunk_t, node, n2);
 
-	if (e1->size == e2->size) {
+	size_t e1sz = malloc_chunkSize(e1);
+	size_t e2sz = malloc_chunkSize(e2);
+
+	if (e1sz == e2sz) {
 		if (e1 == e2)
 			return 0;
 
 		return (e1 > e2) ? 1 : -1;
 	}
 
-	return (e1->size > e2->size) ? 1 : -1;
+	return (e1sz > e2sz) ? 1 : -1;
 }
 
 
@@ -83,11 +97,14 @@ static int malloc_find(rbnode_t *n1, rbnode_t *n2)
 	chunk_t *e1_left = lib_treeof(chunk_t, node, n1->left);
 	chunk_t *e2 = lib_treeof(chunk_t, node, n2);
 
-	if (e1->size == e2->size)
+	size_t e1sz = malloc_chunkSize(e1);
+	size_t e2sz = malloc_chunkSize(e2);
+
+	if (e1sz == e2sz)
 		return 0;
 
-	if (e1->size > e2->size) {
-		if (e1_left != NULL && e1_left->size >= e2->size)
+	if (e1sz > e2sz) {
+		if (e1_left != NULL && malloc_chunkSize(e1_left) >= e2sz)
 			return 1;
 
 		return 0;
@@ -118,61 +135,80 @@ static inline unsigned int malloc_getlidx(size_t size)
 }
 
 
-static inline int _malloc_chunkIsFirst(chunk_t *chunk)
+static inline size_t malloc_chunkPrevSize(chunk_t *chunk)
 {
-	return (chunk->prevSize == 0);
+	return (chunk->size & CHUNK_PUSED) ? 0 : *((size_t*) chunk - 1);
 }
 
 
-static inline int _malloc_chunkIsLast(chunk_t *chunk, size_t size)
+static inline int malloc_chunkIsFirst(chunk_t *chunk)
 {
-	return ((u32) chunk + size + sizeof(chunk_t) > (u32) chunk->heap + chunk->heap->size);
+	return (chunk->heap->space == (u8*) &chunk);
 }
 
 
-static inline chunk_t *_malloc_chunkPrev(chunk_t *chunk)
+static inline int malloc_chunkIsLast(chunk_t *chunk)
 {
-	if (_malloc_chunkIsFirst(chunk))
+	return ((u32) chunk + malloc_chunkSize(chunk) + sizeof(chunk_t) > (u32) chunk->heap + chunk->heap->size);
+}
+
+
+static inline chunk_t *malloc_chunkPrev(chunk_t *chunk)
+{
+	unsigned prevSize = malloc_chunkPrevSize(chunk);
+	if (prevSize == 0)
 		return NULL;
 
-	return (chunk_t *) ((u32) chunk - (chunk->prevSize & ~CHUNK_USED));
+	return (chunk_t *) ((u32) chunk - prevSize);
 }
 
 
-static inline chunk_t *_malloc_chunkNext(chunk_t *chunk)
+static inline chunk_t *malloc_chunkNext(chunk_t *chunk)
 {
-	if (_malloc_chunkIsLast(chunk, chunk->size))
+	if (malloc_chunkIsLast(chunk))
 		return NULL;
 
-	return (chunk_t *) ((u32) chunk + (chunk->size & ~CHUNK_USED));
+	return (chunk_t *) ((u32) chunk + malloc_chunkSize(chunk));
 }
 
 
-static void _malloc_chunkInit(chunk_t *chunk, heap_t *heap, size_t prevSize, size_t size)
+static inline void malloc_chunkSetFooter(chunk_t *chunk)
 {
-	chunk->prevSize = prevSize;
+	size_t size = malloc_chunkSize(chunk);
+	*((size_t*)((u32) chunk + size) - 1) = size;
+}
+
+
+static void malloc_chunkInit(chunk_t *chunk, heap_t *heap, size_t prevSize, size_t size)
+{
 	chunk->size = size;
+
+	if (prevSize)
+		*((size_t*) chunk - 1) = prevSize;
+	else
+		chunk->size |= CHUNK_PUSED;
+
 	chunk->heap = heap;
 	chunk->next = NULL;
 	chunk->prev = NULL;
 
-	if ((u32) chunk + size + sizeof(size_t) <= (u32) heap + heap->size)
-		((chunk_t *) ((u32) chunk + size))->prevSize = size;
+	malloc_chunkSetFooter(chunk);
 }
 
 
 static void _malloc_chunkAdd(chunk_t *chunk)
 {
 	unsigned int idx;
+	size_t chunksz = malloc_chunkSize(chunk);
 
-	if (chunk->size <= CHUNK_SMALLBIN_MAX_SIZE) {
-		idx = malloc_getsidx(chunk->size);
+	if (chunksz <= CHUNK_SMALLBIN_MAX_SIZE) {
+		idx = malloc_getsidx(chunksz);
 		LIST_ADD(&malloc_common.sbins[idx], chunk);
 		malloc_common.sbinmap |= (1 << idx);
 		return;
 	}
 
-	idx = malloc_getlidx(chunk->size);
+	idx = malloc_getlidx(chunksz);
 	lib_rbInsert(&malloc_common.lbins[idx], &chunk->node);
 	malloc_common.lbinmap |= (1 << idx);
 }
@@ -181,9 +217,10 @@ static void _malloc_chunkAdd(chunk_t *chunk)
 static void _malloc_chunkRemove(chunk_t *chunk)
 {
 	unsigned int idx;
+	size_t chunksz = malloc_chunkSize(chunk);
 
-	if (chunk->size <= CHUNK_SMALLBIN_MAX_SIZE) {
-		idx = malloc_getsidx(chunk->size);
+	if (chunksz <= CHUNK_SMALLBIN_MAX_SIZE) {
+		idx = malloc_getsidx(chunksz);
 		LIST_REMOVE(&malloc_common.sbins[idx], chunk);
 		if (malloc_common.sbins[idx] == NULL)
 			malloc_common.sbinmap &= ~(1 << idx);
@@ -191,32 +228,28 @@ static void _malloc_chunkRemove(chunk_t *chunk)
 		return;
 	}
 
-	idx = malloc_getlidx(chunk->size);
+	idx = malloc_getlidx(chunksz);
 	lib_rbRemove(&malloc_common.lbins[idx], &chunk->node);
 	malloc_common.lbinmap &= ~(1 << idx);
 }
 
-static inline int _malloc_chunkCanSplit(chunk_t *chunk, size_t size)
+
+static inline int malloc_chunkCanSplit(chunk_t *chunk, size_t size)
 {
-	return !(chunk->size <= size + CHUNK_MIN_SIZE || _malloc_chunkIsLast(chunk, size));
+	return !((malloc_chunkSize(chunk) <= size + CHUNK_MIN_SIZE) ||
+		 (((u32) chunk + size + sizeof(chunk_t)) > ((u32) chunk->heap + chunk->heap->size)));
 }
+
 
 static void _malloc_chunkSplit(chunk_t *chunk, size_t size)
 {
 	chunk_t *sibling;
 
-/*	if (chunk->size <= size + CHUNK_MIN_SIZE)
-		return;
-
-	if (_malloc_chunkIsLast(chunk, size))
-		return;
-*/
 	sibling = (chunk_t *) ((u32) chunk + size);
-	_malloc_chunkInit(sibling, chunk->heap, size, chunk->size - size);
+	malloc_chunkInit(sibling, chunk->heap, size, malloc_chunkSize(chunk) - size);
 
 	_malloc_chunkRemove(chunk);
-	chunk->size = size;
-/*	_malloc_chunkAdd(chunk); */
+	chunk->size = size | CHUNK_PUSED;
 	_malloc_chunkAdd(sibling);
 }
 
@@ -227,32 +260,31 @@ static void _malloc_chunkJoin(chunk_t *chunk)
 	chunk_t *sibling;
 
 	/* Join with the previous chunks. */
-	while (!_malloc_chunkIsFirst(it) && (it->prevSize & CHUNK_USED) == 0) {
-		sibling = _malloc_chunkPrev(it);
+	while (!malloc_chunkIsFirst(it) && (it->size & CHUNK_PUSED) == 0) {
+		sibling = malloc_chunkPrev(it);
 		_malloc_chunkRemove(sibling);
 		_malloc_chunkRemove(it);
 
-		sibling->size += it->size;
+		sibling->size += malloc_chunkSize(it);
 		_malloc_chunkAdd(sibling);
 		it = sibling;
 	}
 
 	/* Join with the following chunks. */
-	while (!_malloc_chunkIsLast(it, it->size) && (_malloc_chunkNext(it)->size & CHUNK_USED) == 0) {
-		sibling = _malloc_chunkNext(it);
+	while (!malloc_chunkIsLast(it) && (malloc_chunkNext(it)->size & CHUNK_CUSED) == 0) {
+		sibling = malloc_chunkNext(it);
 		_malloc_chunkRemove(it);
 		_malloc_chunkRemove(sibling);
 
-		it->size += sibling->size;
+		it->size += malloc_chunkSize(sibling);
 		_malloc_chunkAdd(it);
 	}
 
-	if (!_malloc_chunkIsLast(it, it->size))
-		_malloc_chunkNext(it)->prevSize = it->size;
+	malloc_chunkSetFooter(it);
 }
 
 
-static void _malloc_heapInit(heap_t *heap, size_t size)
+static void malloc_heapInit(heap_t *heap, size_t size)
 {
 	heap->size = size;
 	heap->spaceSize = heap->size - sizeof(heap_t);
@@ -264,17 +296,38 @@ static heap_t *_malloc_heapAlloc(size_t size)
 {
 	size_t heapSize = CEIL(sizeof(heap_t) + size, SIZE_PAGE);
 	heap_t *heap = mmap(NULL, heapSize, PROT_WRITE, MAP_ANONYMOUS, NULL, 0);
-	if (heap == -1)
+	if (heap == (heap_t*) -1)
 		return NULL;
 
-	_malloc_heapInit(heap, heapSize);
-	_malloc_chunkInit((chunk_t *) heap->space, heap, 0, FLOOR(heap->spaceSize, 8));
+	malloc_heapInit(heap, heapSize);
+	malloc_chunkInit((chunk_t *) heap->space, heap, 0, FLOOR(heap->spaceSize, 8));
 	_malloc_chunkAdd((chunk_t *) heap->space);
 	return heap;
 }
 
 
-static void *malloc_allocLarge(size_t size)
+static inline void *_malloc_allocFrom(chunk_t *chunk, size_t size)
+{
+	chunk_t *chunkNext;
+
+	if (malloc_chunkCanSplit(chunk, size))
+		_malloc_chunkSplit(chunk, size);
+	else
+		_malloc_chunkRemove(chunk);
+
+	chunk->heap->freesz -= malloc_chunkSize(chunk);
+
+	chunk->size |= CHUNK_CUSED;
+
+	if ((chunkNext = malloc_chunkNext(chunk))) {
+		chunkNext->size |= CHUNK_PUSED;
+	}
+
+	return (void *) ((u32) chunk + CHUNK_OVERHEAD);
+}
+
+
+static void *_malloc_allocLarge(size_t size)
 {
 	/* Lookup table to speed-up operation reverse to malloc_getlidx(). */
 	static const size_t lookup[32] = {
@@ -307,22 +360,11 @@ static void *malloc_allocLarge(size_t size)
 		chunk = (chunk_t *) heap->space;
 	}
 
-	if (_malloc_chunkCanSplit(chunk, size))
-		_malloc_chunkSplit(chunk, size);
-	else
-		_malloc_chunkRemove(chunk);
-
-	chunk->heap->freesz -= size;
-
-	chunk->size |= CHUNK_USED;
-	if (!_malloc_chunkIsLast(chunk, chunk->size))
-		_malloc_chunkNext(chunk)->prevSize = chunk->size;
-
-	return (void *) ((u32) chunk + 2 * sizeof(size_t) + sizeof(heap_t *));
+	return _malloc_allocFrom(chunk, size);
 }
 
 
-static void *malloc_allocSmall(size_t size)
+static void *_malloc_allocSmall(size_t size)
 {
 	unsigned int idx = malloc_getsidx(size);
 	unsigned int binmap = malloc_common.sbinmap & ~((1 << idx) - 1);
@@ -334,7 +376,7 @@ static void *malloc_allocSmall(size_t size)
 	if (binmap)
 		idx = __builtin_ctz(binmap);
 	else if (malloc_common.lbinmap)
-		return malloc_allocLarge(size);
+		return _malloc_allocLarge(size);
 
 	idxSize = idx << 3;
 	if ((chunk = malloc_common.sbins[idx]) == NULL) {
@@ -343,24 +385,13 @@ static void *malloc_allocSmall(size_t size)
 
 		chunk = (chunk_t *) heap->space;
 
-		if (_malloc_chunkCanSplit(chunk, idxSize)) {
+		if (malloc_chunkCanSplit(chunk, idxSize)) {
 			_malloc_chunkSplit(chunk, idxSize);
 			_malloc_chunkAdd(chunk);
 		}
 	}
 
-	if (_malloc_chunkCanSplit(chunk, targetSize))
-		_malloc_chunkSplit(chunk, targetSize);
-	else
-		_malloc_chunkRemove(chunk);
-
-	chunk->heap->freesz -= chunk->size;
-
-	chunk->size |= CHUNK_USED;
-	if (!_malloc_chunkIsLast(chunk, chunk->size))
-		_malloc_chunkNext(chunk)->prevSize = chunk->size;
-
-	return (void *) ((u32) chunk + 2 * sizeof(size_t) + sizeof(heap_t *));
+	return _malloc_allocFrom(chunk, targetSize);
 }
 
 
@@ -371,13 +402,13 @@ void *malloc(size_t size)
 	if (size == 0)
 		return NULL;
 
-	size = CEIL(max(size + sizeof(chunk_t), CHUNK_MIN_SIZE), 8);
+	size = CEIL(max(size + CHUNK_OVERHEAD, CHUNK_MIN_SIZE), 8);
 
 	lock(malloc_common.mutex);
 	if (size <= CHUNK_SMALLBIN_MAX_SIZE)
-		ptr = malloc_allocSmall(size);
+		ptr = _malloc_allocSmall(size);
 	else
-		ptr = malloc_allocLarge(size);
+		ptr = _malloc_allocLarge(size);
 	unlock(malloc_common.mutex);
 
 	return ptr;
@@ -402,7 +433,7 @@ void *calloc(size_t nitems, size_t size)
 
 void free(void *ptr)
 {
-	chunk_t *chunk;
+	chunk_t *chunk, *chunkNext;
 	heap_t *heap;
 
 	if (ptr == NULL)
@@ -410,13 +441,17 @@ void free(void *ptr)
 
 	lock(malloc_common.mutex);
 
-	chunk = (chunk_t *) ((u32) ptr - 2 * sizeof(size_t) - sizeof(heap_t *));
+	chunk = (chunk_t *) ((u32) ptr - CHUNK_OVERHEAD);
 	heap = chunk->heap;
-	chunk->size &= ~CHUNK_USED;
-	if (!_malloc_chunkIsLast(chunk, chunk->size))
-		_malloc_chunkNext(chunk)->prevSize = chunk->size;
+	chunk->size &= ~CHUNK_CUSED;
+	malloc_chunkSetFooter(chunk);
+	chunk->next = chunk->prev = NULL;
 
-	heap->freesz += chunk->size;
+	if ((chunkNext = malloc_chunkNext(chunk))) {
+		chunkNext->size &= ~CHUNK_PUSED;
+	}
+
+	heap->freesz += malloc_chunkSize(chunk);
 	_malloc_chunkAdd(chunk);
 	_malloc_chunkJoin(chunk);
 
