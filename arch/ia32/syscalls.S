@@ -91,19 +91,54 @@ SYSCALLDEF(usleep)
 .size usleep, .-usleep
 
 
-SYSCALLDEF(mutex)
+SYSCALLDEF(mutexCreate)
 	SYSCALL(12);
-.size mutex, .-mutex
+.size mutexCreate, .-mutexCreate
 
 
-SYSCALLDEF(lock)
+SYSCALLDEF(mutexLock)
 	SYSCALL(13);
-.size lock, .-lock
+.size mutexLock, .-mutexLock
 
 
-SYSCALLDEF(unlock)
+SYSCALLDEF(mutexUnlock)
 	SYSCALL(14);
-.size unlock, .-unlock
+.size mutexUnlock, .-mutexUnlock
+
+
+SYSCALLDEF(semaphoreCreate)
+	SYSCALL(15);
+.size semaphoreCreate, .-semaphoreCreate
+
+
+SYSCALLDEF(semaphoreDown)
+	SYSCALL(16);
+.size semaphoreDown, .-semaphoreDown
+
+
+SYSCALLDEF(semaphoreUp)
+	SYSCALL(17);
+.size semaphoreUp, .-semaphoreUp
+
+
+SYSCALLDEF(condCreate)
+	SYSCALL(18);
+.size condCreate, .-condCreate
+
+
+SYSCALLDEF(condWait)
+	SYSCALL(19);
+.size condWait, .-condWait
+
+
+SYSCALLDEF(condSignal)
+	SYSCALL(20);
+.size condSignal, .-condSignal
+
+
+SYSCALLDEF(resourceDestroy)
+	SYSCALL(21);
+.size resourceDestroy, .-resourceDestroy
 
 
 SYSCALLDEF(interrupt)

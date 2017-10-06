@@ -109,7 +109,7 @@ char *strncpy(char *dest, const char *src, size_t n)
 
 #ifndef __MEMMOVE
 #define __MEMMOVE
-void memmove(void *dest, void *src, size_t n)
+void *memmove(void *dest, const void *src, size_t n)
 {
 	int i;
 
@@ -119,6 +119,7 @@ void memmove(void *dest, void *src, size_t n)
 	else
 		for (i = n; i > 0; --i)
 			((char *)dest)[i] = ((char *)src)[i];
+	return dest;
 }
 #endif
 

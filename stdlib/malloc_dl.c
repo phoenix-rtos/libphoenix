@@ -360,12 +360,12 @@ void *malloc(size_t size)
 
 	size = CEIL(max(size + sizeof(chunk_t), CHUNK_MIN_SIZE), 8);
 
-	lock(malloc_common.mutex);
+	mutexLock(malloc_common.mutex);
 	if (size <= CHUNK_SMALLBIN_MAX_SIZE)
 		ptr = malloc_allocSmall(size);
 	else
 		ptr = malloc_allocLarge(size);
-	unlock(malloc_common.mutex);
+	mutexUnlock(malloc_common.mutex);
 
 	return ptr;
 }
@@ -395,7 +395,7 @@ void free(void *ptr)
 	if (ptr == NULL)
 		return;
 
-	lock(malloc_common.mutex);
+	mutexLock(malloc_common.mutex);
 
 	chunk = (chunk_t *) ((u32) ptr - 2 * sizeof(size_t) - sizeof(heap_t *));
 	heap = chunk->heap;
@@ -413,7 +413,7 @@ void free(void *ptr)
 		munmap(heap, heap->size);
 	}
 
-	unlock(malloc_common.mutex);
+	mutexUnlock(malloc_common.mutex);
 }
 
 
@@ -431,5 +431,5 @@ void _malloc_init(void)
 		lib_rbInit(&malloc_common.lbins[i], malloc_cmp, NULL);
 	}
 
-	mutex(&malloc_common.mutex);
+	mutexCreate(&malloc_common.mutex);
 }

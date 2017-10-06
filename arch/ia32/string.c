@@ -13,8 +13,10 @@
  * %LICENSE%
  */
 
+#include "arch.h"
 
-void memcpy(void *to, const void *from, unsigned int n)
+
+void *memcpy(void *to, const void *from, unsigned int n)
 {
 	__asm__ volatile
 	(" \
@@ -31,10 +33,12 @@ void memcpy(void *to, const void *from, unsigned int n)
 	:
 	: "g" (n), "g" (to), "g" (from)
 	: "ecx", "edx", "esi", "edi", "cc");
+
+	return NULL;
 }
 
 
-void memset(void *where, u8 v, unsigned int n)
+void *memset(void *where, int v, size_t n)
 {
 	__asm__ volatile
 	(" \
@@ -60,4 +64,6 @@ void memset(void *where, u8 v, unsigned int n)
 	: "+d" (n)
 	: "m" (v), "m" (where)
 	: "eax", "ebx", "cc", "ecx", "edi" ,"memory");
+
+	return NULL;
 }

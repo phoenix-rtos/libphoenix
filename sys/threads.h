@@ -19,19 +19,28 @@
 #include ARCH
 
 
-extern int mutex(handle_t *h);
-
-
-extern int lock(handle_t h);
-
-
-extern int unlock(handle_t h);
-
-
 extern int beginthread(void (*start)(void *), unsigned int priority, void *stack, void *arg);
 
 
 extern void endthread(void);
+
+
+extern int mutexCreate(handle_t *h);
+
+
+extern int mutexLock(handle_t h);
+
+
+extern int mutexUnlock(handle_t h);
+
+
+extern int condCreate(handle_t *h);
+
+
+extern int condWait(handle_t h, handle_t m, time_t timeout);
+
+
+extern int condSignal(handle_t h);
 
 
 #endif
