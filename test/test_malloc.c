@@ -69,7 +69,23 @@ void test_malloc(void)
 		}
 	}
 
-	printf("\ntest: done\n");
+	printf("\ntest: edge cases\n");
+
+	printf("test: allocating 0\n");
+	if (buff[0] = malloc(0)) {
+		printf("test:      succeded with %p\n", buff[0]);
+	}
+
+	printf("test: freeing 0\n");
+	free(NULL);
+
+	printf("test: allocating -1\n");
+
+	if (buff[0] = malloc((size_t) -1)) {
+		printf("test:      succeded with %p\n", buff[0]);
+	}
+
+	printf("test: done\n");
 }
 
 

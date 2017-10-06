@@ -399,7 +399,7 @@ void *malloc(size_t size)
 {
 	void *ptr = NULL;
 
-	if (size == 0)
+	if (size == 0 || (size + CHUNK_OVERHEAD) < size)
 		return NULL;
 
 	size = CEIL(max(size + CHUNK_OVERHEAD, CHUNK_MIN_SIZE), 8);
@@ -445,7 +445,6 @@ void free(void *ptr)
 	heap = chunk->heap;
 	chunk->size &= ~CHUNK_CUSED;
 	malloc_chunkSetFooter(chunk);
-	chunk->next = chunk->prev = NULL;
 
 	if ((chunkNext = malloc_chunkNext(chunk))) {
 		chunkNext->size &= ~CHUNK_PUSED;
