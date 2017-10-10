@@ -290,9 +290,9 @@ void *malloc(size_t size)
 
 	size = ALIGN_CEIL(size);
 
-	lock(malloc_common.mutex);
+	mutexLock(malloc_common.mutex);
 	result = _allocate(size);
-	unlock(malloc_common.mutex);
+	mutexUnlock(malloc_common.mutex);
 	return result;
 }
 
@@ -335,11 +335,11 @@ void free(void *ptr)
 	if (ptr == NULL)
 		return;
 
-	lock(malloc_common.mutex);
+	mutexLock(malloc_common.mutex);
 	freed_chunk = chunk_of_contents(ptr);
 	page_set = _page_set_of_chunk(freed_chunk);
 	_release_chunk(page_set, freed_chunk);
-	unlock(malloc_common.mutex);
+	mutexUnlock(malloc_common.mutex);
 }
 
 void *realloc(void *ptr, size_t size)
@@ -359,7 +359,7 @@ void *realloc(void *ptr, size_t size)
 
 	size = ALIGN_CEIL(size);
 
-	lock(malloc_common.mutex);
+	mutexLock(malloc_common.mutex);
 	current_chunk = chunk_of_contents(ptr);
 	page_set = _page_set_of_chunk(current_chunk);
 	if (current_chunk->size >= size) {
@@ -381,7 +381,7 @@ void *realloc(void *ptr, size_t size)
 			_release_chunk(page_set, current_chunk);
 		}
 	}
-	unlock(malloc_common.mutex);
+	mutexUnlock(malloc_common.mutex);
 	return result;
 }
 
@@ -394,16 +394,16 @@ void *calloc(size_t nmemb, size_t size)
 
 	size = ALIGN_CEIL(nmemb * size);
 
-	lock(malloc_common.mutex);
+	mutexLock(malloc_common.mutex);
 	result = _allocate(size);
 	if (result != NULL)
 		memset(result, 0, size);
-	unlock(malloc_common.mutex);
+	mutexUnlock(malloc_common.mutex);
 	return result;
 }
 
 void _malloc_init(void)
 {
 	malloc_common.page_sets.compare = _page_set_fit;
-	mutex(&malloc_common.mutex);
+	mutexCreate(&malloc_common.mutex);
 }
