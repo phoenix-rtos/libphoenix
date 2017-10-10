@@ -136,12 +136,12 @@ void *malloc(size_t size)
 
 	size = CEIL(size, 8);
 
-	lock(malloc_common.mutex);
+	mutexLock(malloc_common.mutex);
 	if ((heap = LIST_FIND(malloc_common.heaps, size)) == NULL)
 		heap = malloc_heapCreate();
 
 	m = _malloc_heapAlloc(size);
-	unlock(malloc_common.mutex);
+	mutexUnlock(malloc_common.mutex);
 
 	return m;
 }
@@ -152,12 +152,12 @@ void free(void *ptr)
 	heap_t *heap;
 	chunk_t *chunk;
 
-	lock(malloc_common.mutex);
+	mutexLock(malloc_common.mutex);
 
 	chunk = ptr - sizeof(size_t);
 	heap = _malloc_heapFind(chunk);	
 	_malloc_heapRelease(heap, chunk);
-	unlock(malloc_common.mutex);
+	mutexUnlock(malloc_common.mutex);
 }
 
 
@@ -189,10 +189,10 @@ void *realloc(void *ptr, size_t size)
 
 	size = CEIL(size, 8);
 
-	lock(malloc_common.mutex);
+	mutexLock(malloc_common.mutex);
 	chunk = ptr - sizeof(chunk_t);
 	if (chunk->size == size) {
-		unlock(malloc_common.mutex);
+		mutexUnlock(malloc_common.mutex);
 		return ptr;
 	}
 
@@ -218,7 +218,7 @@ void *realloc(void *ptr, size_t size)
 	}
 
 	_malloc_heapUpdate(heap);
-	unlock(malloc_common.mutex);
+	mutexUnlock(malloc_common.mutex);
 
 	return result;
 }
@@ -227,4 +227,5 @@ void *realloc(void *ptr, size_t size)
 void _malloc_init(void)
 {
 	malloc_common.heaps = NULL;
+	mutexCreate(&malloc_common.mutex);
 }
