@@ -143,7 +143,7 @@ static inline size_t malloc_chunkPrevSize(chunk_t *chunk)
 
 static inline int malloc_chunkIsFirst(chunk_t *chunk)
 {
-	return (chunk->heap->space == (u8*) &chunk);
+	return (chunk->heap->space == (u8*) chunk);
 }
 
 
@@ -179,15 +179,9 @@ static inline void malloc_chunkSetFooter(chunk_t *chunk)
 }
 
 
-static void malloc_chunkInit(chunk_t *chunk, heap_t *heap, size_t prevSize, size_t size)
+static void malloc_chunkInit(chunk_t *chunk, heap_t *heap, size_t size)
 {
 	chunk->size = size;
-
-	if (prevSize)
-		*((size_t*) chunk - 1) = prevSize;
-	else
-		chunk->size |= CHUNK_PUSED;
-
 	chunk->heap = heap;
 	chunk->next = NULL;
 	chunk->prev = NULL;
@@ -245,10 +239,11 @@ static void _malloc_chunkSplit(chunk_t *chunk, size_t size)
 {
 	chunk_t *sibling;
 
-	sibling = (chunk_t *) ((u32) chunk + size);
-	malloc_chunkInit(sibling, chunk->heap, size, malloc_chunkSize(chunk) - size);
-
 	_malloc_chunkRemove(chunk);
+
+	sibling = (chunk_t *) ((u32) chunk + size);
+	malloc_chunkInit(sibling, chunk->heap, malloc_chunkSize(chunk) - size);
+
 	chunk->size = size | CHUNK_PUSED;
 	_malloc_chunkAdd(sibling);
 }
@@ -294,14 +289,18 @@ static void malloc_heapInit(heap_t *heap, size_t size)
 
 static heap_t *_malloc_heapAlloc(size_t size)
 {
+	chunk_t *chunk;
 	size_t heapSize = CEIL(sizeof(heap_t) + size, SIZE_PAGE);
 	heap_t *heap = mmap(NULL, heapSize, PROT_WRITE, MAP_ANONYMOUS, NULL, 0);
 	if (heap == (heap_t*) -1)
 		return NULL;
 
+	chunk = (chunk_t*) heap->space;
+
 	malloc_heapInit(heap, heapSize);
-	malloc_chunkInit((chunk_t *) heap->space, heap, 0, FLOOR(heap->spaceSize, 8));
-	_malloc_chunkAdd((chunk_t *) heap->space);
+	malloc_chunkInit(chunk, heap, FLOOR(heap->spaceSize, 8));
+	chunk->size |= CHUNK_PUSED;
+	_malloc_chunkAdd(chunk);
 	return heap;
 }
 
@@ -319,9 +318,8 @@ static inline void *_malloc_allocFrom(chunk_t *chunk, size_t size)
 
 	chunk->size |= CHUNK_CUSED;
 
-	if ((chunkNext = malloc_chunkNext(chunk))) {
+	if ((chunkNext = malloc_chunkNext(chunk)) != NULL)
 		chunkNext->size |= CHUNK_PUSED;
-	}
 
 	return (void *) ((u32) chunk + CHUNK_OVERHEAD);
 }
@@ -387,6 +385,7 @@ static void *_malloc_allocSmall(size_t size)
 
 		if (malloc_chunkCanSplit(chunk, idxSize)) {
 			_malloc_chunkSplit(chunk, idxSize);
+			malloc_chunkSetFooter(chunk);
 			_malloc_chunkAdd(chunk);
 		}
 	}
@@ -443,12 +442,12 @@ void free(void *ptr)
 
 	chunk = (chunk_t *) ((u32) ptr - CHUNK_OVERHEAD);
 	heap = chunk->heap;
+
 	chunk->size &= ~CHUNK_CUSED;
 	malloc_chunkSetFooter(chunk);
 
-	if ((chunkNext = malloc_chunkNext(chunk))) {
+	if ((chunkNext = malloc_chunkNext(chunk)) != NULL)
 		chunkNext->size &= ~CHUNK_PUSED;
-	}
 
 	heap->freesz += malloc_chunkSize(chunk);
 	_malloc_chunkAdd(chunk);
@@ -461,6 +460,68 @@ void free(void *ptr)
 	}
 
 	mutexUnlock(malloc_common.mutex);
+}
+
+
+void *realloc(void *ptr, size_t size)
+{
+	chunk_t *chunk, *sibling, *next;
+	heap_t *heap;
+	size_t chunksz;
+
+	void *p;
+
+	if (ptr == NULL)
+		return malloc(size);
+
+	if ((size + CHUNK_OVERHEAD) < size)
+		return NULL;
+
+	size = CEIL(max(size + CHUNK_OVERHEAD, CHUNK_MIN_SIZE), 8);
+
+	mutexLock(malloc_common.mutex);
+
+	chunk = (chunk_t *) ((u32) ptr - CHUNK_OVERHEAD);
+	heap = chunk->heap;
+	chunksz = malloc_chunkSize(chunk);
+
+
+	if (size < chunksz && malloc_chunkCanSplit(chunk, size)) {
+		sibling = (chunk_t *) ((u32) chunk + size);
+		malloc_chunkInit(sibling, heap, chunksz - size);
+		sibling->size |= CHUNK_PUSED;
+		_malloc_chunkAdd(sibling);
+		heap->freesz += chunksz - size;
+
+		chunk->size = size | CHUNK_CUSED | (chunk->size & CHUNK_PUSED);
+
+		_malloc_chunkJoin(sibling);
+
+		if ((next = malloc_chunkNext(sibling)) != NULL)
+			next->size &= ~CHUNK_PUSED;
+	}
+	else if (size > chunksz) {
+		if ((next = malloc_chunkNext(chunk)) != NULL && !(next->size & CHUNK_CUSED) &&
+		    (malloc_chunkSize(next) >= (size - chunksz))) {
+			_malloc_allocFrom(next, size - chunksz);
+			chunk->size += malloc_chunkSize(next);
+		}
+		else {
+			mutexUnlock(malloc_common.mutex);
+
+			p = malloc(size);
+			if (p != NULL) {
+				memcpy(p, ptr, chunksz - CHUNK_OVERHEAD);
+				free(ptr);
+			}
+
+			return p;
+		}
+	}
+
+	mutexUnlock(malloc_common.mutex);
+
+	return ptr;
 }
 
 
