@@ -35,7 +35,6 @@
 
 typedef struct _heap_t {
 	size_t size;
-	size_t spaceSize;
 	size_t freesz;
 	u8 space[];
 } __attribute__ ((packed)) heap_t;
@@ -282,8 +281,7 @@ static void _malloc_chunkJoin(chunk_t *chunk)
 static void malloc_heapInit(heap_t *heap, size_t size)
 {
 	heap->size = size;
-	heap->spaceSize = heap->size - sizeof(heap_t);
-	heap->freesz = heap->spaceSize;
+	heap->freesz = heap->size - sizeof(heap_t);
 }
 
 
@@ -291,14 +289,14 @@ static heap_t *_malloc_heapAlloc(size_t size)
 {
 	chunk_t *chunk;
 	size_t heapSize = CEIL(sizeof(heap_t) + size, SIZE_PAGE);
-	heap_t *heap = mmap(NULL, heapSize, PROT_WRITE, MAP_ANONYMOUS, NULL, 0);
+	heap_t *heap = mmap(NULL, heapSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, NULL, 0);
 	if (heap == (heap_t*) -1)
 		return NULL;
 
 	chunk = (chunk_t*) heap->space;
 
 	malloc_heapInit(heap, heapSize);
-	malloc_chunkInit(chunk, heap, FLOOR(heap->spaceSize, 8));
+	malloc_chunkInit(chunk, heap, FLOOR(heap->size - sizeof(heap_t), 8));
 	chunk->size |= CHUNK_PUSED;
 	_malloc_chunkAdd(chunk);
 	return heap;
@@ -453,7 +451,7 @@ void free(void *ptr)
 	_malloc_chunkAdd(chunk);
 	_malloc_chunkJoin(chunk);
 
-	if (heap->freesz == heap->spaceSize) {
+	if (heap->freesz == heap->size - sizeof(heap_t)) {
 		chunk = (chunk_t *) heap->space;
 		_malloc_chunkRemove(chunk);
 		munmap(heap, heap->size);
