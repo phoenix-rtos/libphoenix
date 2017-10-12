@@ -146,21 +146,36 @@ SYSCALLDEF(interrupt)
 .size interrupt, .-interrupt
 
 
-SYSCALLDEF(send)
+SYSCALLDEF(portCreate)
 	SYSCALL(23);
+.size portCreate, .-portCreate
+
+
+SYSCALLDEF(portDestroy)
+	SYSCALL(24);
+.size portDestroy, .-portDestroy
+
+
+SYSCALLDEF(send)
+	SYSCALL(25);
 .size send, .-send
 
 
+SYSCALLDEF(recv)
+	SYSCALL(26);
+.size recv, .-recv
+
+
 SYSCALLDEF(lookup)
-	SYSCALL(25);
+	SYSCALL(27);
 .size lookup, .-lookup
 
 
 SYSCALLDEF(gettime)
-	SYSCALL(26);
+	SYSCALL(28);
 .size gettime, .-gettime
 
 
 SYSCALLDEF(keepidle)
-	SYSCALL(27)
+	SYSCALL(29)
 .size keepidle, .-keepidle

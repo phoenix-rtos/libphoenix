@@ -44,6 +44,12 @@ typedef struct {
 } msgdata_t;
 
 
+extern int portCreate(u32 *port);
+
+
+extern void portDestroy(u32 port);
+
+
 extern int send(u32 port, msgop_t op, void *data, size_t size, msgtype_t type, void *rdata, size_t rsize);
 
 
