@@ -20,76 +20,89 @@
 #include "sys/threads.h"
 #include "sys/mman.h"
 
-#define BUFLEN 40
 
-static char *buff[BUFLEN];
-static unsigned sizes[BUFLEN];
+struct {
+	unsigned nothreads;
+	unsigned allocslen;
 
-void test_malloc(unsigned seed)
+	struct {
+		char stack[1024] __attribute__ ((aligned(8)));
+		unsigned seed, noallocs;
+
+		struct test_malloc_alloc {
+			unsigned sz;
+			char *buf;
+		} allocs[40];
+	} threads[3];
+
+	handle_t mutex;
+
+} test_malloc_common;
+
+
+
+#define test_printf(...) do {\
+		mutexLock(test_malloc_common.mutex);\
+		printf(__VA_ARGS__);\
+		mutexUnlock(test_malloc_common.mutex);\
+	} while(0)
+
+
+void test_malloc(unsigned threadId)
 {
-	char *p;
-	int i, j, k, szmode, nofailed;
-	unsigned size = 0, imodeTrunc = 0;
+	unsigned *seed = &test_malloc_common.threads[threadId].seed;
+	char *ptr;
+	int i, j, k, szmode;
+	unsigned size = 0, imax, total = 0, ftotal = 0, nofailed = 0, counter = 0;
 
-	unsigned long total = 0, failedTotal;
+	struct test_malloc_alloc *allocs = test_malloc_common.threads[threadId].allocs;
 
 	enum {
 		IMODE_RANDOM = 0,
-		IMODE_TRUNCATED_RANDOM,
 		IMODE_SEQUENTIAL,
 		IMODE_NUM_MODES
 	} imode;
 
-	printf("test: malloc/realloc randomized tests, seed = %u\n", seed);
+	test_printf("test thread %d: malloc/realloc randomized tests, seed = %u\n", threadId, *seed);
 
-	memset(sizes, 0, BUFLEN * sizeof(unsigned));
-
-	for (i = 0; i < BUFLEN; i++)
-		buff[i] = NULL;
+	for (i = 0; i < test_malloc_common.allocslen; i++) {
+		allocs[i].sz = 0;
+		allocs[i].buf = NULL;
+	}
 
 	for (;;) {
-		imode = rand_r(&seed) % IMODE_NUM_MODES;
-		szmode = rand_r(&seed) % 11;
+		imode = rand_r(seed) % IMODE_NUM_MODES;
+		szmode = rand_r(seed) % 11;
+		imax = 1 + rand_r(seed) % test_malloc_common.allocslen;
 
-		printf("test: size picking mode set to %d, buffer slot: %s\n", szmode,
-		       (imode == 0) ? "random" :
-		       (imode == 1) ? "truncated random" : "picked sequentially");
-		i = 0;
+		test_printf("test thread %d: size picking mode set to %d, buffer slot: %s up to %u\n", threadId, szmode,
+			    (imode == IMODE_RANDOM) ? "random" : "picked sequentially", imax);
 
-		if (imode == IMODE_TRUNCATED_RANDOM) {
-			imodeTrunc = 1 + rand_r(&seed) % BUFLEN;
-			printf("test:   truncated to %u\n", imodeTrunc);
-		}
 
 		switch (szmode) {
 		case 6:
-			size = 1 + rand_r(&seed) % 50;
+			size = 1 + rand_r(seed) % 50;
 			break;
 		case 7:
-			size = 300 + rand_r(&seed) % 100;
+			size = 300 + rand_r(seed) % 100;
 			break;
 		case 8:
-			size = 800 + rand_r(&seed) % 500;
+			size = 800 + rand_r(seed) % 500;
 			break;
 		case 9:
-			size = 3000 + rand_r(&seed) % 1000;
+			size = 3000 + rand_r(seed) % 1000;
 			break;
 		default:
 			break;
 		};
 
-		nofailed = 0;
-		failedTotal = 0;
-		for (k = 1; k <= 100; ++k) {
+		for (i = 0, nofailed = 0, ftotal = 0, k = 1; k <= test_malloc_common.threads[threadId].noallocs; ++k) {
 			switch (imode) {
 			case IMODE_RANDOM:
-				i = rand_r(&seed) % BUFLEN;
-				break;
-			case IMODE_TRUNCATED_RANDOM:
-				i = rand_r(&seed) % imodeTrunc;
+				i = rand_r(seed) % imax;
 				break;
 			case IMODE_SEQUENTIAL:
-				i = (i + 1) % BUFLEN;
+				i = (i + 1) % test_malloc_common.allocslen;
 				break;
 			case IMODE_NUM_MODES:
 				break;
@@ -97,119 +110,121 @@ void test_malloc(unsigned seed)
 
 			switch (szmode) {
 			case 0:
-				size = 1 + rand_r(&seed) % 5;
+				size = 1 + rand_r(seed) % 5;
 				break;
 			case 1:
-				size = 1 + rand_r(&seed) % 50;
+				size = 1 + rand_r(seed) % 50;
 				break;
 			case 2:
-				size = 1 + rand_r(&seed) % 500;
+				size = 1 + rand_r(seed) % 500;
 				break;
 			case 3:
-				size = 1 + rand_r(&seed) % 1500;
+				size = 1 + rand_r(seed) % 1500;
 				break;
 			case 4:
-				size = 1 + rand_r(&seed) % 5000;
+				size = 1 + rand_r(seed) % 5000;
 				break;
 			case 5:
-				size = 1000 + rand_r(&seed) % 200;
+				size = 1000 + rand_r(seed) % 200;
 				break;
 			case 10:
-				size = 1 << (rand_r(&seed) % 10);
+				size = 1 << (rand_r(seed) % 10);
 				break;
 			default:
 				break;
 			};
 
 
-			if (rand_r(&seed) % 2) {
-				if (k % 10 == 0)
-					printf("\33[2K\rtest: %d/100 reallocing %u to %u", k, sizes[i], size);
+			if (rand_r(seed) % 2) {
+				ptr = realloc(allocs[i].buf, size);
 
-				p = realloc(buff[i], size);
-
-				if (p == NULL) {
+				if (ptr == NULL) {
 					nofailed++;
-					failedTotal += total;
-					free(buff[i]);
-					total -= sizes[i];
-					sizes[i] = 0;
-					buff[i] = NULL;
+					ftotal += total;
+					free(allocs[i].buf);
+					total -= allocs[i].sz;
+					allocs[i].sz = 0;
+					allocs[i].buf = NULL;
 				}
 				else {
-					for (j = 0; j < min(size, sizes[i]); ++j) {
-						if (p[j] != i) {
-							printf("\ntest: user memory corrupted (buffer %d at %d)\n", i, j);
+					for (j = 0; j < min(size, allocs[i].sz); ++j) {
+						if (ptr[j] != i) {
+							test_printf("test thread %d: user memory corrupted (buffer %d at %d is %d)\n", threadId, i, j, allocs[i].buf[j]);
 							for (;;) ;
 						}
 					}
 
-					if (size > sizes[i])
-						memset(p, i, size);
+					if (size > allocs[i].sz)
+						memset(ptr, i, size);
 
-					buff[i] = p;
-					total += size - sizes[i];
-					sizes[i] = size;
+					allocs[i].buf = ptr;
+					total += size - allocs[i].sz;
+					allocs[i].sz = size;
 				}
 			}
 			else {
-				if (buff[i] != NULL) {
-					for (j = 0; j < sizes[i]; ++j) {
-						if (buff[i][j] != i) {
-							printf("\ntest: user memory corrupted (buffer %d at %d)\n", i, j);
+				if (allocs[i].buf != NULL) {
+					for (j = 0; j < allocs[i].sz; ++j) {
+						if (allocs[i].buf[j] != i) {
+							test_printf("test thread %d: user memory corrupted (buffer %d at %d is %d)\n", threadId, i, j, allocs[i].buf[j]);
 							for (;;) ;
 						}
 					}
 
-					total -= sizes[i];
-					free(buff[i]);
-					buff[i] = NULL;
+					total -= allocs[i].sz;
+					free(allocs[i].buf);
 				}
 
-				if (k % 10 == 0)
-					printf("\33[2K\rtest: %d/100 allocating %u", k, size);
+				allocs[i].buf = malloc(size);
 
-				buff[i] = malloc(size);
-
-				if (buff[i] != NULL) {
-					sizes[i] = size;
+				if (allocs[i].buf != NULL) {
+					allocs[i].sz = size;
 					total += size;
-					memset(buff[i], i, size);
+					memset(allocs[i].buf, i, size);
 				}
 				else {
 					nofailed++;
-					failedTotal += total;
-					sizes[i] = 0;
+					ftotal += total;
+					allocs[i].sz = 0;
 				}
 			}
 		}
 
 		if (nofailed)
-			printf("\ntest: %d/500 allocations failed with avg %u bytes in use\n", nofailed, failedTotal / nofailed);
-		else
-			printf("\n");
+			test_printf("test thread %d: %d/%u allocations failed with avg %u bytes in use\n", threadId, nofailed, test_malloc_common.threads[threadId].noallocs, ftotal / nofailed);
 
-		if (rand_r(&seed) % 2 == 0) {
-			printf("test: freeing all memory\n");
-			for (i = 0; i < BUFLEN; i++) {
-				free(buff[i]);
-				total -= sizes[i];
-				sizes[i] = 0;
-				buff[i] = NULL;
+		if (rand_r(seed) % 2) {
+			test_printf("test thread %d: freeing all memory, global counter: %u, seed: %u\n", threadId, counter++, *seed);
+			for (i = 0; i < test_malloc_common.allocslen; i++) {
+				free(allocs[i].buf);
+				total -= allocs[i].sz;
+				allocs[i].sz = 0;
+				allocs[i].buf = NULL;
 			}
 		}
 	}
 }
 
 
+static void test_malloc_thread(void *id)
+{
+	test_malloc((unsigned) id);
+}
+
+
 int main(void)
 {
-	unsigned seed = 137;
+	unsigned i;
 	char *ptr;
+
+	mutexCreate(&test_malloc_common.mutex);
+	test_malloc_common.allocslen = sizeof(test_malloc_common.threads[0].allocs) / sizeof(test_malloc_common.threads[0].allocs[0]);
+	test_malloc_common.nothreads = sizeof(test_malloc_common.threads) / sizeof(test_malloc_common.threads[0]);
 
 	printf("test_malloc: Starting, main is at %p\n", main);
 
 	printf("test: malloc edge cases\n");
+
 	if ((ptr = malloc(0)) != NULL) {
 		printf("test: malloc(0) succeded with %p\n", ptr);
 	}
@@ -221,7 +236,14 @@ int main(void)
 		printf("test: malloc(-1) succeded with %p\n", ptr);
 	}
 
-	test_malloc(seed++);
+	for (i = 0; i < test_malloc_common.nothreads; ++i) {
+		test_malloc_common.threads[i].seed = i;
+		test_malloc_common.threads[i].noallocs = 10000;
+		test_printf("test: launching thread %d, stack: %p\n", i, test_malloc_common.threads[i].stack);
+		beginthread(test_malloc_thread, 1, test_malloc_common.threads[i].stack + sizeof(test_malloc_common.threads[0].stack), (void*) i);
+	}
+
+	for (;;) usleep(1000000);
 
 	return 0;
 }
