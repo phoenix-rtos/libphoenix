@@ -21,7 +21,8 @@
 
 #define lib_treeof(type, node_field, node) ({					\
 	int _off = (int) &(((type *) 0)->node_field);				\
-	(type *) ((node == &nil) ? NULL : ((void *) node - _off));	\
+	rbnode_t *tmpnode = (node);					\
+	(type *) ((tmpnode == NULL) ? NULL : ((void *) tmpnode - _off));	\
 })
 
 
@@ -36,9 +37,6 @@ typedef struct _rbnode_t {
 	struct _rbnode_t *right;
 	rbcolor_t color;
 } rbnode_t;
-
-
-extern rbnode_t nil;
 
 
 typedef int (*rbcomp_t)(rbnode_t *n1, rbnode_t *n2);
