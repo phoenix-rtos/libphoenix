@@ -22,15 +22,15 @@
 #include "sys/threads.h"
 #include "sys/mman.h"
 
+#define CEIL(value, size)			((((value) + (size) - 1) / (size)) * (size))
+#define FLOOR(value, size)			(((value) / (size)) * (size))
+
 #define CHUNK_PUSED                1
 #define CHUNK_CUSED                2
 
 #define CHUNK_OVERHEAD             (sizeof(size_t) + sizeof(heap_t*))
-#define CHUNK_MIN_SIZE             (__builtin_offsetof(chunk_t, node) + sizeof(size_t))
+#define CHUNK_MIN_SIZE             CEIL(__builtin_offsetof(chunk_t, node) + sizeof(size_t), 8)
 #define CHUNK_SMALLBIN_MAX_SIZE    (256 - CHUNK_OVERHEAD)
-
-#define CEIL(value, size)			((((value) + (size) - 1) / (size)) * (size))
-#define FLOOR(value, size)			(((value) / (size)) * (size))
 
 
 typedef struct _heap_t {
@@ -148,7 +148,7 @@ static inline int malloc_chunkIsFirst(chunk_t *chunk)
 
 static inline int malloc_chunkIsLast(chunk_t *chunk)
 {
-	return ((u32) chunk + malloc_chunkSize(chunk) + sizeof(chunk_t) > (u32) chunk->heap + chunk->heap->size);
+	return ((u32) chunk + malloc_chunkSize(chunk) + CHUNK_MIN_SIZE > (u32) chunk->heap + chunk->heap->size);
 }
 
 
@@ -229,10 +229,8 @@ static void _malloc_chunkRemove(chunk_t *chunk)
 
 static inline int malloc_chunkCanSplit(chunk_t *chunk, size_t size)
 {
-	return !((malloc_chunkSize(chunk) <= size + CHUNK_MIN_SIZE) ||
-		 (((u32) chunk + size + sizeof(chunk_t)) > ((u32) chunk->heap + chunk->heap->size)));
+	return (malloc_chunkSize(chunk) >= size + CHUNK_MIN_SIZE);
 }
-
 
 static void _malloc_chunkSplit(chunk_t *chunk, size_t size)
 {
