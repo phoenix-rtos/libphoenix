@@ -396,6 +396,9 @@ static int scanf_parse(const char *inp, char const *fmt0, va_list ap)
 					width = sizeof(buf) - 2;
 				width++;
 
+				if (flags & SUPPRESS)
+					width = ~0;
+
 				flags |= SIGNOK | NDIGITS | NZDIGITS;
 				for (p = buf; width; width--) {
 					int ok = 0;
@@ -456,7 +459,8 @@ static int scanf_parse(const char *inp, char const *fmt0, va_list ap)
 					if(!ok)
 						break;
 
-					*p++ = c;
+					if ((flags & SUPPRESS) == 0)
+						*p++ = c;
 					if (--inr > 0)
 						inp++;
 					else
@@ -482,7 +486,7 @@ static int scanf_parse(const char *inp, char const *fmt0, va_list ap)
 						res = strtoull(buf, (char **)NULL, base);
 					if (flags & POINTER)
 						*va_arg(ap, void **) =
-							(void *)(uint64_t *)res;
+							(void *)(unsigned)res;
 					else if (flags & SHORTSHORT)
 						*va_arg(ap, char *) = res;
 					else if (flags & SHORT)
