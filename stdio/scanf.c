@@ -249,6 +249,7 @@ static int scanf_parse(const char *inp, char const *fmt0, va_list ap)
 					c = CT_INT;
 					flags |= UNSIGNED;
 					base = 16;
+					break;
 
 				case 'n':
 					nconversions++;
@@ -529,4 +530,3 @@ int scanf(const char *format, ...)
 
 	return retVal;
 }
-
