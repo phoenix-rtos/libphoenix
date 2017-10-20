@@ -20,7 +20,7 @@
 
 static inline void do_test(int success, int ix, int *failed) {
 	if (!success) {
-		*failed++;
+		(*failed)++;
 		printf("test_scanf: test %d failed\n", ix);
 	}
 }
@@ -41,6 +41,7 @@ int test_scanf(void)
 	short hd;
 	void* p;
 	char s[8];
+	const char baddata[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x0};
 
 	do_test(sscanf("0x1234babe", "%p", &p) == 1 && p == (void*)0x1234babe, ix++, &failed);
 	do_test(sscanf("1234FACE", "%p", &p) == 1 && p == (void*)0x1234face, ix++, &failed);
@@ -59,6 +60,15 @@ int test_scanf(void)
 	do_test(sscanf("ASDBGIiufhsiu!asd", "%*[^!]%c", &c) == 1 && c == '!', ix++, &failed);
 	do_test(sscanf("abcbdbabcebfbg?das", "%*[a-w]%c", &c) == 1 && c == '?', ix++, &failed);
 	do_test(sscanf("deadbeef12345678deadc0de", "%8x%8x%8x", &x, &x1, &x2) == 3 && x == 0xdeadbeef && x1 == 0x12345678 && x2 == 0xdeadc0de, ix++, &failed);
+
+	do_test(sscanf("deadbeef 12345678 Zeadc0de", "%8x %8x %8x", &x, &x1, &x2) == 2 && x == 0xdeadbeef && x1 == 0x12345678, ix++, &failed);
+	do_test(sscanf("12345678a1234567", "%8d%8u", &d, &u) == 1 && d == 12345678, ix++, &failed);
+
+	do_test(sscanf("!@%SFDS@#$", "%8d", &d) == 0, ix++, &failed);
+	do_test(sscanf("$#&$%&%$@#^#$^&%$^@#$^&%$^#$%@#%#$^&%*^&*(^&&%$^#%$^&$%S@#$", "%d", &d) == 0, ix++, &failed);
+	do_test(sscanf("ąęść≠€ß¢½", "%d", &d) == 0, ix++, &failed);
+	do_test(sscanf("·½§²€³€¢³", "%d", &d) == 0, ix++, &failed);
+	do_test(sscanf(baddata, "%d", &d) == 0, ix++, &failed);
 
 	return failed;
 }
