@@ -21,7 +21,15 @@
 #include "sys/mman.h"
 
 
-struct {
+enum size_mode {
+	SZMODE_SMALL = 0,
+	SZMODE_MEDIUM,
+	SZMODE_BIG,
+	SZMODE_MIXED,
+	SZMODE_NUM_MODES,
+};
+
+static struct {
 	unsigned nothreads;
 	unsigned allocslen;
 
@@ -32,11 +40,10 @@ struct {
 		struct test_malloc_alloc {
 			unsigned sz;
 			char *buf;
-		} allocs[40];
+		} allocs[100];
 	} threads[3];
 
 	handle_t mutex;
-
 } test_malloc_common;
 
 
@@ -48,20 +55,32 @@ struct {
 	} while(0)
 
 
+unsigned random_size(enum size_mode szmode, unsigned *seed)
+{
+	switch (szmode) {
+	case SZMODE_SMALL:
+		return 1 + rand_r(seed) % 100;
+	case SZMODE_MEDIUM:
+		return 100 + rand_r(seed) % 400;
+	case SZMODE_BIG:
+		return 500 + rand_r(seed) % (10 * SIZE_PAGE);
+	case SZMODE_MIXED:
+		return random_size(rand_r(seed) % SZMODE_MIXED, seed);
+	default:
+		return 0;
+	}
+}
+
+
 void test_malloc(unsigned threadId)
 {
 	unsigned *seed = &test_malloc_common.threads[threadId].seed;
 	char *ptr;
-	int i, j, k, szmode;
+	int i, j, k;
+	enum size_mode szmode;
 	unsigned size = 0, imax, total = 0, ftotal = 0, nofailed = 0, counter = 0;
-
+	const char* szmodes[SZMODE_NUM_MODES] = {"small", "medium", "big", "mixed"};
 	struct test_malloc_alloc *allocs = test_malloc_common.threads[threadId].allocs;
-
-	enum {
-		IMODE_RANDOM = 0,
-		IMODE_SEQUENTIAL,
-		IMODE_NUM_MODES
-	} imode;
 
 	test_printf("test thread %d: malloc/realloc randomized tests, seed = %u\n", threadId, *seed);
 
@@ -71,69 +90,14 @@ void test_malloc(unsigned threadId)
 	}
 
 	for (;;) {
-		imode = rand_r(seed) % IMODE_NUM_MODES;
-		szmode = rand_r(seed) % 11;
+		szmode = rand_r(seed) % SZMODE_NUM_MODES;
 		imax = 1 + rand_r(seed) % test_malloc_common.allocslen;
 
-		test_printf("test thread %d: size picking mode set to %d, buffer slot: %s up to %u\n", threadId, szmode,
-			    (imode == IMODE_RANDOM) ? "random" : "picked sequentially", imax);
-
-
-		switch (szmode) {
-		case 6:
-			size = 1 + rand_r(seed) % 50;
-			break;
-		case 7:
-			size = 300 + rand_r(seed) % 100;
-			break;
-		case 8:
-			size = 800 + rand_r(seed) % 500;
-			break;
-		case 9:
-			size = 3000 + rand_r(seed) % 1000;
-			break;
-		default:
-			break;
-		};
+		test_printf("test thread %d: allocation size: %s, up to %u buffers\n", threadId, szmodes[szmode], imax);
 
 		for (i = 0, nofailed = 0, ftotal = 0, k = 1; k <= test_malloc_common.threads[threadId].noallocs; ++k) {
-			switch (imode) {
-			case IMODE_RANDOM:
-				i = rand_r(seed) % imax;
-				break;
-			case IMODE_SEQUENTIAL:
-				i = (i + 1) % test_malloc_common.allocslen;
-				break;
-			case IMODE_NUM_MODES:
-				break;
-			}
-
-			switch (szmode) {
-			case 0:
-				size = 1 + rand_r(seed) % 5;
-				break;
-			case 1:
-				size = 1 + rand_r(seed) % 50;
-				break;
-			case 2:
-				size = 1 + rand_r(seed) % 500;
-				break;
-			case 3:
-				size = 1 + rand_r(seed) % 1500;
-				break;
-			case 4:
-				size = 1 + rand_r(seed) % 5000;
-				break;
-			case 5:
-				size = 1000 + rand_r(seed) % 200;
-				break;
-			case 10:
-				size = 1 << (rand_r(seed) % 10);
-				break;
-			default:
-				break;
-			};
-
+			i = rand_r(seed) % imax;
+			size = random_size(szmode, seed);
 
 			if (rand_r(seed) % 2) {
 				ptr = realloc(allocs[i].buf, size);
@@ -150,7 +114,8 @@ void test_malloc(unsigned threadId)
 					for (j = 0; j < min(size, allocs[i].sz); ++j) {
 						if (ptr[j] != i) {
 							test_printf("test thread %d: user memory corrupted (buffer %d at %d is %d)\n", threadId, i, j, allocs[i].buf[j]);
-							for (;;) ;
+							for (;;)
+								usleep(100000);
 						}
 					}
 
@@ -167,7 +132,8 @@ void test_malloc(unsigned threadId)
 					for (j = 0; j < allocs[i].sz; ++j) {
 						if (allocs[i].buf[j] != i) {
 							test_printf("test thread %d: user memory corrupted (buffer %d at %d is %d)\n", threadId, i, j, allocs[i].buf[j]);
-							for (;;) ;
+							for (;;)
+								usleep(100000);
 						}
 					}
 

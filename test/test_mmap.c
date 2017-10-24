@@ -86,7 +86,7 @@ void test_mmap(void *threadId)
 }
 
 
-int main()
+int main(void)
 {
 	int i;
 
