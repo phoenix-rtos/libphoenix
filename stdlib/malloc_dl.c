@@ -223,7 +223,9 @@ static void _malloc_chunkRemove(chunk_t *chunk)
 
 	idx = malloc_getlidx(chunksz);
 	lib_rbRemove(&malloc_common.lbins[idx], &chunk->node);
-	malloc_common.lbinmap &= ~(1 << idx);
+
+	if (malloc_common.lbins[idx].root == NULL)
+		malloc_common.lbinmap &= ~(1 << idx);
 }
 
 
@@ -331,19 +333,19 @@ static void *_malloc_allocLarge(size_t size)
 		0x17ffff, 0x1fffff, 0x2fffff, 0x3fffff, 0x5fffff, 0x7fffff, 0xbfffff, 0xffffffff
 	};
 
-	unsigned int binmap = malloc_common.lbinmap;
 	unsigned int idx = malloc_getlidx(size);
+	unsigned int binmap = malloc_common.lbinmap & ~((1 << idx) - 1);
 	heap_t *heap;
 	chunk_t *chunk = NULL;
 	chunk_t t;
 	t.size = size;
 
-	while (idx < 32 && binmap != 0) {
+	while (idx < 32 && binmap) {
 		chunk = lib_treeof(chunk_t, node, lib_rbFindEx(malloc_common.lbins[idx].root, &t.node, malloc_find));
 		if (chunk != NULL)
 			break;
 
-		binmap = malloc_common.lbinmap & ~((1 << ++idx) - 1);
+		binmap = binmap & ~(1 << idx++);
 	}
 
 	if (chunk == NULL) {
@@ -536,4 +538,93 @@ void _malloc_init(void)
 	}
 
 	mutexCreate(&malloc_common.mutex);
+}
+
+
+#define ASSERT(cond, ...) do {					\
+		if (!(cond)) {					\
+			printf(__VA_ARGS__);			\
+			for (;;) ;				\
+		}						\
+	} while (0)
+
+
+static void malloc_test_heap(chunk_t *chunk)
+{
+	size_t sz = malloc_chunkSize(chunk);
+	chunk_t *next = malloc_chunkNext(chunk);
+	const char *unmerged = "malloc_dl: unmerged free chunks\n";
+	const char *pused = "malloc_dl: invalid PUSED flag\n";
+
+	ASSERT(chunk->size & CHUNK_PUSED, pused);
+	ASSERT(next == NULL || (next->size & CHUNK_CUSED), unmerged);
+	ASSERT(next == NULL || !(next->size & CHUNK_PUSED), pused);
+
+	next = malloc_chunkPrev(chunk);
+	ASSERT(next == NULL || (next->size & CHUNK_CUSED), unmerged);
+	ASSERT(chunk->size & CHUNK_PUSED, pused);
+}
+
+
+static void malloc_test_lbin(int lidx, chunk_t *chunk)
+{
+	size_t sz;
+
+	if (chunk == NULL)
+		return;
+
+	malloc_test_heap(chunk);
+
+	sz = malloc_chunkSize(chunk);
+	ASSERT(!(chunk->size & CHUNK_CUSED), "malloc_dl: free chunk marked as used\n");
+	ASSERT(malloc_getlidx(sz) == lidx, "malloc_dl: wrong chunk size (%u) at lbin %d", sz, lidx);
+
+/* TODO: uncomment when lbins are trees of lists as they should be
+	chunk_t *c;
+	c = chunk;
+
+	do  {
+		ASSERT(!(c->size & CHUNK_CUSED), "malloc_dl: free chunk marked as used\n");
+		ASSERT(malloc_chunkSize(c) == sz, "malloc_dl: wrong chunk size at lidx %d\n", lidx);
+	} while (c->next != chunk && (c = c->next));
+*/
+
+	malloc_test_lbin(lidx, lib_treeof(chunk_t, node, chunk->node.left));
+	malloc_test_lbin(lidx, lib_treeof(chunk_t, node, chunk->node.right));
+}
+
+
+void malloc_test(void)
+{
+	int i;
+	chunk_t *chunk;
+	mutexLock(malloc_common.mutex);
+
+	for (i = 0; i < 32; ++i) {
+		if (malloc_common.sbinmap & (1 << i)) {
+			ASSERT(malloc_common.sbins[i] != NULL, "malloc_dl: sbinmap bit %d set but bin is empty\n", i);
+			chunk = malloc_common.sbins[i];
+
+			do  {
+				malloc_test_heap(chunk);
+				ASSERT(!(chunk->size & CHUNK_CUSED), "malloc_dl: free chunk marked as used\n");
+				ASSERT(malloc_chunkSize(chunk) == (i << 3), "malloc_dl: wrong chunk size at sidx %d\n", i);
+			} while (chunk->next != malloc_common.sbins[i] && (chunk = chunk->next));
+		}
+		else
+			ASSERT(malloc_common.sbins[i] == NULL, "malloc_dl: empty lbin %d should be NULL\n", i);
+	}
+
+	for (i = 0; i < 32; ++i) {
+		if (malloc_common.lbinmap & (1 << i)) {
+			ASSERT(malloc_common.lbins[i].root != NULL, "malloc_dl: lbinmap bit %d set but bin is empty\n", i);
+			chunk = lib_treeof(chunk_t, node, malloc_common.lbins[i].root);
+
+			malloc_test_lbin(i, chunk);
+		}
+		else
+			ASSERT(malloc_common.lbins[i].root == NULL, "malloc_dl: empty lbin %d should be NULL\n", i);
+	}
+
+	mutexUnlock(malloc_common.mutex);
 }

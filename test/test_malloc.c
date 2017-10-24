@@ -47,6 +47,8 @@ static struct {
 } test_malloc_common;
 
 
+extern void malloc_test(void);
+
 
 #define test_printf(...) do {\
 		mutexLock(test_malloc_common.mutex);\
@@ -79,7 +81,7 @@ void test_malloc(unsigned threadId)
 	int i, j, k;
 	enum size_mode szmode;
 	unsigned size = 0, imax, total = 0, ftotal = 0, nofailed = 0, counter = 0;
-	const char* szmodes[SZMODE_NUM_MODES] = {"small", "medium", "big", "mixed"};
+	const char szmodes[SZMODE_NUM_MODES][7] = {"small", "medium", "big", "mixed"};
 	struct test_malloc_alloc *allocs = test_malloc_common.threads[threadId].allocs;
 
 	test_printf("test thread %d: malloc/realloc randomized tests, seed = %u\n", threadId, *seed);
@@ -94,6 +96,8 @@ void test_malloc(unsigned threadId)
 		imax = 1 + rand_r(seed) % test_malloc_common.allocslen;
 
 		test_printf("test thread %d: allocation size: %s, up to %u buffers\n", threadId, szmodes[szmode], imax);
+
+		malloc_test();
 
 		for (i = 0, nofailed = 0, ftotal = 0, k = 1; k <= test_malloc_common.threads[threadId].noallocs; ++k) {
 			i = rand_r(seed) % imax;
