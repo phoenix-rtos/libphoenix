@@ -17,56 +17,87 @@
 #include "stdlib.h"
 #include "unistd.h"
 #include "sys/mman.h"
+#include "sys/threads.h"
 
 
-void test_mmap(void)
+struct {
+	handle_t mutex;
+} test_mmap_common;
+
+
+#define test_printf(...) do {\
+		mutexLock(test_mmap_common.mutex);\
+		printf(__VA_ARGS__);\
+		mutexUnlock(test_mmap_common.mutex);\
+	} while(0)
+
+
+void test_mmap(void *threadId)
 {
-#if 0
-	struct {
-		void *vaddr;
-		size_t size;
-	} buff[150];
+	const unsigned bufsz = 16;
+	char *buf[bufsz];
+	unsigned sizes[bufsz];
 
-	for (i = 0; i < 1024; i++) {
+	int i = 0, j;
 
-size = (unsigned long long)(1 << 16) * rand_r(&seed) / RAND_MAX;
-		v = mmap(0, 4096 * 16, 0, 0, NULL, 0);
+	unsigned seed = (unsigned) threadId, sz, cnt, nofailed = 0;
 
-		if (v == NULL) {
-			printf("NULL at %p\n", vaddr);
-			for (;;);
-		}
-		vaddr = v;
-	
-		memset(vaddr, ((int)vaddr >> 16) & 0xff, 4096);
+	test_printf("thread %d launching\n", (int) threadId);
 
-		printf("\rvaddr=%p, %x", vaddr, ((int)vaddr >> 16) & 0xff);
+	for (i = 0; i < bufsz; ++i) {
+		buf[i] = (char*) -1;
 	}
-	printf("\ncheck\n");
 
-	for (i = 0; i < 1024 * 8; i++) {
-		for (k = 0; k < 4096 * 16; k++) {
-			if (*(u8 *)(vaddr + k) != (((int)vaddr >> 16) & 0xff)) {
-				printf("INTERFERENCE!!\n");
-				for (;;);
-			}			
+	memset(sizes, 0, sizeof(sizes));
+
+	for (cnt = 0; ; ++cnt) {
+
+		if (cnt && (cnt % 10000 == 0)) {
+			test_printf("test (thread %d): integrity ok, %u/%u allocs failed\n", (int) threadId, nofailed, cnt);
 		}
-//		munmap(vaddr, 4096);
 
-		printf("\rvaddr=%p, %x", vaddr, ((int)vaddr >> 16) & 0xff);
-		vaddr -= 4096 * 16;
+		i = rand_r(&seed) % bufsz;
+
+		if (buf[i] != (char*) -1) {
+			for (j = 0; j < sizes[i]; ++j) {
+				if (buf[i][j] != (char) i) {
+					test_printf("test (thread %d): user memory corrupt, buffer %d at %d is %d\n", (int) threadId, i, j, buf[i][j]);
+					for (;;)
+						usleep(1000000);
+				}
+			}
+
+			munmap(buf[i], sizes[i]);
+			buf[i] = (char*) -1;
+			sizes[i] = 0;
+		}
+
+		sz = SIZE_PAGE * (1 + rand_r(&seed) % 32);
+
+		buf[i] = mmap(NULL, sz, PROT_READ | PROT_WRITE, MAP_PRIVATE, NULL, 0);
+
+		if (buf[i] != (char*) -1) {
+			sizes[i] = sz;
+			memset(buf[i], (char) i, sz);
+		}
+		else
+			nofailed++;
 	}
-	printf("\n");
-#endif
 }
 
 
-int main(void)
+int main()
 {
-	printf("test_mmap: Starting, main is at %p\n", main);
-	test_mmap();
+	int i;
 
-	for (;;);
+	printf("test_mmap: Starting, main is at %p\n", main);
+	mutexCreate(&test_mmap_common.mutex);
+
+	for(i = 0; i < 1; ++i)
+		beginthread(test_mmap, 1, malloc(1024) + 1024, (void*) i);
+
+	for (;;)
+		usleep(1000000);
 
 	return 0;
 }
