@@ -177,3 +177,8 @@ SYSCALLDEF(gettime)
 SYSCALLDEF(keepidle)
 	SYSCALL(29)
 .size keepidle, .-keepidle
+
+
+SYSCALLDEF(mmdump)
+	SYSCALL(30)
+.size mmdump, .-mmdump
