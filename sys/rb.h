@@ -58,7 +58,10 @@ typedef struct _rbtree_t {
 extern void lib_rbInit(rbtree_t *tree, rbcomp_t compare, rbaugment_t augment);
 
 
-extern int lib_rbInsert(rbtree_t *tree, rbnode_t *node);
+extern rbnode_t *lib_rbInsert(rbtree_t *tree, rbnode_t *node);
+
+
+extern void rb_transplant(rbtree_t *tree, rbnode_t *u, rbnode_t *v);
 
 
 extern void lib_rbRemove(rbtree_t *tree, rbnode_t *node);

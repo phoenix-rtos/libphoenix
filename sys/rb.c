@@ -210,7 +210,7 @@ static void lib_rbRemoveBalance(rbtree_t *tree, rbnode_t *parent, rbnode_t *node
 }
 
 
-static void rb_transplant(rbtree_t *tree, rbnode_t *u, rbnode_t *v)
+void rb_transplant(rbtree_t *tree, rbnode_t *u, rbnode_t *v)
 {
 	if (u->parent != NULL) {
 		if (u == u->parent->left)
@@ -230,7 +230,7 @@ static void rb_transplant(rbtree_t *tree, rbnode_t *u, rbnode_t *v)
 }
 
 
-int lib_rbInsert(rbtree_t *tree, rbnode_t *z)
+rbnode_t *lib_rbInsert(rbtree_t *tree, rbnode_t *z)
 {
 	rbnode_t *y = NULL;
 	rbnode_t *x = tree->root;
@@ -241,7 +241,7 @@ int lib_rbInsert(rbtree_t *tree, rbnode_t *z)
 
 		c = tree->compare(y, z);
 		if (c == 0)
-			return -EEXIST;
+			return y;
 
 		x = (c > 0) ? x->left : x->right;
 	}
@@ -260,7 +260,7 @@ int lib_rbInsert(rbtree_t *tree, rbnode_t *z)
 
 	rb_augment(tree, z);
 	lib_rbInsertBalance(tree, z);
-	return EOK;
+	return NULL;
 }
 
 
