@@ -28,6 +28,9 @@
 #define MAP_ANONYMOUS  4
 
 
+extern void mmdump(void);
+
+
 extern void *mmap(void *vaddr, size_t size, int prot, int flags, oid_t *oid, offs_t offs);
 
 
