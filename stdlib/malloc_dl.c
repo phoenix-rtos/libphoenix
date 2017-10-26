@@ -79,12 +79,8 @@ static int malloc_cmp(rbnode_t *n1, rbnode_t *n2)
 	size_t e1sz = malloc_chunkSize(e1);
 	size_t e2sz = malloc_chunkSize(e2);
 
-	if (e1sz == e2sz) {
-		if (e1 == e2)
-			return 0;
-
-		return (e1 > e2) ? 1 : -1;
-	}
+	if (e1sz == e2sz)
+		return 0;
 
 	return (e1sz > e2sz) ? 1 : -1;
 }
@@ -193,6 +189,7 @@ static void _malloc_chunkAdd(chunk_t *chunk)
 {
 	unsigned int idx;
 	size_t chunksz = malloc_chunkSize(chunk);
+	chunk_t *exist;
 
 	if (chunksz <= CHUNK_SMALLBIN_MAX_SIZE) {
 		idx = malloc_getsidx(chunksz);
@@ -202,7 +199,12 @@ static void _malloc_chunkAdd(chunk_t *chunk)
 	}
 
 	idx = malloc_getlidx(chunksz);
-	lib_rbInsert(&malloc_common.lbins[idx], &chunk->node);
+	exist = lib_treeof(chunk_t, node, lib_rbInsert(&malloc_common.lbins[idx], &chunk->node));
+	if (exist != NULL)
+		/* Mark chunk as not actually being in the tree */
+		chunk->node.parent = &chunk->node;
+	LIST_ADD(&exist, chunk);
+
 	malloc_common.lbinmap |= (1 << idx);
 }
 
@@ -211,6 +213,7 @@ static void _malloc_chunkRemove(chunk_t *chunk)
 {
 	unsigned int idx;
 	size_t chunksz = malloc_chunkSize(chunk);
+	chunk_t *next = chunk;
 
 	if (chunksz <= CHUNK_SMALLBIN_MAX_SIZE) {
 		idx = malloc_getsidx(chunksz);
@@ -222,10 +225,22 @@ static void _malloc_chunkRemove(chunk_t *chunk)
 	}
 
 	idx = malloc_getlidx(chunksz);
-	lib_rbRemove(&malloc_common.lbins[idx], &chunk->node);
+	LIST_REMOVE(&next, chunk);
 
-	if (malloc_common.lbins[idx].root == NULL)
-		malloc_common.lbinmap &= ~(1 << idx);
+	if (next == NULL) {
+		lib_rbRemove(&malloc_common.lbins[idx], &chunk->node);
+
+		if (malloc_common.lbins[idx].root == NULL)
+			malloc_common.lbinmap &= ~(1 << idx);
+	}
+	else if (chunk->node.parent != &chunk->node) {
+		next->node = chunk->node;
+		rb_transplant(&malloc_common.lbins[idx], &chunk->node, &next->node);
+		if (next->node.left != NULL)
+			next->node.left->parent = &next->node;
+		if (next->node.right != NULL)
+			next->node.right->parent = &next->node;
+	}
 }
 
 
@@ -233,6 +248,7 @@ static inline int malloc_chunkCanSplit(chunk_t *chunk, size_t size)
 {
 	return (malloc_chunkSize(chunk) >= size + CHUNK_MIN_SIZE);
 }
+
 
 static void _malloc_chunkSplit(chunk_t *chunk, size_t size)
 {
@@ -551,7 +567,6 @@ void _malloc_init(void)
 
 static void malloc_test_heap(chunk_t *chunk)
 {
-	size_t sz = malloc_chunkSize(chunk);
 	chunk_t *next = malloc_chunkNext(chunk);
 	const char *unmerged = "malloc_dl: unmerged free chunks\n";
 	const char *pused = "malloc_dl: invalid PUSED flag\n";
@@ -569,6 +584,7 @@ static void malloc_test_heap(chunk_t *chunk)
 static void malloc_test_lbin(int lidx, chunk_t *chunk)
 {
 	size_t sz;
+	chunk_t *c;
 
 	if (chunk == NULL)
 		return;
@@ -579,15 +595,11 @@ static void malloc_test_lbin(int lidx, chunk_t *chunk)
 	ASSERT(!(chunk->size & CHUNK_CUSED), "malloc_dl: free chunk marked as used\n");
 	ASSERT(malloc_getlidx(sz) == lidx, "malloc_dl: wrong chunk size (%u) at lbin %d", sz, lidx);
 
-/* TODO: uncomment when lbins are trees of lists as they should be
-	chunk_t *c;
 	c = chunk;
-
 	do  {
 		ASSERT(!(c->size & CHUNK_CUSED), "malloc_dl: free chunk marked as used\n");
 		ASSERT(malloc_chunkSize(c) == sz, "malloc_dl: wrong chunk size at lidx %d\n", lidx);
 	} while (c->next != chunk && (c = c->next));
-*/
 
 	malloc_test_lbin(lidx, lib_treeof(chunk_t, node, chunk->node.left));
 	malloc_test_lbin(lidx, lib_treeof(chunk_t, node, chunk->node.right));
