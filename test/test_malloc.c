@@ -97,8 +97,6 @@ void test_malloc(unsigned threadId)
 
 		test_printf("test thread %d: allocation size: %s, up to %u buffers\n", threadId, szmodes[szmode], imax);
 
-		malloc_test();
-
 		for (i = 0, nofailed = 0, ftotal = 0, k = 1; k <= test_malloc_common.threads[threadId].noallocs; ++k) {
 			i = rand_r(seed) % imax;
 			size = random_size(szmode, seed);
@@ -158,6 +156,8 @@ void test_malloc(unsigned threadId)
 					allocs[i].sz = 0;
 				}
 			}
+
+			malloc_test();
 		}
 
 		if (nofailed)

@@ -52,8 +52,8 @@ void test_mmap(void *threadId)
 
 	for (cnt = 0; ; ++cnt) {
 
-		if (cnt && (cnt % 10000 == 0)) {
-			test_printf("test (thread %d): integrity ok, %u/%u allocs failed\n", (int) threadId, nofailed, cnt);
+		if (cnt && (cnt % 1000 == 0)) {
+			test_printf("test (thread %d): integrity ok, %u/%u (%.2f%%) allocs failed\n", (int) threadId, nofailed, cnt, 100 * (float) nofailed / cnt);
 		}
 
 		i = rand_r(&seed) % bufsz;
@@ -93,7 +93,7 @@ int main(void)
 	printf("test_mmap: Starting, main is at %p\n", main);
 	mutexCreate(&test_mmap_common.mutex);
 
-	for(i = 0; i < 1; ++i)
+	for(i = 0; i < 3; ++i)
 		beginthread(test_mmap, 1, malloc(1024) + 1024, (void*) i);
 
 	for (;;)
