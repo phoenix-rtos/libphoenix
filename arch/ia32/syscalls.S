@@ -156,31 +156,36 @@ SYSCALLDEF(portDestroy)
 .size portDestroy, .-portDestroy
 
 
-SYSCALLDEF(send)
+SYSCALLDEF(portRegister)
 	SYSCALL(25);
+.size portRegister, .-portRegister
+
+
+SYSCALLDEF(send)
+	SYSCALL(26);
 .size send, .-send
 
 
 SYSCALLDEF(recv)
-	SYSCALL(26);
+	SYSCALL(27);
 .size recv, .-recv
 
 
 SYSCALLDEF(lookup)
-	SYSCALL(27);
+	SYSCALL(28);
 .size lookup, .-lookup
 
 
 SYSCALLDEF(gettime)
-	SYSCALL(28);
+	SYSCALL(29);
 .size gettime, .-gettime
 
 
 SYSCALLDEF(keepidle)
-	SYSCALL(29)
+	SYSCALL(30)
 .size keepidle, .-keepidle
 
 
 SYSCALLDEF(mmdump)
-	SYSCALL(30)
+	SYSCALL(31)
 .size mmdump, .-mmdump
