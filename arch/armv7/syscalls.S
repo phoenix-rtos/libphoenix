@@ -169,21 +169,26 @@ SYSCALLDEF(recv)
 .size recv, .-recv
 
 
-SYSCALLDEF(lookup)
+SYSCALLDEF(respond)
 	SYSCALL(28);
+.size respond, .-respond
+
+
+SYSCALLDEF(lookup)
+	SYSCALL(29);
 .size lookup, .-lookup
 
 
 SYSCALLDEF(gettime)
-	SYSCALL(29);
+	SYSCALL(30);
 .size gettime, .-gettime
 
 
 SYSCALLDEF(keepidle)
-	SYSCALL(30)
+	SYSCALL(31)
 .size keepidle, .-keepidle
 
 
 SYSCALLDEF(mmdump)
-	SYSCALL(31)
+	SYSCALL(32)
 .size mmdump, .-mmdump
