@@ -19,7 +19,7 @@
 #include ARCH
 
 
-extern int beginthread(void (*start)(void *), unsigned int priority, void *stack, void *arg);
+extern int beginthread(void (*start)(void *), unsigned int priority, void *stack, unsigned int stacksz, void *arg);
 
 
 extern void endthread(void);

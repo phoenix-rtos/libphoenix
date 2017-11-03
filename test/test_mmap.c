@@ -95,7 +95,7 @@ int main(void)
 	mutexCreate(&test_mmap_common.mutex);
 
 	for(i = 0; i < 3; ++i)
-		beginthread(test_mmap, 1, malloc(1024) + 1024, (void*) i);
+		beginthread(test_mmap, 1, malloc(1024), 1024, (void*) i);
 
 	for (;;)
 		usleep(1000000);
