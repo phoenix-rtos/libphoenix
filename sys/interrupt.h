@@ -16,6 +16,6 @@
 #ifndef _LIBPHOENIX_SYS_INTERRUPT_H_
 #define _LIBPHOENIX_SYS_INTERRUPT_H_
 
-extern int interrupt(unsigned int n, int (*f)(unsigned int, void *), void *arg);
+extern int interrupt(unsigned int n, int (*f)(unsigned int, void *), void *arg, unsigned int cond);
 
 #endif
