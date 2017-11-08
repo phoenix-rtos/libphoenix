@@ -27,9 +27,9 @@ extern int portCreate(u32 *port);
 
 extern void portDestroy(u32 port);
 
-extern int portRegister(u32 port, char *name, oid_t *oid);
+extern int portRegister(u32 port, const char *name, oid_t *oid);
 
-extern int lookup(char *name, oid_t *oid);
+extern int lookup(const char *name, oid_t *oid);
 
 
 /* Message passing */
