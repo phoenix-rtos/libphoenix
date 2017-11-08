@@ -94,7 +94,7 @@ extern int atexit(void (*func)(void));
 
 
 /* Causes the program to terminate normally.*/
-extern void exit(int status);
+extern void exit(int status) __attribute__((noreturn));
 
 
 /* Causes the program to terminate without cleanup.*/
