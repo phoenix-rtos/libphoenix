@@ -42,6 +42,10 @@ extern void *memmove(void *dest, const void *src, size_t n);
 extern void *memset(void *str, int c, size_t n);
 
 
+/* Copies word v (an unsigned char) to the first n characters of the string pointed to, by the argument str. */
+extern void *memsetw(void *str, int v, size_t n);
+
+
 /* Appends the string pointed to, by src to the end of the string pointed to by dest. */
 extern char *strcat(char *dest, const char *src);
 

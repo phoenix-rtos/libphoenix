@@ -74,6 +74,7 @@ typedef u32 handle_t;
 #define SIZE_PAGE 0x1000
 
 
+#include "arch/ia32/io.h"
 #include "string.h"
 
 

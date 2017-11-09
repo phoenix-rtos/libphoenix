@@ -28,6 +28,11 @@
 #define MAP_ANONYMOUS  4
 
 
+/* Predefined oids */
+#define OID_NULL         NULL
+#define OID_PHYSMEM      (void *)-1
+
+
 extern void mmdump(void);
 
 
