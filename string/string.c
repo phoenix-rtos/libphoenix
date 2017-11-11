@@ -255,7 +255,7 @@ void *memmove(void *dest, const void *src, size_t n)
 		for (i = 0; i < n; ++i)
 			((char *)dest)[i] = ((const char *)src)[i];
 	else
-		for (i = n; i > 0; --i)
+		for (i = n; i-- > 0; )
 			((char *)dest)[i] = ((const char *)src)[i];
 	return dest;
 }
