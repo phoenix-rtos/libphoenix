@@ -192,3 +192,8 @@ SYSCALLDEF(keepidle)
 SYSCALLDEF(mmdump)
 	SYSCALL(32)
 .size mmdump, .-mmdump
+
+
+SYSCALLDEF(platformctl)
+	SYSCALL(33)
+.size platformctl, .-platformctl
