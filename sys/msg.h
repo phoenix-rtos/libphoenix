@@ -20,12 +20,12 @@
 
 
 typedef enum _msgtype_t {
-	NOTIFY, NORMAL
+	NOTIFY = 0, NORMAL
 } msgtype_t;
 
 
 typedef enum _msgop_t {
-	READ, WRITE, DEVCTL
+	READ = 0, WRITE, DEVCTL, OPEN, CLOSE
 } msgop_t;
 
 
@@ -56,7 +56,7 @@ extern int portRegister(u32 port, char *name);
 extern int send(u32 port, msgop_t op, void *data, size_t size, msgtype_t type, void *rdata, size_t rsize);
 
 
-extern int recv(u32 port, void *data, size_t size, msghdr_t *hdr, time_t timeout);
+extern int recv(u32 port, void *data, size_t size, msghdr_t *hdr);
 
 
 extern int respond(u32 port, int err, void *data, size_t size);
