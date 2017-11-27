@@ -96,13 +96,13 @@ static const unsigned char *__sccl(char *tab, const unsigned char *fmt)
 }
 
 
-static int scanf_parse(const char *inp, char const *fmt0, va_list ap)
+static int scanf_parse(char *ccltab, const char *inp, char const *fmt0, va_list ap)
 {
 	const unsigned char *fmt = (const unsigned char *)fmt0;
 	int c, n, inr, flags, nassigned, nconversions, nread, base;
 	size_t width;
 	char *p, *p0;
-	char ccltab[256], buf[32];
+	char buf[32];
 
 	static short basefix[17] = { 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
 
@@ -513,10 +513,13 @@ int sscanf(const char *str, const char *format, ...)
 {
 	int retVal;
 	va_list arg;
+	char *ccltab = malloc(256);
 
 	va_start(arg, format);
-	retVal = scanf_parse(str, format, arg);
+	retVal = scanf_parse(ccltab, str, format, arg);
 	va_end(arg);
+
+	free(ccltab);
 
 	return retVal;
 }
