@@ -194,3 +194,8 @@ SYSCALLDEF(keepidle)
 SYSCALLDEF(mmdump)
 	SYSCALL(32)
 .size mmdump, .-mmdump
+
+
+SYSCALLDEF(wdgreload)
+	SYSCALL(34)
+.size wdgreload, .-wdgreload

@@ -197,3 +197,8 @@ SYSCALLDEF(mmdump)
 SYSCALLDEF(platformctl)
 	SYSCALL(33)
 .size platformctl, .-platformctl
+
+
+SYSCALLDEF(wdgreload)
+	SYSCALL(34)
+.size wdgreload, .-wdgreload
