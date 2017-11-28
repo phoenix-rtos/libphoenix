@@ -350,10 +350,7 @@ rbnode_t *lib_rbPrev(rbnode_t *node)
 	while (x->parent != NULL && x == x->parent->left)
 		x = x->parent;
 
-	if (x->parent != NULL)
-		return x->parent;
-	else
-		return NULL;
+	return x->parent;
 }
 
 
@@ -367,10 +364,7 @@ rbnode_t *lib_rbNext(rbnode_t *node)
 	while (x->parent != NULL && x == x->parent->right)
 		x = x->parent;
 
-	if (x->parent != NULL)
-		return x->parent;
-	else
-		return NULL;
+	return x->parent;
 }
 
 
