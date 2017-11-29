@@ -25,8 +25,7 @@ typedef offs_t fpos_t;
 
 
 typedef struct _FILE {
-	u32 port;
-	u32 id;
+	u64 oid;
 	char *buff;
 	size_t buffsz;
 	size_t pos;
