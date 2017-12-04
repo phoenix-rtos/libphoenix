@@ -66,7 +66,7 @@ typedef u64 offs_t;
 
 typedef struct _oid_t {
 	u32 port;
-	u64 id;
+	u32 id;
 } oid_t;
 
 
