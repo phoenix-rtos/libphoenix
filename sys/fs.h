@@ -19,7 +19,6 @@
 typedef struct {
 	unsigned int id;
 	size_t pos;
-	size_t bufflen;
 	unsigned char buff[];
 } __attribute__((packed)) fsdata_t;
 
