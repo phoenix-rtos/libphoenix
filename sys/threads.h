@@ -19,10 +19,16 @@
 #include ARCH
 
 
-extern int beginthread(void (*start)(void *), unsigned int priority, void *stack, unsigned int stacksz, void *arg);
+extern int beginendthread(void (*start)(void *), void (*end)(void), unsigned int priority, void *stack, unsigned int stacksz, void *arg);
 
 
 extern void endthread(void);
+
+
+static inline int beginthread(void (*start)(void *), unsigned int priority, void *stack, unsigned int stacksz, void *arg)
+{
+	return beginendthread(start, endthread, priority, stack, stacksz, arg);
+}
 
 
 extern int mutexCreate(handle_t *h);

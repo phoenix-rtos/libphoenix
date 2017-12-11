@@ -76,9 +76,9 @@ SYSCALLDEF(getppid)
 .size getppid, .-getppid
 
 
-SYSCALLDEF(beginthread)
+SYSCALLDEF(beginendthread)
 	SYSCALL(9);
-.size beginthread, .-beginthread
+.size beginendthread, .-beginendthread
 
 
 SYSCALLDEF(endthread)
