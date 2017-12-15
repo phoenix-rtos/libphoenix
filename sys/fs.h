@@ -33,6 +33,19 @@ typedef unsigned int fsclose_t;
 
 
 typedef struct {
+	unsigned int port;
+	char name[];
+} __attribute__((packed)) fsmount_t;
+
+
+typedef struct {
+	oid_t oid;
+	size_t pos;
+	char path[];
+} __attribute__((packed)) fslookup_t;
+
+
+typedef struct {
 	unsigned int id;
 	unsigned int cmd;
 	unsigned long arg;

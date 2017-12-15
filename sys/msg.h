@@ -25,7 +25,7 @@ typedef enum _msgtype_t {
 
 
 typedef enum _msgop_t {
-	READ = 0, WRITE, DEVCTL, OPEN, CLOSE, MOUNT, LOOKUP
+	READ = 0, WRITE, DEVCTL, OPEN, CLOSE, MOUNT, UMOUNT, LOOKUP
 } msgop_t;
 
 
@@ -50,7 +50,7 @@ extern int portCreate(u32 *port);
 extern void portDestroy(u32 port);
 
 
-extern int portRegister(u32 port, char *name);
+extern int portRegister(u32 port, const char *name);
 
 
 extern int send(u32 port, msgop_t op, void *data, size_t size, msgtype_t type, void *rdata, size_t rsize);
