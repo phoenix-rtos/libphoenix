@@ -16,20 +16,29 @@
 #ifndef _LIBPHOENIX_SYS_FS_H_
 #define _LIBPHOENIX_SYS_FS_H_
 
+#include ARCH
+#include <fcntl.h>
+
 typedef struct {
-	unsigned int id;
+	id_t id;
 	size_t pos;
 	unsigned char buff[];
 } __attribute__((packed)) fsdata_t;
 
 
 typedef struct {
-	unsigned int mode;
-	char name[];
+	id_t id;
+	mode_t mode;
 } __attribute__((packed)) fsopen_t;
 
 
-typedef unsigned int fsclose_t;
+typedef id_t fsclose_t;
+
+
+typedef struct {
+	mode_t mode;
+	char path[];
+} __attribute__((packed)) fscreat_t;
 
 
 typedef struct {
@@ -46,7 +55,7 @@ typedef struct {
 
 
 typedef struct {
-	unsigned int id;
+	id_t id;
 	unsigned int cmd;
 	unsigned long arg;
 } __attribute__((packed)) fsfcntl_t;

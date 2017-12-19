@@ -25,7 +25,7 @@ typedef offs_t fpos_t;
 
 
 typedef struct _FILE {
-	u64 oid;
+	oid_t oid;
 	char *buff;
 	size_t buffsz;
 	size_t pos;
@@ -33,7 +33,7 @@ typedef struct _FILE {
 
 
 /* Closes the stream. All buffers are flushed. */
-extern int fclose(int *stream);
+extern int fclose(FILE *file);
 
 
 /* Clears the end-of-file and error indicators for the given stream. */

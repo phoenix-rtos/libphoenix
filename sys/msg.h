@@ -25,7 +25,7 @@ typedef enum _msgtype_t {
 
 
 typedef enum _msgop_t {
-	READ = 0, WRITE, DEVCTL, OPEN, CLOSE, MOUNT, UMOUNT, LOOKUP
+	READ = 0, WRITE, DEVCTL, OPEN, CLOSE, CREAT, MOUNT, UMOUNT, LOOKUP
 } msgop_t;
 
 
@@ -62,7 +62,7 @@ extern int recv(u32 port, void *data, size_t size, msghdr_t *hdr);
 extern int respond(u32 port, int err, void *data, size_t size);
 
 
-extern int lookup(char *name, oid_t *oid);
+extern int lookup(const char *name, oid_t *oid);
 
 
 #endif
