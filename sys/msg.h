@@ -17,31 +17,10 @@
 #define _LIBPHOENIX_MSG_H_
 
 #include ARCH
+#include "../phoenix-rtos-kernel/include/msg.h"
 
 
-typedef enum _msgtype_t {
-	NOTIFY, NORMAL
-} msgtype_t;
-
-
-typedef enum _msgop_t {
-	READ, WRITE, DEVCTL
-} msgop_t;
-
-
-typedef struct _msghdr_t {
-	msgtype_t type;
-	msgop_t op;
-	size_t rsize;
-	unsigned int sender;
-} msghdr_t;
-
-
-typedef struct {
-	size_t offset;
-	void *buff;
-	size_t size;
-} msgdata_t;
+/* Port management */
 
 
 extern int portCreate(u32 *port);
@@ -50,19 +29,25 @@ extern int portCreate(u32 *port);
 extern void portDestroy(u32 port);
 
 
-extern int portRegister(u32 port, char *name);
-
-
-extern int send(u32 port, msgop_t op, void *data, size_t size, msgtype_t type, void *rdata, size_t rsize);
-
-
-extern int recv(u32 port, void *data, size_t size, msghdr_t *hdr, time_t timeout);
-
-
-extern int respond(u32 port, int err, void *data, size_t size);
+extern int portRegister(u32 port, char *name, oid_t *oid);
 
 
 extern int lookup(char *name, unsigned int *port);
+
+
+/* Message passing */
+
+
+extern int msgSend(u32 port, msg_t *m);
+
+
+extern int msgPulse(u32 port, msg_t *m);
+
+
+extern int msgRecv(u32 port, msg_t *m, unsigned int *rid);
+
+
+extern int msgRespond(u32 port, unsigned int rid);
 
 
 #endif

@@ -161,19 +161,19 @@ SYSCALLDEF(portRegister)
 .size portRegister, .-portRegister
 
 
-SYSCALLDEF(send)
+SYSCALLDEF(msgSend)
 	SYSCALL(26);
-.size send, .-send
+.size msgSend, .-msgSend
 
 
-SYSCALLDEF(recv)
+SYSCALLDEF(msgRecv)
 	SYSCALL(27);
-.size recv, .-recv
+.size msgRecv, .-msgRecv
 
 
-SYSCALLDEF(respond)
+SYSCALLDEF(msgRespond)
 	SYSCALL(28);
-.size respond, .-respond
+.size msgRespond, .-msgRespond
 
 
 SYSCALLDEF(lookup)

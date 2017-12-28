@@ -79,7 +79,8 @@ void *memsetw(void *where, int v, size_t n)
 		andl $1, %%edx; \
 		shrl $1, %%ecx; \
 		\
-		movw %1, %%ax; \
+		movl %1, %%eax; \
+		andl $0x0000ffff, %%eax; \
 		movl %%eax, %%ebx; \
 		shll $16, %%ebx; \
 		orl %%ebx, %%eax; \

@@ -68,6 +68,8 @@ int fputc(int c, FILE *f)
 int fflush(FILE *f)
 {
 	debug(f->buff);
+	
+	fileSend(f->h, f->buff);
 	return EOK;
 }
 
