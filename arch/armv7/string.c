@@ -17,7 +17,7 @@
 #include "arch.h"
 
 
-void memcpy(void *dst, const void *src, size_t l)
+void *memcpy(void *dst, const void *src, size_t l)
 {
 	__asm__ volatile
 	(" \
@@ -44,10 +44,12 @@ void memcpy(void *dst, const void *src, size_t l)
 	:
 	: "r" (dst), "r" (src), "r" (l)
 	: "r1", "r2", "r3", "r4", "memory", "cc");
+
+	return dst;
 }
 
 
-void memmove(void *dst, const void *src, size_t l)
+void *memmove(void *dst, const void *src, size_t l)
 {
 	__asm__ volatile
 	(" \
@@ -100,6 +102,8 @@ void memmove(void *dst, const void *src, size_t l)
 	:
 	: "r" (dst), "r" (src), "r" (l)
 	: "r1", "r2", "r3", "r4", "memory", "cc");
+
+	return dst;
 }
 
 
@@ -134,7 +138,7 @@ int memcmp(const void *ptr1, const void *ptr2, size_t num)
 }
 
 
-void memset(void *dst, u8 v, size_t l)
+void *memset(void *dst, int v, size_t l)
 {
 	__asm__ volatile
 	(" \
@@ -158,12 +162,14 @@ void memset(void *dst, u8 v, size_t l)
 		subsne r1, #1; \
 		bne 2b"
 	:
-	: "r" (dst), "r" (v), "r" (l)
+	: "r" (dst), "r" (v & 0xff), "r" (l)
 	: "r1", "r2", "r3", "r4", "memory", "cc");
+
+	return dst;
 }
 
 
-unsigned int strlen(const char *s)
+size_t strlen(const char *s)
 {
 	unsigned int k = 0;
 

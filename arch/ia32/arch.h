@@ -62,9 +62,10 @@ typedef unsigned long long time_t;
 typedef unsigned int useconds_t;
 
 
+typedef u64 id_t;
 typedef struct _oid_t {
 	u32 port;
-	u64 id;
+	id_t id;
 } oid_t;
 
 

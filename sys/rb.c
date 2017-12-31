@@ -340,6 +340,34 @@ rbnode_t *lib_rbMaximum(rbnode_t *node)
 }
 
 
+rbnode_t *lib_rbPrev(rbnode_t *node)
+{
+	rbnode_t *x = node;
+
+	if (x->left != NULL)
+		return lib_rbMaximum(x->left);
+
+	while (x->parent != NULL && x == x->parent->left)
+		x = x->parent;
+
+	return x->parent;
+}
+
+
+rbnode_t *lib_rbNext(rbnode_t *node)
+{
+	rbnode_t *x = node;
+
+	if (x->right != NULL)
+		return lib_rbMinimum(x->right);
+
+	while (x->parent != NULL && x == x->parent->right)
+		x = x->parent;
+
+	return x->parent;
+}
+
+
 rbnode_t *lib_rbFind(rbtree_t *tree, rbnode_t *node)
 {
 	return lib_rbFindEx(tree->root, node, tree->compare);

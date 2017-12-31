@@ -73,6 +73,12 @@ extern rbnode_t *lib_rbMinimum(rbnode_t *node);
 extern rbnode_t *lib_rbMaximum(rbnode_t *node);
 
 
+extern rbnode_t *lib_rbPrev(rbnode_t *node);
+
+
+extern rbnode_t *lib_rbNext(rbnode_t *node);
+
+
 extern rbnode_t *lib_rbFind(rbtree_t *tree, rbnode_t *node);
 
 

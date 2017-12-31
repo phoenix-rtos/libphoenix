@@ -74,9 +74,9 @@ SYSCALLDEF(getppid)
 .size getppid, .-getppid
 
 
-SYSCALLDEF(beginthread)
+SYSCALLDEF(beginthreadex)
 	SYSCALL(9);
-.size beginthread, .-beginthread
+.size beginthreadex, .-beginthreadex
 
 
 SYSCALLDEF(endthread)
@@ -192,3 +192,13 @@ SYSCALLDEF(keepidle)
 SYSCALLDEF(mmdump)
 	SYSCALL(32)
 .size mmdump, .-mmdump
+
+
+SYSCALLDEF(platformctl)
+	SYSCALL(33)
+.size platformctl, .-platformctl
+
+
+SYSCALLDEF(wdgreload)
+	SYSCALL(34)
+.size wdgreload, .-wdgreload

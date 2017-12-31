@@ -25,12 +25,9 @@
 
 extern int portCreate(u32 *port);
 
-
 extern void portDestroy(u32 port);
 
-
 extern int portRegister(u32 port, char *name, oid_t *oid);
-
 
 extern int lookup(char *name, unsigned int *port);
 
@@ -40,12 +37,9 @@ extern int lookup(char *name, unsigned int *port);
 
 extern int msgSend(u32 port, msg_t *m);
 
-
 extern int msgPulse(u32 port, msg_t *m);
 
-
 extern int msgRecv(u32 port, msg_t *m, unsigned int *rid);
-
 
 extern int msgRespond(u32 port, unsigned int rid);
 
