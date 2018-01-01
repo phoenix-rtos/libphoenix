@@ -6,6 +6,7 @@
 #
 
 SRCS = printf.c sprintf.c format.c scanf.c
+#fs.c
 OBJS = $(SRCS:.c=.o)
 
 

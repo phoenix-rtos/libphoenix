@@ -16,7 +16,7 @@
 #include ARCH
 
 #include <stdio.h>
-//#include <fcntl.h>
+#include <fcntl.h>
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
