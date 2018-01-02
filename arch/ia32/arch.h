@@ -58,6 +58,7 @@ typedef u64 usec_t;
 typedef s64 offs_t;
 
 typedef unsigned int size_t;
+typedef int ssize_t;
 typedef unsigned long long time_t;
 typedef unsigned int useconds_t;
 

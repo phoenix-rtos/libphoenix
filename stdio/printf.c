@@ -16,7 +16,7 @@
 #include "stdio.h"
 #include "format.h"
 #include "sys/debug.h"
-
+#include "unistd.h"
 
 typedef struct _printf_ctx_t {
 	char buff[16];
@@ -33,7 +33,10 @@ static void printf_feed(void *context, char c)
 	ctx->buff[ctx->n] = '\0';
 
 	if(ctx->n == sizeof(ctx->buff) - 1) {
-		debug(&ctx->buff[0]);
+
+		if (write(1, ctx->buff, ctx->n) < 0)
+			debug(&ctx->buff[0]);
+
 		ctx->n = 0;
 	}
 
@@ -63,8 +66,10 @@ int vprintf(const char *format, va_list arg)
 
 	format_parse(&ctx, printf_feed, format, arg);
 
-	if(ctx.n % sizeof(ctx.buff) != 0)
-		debug(ctx.buff);
+	if(ctx.n % sizeof(ctx.buff) != 0) {
+		if (write(1, ctx.buff, ctx.n) < 0)
+			debug(ctx.buff);
+	}
 
 	return ctx.total;
 }

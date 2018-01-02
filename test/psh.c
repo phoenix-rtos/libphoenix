@@ -18,48 +18,7 @@
 #include "unistd.h"
 #include "sys/threads.h"
 #include "sys/msg.h"
-
-
-int psh_write(oid_t *oid, char *buff, size_t len)
-{
-	msg_t msg;
-
-	msg.type = mtWrite;
-	memcpy(&msg.i.io.oid, &oid, sizeof(oid_t));
-
-	msg.i.io.offs = 0;
-	msg.i.data = buff;
-	msg.i.size = len;
-
-	msg.o.data = NULL;
-	msg.o.size = 0;
-
-	if (msgSend(oid->port, &msg) < 0)
-		return -1;
-	
-	return 0;
-}
-
-
-int psh_read(oid_t *oid, char *buff, size_t len)
-{
-	msg_t msg;
-
-	msg.type = mtRead;
-	memcpy(&msg.i.io.oid, &oid, sizeof(oid_t));
-
-	msg.i.io.offs = 0;
-	msg.i.data = NULL;
-	msg.i.size = 0;
-
-	msg.o.data = buff;
-	msg.o.size = len;
-
-	if (msgSend(oid->port, &msg) < 0)
-		return -1;
-
-	return 0;
-}
+#include "sys/file.h"
 
 
 static int psh_isNewline(char c)
@@ -102,7 +61,7 @@ static int psh_readln(oid_t *oid, char *line, int size)
 	char c;
 
 	for (;;) {
-		psh_read(oid, &c, 1);
+		read(1, &c, 1);
 
 		if (c == 0)
 			break;
@@ -119,13 +78,13 @@ static int psh_readln(oid_t *oid, char *line, int size)
 
 		/* Print character. */
 		if (c != 0x7f || count > 0)
-			psh_write(oid, &c, 1);
+			write(1, &c, 1);
 
 		/* Handle delete. */
 		if (c == 0x7f) {
 			if (count > 0) {
 				--count;
-				psh_write(oid, "\b \b", 3);
+				write(1, "\b \b", 3);
 			}
 		}
 		else
@@ -133,7 +92,7 @@ static int psh_readln(oid_t *oid, char *line, int size)
 	}
 
 	memset(&line[count], '\0', size - count);
-	psh_write(oid, "\n", 1);
+	write(1, "\n", 1);
 
 	return count;
 }
@@ -141,8 +100,6 @@ static int psh_readln(oid_t *oid, char *line, int size)
 
 static void psh_threads(oid_t *oid)
 {
-	psh_write(oid, "threads\n", 8);
-
 /*	thread_t *t;
 	int load;
 
@@ -159,20 +116,18 @@ static void psh_threads(oid_t *oid)
 
 static void psh_mem(oid_t *oid)
 {
-	psh_write(oid, "mem\n", 4);
+	printf("mem\n");
 }
 
 
 static void psh_help(oid_t *oid)
 {
-	psh_write(oid, "help\n", 5);
-
-/*	lib_printf("Available commands:\n");
-	lib_printf("\thelp          - prints this help\n");
-	lib_printf("\tpidin         - threads statistics\n");
-	lib_printf("\tmmap          - memory map\n");
-	lib_printf("\tlogo          - displays Phoenix-RTOS logo\n");
-	lib_printf("\ticon [ 1..4 ] - change current LCD screen\n");*/
+	printf("Available commands:\n");
+	printf("\thelp          - prints this help\n");
+	printf("\tpidin         - threads statistics\n");
+	printf("\tmmap          - memory map\n");
+	printf("\tlogo          - displays Phoenix-RTOS logo\n");
+	printf("\ticon [ 1..4 ] - change current LCD screen\n");
 }
 
 
@@ -183,7 +138,7 @@ void psh_run(oid_t *oid)
 	char *cmd;
 
 	for (;;) {
-		while (psh_write(oid, "(psh)% ", 7) < 0);
+		while (write(1, "(psh)% ", 7) < 0);
 
 		psh_readln(oid, buff, sizeof(buff));
 		cmd = psh_nextString(buff, &n);
@@ -201,7 +156,7 @@ void psh_run(oid_t *oid)
 			psh_mem(oid);
 
 		else
-			psh_write(oid, "Unknown command!\n", 17);
+			printf("Unknown command!\n");
 
 	}
 }
@@ -209,7 +164,12 @@ void psh_run(oid_t *oid)
 
 int main(void)
 {
+	unsigned int h;
+
 	oid_t oid = { 0, 0 };
+
+	/* (MOD) */
+	fileAdd(&h, &oid);
 
 	psh_run(&oid);
 	return 0;

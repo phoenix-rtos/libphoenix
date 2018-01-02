@@ -196,6 +196,31 @@ SYSCALLDEF(mmdump)
 .size mmdump, .-mmdump
 
 
+SYSCALLDEF(platformctl)
+	SYSCALL(33)
+.size platformctl, .-platformctl
+
+
 SYSCALLDEF(wdgreload)
 	SYSCALL(34)
 .size wdgreload, .-wdgreload
+
+
+SYSCALLDEF(fileAdd)
+	SYSCALL(35)
+.size fileAdd, .-fileAdd
+
+
+SYSCALLDEF(fileSet)
+	SYSCALL(36)
+.size fileSet, .-fileSet
+
+
+SYSCALLDEF(fileGet)
+	SYSCALL(37)
+.size fileGet, .-fileGet
+
+
+SYSCALLDEF(fileRemove)
+	SYSCALL(38)
+.size fileRemove, .-fileRemove
