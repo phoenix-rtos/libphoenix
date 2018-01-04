@@ -19,7 +19,7 @@
 #include ARCH
 
 
-extern int beginthreadex(void (*start)(void *), void (*end)(void), unsigned int priority, void *stack, unsigned int stacksz, void *arg);
+extern int beginthreadex(void (*start)(void *), unsigned int priority, void *stack, unsigned int stacksz, void *arg, handle_t *id);
 
 
 extern void endthread(void);
@@ -27,7 +27,7 @@ extern void endthread(void);
 
 static inline int beginthread(void (*start)(void *), unsigned int priority, void *stack, unsigned int stacksz, void *arg)
 {
-	return beginthreadex(start, endthread, priority, stack, stacksz, arg);
+	return beginthreadex(start, priority, stack, stacksz, arg, NULL);
 }
 
 
