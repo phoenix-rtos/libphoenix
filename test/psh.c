@@ -98,8 +98,32 @@ static int psh_readln(oid_t *oid, char *line, int size)
 }
 
 
-static void psh_threads(oid_t *oid)
+static void psh_help(oid_t *oid)
 {
+	printf("Available commands:\n");
+	printf("  help   - prints this help\n");
+	printf("  ls     - lists files in the namespace\n");
+	printf("  mem    - prints memory map\n");
+	printf("  ps     - prints list of processes and threads\n");
+}
+
+
+static void psh_ls(oid_t *oid)
+{
+	printf("ls\n");
+}
+
+
+static void psh_mem(oid_t *oid)
+{
+	printf("mem\n");
+}
+
+
+static void psh_ps(oid_t *oid)
+{
+	printf("%9s %8s %16s %100s\n", "PID", "TTY", "TIME", "CMD");
+
 /*	thread_t *t;
 	int load;
 
@@ -111,23 +135,6 @@ static void psh_threads(oid_t *oid)
 			t->id, t->priority, (t->state == READY) ? "ready" : "sleep", t->context);
 		t = threads_getNextThread(t);
 	}*/
-}
-
-
-static void psh_mem(oid_t *oid)
-{
-	printf("mem\n");
-}
-
-
-static void psh_help(oid_t *oid)
-{
-	printf("Available commands:\n");
-	printf("\thelp          - prints this help\n");
-	printf("\tpidin         - threads statistics\n");
-	printf("\tmmap          - memory map\n");
-	printf("\tlogo          - displays Phoenix-RTOS logo\n");
-	printf("\ticon [ 1..4 ] - change current LCD screen\n");
 }
 
 
@@ -149,11 +156,14 @@ void psh_run(oid_t *oid)
 		if (!strcmp(cmd, "help"))
 			psh_help(oid);
 
-		else if (!strcmp(cmd, "threads"))
-			psh_threads(oid);
+		else if (!strcmp(cmd, "ls"))
+			psh_ls(oid);
 
 		else if (!strcmp(cmd, "mem"))
 			psh_mem(oid);
+
+		else if (!strcmp(cmd, "ps"))
+			psh_ps(oid);
 
 		else
 			printf("Unknown command!\n");
