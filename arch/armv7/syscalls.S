@@ -18,187 +18,89 @@
 .text
 
 
-#define SYSCALLDEF(sym) \
+#define SYSCALLDEF(sym, sn) \
 .globl sym; \
 .type sym, %function; \
-sym:
-
-
-#define SYSCALL(sn) \
+sym: \
 	svc $sn; \
-	blx lr;
+	blx lr; \
+.size sym, .-sym
 
 
-SYSCALLDEF(debug)
-	SYSCALL(0)
-.size debug, .-debug
+SYSCALLDEF(debug, 0)
 
+SYSCALLDEF(mmap, 1)
 
-SYSCALLDEF(mmap)
-	SYSCALL(1);
-.size mmap, .-mmap
+SYSCALLDEF(munmap, 2)
 
+SYSCALLDEF(vfork, 3)
 
-SYSCALLDEF(munmap)
-	SYSCALL(2);
-.size munmap, .-munmap
+SYSCALLDEF(execle, 4)
 
+SYSCALLDEF(exit, 5)
 
-SYSCALLDEF(vfork)
-	SYSCALL(3);
-.size vfork, .-vfork
+SYSCALLDEF(waitpid, 6)
 
+SYSCALLDEF(getpid, 7)
 
-SYSCALLDEF(execle)
-	SYSCALL(4);
-.size execle, .-execle
+SYSCALLDEF(getppid, 8)
 
+SYSCALLDEF(beginthreadex, 9)
 
-SYSCALLDEF(exit)
-	SYSCALL(5);
-.size exit, .-exit
+SYSCALLDEF(endthread, 10)
 
+SYSCALLDEF(usleep, 11)
 
-SYSCALLDEF(waitpid)
-	SYSCALL(6);
-.size waitpid, .-waitpid
+SYSCALLDEF(mutexCreate, 12)
 
+SYSCALLDEF(mutexLock, 13)
 
-SYSCALLDEF(getpid)
-	SYSCALL(7);
-.size getpid, .-getpid
+SYSCALLDEF(mutexUnlock, 14)
 
+SYSCALLDEF(semaphoreCreate, 15)
 
-SYSCALLDEF(getppid)
-	SYSCALL(8);
-.size getppid, .-getppid
+SYSCALLDEF(semaphoreDown, 16)
 
+SYSCALLDEF(semaphoreUp, 17)
 
-SYSCALLDEF(beginthreadex)
-	SYSCALL(9);
-.size beginthreadex, .-beginthreadex
+SYSCALLDEF(condCreate, 18)
 
+SYSCALLDEF(condWait, 19)
 
-SYSCALLDEF(endthread)
-	SYSCALL(10);
-.size endthread, .-endthread
+SYSCALLDEF(condSignal, 20)
 
+SYSCALLDEF(resourceDestroy, 21)
 
-SYSCALLDEF(usleep)
-	SYSCALL(11);
-.size usleep, .-usleep
+SYSCALLDEF(interrupt, 22)
 
+SYSCALLDEF(portCreate, 23)
 
-SYSCALLDEF(mutexCreate)
-	SYSCALL(12);
-.size mutexCreate, .-mutexCreate
+SYSCALLDEF(portDestroy, 24)
 
+SYSCALLDEF(portRegister, 25)
 
-SYSCALLDEF(mutexLock)
-	SYSCALL(13);
-.size mutexLock, .-mutexLock
+SYSCALLDEF(msgSend, 26)
 
+SYSCALLDEF(msgRecv, 27)
 
-SYSCALLDEF(mutexUnlock)
-	SYSCALL(14);
-.size mutexUnlock, .-mutexUnlock
+SYSCALLDEF(msgRespond, 28)
 
+SYSCALLDEF(lookup, 29)
 
-SYSCALLDEF(semaphoreCreate)
-	SYSCALL(15);
-.size semaphoreCreate, .-semaphoreCreate
+SYSCALLDEF(gettime, 30)
 
+SYSCALLDEF(keepidle, 31)
 
-SYSCALLDEF(semaphoreDown)
-	SYSCALL(16);
-.size semaphoreDown, .-semaphoreDown
+SYSCALLDEF(mmdump, 32)
 
+SYSCALLDEF(platformctl, 33)
 
-SYSCALLDEF(semaphoreUp)
-	SYSCALL(17);
-.size semaphoreUp, .-semaphoreUp
+SYSCALLDEF(wdgreload, 34)
 
+SYSCALLDEF(fileAdd, 35)
 
-SYSCALLDEF(condCreate)
-	SYSCALL(18);
-.size condCreate, .-condCreate
+SYSCALLDEF(fileSet, 36)
 
+SYSCALLDEF(fileGet, 37)
 
-SYSCALLDEF(condWait)
-	SYSCALL(19);
-.size condWait, .-condWait
-
-
-SYSCALLDEF(condSignal)
-	SYSCALL(20);
-.size condSignal, .-condSignal
-
-
-SYSCALLDEF(resourceDestroy)
-	SYSCALL(21);
-.size resourceDestroy, .-resourceDestroy
-
-
-SYSCALLDEF(interrupt)
-	SYSCALL(22);
-.size interrupt, .-interrupt
-
-
-SYSCALLDEF(portCreate)
-	SYSCALL(23);
-.size portCreate, .-portCreate
-
-
-SYSCALLDEF(portDestroy)
-	SYSCALL(24);
-.size portDestroy, .-portDestroy
-
-
-SYSCALLDEF(portRegister)
-	SYSCALL(25);
-.size portRegister, .-portRegister
-
-
-SYSCALLDEF(send)
-	SYSCALL(26);
-.size send, .-send
-
-
-SYSCALLDEF(recv)
-	SYSCALL(27);
-.size recv, .-recv
-
-
-SYSCALLDEF(respond)
-	SYSCALL(28);
-.size respond, .-respond
-
-
-SYSCALLDEF(lookup)
-	SYSCALL(29);
-.size lookup, .-lookup
-
-
-SYSCALLDEF(gettime)
-	SYSCALL(30);
-.size gettime, .-gettime
-
-
-SYSCALLDEF(keepidle)
-	SYSCALL(31)
-.size keepidle, .-keepidle
-
-
-SYSCALLDEF(mmdump)
-	SYSCALL(32)
-.size mmdump, .-mmdump
-
-
-SYSCALLDEF(platformctl)
-	SYSCALL(33)
-.size platformctl, .-platformctl
-
-
-SYSCALLDEF(wdgreload)
-	SYSCALL(34)
-.size wdgreload, .-wdgreload
+SYSCALLDEF(fileRemove, 38)
