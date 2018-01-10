@@ -346,10 +346,9 @@ size_t strspn(const char *s1, const char *s2)
 	const char *p;
 
 	for (count = 0; *s1; ++count, ++s1) {
-		for (p = s2; *p; ++p) {
-			if (*s1 != *p)
-				return count;
-		}
+		for (p = s2; *p && *s1 != *p; ++p) ;
+		if (!*p)
+			return count;
 	}
 
 	return count;
@@ -357,7 +356,6 @@ size_t strspn(const char *s1, const char *s2)
 }
 
 
-/* Untested */
 char *strtok(char *restrict s1, const char *restrict s2)
 {
 	char *tokend;
@@ -372,10 +370,10 @@ char *strtok(char *restrict s1, const char *restrict s2)
 
 	tokend = strpbrk(s1, s2);
 
+	string_common.next_token = tokend + strspn(tokend, s2);
+
 	if (tokend != NULL)
 		*tokend = 0;
-
-	string_common.next_token = tokend + 1;
 
 	return s1;
 }
