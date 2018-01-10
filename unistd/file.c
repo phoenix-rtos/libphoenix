@@ -107,7 +107,7 @@ ssize_t write(int fildes, void *buf, size_t nbyte)
 
 int isatty(int fildes)
 {
-	return 0;
+	return fildes == 0 || fildes == 1;
 }
 
 

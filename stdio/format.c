@@ -28,6 +28,7 @@
 #define FLAG_LARGE_DIGITS  0x100
 #define FLAG_ALTERNATE     0x200
 #define FLAG_NULLMARK      0x400
+#define FLAG_MINUS         0x1000
 
 
 #define GET_UNSIGNED(number, flags, args) do {		\
@@ -291,6 +292,8 @@ void format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 		for (;;) {
 			if (fmt == ' ')
 				flags |= FLAG_SPACE;
+			else if (fmt == '-')
+				flags |= FLAG_MINUS;
 			else if (fmt == '0')
 				flags |= FLAG_ZERO;
 			else if (fmt == '+')
@@ -352,8 +355,20 @@ void format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 					s = "(null)";
 
 				int i;
-				for(i = 0; i < strlen(s); i++)
+				int l = strlen(s);
+
+				if (l < min_number_len && !(flags & FLAG_MINUS)) {
+					for(i = 0; i < (min_number_len - l); i++)
+						feed(ctx, ' ');
+				}
+
+				for(i = 0; i < l; i++)
 					feed(ctx, s[i]);
+
+				if (l < min_number_len && (flags & FLAG_MINUS)) {
+					for(i = 0; i < (min_number_len - l); i++)
+						feed(ctx, ' ');
+				}
 
 				break;
 			}

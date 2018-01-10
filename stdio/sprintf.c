@@ -13,6 +13,7 @@
  * %LICENSE%
  */
 
+#include "stdlib.h"
 #include "stdio.h"
 #include "format.h"
 
@@ -65,17 +66,8 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap)
 
 int vasprintf(char **strp, const char *fmt, va_list ap)
 {
+	/* Temporary */
+	*strp = malloc(1024);
+	vsprintf(*strp, fmt, ap);
 	return 0;
 }
-
-#if 0
-char *xasprintf(const char *fmt, ...)
-{
-	char *buf;
-	va_list ap;
-	va_start (ap, fmt);
-	buf = xvasprintf(fmt, ap);
-	va_end (ap);
-	return buf;
-}
-#endif
