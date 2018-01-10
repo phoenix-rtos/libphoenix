@@ -20,8 +20,11 @@
 
 
 struct dirent {
-	ino_t  d_ino;
-	char   d_name[];
+	ino_t		d_ino;
+	u32			d_type;
+	u16			d_reclen;
+	u16			d_namlen;
+	char		d_name[];
 };
 
 #endif
