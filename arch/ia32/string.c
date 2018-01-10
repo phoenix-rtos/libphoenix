@@ -16,7 +16,7 @@
 #include "arch.h"
 
 
-void *memcpy(void *to, const void *from, unsigned int n)
+void *memcpy(void *to, const void *from, size_t n)
 {
 	__asm__ volatile
 	(" \

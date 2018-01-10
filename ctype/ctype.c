@@ -46,3 +46,7 @@ int isupper(int c)
 }
 
 
+int tolower(int c)
+{
+	return isupper(c) ? c - 'A' + 'a' : c;
+}

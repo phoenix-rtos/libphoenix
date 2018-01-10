@@ -5,7 +5,7 @@
 # Author: Pawel Pisarczyk
 #
 
-SRCS = file.c
+SRCS = file.c dir.c group.c user.c getopt.c pwd.c sys.c
 OBJS = $(SRCS:.c=.o)
 
 

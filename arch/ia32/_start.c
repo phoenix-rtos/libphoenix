@@ -14,15 +14,32 @@
  */
 
 #include ARCH
-#include "stdlib.h"
+#include <sys/file.h>
+#include <stdlib.h>
 
 
 extern int main(int argc, char **argv);
 
 
+char **environ;
+
+
 void _start(void)
 {
-	_malloc_init();
+	char *argv[6] = { NULL };
+	char **p = argv;
+	unsigned int h;
+	oid_t oid = { 0, 0 };
 
-	exit(main(1, 0));
+	environ = NULL;
+
+	*(p++) = "sh";
+	*(p++) = "-i";
+
+	fileAdd(&h, &oid);
+	fileAdd(&h, &oid);
+	fileAdd(&h, &oid);
+
+	_malloc_init();
+	exit(main(p - argv, argv));
 }

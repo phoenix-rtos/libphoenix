@@ -18,6 +18,19 @@
 
 #include ARCH
 
+#define STDIN_FILENO 0
+#define STDOUT_FILENO 1
+#define STDERR_FILENO 2
+
+#define _SC_CLK_TCK 0
+
+
+enum {
+	F_OK = 0,
+	R_OK = 1 << 0,
+	W_OK = 1 << 1,
+	X_OK = 1 << 2,
+};
 
 extern int vfork(void);
 
@@ -25,10 +38,37 @@ extern int vfork(void);
 extern int usleep(useconds_t usecs);
 
 
+extern int chdir(const char *path);
+
+
 extern ssize_t read(int fildes, void *buf, size_t nbyte);
 
 
 extern ssize_t write(int fildes, void *buf, size_t nbyte);
+
+
+extern int dup(int fildes);
+
+
+extern int dup2(int fildes, int fildes2);
+
+
+extern void _exit(int status);
+
+
+extern int symlink(const char *path1, const char *path2);
+
+
+extern int link(const char *path1, const char *path2);
+
+
+int getopt(int argc, char * const argv[], const char *optstring);
+
+
+extern char *optarg;
+
+
+extern int optind, opterr, optopt;
 
 
 #endif

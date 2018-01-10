@@ -403,4 +403,3 @@ void format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 
 	feed(ctx, '\0');
 }
-

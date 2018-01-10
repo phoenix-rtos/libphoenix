@@ -18,6 +18,35 @@
 #include "sys/debug.h"
 
 
+int fprintf(FILE *file, const char *format, ...)
+{
+	int err;
+	va_list arg;
+
+	va_start(arg, format);
+	err = vprintf(format, arg);
+	va_end(arg);
+
+	return err;
+}
+
+
+int vfprintf(FILE *f, const char *format, va_list args)
+{
+	int err;
+	err = vprintf(format, args);
+	return err;
+}
+
+
+int dprintf(int fd, const char *format, ...)
+{
+	return 0;
+}
+
+
+#if 0
+
 #define FLAG_SIGNED        0x1
 #define FLAG_64BIT         0x2
 #define FLAG_FLOAT         0x4
@@ -48,6 +77,8 @@ int fputs(const char *str, FILE *f)
 		else
 			proc_send(f->port, msg);
 	}*/
+	int len = strlen(s);
+	write(0, s, len);
 	return EOK;
 }
 
@@ -68,7 +99,7 @@ int fputc(int c, FILE *f)
 int fflush(FILE *f)
 {
 	debug(f->buff);
-	
+
 	fileSend(f->h, f->buff);
 	return EOK;
 }
@@ -486,3 +517,5 @@ int printf(const char *format, ...)
 
 	return err;
 }
+
+#endif

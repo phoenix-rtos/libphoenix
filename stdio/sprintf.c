@@ -55,3 +55,27 @@ int vsprintf(char *str, const char *format, va_list arg)
 
 	return ctx.n;
 }
+
+
+int vsnprintf(char *str, size_t size, const char *format, va_list ap)
+{
+	return 0;
+}
+
+
+int vasprintf(char **strp, const char *fmt, va_list ap)
+{
+	return 0;
+}
+
+#if 0
+char *xasprintf(const char *fmt, ...)
+{
+	char *buf;
+	va_list ap;
+	va_start (ap, fmt);
+	buf = xvasprintf(fmt, ap);
+	va_end (ap);
+	return buf;
+}
+#endif

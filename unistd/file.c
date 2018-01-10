@@ -17,6 +17,7 @@
 
 #include <stdio.h>
 #include <fcntl.h>
+#include <poll.h>
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -31,7 +32,7 @@ int close(int fildes)
 
 	if (fileGet(fildes, 1, &oid, NULL) < 0)
 		return -EBADF;
-	
+
 	msg.type = mtClose;
 	memcpy(&msg.i.close.oid, &oid, sizeof(oid_t));
 
@@ -73,7 +74,8 @@ ssize_t read(int fildes, void *buf, size_t nbyte)
 	if (msgSend(oid.port, &msg) < 0)
 		return -1;
 
-	return 0;
+	msg.o.io.err = 1;
+	return msg.o.io.err;
 }
 
 
@@ -98,6 +100,24 @@ ssize_t write(int fildes, void *buf, size_t nbyte)
 
 	if (msgSend(oid.port, &msg) < 0)
 		return -1;
-	
+
+	return nbyte;
+}
+
+
+int isatty(int fildes)
+{
 	return 0;
+}
+
+
+int pipe(int fildes[2])
+{
+	return -ENOSYS;
+}
+
+
+int poll(struct pollfd *fds, nfds_t nfds, int timeout)
+{
+	return -ENOSYS;
 }

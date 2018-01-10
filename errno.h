@@ -17,6 +17,9 @@
 #define _LIBPHOENIX_ERRNO_H_
 
 
+extern int errno;
+
+
 #include "../phoenix-rtos-kernel/include/errno.h"
 
 

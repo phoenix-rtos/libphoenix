@@ -14,7 +14,7 @@ TARGET = ia32-qemu
 VERSION = 0.2
 SRCDIR := $(CURDIR)
 
-SUBSYSTEMS = math stdio stdlib string sys ctype time fcntl unistd
+SUBSYSTEMS = math stdio stdlib string sys ctype time fcntl unistd errno signal termios
 
 LIB = libphoenix.a
 
@@ -30,8 +30,8 @@ ifneq (, $(findstring ia32, $(TARGET)))
 
 	CC = $(CROSS)gcc
 
-	CFLAGS += -O2 -Wall -Wstrict-prototypes -I$(SRCDIR) -nostartfiles -nostdlib\
-		-m32 -mtune=generic -mno-mmx -mno-sse\
+	CFLAGS += -O2 -g -Wall -Wstrict-prototypes -I$(SRCDIR) -nostartfiles -nostdlib\
+		-m32 -mtune=generic -mno-mmx -mno-sse -fno-pic -fno-pie\
 		-fomit-frame-pointer -fno-strength-reduce -ffreestanding\
 		-DVERSION=\"$(VERSION)\" -DARCH=\"arch/ia32/arch.h\"
 
@@ -67,7 +67,7 @@ ifneq (, $(findstring armv7, $(TARGET)))
 	ARFLAGS = -r
 
 	LD = $(CROSS)ld
-	LDFLAGS = -nostdlib -e _start --section-start .init=8000000 -Tbss=20000000 -z max-page-size=0x10
+	LDFLAGS = -nostdlib -e _start --section-start .text=0 -Tbss=20000000 -z max-page-size=0x10
 	GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 #GCCLIB := ../$(GCCLIB)
 

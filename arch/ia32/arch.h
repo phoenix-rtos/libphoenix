@@ -18,12 +18,13 @@
 
 #include "errno.h"
 #include "arch/ia32/syscalls.h"
+#include <stddef.h>
+#include <endian.h>
 
+#define __BYTE_ORDER __LITTLE_ENDIAN
 
-#define __LITTLE_ENDIAN
+/* #define NULL (void *)0 - defined in stddef */
 
-
-#define NULL (void *)0
 #define __MEMCPY
 #define __MEMSET
 
@@ -57,7 +58,6 @@ typedef u64 cycles_t;
 typedef u64 usec_t;
 typedef s64 offs_t;
 
-typedef unsigned int size_t;
 typedef int ssize_t;
 typedef unsigned long long time_t;
 typedef unsigned int useconds_t;

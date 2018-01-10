@@ -20,6 +20,8 @@
 #include ARCH
 #include "stdarg.h"
 
+#define EOF (-1)
+
 
 typedef offs_t fpos_t;
 
@@ -30,6 +32,12 @@ typedef struct _FILE {
 	size_t buffsz;
 	size_t pos;
 } FILE;
+
+
+typedef FILE DIR;
+
+
+extern FILE *stderr, *stdin, *stdout;
 
 
 /* Closes the stream. All buffers are flushed. */

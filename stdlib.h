@@ -21,6 +21,8 @@
 
 #define RAND_MAX   2147483647
 
+#define EXIT_SUCCESS 0
+#define EXIT_FAILURE 1
 
 typedef struct {
   int quot;
@@ -34,8 +36,6 @@ typedef struct {
 } ldiv_t;
 
 
-typedef s16 wchar_t;
-
 
 /* Converts the string pointed to, by the argument str to a floating-point number (type double). */
 extern double atof(const char *str);
@@ -45,15 +45,15 @@ extern double atof(const char *str);
 extern int atoi(const char *str);
 
 
-/* Converts the string pointed to, by the argument str to a long integer (type long int). */ 
+/* Converts the string pointed to, by the argument str to a long integer (type long int). */
 extern long int atol(const char *str);
 
 
-/* Converts the string pointed to, by the argument str to a floating-point number (type double). */ 
+/* Converts the string pointed to, by the argument str to a floating-point number (type double). */
 extern double strtod(const char *str, char **endptr);
 
 
-/* Converts the string pointed to, by the argument str to a long integer (type long int). */ 
+/* Converts the string pointed to, by the argument str to a long integer (type long int). */
 extern long int strtol(const char *str, char **endptr, int base);
 
 
@@ -81,47 +81,51 @@ extern void free(void *ptr);
 extern void *malloc(size_t size);
 
 
-/* Attempts to resize the memory block pointed to by ptr that was previously allocated with a call to malloc or calloc. */ 
+/* Attempts to resize the memory block pointed to by ptr that was previously allocated with a call to malloc or calloc. */
 extern void *realloc(void *ptr, size_t size);
 
 
-/* Causes an abnormal program termination. */ 
+/* Causes an abnormal program termination. */
 extern void abort(void);
 
 
-/* Causes the specified function func to be called when the program terminates normally. */ 
+/* Causes the specified function func to be called when the program terminates normally. */
 extern int atexit(void (*func)(void));
 
 
-/* Causes the program to terminate normally.*/ 
+/* Causes the program to terminate normally.*/
 extern void exit(int status);
 
 
-/* Searches for the environment string pointed to by name and returns the associated value to the string. */ 
+/* Causes the program to terminate without cleanup.*/
+extern void _Exit(int status);
+
+
+/* Searches for the environment string pointed to by name and returns the associated value to the string. */
 extern char *getenv(const char *name);
 
 
-/* The command specified by string is passed to the host environment to be executed by the command processor. */ 
+/* The command specified by string is passed to the host environment to be executed by the command processor. */
 extern int system(const char *string);
 
 
-/* Performs a binary search.*/ 
+/* Performs a binary search.*/
 extern void *bsearch(const void *key, const void *base, size_t nitems, size_t size, int (*compar)(const void *, const void *));
 
 
-/* Sorts an array. */ 
+/* Sorts an array. */
 extern void qsort(void *base, size_t nitems, size_t size, int (*compar)(const void *, const void*));
 
 
-/* Returns the absolute value of x. */ 
+/* Returns the absolute value of x. */
 extern int abs(int x);
 
 
-/* Divides numer (numerator) by denom (denominator). */ 
+/* Divides numer (numerator) by denom (denominator). */
 extern div_t div(int numer, int denom);
 
 
-/* Returns the absolute value of x. */ 
+/* Returns the absolute value of x. */
 extern long int labs(long int x);
 
 

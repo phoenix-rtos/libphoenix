@@ -17,7 +17,7 @@
 #define _LIBPHOENIX_STRING_H_
 
 #include ARCH
-
+#include <stddef.h>
 
 /*
  * Searches for the first occurrence of the character c (an unsigned char) in the first n bytes of the string
@@ -30,7 +30,7 @@ extern void *memchr(const void *str, int c, size_t n);
 extern int memcmp(const void *str1, const void *str2, size_t n);
 
 
-/* Copies n characters from src to dest. */
+/* Copies n characters from src to dest. - defined in stddef.h */
 extern void *memcpy(void *dest, const void *src, size_t n);
 
 
@@ -58,15 +58,15 @@ extern char *strncat(char *dest, const char *src, size_t n);
 extern char *strchr(const char *str, int c);
 
 
-/* Compares the string pointed to, by str1 to the string pointed to by str2. */ 
+/* Compares the string pointed to, by str1 to the string pointed to by str2. */
 extern int strcmp(const char *str1, const char *str2);
 
 
-/* Compares at most the first n bytes of str1 and str2. */
-extern int strncmp(const char *str1, const char *str2, size_t n);
+/* Compares at most the first n bytes of str1 and str2. - defined in stddef.h */
+//extern int strncmp(const char *str1, const char *str2, size_t n);
 
 
-/* Compares string str1 to str2. The result is dependent on the LC_COLLATE setting of the location. */ 
+/* Compares string str1 to str2. The result is dependent on the LC_COLLATE setting of the location. */
 extern int strcoll(const char *str1, const char *str2);
 
 
@@ -116,5 +116,10 @@ extern char *strtok(char *str, const char *delim);
 /* Transforms the first n characters of the string src into corrent locale and places them in the string dest. */
 extern size_t strxfrm(char *dest, const char *src, size_t n);
 
+
+extern char *strchrnul(const char *str, int z);
+
+
+extern char *strchr(const char *str, int z);
 
 #endif

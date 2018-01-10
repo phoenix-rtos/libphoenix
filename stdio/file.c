@@ -20,12 +20,17 @@
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
-#include <sys/fs.h>
 #include <sys/msg.h>
+#include <unistd.h>
+
+
+FILE *stderr, *stdin, *stdout;
 
 
 int fclose(FILE *file)
 {
+	return 0;
+#if 0
 	int err;
 	fsclose_t close;
 
@@ -39,11 +44,14 @@ int fclose(FILE *file)
 	free(file);
 
 	return err;
+#endif
 }
 
 
 FILE *fopen(const char *filename, const char *mode)
 {
+	return NULL;
+#if 0
 	oid_t oid;
 	int err;
 	unsigned int m;
@@ -121,11 +129,14 @@ FILE *fopen(const char *filename, const char *mode)
 	f->pos = 0; /* TODO - get filesize and set pos if append */
 
 	return f;
+#endif
 }
 
 
 size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
+	return 0;
+#if 0
 	fsdata_t data;
 	int err;
 
@@ -143,11 +154,14 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
 	stream->pos += err;
 
 	return (size_t)err;
+#endif
 }
 
 
 size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
+	return 0;
+#if 0
 	size_t cnt;
 	int err;
 	fsdata_t *data;
@@ -170,11 +184,14 @@ size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 	}
 
 	return 0;
+#endif
 }
 
 
 int fgetc(FILE *stream)
 {
+	return -ENOSYS;
+#if 0
 	int err;
 	unsigned char c;
 	fsdata_t data;
@@ -191,11 +208,16 @@ int fgetc(FILE *stream)
 		return (int)c;
 
 	return err;
+#endif
 }
 
 
 int fputc(int c, FILE *stream)
 {
+	/* Temporary: stdout */
+	write(1, &c, 1);
+	return 0;
+#if 0
 	int err;
 	union {
 		fsdata_t data;
@@ -216,5 +238,90 @@ int fputc(int c, FILE *stream)
 
 	++(stream->pos);
 
+	return EOK;
+#endif
+}
+
+
+char *fgets(char *str, int n, FILE *stream)
+{
+	return NULL;
+}
+
+
+char *fgets_unlocked(char *str, int n, FILE *stream)
+{
+	return NULL;
+}
+
+
+int fileno_unlocked(FILE *stream)
+{
+	return -ENOSYS;
+}
+
+
+int getc_unlocked(FILE *stream)
+{
+	char c;
+	/* Temporary: stdin */
+	read(0, &c, 1);
+	return c;
+}
+
+
+int putc_unlocked(int c)
+{
+	/* Temporary: stdout */
+	write(1, &c, 1);
+	return 0;
+}
+
+
+int puts(const char *s)
+{
+	int len = strlen(s);
+	write(1, (void *)s, len);
+	return 0;
+}
+
+
+int fputs_unlocked(const char *s, FILE *stream)
+{
+	int len = strlen(s);
+	/* Temporary: stdout */
+	write(1, (void *)s, len);
+	return 0;
+}
+
+
+int ferror(FILE *stream)
+{
+	return 0;
+}
+
+
+void clearerr(FILE *stream)
+{
+}
+
+
+int ferror_unlocked(FILE *stream)
+{
+	return 0;
+}
+
+
+int fflush(FILE *stream)
+{
+	return 0;
+}
+
+
+int fputs(const char *str, FILE *f)
+{
+	int len = strlen(str);
+	/* Temporary: stdout */
+	write(1, (void *)str, len);
 	return EOK;
 }

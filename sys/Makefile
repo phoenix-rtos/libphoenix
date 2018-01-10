@@ -5,7 +5,7 @@
 # Author: Pawel Pisarczyk
 #
 
-SRCS = rb.c
+SRCS = rb.c stat.c time.c times.c
 #mount.c
 OBJS = $(SRCS:.c=.o)
 

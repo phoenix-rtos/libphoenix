@@ -67,3 +67,9 @@ int strtol(char *nptr, char **endptr, int base)
 
 	return sign * strtoul(nptr, endptr, base);
 }
+
+
+int atoi(char *str)
+{
+	return strtol(str, NULL, 10);
+}
