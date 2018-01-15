@@ -3,10 +3,10 @@
  *
  * libphoenix
  *
- * endian.h
+ * endian checks and conversions
  *
- * Copyright 2018 Phoenix Systems
- * Author: Jan Sikorski
+ * Copyright 2017, 2018 Phoenix Systems
+ * Author: Michał Mirosław
  *
  * This file is part of Phoenix-RTOS.
  *
