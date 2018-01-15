@@ -118,7 +118,7 @@ extern int killpg(pid_t, int);
 extern int raise(int);
 
 
-extern int sigaction(int, const struct sigaction *restrict, struct sigaction *restrict);
+extern int sigaction(int, const struct sigaction *, struct sigaction *);
 
 
 extern int sigaddset(sigset_t *, int);
@@ -154,7 +154,7 @@ extern int sigpause(int);
 extern int sigpending(sigset_t *);
 
 
-extern int sigprocmask(int, const sigset_t *restrict, sigset_t *restrict);
+extern int sigprocmask(int, const sigset_t *, sigset_t *);
 
 
 extern int sigqueue(pid_t, int, const union sigval);
@@ -169,13 +169,13 @@ extern void (*sigset(int, void (*)(int)))(int);
 extern int sigsuspend(const sigset_t *);
 
 
-extern int sigtimedwait(const sigset_t *restrict, siginfo_t *restrict, const struct timespec *restrict);
+extern int sigtimedwait(const sigset_t *, siginfo_t *, const struct timespec *);
 
 
-extern int sigwait(const sigset_t *restrict, int *restrict);
+extern int sigwait(const sigset_t *, int *);
 
 
-extern int sigwaitinfo(const sigset_t *restrict, siginfo_t *restrict);
+extern int sigwaitinfo(const sigset_t *, siginfo_t *);
 
 
 #endif

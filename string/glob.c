@@ -19,7 +19,7 @@
 #include <errno.h>
 
 
-int glob(const char *restrict pattern, int flags, int(*errfunc)(const char *epath, int eerrno), glob_t *restrict pglob)
+int glob(const char *pattern, int flags, int (*errfunc)(const char *epath, int eerrno), glob_t *pglob)
 {
 	return -ENOSYS;
 }

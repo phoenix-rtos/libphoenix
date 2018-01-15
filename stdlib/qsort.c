@@ -17,7 +17,7 @@
 #include <stdlib.h>
 
 
-static void qsort_swap(char * restrict a, char * restrict b, size_t size)
+static void qsort_swap(char *a, char *b, size_t size)
 {
 	int s;
 	char tmp;

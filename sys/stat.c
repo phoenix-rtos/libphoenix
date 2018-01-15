@@ -22,7 +22,7 @@ int fstat(int fildes, struct stat *buf)
 }
 
 
-int stat(const char *restrict path, struct stat *restrict buf)
+int stat(const char *path, struct stat *buf)
 {
 	return -ENOSYS;
 }
@@ -34,7 +34,7 @@ mode_t umask(mode_t cmask)
 }
 
 
-int lstat(const char *restrict path, struct stat *restrict buf)
+int lstat(const char *path, struct stat *buf)
 {
 	return -ENOSYS;
 }

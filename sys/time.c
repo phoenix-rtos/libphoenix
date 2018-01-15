@@ -16,7 +16,7 @@
 #include <sys/time.h>
 
 
-int gettimeofday(struct timeval *restrict tp, void *restrict tzp)
+int gettimeofday(struct timeval *tp, void *tzp)
 {
 	tp->tv_sec = tp->tv_usec = 0;
 	return 0;

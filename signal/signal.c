@@ -38,7 +38,7 @@ void (*signal(int signum, void (*handler)(int)))(int)
 }
 
 
-int sigaction(int sig, const struct sigaction *restrict act, struct sigaction *restrict oact)
+int sigaction(int sig, const struct sigaction * act, struct sigaction * oact)
 {
 	return -ENOSYS;
 }

@@ -48,7 +48,7 @@ typedef struct {
 } glob_t;
 
 
-extern int glob(const char *restrict pattern, int flags, int (*errfunc)(const char *epath, int eerrno), glob_t *restrict pglob);
+extern int glob(const char *pattern, int flags, int (*errfunc)(const char *epath, int eerrno), glob_t *pglob);
 
 
 extern void globfree(glob_t *pglob);

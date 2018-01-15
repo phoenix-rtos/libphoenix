@@ -77,23 +77,10 @@ static int psh_readln(oid_t *oid, char *line, int size)
 		if (psh_isNewline(c))
 			break;
 
-		/* Print character. */
-		if (c != 0x7f || count > 0)
-			write(1, &c, 1);
-
-		/* Handle delete. */
-		if (c == 0x7f) {
-			if (count > 0) {
-				--count;
-				write(1, "\b \b", 3);
-			}
-		}
-		else
-			line[count++] = c;
+		line[count++] = c;
 	}
 
 	memset(&line[count], '\0', size - count);
-	write(1, "\n", 1);
 
 	return count;
 }

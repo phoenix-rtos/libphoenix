@@ -96,10 +96,10 @@ struct stat {
 };
 
 
-extern int lstat(const char *restrict path, struct stat *restrict buf);
+extern int lstat(const char *path, struct stat *buf);
 
 
-extern int stat(const char *restrict path, struct stat *restrict buf);
+extern int stat(const char *path, struct stat *buf);
 
 
 extern mode_t umask(mode_t cmask);

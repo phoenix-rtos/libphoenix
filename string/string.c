@@ -215,7 +215,7 @@ char *strncpy(char *dest, const char *src, size_t n)
 
 #ifndef __STRPCPY
 #define __STRPCPY
-char *stpcpy(char *restrict dest, const char *restrict src)
+char *stpcpy(char *dest, const char *src)
 {
 	do
 		*(dest++) = *(src++);
@@ -356,7 +356,7 @@ size_t strspn(const char *s1, const char *s2)
 }
 
 
-char *strtok(char *restrict s1, const char *restrict s2)
+char *strtok(char *s1, const char *s2)
 {
 	char *tokend;
 
