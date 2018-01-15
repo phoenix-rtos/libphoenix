@@ -17,7 +17,6 @@
 #define _LIBPHOENIX_ARCH_ARM_IMX_ARCH_H_
 
 #include <stddef.h>
-#include <endian.h>
 
 #define __BYTE_ORDER __LITTLE_ENDIAN
 

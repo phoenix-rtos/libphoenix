@@ -19,7 +19,6 @@
 #include "errno.h"
 #include "arch/ia32/syscalls.h"
 #include <stddef.h>
-#include <endian.h>
 
 #define __BYTE_ORDER __LITTLE_ENDIAN
 

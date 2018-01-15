@@ -18,9 +18,10 @@
 
 #include ARCH
 
+
 typedef union {
 		struct {
-#ifdef __LITTLE_ENDIAN
+#if __BYTE_ORDER == __LITTLE_ENDIAN
 			u64 mantisa:52;
 			u16 exponent:11;
 			u8 sign:1;
