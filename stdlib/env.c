@@ -33,3 +33,16 @@ int clearenv(void)
 {
 	return EOK;
 }
+
+
+char *getenv(const char *name)
+{
+	return NULL;
+}
+
+
+/* TODO: Move? */
+int system(const char *command)
+{
+	return EOK;
+}

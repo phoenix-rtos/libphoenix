@@ -14,6 +14,8 @@
  */
 
 #include "stdio.h"
+#include "stdlib.h"
+#include "unistd.h"
 #include "format.h"
 #include "sys/debug.h"
 
@@ -41,7 +43,18 @@ int vfprintf(FILE *f, const char *format, va_list args)
 
 int dprintf(int fd, const char *format, ...)
 {
-	return 0;
+	/* TEMPORARY */
+	va_list ap;
+	char *buf = malloc(1024);
+	int retVal;
+
+	va_start(ap, format);
+	retVal = vsprintf(buf, format, ap);
+	va_end(ap);
+
+	write(fd, buf, retVal);
+
+	return retVal;
 }
 
 

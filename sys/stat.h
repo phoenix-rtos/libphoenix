@@ -105,4 +105,7 @@ extern int stat(const char *path, struct stat *buf);
 extern mode_t umask(mode_t cmask);
 
 
+extern int mkdir(const char *pathname, mode_t mode);
+
+
 #endif

@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <sys/msg.h>
 #include <sys/file.h>
+#include <sys/types.h>
 
 
 int close(int fildes)
@@ -74,7 +75,6 @@ ssize_t read(int fildes, void *buf, size_t nbyte)
 	if (msgSend(oid.port, &msg) < 0)
 		return -1;
 
-	msg.o.io.err = 1;
 	return msg.o.io.err;
 }
 
@@ -120,4 +120,10 @@ int pipe(int fildes[2])
 int poll(struct pollfd *fds, nfds_t nfds, int timeout)
 {
 	return -ENOSYS;
+}
+
+
+int ftruncate(int fildes, off_t length)
+{
+	return EOK;
 }

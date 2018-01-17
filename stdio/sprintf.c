@@ -45,6 +45,19 @@ int sprintf(char *str, const char *format, ...)
 }
 
 
+int snprintf(char *str, size_t n, const char *format, ...)
+{
+	va_list ap;
+	int retVal;
+
+	va_start(ap, format);
+	retVal = vsprintf(str, format, ap);
+	va_end(ap);
+
+	return retVal;
+}
+
+
 int vsprintf(char *str, const char *format, va_list arg)
 {
 	sprintf_ctx_t ctx;

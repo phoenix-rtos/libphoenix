@@ -169,4 +169,8 @@ extern int wctomb(char *str, wchar_t wchar);
 extern void _malloc_init(void);
 
 
+/* Return canonicalized absolute path, to be deallocated with free() */
+char *canonicalize_file_name(const char *path);
+
+
 #endif

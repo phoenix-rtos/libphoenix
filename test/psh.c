@@ -17,9 +17,11 @@
 #include "stdlib.h"
 #include "string.h"
 #include "unistd.h"
+#include "dirent.h"
 #include "sys/threads.h"
 #include "sys/msg.h"
 #include "sys/file.h"
+#include "sys/stat.h"
 
 
 static int psh_isNewline(char c)
@@ -96,9 +98,48 @@ static void psh_help(oid_t *oid)
 }
 
 
-static void psh_ls(oid_t *oid)
+static void psh_ls(oid_t *oid, char *args)
 {
-	printf("ls\n");
+	char *path = args;
+	unsigned int len;
+	DIR *stream;
+	struct dirent *dir;
+
+	while ((path = psh_nextString(path, &len)) && len) {
+		stream = opendir(path);
+
+		if (stream == NULL) {
+			puts(path);
+			puts(": no such directory\n");
+			break;
+		}
+
+		while ((dir = readdir(stream)) != NULL) {
+			puts(dir->d_name);
+			puts("\n");
+		}
+
+		puts("\n");
+
+		closedir(stream);
+		path += len + 1;
+	}
+}
+
+
+static void psh_mkdir(oid_t *oid, char *args)
+{
+	char *path = args;
+	unsigned int len;
+
+	while ((path = psh_nextString(path, &len)) && len) {
+		if (mkdir(path, 0) < 0) {
+			puts(path);
+			puts(": failed to create directory\n");
+		}
+
+		path += len + 1;
+	}
 }
 
 
@@ -145,13 +186,16 @@ void psh_run(oid_t *oid)
 			psh_help(oid);
 
 		else if (!strcmp(cmd, "ls"))
-			psh_ls(oid);
+			psh_ls(oid, cmd + 3);
 
 		else if (!strcmp(cmd, "mem"))
 			psh_mem(oid);
 
 		else if (!strcmp(cmd, "ps"))
 			psh_ps(oid);
+
+		else if (!strcmp(cmd, "mkdir"))
+			psh_mkdir(oid, cmd + 6);
 
 		else
 			printf("Unknown command!\n");

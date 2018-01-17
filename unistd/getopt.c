@@ -14,6 +14,7 @@
  */
 
 #include <unistd.h>
+#include <getopt.h>
 
 
 char *optarg;
@@ -21,6 +22,12 @@ int optind, opterr, optopt;
 
 
 int getopt(int argc, char * const argv[], const char *optstring)
+{
+	return -1;
+}
+
+
+int getopt_long(int argc, char * const argv[], const char *optstring, const struct option *longopts, int *longindex)
 {
 	return -1;
 }

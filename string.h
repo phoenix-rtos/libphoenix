@@ -122,4 +122,7 @@ extern char *strchrnul(const char *str, int z);
 
 extern char *strchr(const char *str, int z);
 
+
+extern char *strdup(const char *s1);
+
 #endif

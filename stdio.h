@@ -34,7 +34,11 @@ typedef struct _FILE {
 } FILE;
 
 
-typedef FILE DIR;
+typedef struct _DIR {
+	oid_t oid;
+	size_t pos;
+	struct dirent *dirent;
+} DIR;
 
 
 extern FILE *stderr, *stdin, *stdout;

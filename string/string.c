@@ -379,4 +379,23 @@ char *strtok(char *s1, const char *s2)
 }
 
 
+char *strcat(char *s1, const char *s2)
+{
+	int len = strlen(s1);
+	return strcpy(s1 + len, s2) - len;
+}
+
+
+void *memrchr(const void *s, int c, size_t n)
+{
+	int i;
+	for (i = 0; i < n; ++i) {
+		if (((char *)s)[-i] == c)
+			return (char *)s - i;
+	}
+
+	return NULL;
+}
+
+
 #endif

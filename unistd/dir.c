@@ -18,32 +18,162 @@
 #include <dirent.h>
 #include <stdio.h>
 #include <errno.h>
+#include <sys/msg.h>
+
+
 
 int chdir(const char *path)
 {
-	return -ENOENT;
+	return EOK;
+}
+
+
+static int getcwd_len(void)
+{
+	return 1;
 }
 
 
 char *getcwd(char *buf, size_t size)
 {
-	return NULL;
+	if (buf == NULL)
+		buf = malloc(getcwd_len() + 1);
+
+	buf[0] = '/';
+	buf[1] = 0;
+
+	return buf;
 }
 
 
-struct dirent *readdir(DIR *dirp)
+/* TODO: resolve links, handle '//', '.' and '..' */
+char *canonicalize_file_name(const char *path)
 {
-	return NULL;
+	char *buf;
+	int cwdlen = getcwd_len();
+	int pathlen;
+
+	if (path == NULL)
+		return NULL;
+
+	pathlen = strlen(path);
+
+	if (*path != '/') {
+		if ((buf = malloc(cwdlen + pathlen + 1)) == NULL)
+			return NULL; /* ENOMEM */
+
+		buf = strcat(getcwd(buf, cwdlen), path);
+	}
+	else {
+		if ((buf = strdup(path)) == NULL)
+			return NULL; /* ENOMEM */
+	}
+
+	return buf;
+}
+
+
+struct dirent *readdir(DIR *s)
+{
+	msg_t msg;
+
+	if (s->dirent == NULL) {
+		if ((s->dirent = calloc(1, sizeof(struct dirent) + NAME_MAX)) == NULL)
+			return NULL;
+	}
+
+	msg.type = mtReaddir;
+	msg.i.readdir.offs = s->pos;
+
+	memcpy(&msg.i.readdir.dir, &s->oid, sizeof(oid_t));
+	msg.o.data = s->dirent;
+	msg.o.size = 1024;
+
+	if (msgSend(s->oid.port, &msg) < 0) {
+		free(s->dirent);
+		s->dirent = NULL;
+		return NULL; /* EIO */
+	}
+
+	if (msg.o.io.err < 0) {
+		free(s->dirent);
+		s->dirent = NULL;
+		return NULL;
+	}
+
+	s->pos += sizeof(struct dirent) + s->dirent->d_namlen;
+
+	return s->dirent;
 }
 
 
 DIR *opendir(const char *dirname)
 {
-	return NULL;
+	msg_t msg = { 0 };
+	char *canonical_name = canonicalize_file_name(dirname);
+	DIR *s = calloc(1, sizeof(DIR));
+
+	if (!dirname[0] || (lookup((char *)canonical_name, &s->oid) < 0)) {
+		free(s);
+		return NULL; /* ENOENT */
+	}
+
+	free(canonical_name);
+	s->dirent = NULL;
+
+#if 0
+	msg.type = mtGetattr;
+	msg.i.attr.type = /*atType*/ 0;
+	memcpy(&msg.i.attr.oid, &s->oid, sizeof(oid_t));
+
+	if (msgSend(s->oid.port, &msg) < 0) {
+		free(s);
+		return NULL; /* EIO */
+	}
+
+	if (msg.o.attr.val != /* Dir */ 0)
+		return NULL; /* ENOTDIR */
+#endif
+
+	msg.type = mtOpen;
+	memcpy(&msg.i.open.oid, &s->oid, sizeof(oid_t));
+	msg.i.open.flags = 0;
+
+	if (msgSend(s->oid.port, &msg) < 0) {
+		free(s);
+		return NULL; /* EIO */
+	}
+
+	if (msg.o.io.err < 0) {
+		free(s);
+		return NULL;
+	}
+
+	return s;
 }
 
 
 int closedir(DIR *dirp)
+{
+	msg_t msg = { 0 };
+
+	msg.type = mtClose;
+	memcpy(&msg.i.close.oid, &dirp->oid, sizeof(oid_t));
+
+	if (msgSend(dirp->oid.port, &msg) < 0)
+		return -1; /* EIO */
+
+	if (msg.o.io.err < 0)
+		return -1;
+
+	free(dirp->dirent);
+	free(dirp);
+
+	return 0;
+}
+
+
+ssize_t readlink(const char *pathname, char *buf, size_t bufsiz)
 {
 	return 0;
 }

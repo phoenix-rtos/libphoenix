@@ -6,7 +6,7 @@
  * fs.c
  *
  * Copyright 2017 Phoenix Systems
- * Author: Aleksander Kaminski
+ * Author: Aleksander Kaminski, Jan Sikorski
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -50,18 +50,16 @@ int fclose(FILE *file)
 
 FILE *fopen(const char *filename, const char *mode)
 {
-	return NULL;
-#if 0
 	oid_t oid;
-	int err;
 	unsigned int m;
-	size_t len, i;
-	fsopen_t open;
-	fscreat_t *creat;
+	msg_t msg = { 0 };
 	FILE *f;
+	char *canonical_name, *name, *parent;
 
 	if (filename == NULL || mode == NULL)
 		return NULL;
+
+	canonical_name = canonicalize_file_name(filename);
 
 	if (strcmp(mode, "r") == 0)
 		m = O_RDONLY;
@@ -78,42 +76,53 @@ FILE *fopen(const char *filename, const char *mode)
 	else
 		return NULL;
 
-	if (lookup(filename, &oid) == EOK) {
-		open.id = oid.id;
-		open.mode = m;
+	if (lookup(canonical_name, &oid) == EOK) {
+		msg.type = mtOpen;
+		memcpy(&msg.i.open.oid, &oid, sizeof(oid));
 
-		if (send(oid.port, OPEN, &open, sizeof(open), NORMAL, NULL, 0) != EOK)
+		if (msgSend(oid.port, &msg) != EOK)
+			return NULL;
+
+		if (msg.o.io.err < 0)
 			return NULL;
 	}
 	else if (m & O_CREAT) {
-		len = strlen(filename);
-		for (i = len; i > 0; --i) {
-			if (filename[i] == '/')
-				break;
+		msg.type = mtCreate;
+		msg.i.create.type = 1;
+
+		name = strrchr(canonical_name, '/');
+
+		if (name == canonical_name) {
+			name++;
+			parent = "/";
+		}
+		else {
+			*(name++) = 0;
+			parent = canonical_name;
 		}
 
-		if (i == 0)
-			return NULL;
-
-		if ((creat = malloc(sizeof(fscreat_t) + len + 1)) == NULL)
-			return NULL;
-
-		strcpy(creat->path, filename);
-		creat->path[i + 1] = '\0';
-
-		if (lookup(creat->path, &oid) != EOK) {
-			free(creat);
+		if (lookup(parent, &oid) < EOK) {
+			free(canonical_name);
 			return NULL;
 		}
 
-		creat->path[i + 1] = filename[i + 1];
-
-		err = send(oid.port, CREAT, creat, sizeof(fscreat_t), NORMAL, &oid, sizeof(oid)) != sizeof(oid);
-
-		free(creat);
-
-		if (err != sizeof(oid))
+		if (msgSend(oid.port, &msg) != EOK) {
+			free(canonical_name);
 			return NULL;
+		}
+
+		msg.i.ln.dir = oid;
+		msg.type = mtLink;
+		memcpy(&msg.i.ln.oid, &msg.o.create.oid, sizeof(oid));
+		msg.i.data = name;
+		msg.i.size = strlen(name) + 1;
+
+		if (msgSend(oid.port, &msg) != EOK) {
+			free(canonical_name);
+			return NULL;
+		}
+
+		free(canonical_name);
 	}
 	else {
 		return NULL;
@@ -123,13 +132,12 @@ FILE *fopen(const char *filename, const char *mode)
 	if ((f = malloc(sizeof(FILE))) == NULL)
 		return NULL;
 
-	f->oid = oid;
+	memcpy(&f->oid, &oid, sizeof(oid));
 	f->buff = NULL;
 	f->buffsz = 0;
 	f->pos = 0; /* TODO - get filesize and set pos if append */
 
 	return f;
-#endif
 }
 
 
@@ -278,6 +286,14 @@ int putc_unlocked(int c)
 }
 
 
+int putchar_unlocked(int c)
+{
+	/* Temporary: stdout */
+	write(1, &c, 1);
+	return 0;
+}
+
+
 int puts(const char *s)
 {
 	int len = strlen(s);
@@ -323,5 +339,11 @@ int fputs(const char *str, FILE *f)
 	int len = strlen(str);
 	/* Temporary: stdout */
 	write(1, (void *)str, len);
+	return EOK;
+}
+
+
+int ioctl(int fildes, int request, ... /* arg */)
+{
 	return EOK;
 }

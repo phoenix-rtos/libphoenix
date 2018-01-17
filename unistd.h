@@ -62,7 +62,10 @@ extern int symlink(const char *path1, const char *path2);
 extern int link(const char *path1, const char *path2);
 
 
-int getopt(int argc, char * const argv[], const char *optstring);
+extern char *getcwd(char *buf, size_t size);
+
+
+extern int getopt(int argc, char * const argv[], const char *optstring);
 
 
 extern char *optarg;

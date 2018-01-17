@@ -45,3 +45,16 @@ int execvp(const char *file, char *const argv[])
 {
 	return -ENOSYS;
 }
+
+
+/* TODO :move */
+unsigned int major(int dev)
+{
+	return 0;
+}
+
+
+unsigned int minor(int dev)
+{
+	return 0;
+}
