@@ -41,7 +41,7 @@ extern int msgPulse(u32 port, msg_t *m);
 
 extern int msgRecv(u32 port, msg_t *m, unsigned int *rid);
 
-extern int msgRespond(u32 port, unsigned int rid);
+extern int msgRespond(u32 port, msg_t *m, unsigned int rid);
 
 
 #endif
