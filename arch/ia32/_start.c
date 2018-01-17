@@ -26,25 +26,22 @@ extern int main(int argc, char **argv);
 char **environ;
 FILE stdin_file, stdout_file;
 
-void _start(void)
+void _start(int argc, char **argv, char **env)
 {
-	char *argv[6] = { NULL };
-	char **p = argv;
 	unsigned int h;
 	oid_t oid = { 0, 0 };
 
-	environ = NULL;
+	environ = env;
 	optind = 1;
 
 	stdin = &stdin_file;
 	stdout = &stdout_file;
-
-	*(p++) = "sh";
 
 	fileAdd(&h, &oid);
 	fileAdd(&h, &oid);
 	fileAdd(&h, &oid);
 
 	_malloc_init();
-	exit(main(p - argv, argv));
+
+	exit(main(argc, argv));
 }
