@@ -136,8 +136,8 @@ DIR *opendir(const char *dirname)
 #endif
 
 	msg.type = mtOpen;
-	memcpy(&msg.i.open.oid, &s->oid, sizeof(oid_t));
-	msg.i.open.flags = 0;
+	memcpy(&msg.i.openclose.oid, &s->oid, sizeof(oid_t));
+	msg.i.openclose.flags = 0;
 
 	if (msgSend(s->oid.port, &msg) < 0) {
 		free(s);
@@ -158,7 +158,7 @@ int closedir(DIR *dirp)
 	msg_t msg = { 0 };
 
 	msg.type = mtClose;
-	memcpy(&msg.i.close.oid, &dirp->oid, sizeof(oid_t));
+	memcpy(&msg.i.openclose.oid, &dirp->oid, sizeof(oid_t));
 
 	if (msgSend(dirp->oid.port, &msg) < 0)
 		return -1; /* EIO */

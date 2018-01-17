@@ -38,9 +38,9 @@ int open(const char *path, int oflag, ...)
 		return -EACCES;
 
 	msg.type = mtOpen;
-	memcpy(&msg.i.open.oid, &oid, sizeof(oid_t));
+	memcpy(&msg.i.openclose.oid, &oid, sizeof(oid_t));
 
-	msg.i.open.flags = oflag;
+	msg.i.openclose.flags = oflag;
 	msg.i.data = (char *)path;
 	msg.i.size = strlen(path);
 
@@ -92,7 +92,7 @@ int dup2(int fildes, int fildes2)
 		return -EBADF;
 
 	msg.type = mtClose;
-	memcpy(&msg.i.close.oid, &oid2, sizeof(oid_t));
+	memcpy(&msg.i.openclose.oid, &oid2, sizeof(oid_t));
 
 	/* NOTE: what happens when oid2 was not open? */
 	if (msgSend(oid.port, &msg) < 0)

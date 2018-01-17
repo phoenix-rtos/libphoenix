@@ -35,7 +35,7 @@ int close(int fildes)
 		return -EBADF;
 
 	msg.type = mtClose;
-	memcpy(&msg.i.close.oid, &oid, sizeof(oid_t));
+	memcpy(&msg.i.openclose.oid, &oid, sizeof(oid_t));
 
 	msg.i.data = NULL;
 	msg.i.size = 0;

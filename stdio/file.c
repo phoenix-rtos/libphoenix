@@ -78,7 +78,7 @@ FILE *fopen(const char *filename, const char *mode)
 
 	if (lookup(canonical_name, &oid) == EOK) {
 		msg.type = mtOpen;
-		memcpy(&msg.i.open.oid, &oid, sizeof(oid));
+		memcpy(&msg.i.openclose.oid, &oid, sizeof(oid));
 
 		if (msgSend(oid.port, &msg) != EOK)
 			return NULL;
