@@ -35,7 +35,32 @@ SYSCALLDEF(mmap, 1)
 
 SYSCALLDEF(munmap, 2)
 
-SYSCALLDEF(vfork, 3)
+//SYSCALLDEF(vfork, 3)
+#if 1
+.bss
+vfork_address:
+.space 4
+.text
+.globl vfork
+.type vfork, @function
+.align 4, 0x90
+vfork:
+	movl $3, %eax
+	int $0x80
+	cmp $0, %eax
+	jz vfork_child
+	push %eax
+	mov (vfork_address), %eax
+	mov %eax, 4(%esp)
+	pop %eax
+	ret
+vfork_child:
+	mov (%esp), %eax
+	mov %eax, (vfork_address)
+	mov $0, %eax
+	ret
+.size vfork, .-vfork
+#endif
 
 SYSCALLDEF(execle, 4)
 
