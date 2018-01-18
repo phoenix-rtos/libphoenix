@@ -14,6 +14,7 @@
  */
 
 #include <sys/types.h>
+#include <unistd.h>
 #include <errno.h>
 
 
@@ -25,7 +26,7 @@ long sysconf(int name)
 
 int execve(const char *path, char *const argv[], char *const envp[])
 {
-	return -ENOSYS;
+	return execle(path, argv[0]);
 }
 
 
@@ -37,13 +38,13 @@ pid_t fork(void)
 
 int execv(const char *path, char *const argv[])
 {
-	return -ENOSYS;
+	return execle(path, argv[0]);
 }
 
 
 int execvp(const char *file, char *const argv[])
 {
-	return -ENOSYS;
+	return execle(file, argv[0]);
 }
 
 

@@ -35,6 +35,9 @@ enum {
 extern int vfork(void);
 
 
+extern int execle(const char *path, const char *arg, ...);
+
+
 extern int usleep(useconds_t usecs);
 
 

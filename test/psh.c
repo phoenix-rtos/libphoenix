@@ -64,7 +64,7 @@ static int psh_readln(oid_t *oid, char *line, int size)
 	char c;
 
 	for (;;) {
-		read(1, &c, 1);
+		read(0, &c, 1);
 
 		if (c == 0)
 			break;
@@ -167,6 +167,13 @@ static void psh_ps(oid_t *oid)
 }
 
 
+void psh_runfile(oid_t *oid, char *cmd)
+{
+	if (!vfork())
+		execle(cmd, cmd);
+}
+
+
 void psh_run(oid_t *oid)
 {
 	unsigned int n;
@@ -196,6 +203,9 @@ void psh_run(oid_t *oid)
 
 		else if (!strcmp(cmd, "mkdir"))
 			psh_mkdir(oid, cmd + 6);
+
+		else if (cmd[0] == '/')
+			psh_runfile(oid, cmd);
 
 		else
 			printf("Unknown command!\n");
