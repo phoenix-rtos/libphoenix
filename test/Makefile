@@ -9,7 +9,7 @@ SRCS = test_malloc.c
 OBJS = $(SRCS:.c=.o)
 
 
-all: check test_mmap test_malloc test_threads test_str2num test_scanf psh helloworld
+all: check test_mmap test_malloc test_threads test_str2num test_scanf psh
 
 
 check:
@@ -63,10 +63,6 @@ test_scanf: test_scanf.o
 
 psh: psh.o
 	$(SIL)$(LD) $(LDFLAGS) -o psh psh.o ../$(LIB) $(GCCLIB)
-
-
-helloworld: helloworld.o
-	$(SIL)$(LD) $(LDFLAGS) -o helloworld helloworld.o ../$(LIB) $(GCCLIB)
 
 
 depend: check
