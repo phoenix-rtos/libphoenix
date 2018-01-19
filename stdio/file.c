@@ -198,7 +198,9 @@ size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 
 int fgetc(FILE *stream)
 {
-	return -ENOSYS;
+	int c;
+	read(0, &c, 1);
+	return c;
 #if 0
 	int err;
 	unsigned char c;
@@ -346,4 +348,12 @@ int fputs(const char *str, FILE *f)
 int ioctl(int fildes, int request, ... /* arg */)
 {
 	return EOK;
+}
+
+
+int getchar_unlocked(void)
+{
+	int c;
+	read(0, &c, 1);
+	return c;
 }

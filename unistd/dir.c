@@ -177,3 +177,14 @@ ssize_t readlink(const char *pathname, char *buf, size_t bufsiz)
 {
 	return 0;
 }
+
+
+int rmdir(const char *path)
+{
+	return 0;
+}
+
+
+char *dirname(char *path)
+{
+}

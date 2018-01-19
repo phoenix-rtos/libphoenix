@@ -127,3 +127,21 @@ int ftruncate(int fildes, off_t length)
 {
 	return EOK;
 }
+
+
+int link(const char *path1, const char *path2)
+{
+	return 0;
+}
+
+
+int unlink(const char *path)
+{
+	return 0;
+}
+
+
+int symlink(const char *path1, const char *path2)
+{
+	return 0;
+}

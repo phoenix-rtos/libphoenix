@@ -131,3 +131,5 @@ SYSCALLDEF(fileSet, 36)
 SYSCALLDEF(fileGet, 37)
 
 SYSCALLDEF(fileRemove, 38)
+
+SYSCALLDEF(execve, 39)

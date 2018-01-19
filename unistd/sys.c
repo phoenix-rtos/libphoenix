@@ -24,10 +24,12 @@ long sysconf(int name)
 }
 
 
+#if 0
 int execve(const char *path, char *const argv[], char *const envp[])
 {
 	return execle(path, argv[0]);
 }
+#endif
 
 
 pid_t fork(void)
@@ -38,13 +40,13 @@ pid_t fork(void)
 
 int execv(const char *path, char *const argv[])
 {
-	return execle(path, argv[0]);
+	return execve(path, argv, NULL);
 }
 
 
 int execvp(const char *file, char *const argv[])
 {
-	return execle(file, argv[0]);
+	return execve(file, argv, NULL);
 }
 
 
@@ -58,4 +60,10 @@ unsigned int major(int dev)
 unsigned int minor(int dev)
 {
 	return 0;
+}
+
+
+unsigned sleep(unsigned seconds)
+{
+	return usleep(seconds * 1000 * 1000);
 }

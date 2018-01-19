@@ -25,6 +25,9 @@ struct timeval {
 };
 
 
-int gettimeofday(struct timeval *tp, void *tzp);
+extern int gettimeofday(struct timeval *tp, void *tzp);
+
+
+extern int utimes(const char *filename, const struct timeval times[2]);
 
 #endif
