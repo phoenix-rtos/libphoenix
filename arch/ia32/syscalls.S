@@ -133,3 +133,5 @@ SYSCALLDEF(fileGet, 37)
 SYSCALLDEF(fileRemove, 38)
 
 SYSCALLDEF(execve, 39)
+
+SYSCALLDEF(threadslist, 40)

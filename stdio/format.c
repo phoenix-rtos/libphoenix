@@ -29,6 +29,7 @@
 #define FLAG_ALTERNATE     0x200
 #define FLAG_NULLMARK      0x400
 #define FLAG_MINUS         0x1000
+#define FLAG_STAR          0x2000
 
 
 #define GET_UNSIGNED(number, flags, args) do {		\
@@ -300,6 +301,8 @@ void format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 				flags |= FLAG_PLUS;
 			else if (fmt == '#')
 				flags |= FLAG_ALTERNATE;
+			else if (fmt == '*')
+				flags |= FLAG_STAR;
 			else
 				break;
 
@@ -350,6 +353,9 @@ void format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 		switch (fmt) {
 			case 's':
 			{
+				if (flags & FLAG_STAR)
+					min_number_len = va_arg(args, int);
+
 				const char *s = va_arg(args, char *);
 				if (s == NULL)
 					s = "(null)";

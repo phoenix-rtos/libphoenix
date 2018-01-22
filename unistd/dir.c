@@ -87,7 +87,7 @@ struct dirent *readdir(DIR *s)
 
 	memcpy(&msg.i.readdir.dir, &s->oid, sizeof(oid_t));
 	msg.o.data = s->dirent;
-	msg.o.size = 1024;
+	msg.o.size = sizeof(struct dirent) + NAME_MAX;
 
 	if (msgSend(s->oid.port, &msg) < 0) {
 		free(s->dirent);
@@ -121,8 +121,9 @@ DIR *opendir(const char *dirname)
 	free(canonical_name);
 	s->dirent = NULL;
 
-#if 0
-	msg.type = mtGetattr;
+#if 1
+	memset(&msg, 0, sizeof(msg));
+	msg.type = mtGetAttr;
 	msg.i.attr.type = /*atType*/ 0;
 	memcpy(&msg.i.attr.oid, &s->oid, sizeof(oid_t));
 
@@ -187,4 +188,5 @@ int rmdir(const char *path)
 
 char *dirname(char *path)
 {
+	return NULL;
 }

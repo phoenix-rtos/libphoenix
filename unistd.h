@@ -38,6 +38,9 @@ extern int vfork(void);
 extern int execle(const char *path, const char *arg, ...);
 
 
+extern int execve(const char *path, char *const argv[], char *const envp[]);
+
+
 extern int usleep(useconds_t usecs);
 
 

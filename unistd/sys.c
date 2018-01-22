@@ -24,14 +24,6 @@ long sysconf(int name)
 }
 
 
-#if 0
-int execve(const char *path, char *const argv[], char *const envp[])
-{
-	return execle(path, argv[0]);
-}
-#endif
-
-
 pid_t fork(void)
 {
 	return -ENOSYS;

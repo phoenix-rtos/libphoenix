@@ -32,11 +32,12 @@ enum {
 #define WCOREDUMP(stat_val) 0
 
 
-/* MOVE */
 static pid_t wait(int *status)
 {
-	return 0;
+	return waitpid(-1, status, 0);
 }
+
+
 
 
 #endif

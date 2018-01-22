@@ -13,6 +13,7 @@
  * %LICENSE%
  */
 
+#include "../../phoenix-rtos-kernel/include/threadinfo.h"
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
@@ -22,6 +23,7 @@
 #include "sys/msg.h"
 #include "sys/file.h"
 #include "sys/stat.h"
+#include "sys/wait.h"
 
 
 static int psh_isNewline(char c)
@@ -93,8 +95,10 @@ static void psh_help(oid_t *oid)
 	printf("Available commands:\n");
 	printf("  help   - prints this help\n");
 	printf("  ls     - lists files in the namespace\n");
+	printf("  mkdir  - create directory\n");
 	printf("  mem    - prints memory map\n");
 	printf("  ps     - prints list of processes and threads\n");
+	printf("  exit   - exit from shell\n");
 }
 
 
@@ -105,7 +109,12 @@ static void psh_ls(oid_t *oid, char *args)
 	DIR *stream;
 	struct dirent *dir;
 
-	while ((path = psh_nextString(path, &len)) && len) {
+	path = psh_nextString(path, &len);
+
+	if (!len)
+		path = ".";
+
+	do {
 		stream = opendir(path);
 
 		if (stream == NULL) {
@@ -124,6 +133,7 @@ static void psh_ls(oid_t *oid, char *args)
 		closedir(stream);
 		path += len + 1;
 	}
+	while ((path = psh_nextString(path, &len)) && len);
 }
 
 
@@ -151,26 +161,34 @@ static void psh_mem(oid_t *oid)
 
 static void psh_ps(oid_t *oid)
 {
-	printf("%9s %8s %16s %100s\n", "PID", "TTY", "TIME", "CMD");
+	threadinfo_t *info;
+	int tcnt, i, n = 32;
 
-/*	thread_t *t;
-	int load;
+	info = malloc(n * sizeof(threadinfo_t));
 
-	t = threads_getFirstThread();
+	while ((tcnt = threadslist(n, info)) >= n) {
+		n *= 2;
+		info = realloc(info, n * sizeof(threadinfo_t));
+	}
 
-	while (t != NULL) {
-		load = threads_getCpuTime(t);
-		lib_printf("load: %02d.%01d%%  proc: -  id: 0x%p  priority: %01u  state: %s  stack: 0x%p\n",  load / 10, load % 10,
-			t->id, t->priority, (t->state == READY) ? "ready" : "sleep", t->context);
-		t = threads_getNextThread(t);
-	}*/
+	printf("%9s %5s %4s %5s %5s %32s\n", "PID", "TTY", "PRT", "STATE", "%CPU", "CMD");
+
+	for (i = 0; i < tcnt; ++i) {
+		printf("%9x %5s %4d %5s %3d.%d %32s\n", info[i].pid, "-", info[i].priority, info[i].state ? "ready" : "sleep", info[i].load / 10, info[i].load % 10, info[i].name);
+	}
+
+	free(info);
 }
 
 
 void psh_runfile(oid_t *oid, char *cmd)
 {
-	if (!vfork())
-		execle(cmd, cmd);
+	int pid;
+
+	if (!(pid = vfork()))
+		exit(execle(cmd, cmd));
+
+	wait(0);
 }
 
 
@@ -206,6 +224,9 @@ void psh_run(oid_t *oid)
 
 		else if (cmd[0] == '/')
 			psh_runfile(oid, cmd);
+
+		else if (!strcmp(cmd, "exit"))
+			exit(EXIT_SUCCESS);
 
 		else
 			printf("Unknown command!\n");
