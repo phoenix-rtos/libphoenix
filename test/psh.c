@@ -63,6 +63,11 @@ static char *psh_nextString(char *buff, unsigned int *size)
 static int psh_readln(oid_t *oid, char *line, int size)
 {
 	int count = 0;
+
+#if 0
+	if ((count = read(0, line, size - 1)) >= 0)
+		memset(&line[count], '\0', size - count);
+#else
 	char c;
 
 	for (;;) {
@@ -85,6 +90,7 @@ static int psh_readln(oid_t *oid, char *line, int size)
 	}
 
 	memset(&line[count], '\0', size - count);
+#endif
 
 	return count;
 }
@@ -221,10 +227,10 @@ void psh_run(oid_t *oid)
 
 		else if (!strcmp(cmd, "mkdir"))
 			psh_mkdir(oid, cmd + 6);
-
+#if 0
 		else if (cmd[0] == '/')
 			psh_runfile(oid, cmd);
-
+#endif
 		else if (!strcmp(cmd, "exit"))
 			exit(EXIT_SUCCESS);
 
