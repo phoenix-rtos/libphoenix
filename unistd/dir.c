@@ -59,14 +59,26 @@ char *canonicalize_file_name(const char *path)
 	pathlen = strlen(path);
 
 	if (*path != '/') {
-		if ((buf = malloc(cwdlen + pathlen + 1)) == NULL)
+		if ((buf = malloc(cwdlen + pathlen + 2)) == NULL)
 			return NULL; /* ENOMEM */
 
 		buf = strcat(getcwd(buf, cwdlen), path);
+
+		if (buf[cwdlen + pathlen - 1] == '/') {
+			buf[cwdlen + pathlen] = '.';
+			buf[cwdlen + pathlen + 1] = 0;
+		}
 	}
 	else {
-		if ((buf = strdup(path)) == NULL)
+		if ((buf = malloc(pathlen + 2)) == NULL)
 			return NULL; /* ENOMEM */
+
+		strcpy(buf, path);
+
+		if (buf[pathlen - 1] == '/') {
+			buf[pathlen] = '.';
+			buf[pathlen + 1] = 0;
+		}
 	}
 
 	return buf;
