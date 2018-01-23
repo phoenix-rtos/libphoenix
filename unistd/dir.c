@@ -64,21 +64,18 @@ char *canonicalize_file_name(const char *path)
 
 		buf = strcat(getcwd(buf, cwdlen), path);
 
-		if (buf[cwdlen + pathlen - 1] == '/') {
-			buf[cwdlen + pathlen] = '.';
-			buf[cwdlen + pathlen + 1] = 0;
-		}
+		pathlen += cwdlen;
 	}
 	else {
 		if ((buf = malloc(pathlen + 2)) == NULL)
 			return NULL; /* ENOMEM */
 
 		strcpy(buf, path);
+	}
 
-		if (buf[pathlen - 1] == '/') {
-			buf[pathlen] = '.';
-			buf[pathlen + 1] = 0;
-		}
+	if (buf[pathlen - 1] == '/') {
+		buf[pathlen] = '.';
+		buf[pathlen + 1] = 0;
 	}
 
 	return buf;
