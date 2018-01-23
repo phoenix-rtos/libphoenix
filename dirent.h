@@ -21,6 +21,12 @@
 
 #define NAME_MAX 128
 
+/* dirent types */
+enum {	dtDir = 0,
+		dtFile,
+		dtDev,
+		dtUnknown
+};
 
 struct dirent {
 	ino_t  d_ino;
