@@ -60,7 +60,7 @@ static char *psh_nextString(char *buff, unsigned int *size)
 }
 
 
-static int psh_readln(oid_t *oid, char *line, int size)
+static int psh_readln(char *line, int size)
 {
 	int count = 0;
 	char c;
@@ -90,7 +90,7 @@ static int psh_readln(oid_t *oid, char *line, int size)
 }
 
 
-static void psh_help(oid_t *oid)
+static void psh_help(void)
 {
 	printf("Available commands:\n");
 	printf("  help   - prints this help\n");
@@ -102,10 +102,10 @@ static void psh_help(oid_t *oid)
 }
 
 
-static void psh_ls(oid_t *oid, char *args)
+static void psh_ls(char *args)
 {
 	char *path = args;
-	unsigned int len;
+	unsigned int len, n = 0;
 	DIR *stream;
 	struct dirent *dir;
 
@@ -124,8 +124,15 @@ static void psh_ls(oid_t *oid, char *args)
 		}
 
 		while ((dir = readdir(stream)) != NULL) {
-			puts(dir->d_name);
-			puts("\n");
+			if (strcmp(dir->d_name, ".") && strcmp(dir->d_name, "..")) {
+				if (dir->d_type == 4)
+					printf("\033[34m%-20s\033[0m",dir->d_name);
+				else
+					printf("%-20s",dir->d_name);
+
+				if (!(++n % 7))
+					printf("\n");
+			}
 		}
 
 		puts("\n");
@@ -137,7 +144,7 @@ static void psh_ls(oid_t *oid, char *args)
 }
 
 
-static void psh_mkdir(oid_t *oid, char *args)
+static void psh_mkdir(char *args)
 {
 	char *path = args;
 	unsigned int len;
@@ -153,13 +160,13 @@ static void psh_mkdir(oid_t *oid, char *args)
 }
 
 
-static void psh_mem(oid_t *oid)
+static void psh_mem(void)
 {
 	printf("mem\n");
 }
 
 
-static void psh_ps(oid_t *oid)
+static void psh_ps(void)
 {
 	threadinfo_t *info;
 	int tcnt, i, n = 32;
@@ -171,17 +178,17 @@ static void psh_ps(oid_t *oid)
 		info = realloc(info, n * sizeof(threadinfo_t));
 	}
 
-	printf("%9s %5s %4s %5s %5s %32s\n", "PID", "TTY", "PRT", "STATE", "%CPU", "CMD");
+	printf("%9s %5s %4s  %5s %5s %s\n", "PID", "TTY", "PRI", "STATE", "%CPU", "CMD");
 
 	for (i = 0; i < tcnt; ++i) {
-		printf("%9x %5s %4d %5s %3d.%d %32s\n", info[i].pid, "-", info[i].priority, info[i].state ? "ready" : "sleep", info[i].load / 10, info[i].load % 10, info[i].name);
+		printf("%9x %5s %4d  %5s %3d.%d  %-32s\n", info[i].pid, "-", info[i].priority, info[i].state ? "ready" : "sleep", info[i].load / 10, info[i].load % 10, info[i].name);
 	}
 
 	free(info);
 }
 
 
-void psh_runfile(oid_t *oid, char *cmd)
+void psh_runfile(char *cmd)
 {
 	int pid;
 
@@ -192,58 +199,60 @@ void psh_runfile(oid_t *oid, char *cmd)
 }
 
 
-void psh_run(oid_t *oid)
+void psh_run(void)
 {
 	unsigned int n;
 	char buff[128];
 	char *cmd;
 
 	for (;;) {
-		while (write(1, "(psh)% ", 7) < 0);
+		write(1, "(psh)% ", 7);
 
-		psh_readln(oid, buff, sizeof(buff));
+		psh_readln(buff, sizeof(buff));
 		cmd = psh_nextString(buff, &n);
 
 		if (n == 0)
 			continue;
 
 		if (!strcmp(cmd, "help"))
-			psh_help(oid);
+			psh_help();
 
 		else if (!strcmp(cmd, "ls"))
-			psh_ls(oid, cmd + 3);
+			psh_ls(cmd + 3);
 
 		else if (!strcmp(cmd, "mem"))
-			psh_mem(oid);
+			psh_mem();
 
 		else if (!strcmp(cmd, "ps"))
-			psh_ps(oid);
+			psh_ps();
 
 		else if (!strcmp(cmd, "mkdir"))
-			psh_mkdir(oid, cmd + 6);
+			psh_mkdir(cmd + 6);
 
 		else if (cmd[0] == '/')
-			psh_runfile(oid, cmd);
+			psh_runfile(cmd);
 
 		else if (!strcmp(cmd, "exit"))
 			exit(EXIT_SUCCESS);
 
 		else
 			printf("Unknown command!\n");
-
 	}
 }
 
 
 int main(void)
 {
-	unsigned int h;
+	oid_t oid;
 
-	oid_t oid = { 0, 0 };
+	/* Wait for filesystem */
+	while (lookup("/", &oid) < 0)
+		usleep(10000);
 
-	/* (MOD) */
-	fileAdd(&h, &oid);
+	/* Wait for console */
+	while (write(1, "", 0) < 0)
+		usleep(10000);
 
-	psh_run(&oid);
+	psh_run();
 	return 0;
 }
