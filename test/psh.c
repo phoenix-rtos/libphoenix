@@ -63,6 +63,11 @@ static char *psh_nextString(char *buff, unsigned int *size)
 static int psh_readln(char *line, int size)
 {
 	int count = 0;
+
+#if 0
+	if ((count = read(0, line, size - 1)) >= 0)
+		memset(&line[count], '\0', size - count);
+#else
 	char c;
 
 	for (;;) {
@@ -85,6 +90,7 @@ static int psh_readln(char *line, int size)
 	}
 
 	memset(&line[count], '\0', size - count);
+#endif
 
 	return count;
 }
