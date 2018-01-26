@@ -134,4 +134,6 @@ SYSCALLDEF(fileRemove, 38)
 
 SYSCALLDEF(execve, 39)
 
-SYSCALLDEF(threadslist, 40)
+SYSCALLDEF(threadsinfo, 40)
+
+SYSCALLDEF(meminfo, 41)

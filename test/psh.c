@@ -13,13 +13,13 @@
  * %LICENSE%
  */
 
-#include "../../phoenix-rtos-kernel/include/threadinfo.h"
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
 #include "unistd.h"
 #include "dirent.h"
 #include "sys/threads.h"
+#include "sys/mman.h"
 #include "sys/msg.h"
 #include "sys/file.h"
 #include "sys/stat.h"
@@ -101,10 +101,11 @@ static void psh_help(void)
 	printf("Available commands:\n");
 	printf("  help   - prints this help\n");
 	printf("  ls     - lists files in the namespace\n");
-	printf("  mkdir  - create directory\n");
+	printf("  mkdir  - creates directory\n");
+	printf("  touch  - changes file timestamp\n");
 	printf("  mem    - prints memory map\n");
 	printf("  ps     - prints list of processes and threads\n");
-	printf("  exit   - exit from shell\n");
+	printf("  exit   - exits the shell\n");
 }
 
 
@@ -166,9 +167,115 @@ static void psh_mkdir(char *args)
 }
 
 
+static void psh_touch(char *args)
+{
+	char *path = args;
+	unsigned int len;
+	FILE *f;
+
+	while ((path = psh_nextString(path, &len)) && len) {
+		if ((f = fopen(path, "w")) == NULL) {
+			puts(path);
+			puts(": fopen failed\n");
+		}
+		else
+			fclose(f);
+
+		path += len + 1;
+	}
+}
+
+
 static void psh_mem(void)
 {
-	printf("mem\n");
+	meminfo_t info;
+	int i;
+	unsigned int n;
+	entryinfo_t *e;
+	pageinfo_t *p;
+
+	unsigned kmapsz, mapsz, pmapsz;
+
+	memset(&info, 0, sizeof(info));
+
+	info.entry.kmapsz = 16;
+	info.entry.mapsz  = 16;
+	info.page.mapsz   = 16;
+
+	do {
+		kmapsz = info.entry.kmapsz;
+		mapsz  = info.entry.mapsz;
+		pmapsz = info.page.mapsz;
+
+		info.entry.map  = realloc(info.entry.map,  mapsz  * sizeof(entryinfo_t));
+		info.entry.kmap = realloc(info.entry.kmap, kmapsz * sizeof(entryinfo_t));
+		info.page.map   = realloc(info.page.map,   pmapsz * sizeof(pageinfo_t));
+
+		meminfo(&info);
+	}
+	while (info.entry.kmapsz > kmapsz || info.entry.mapsz > mapsz || info.page.mapsz > pmapsz);
+
+	if (info.entry.map == NULL || info.entry.kmap == NULL || info.page.map == NULL) {
+		free(info.entry.map);
+		free(info.entry.kmap);
+		free(info.page.map);
+		printf("mem: not enough memory\n");
+		return;
+	}
+
+	printf("allocated memory:  %12u KB\n"
+	       "incl. boot memory: %12u KB\n"
+	       "unused memory:     %12u KB\n"
+	       "total memory:      %12u KB\n",
+	       info.page.alloc / 1024, info.page.boot / 1024, info.page.free / 1024,
+	       (info.page.alloc + info.page.free) / 1024);
+
+	printf("\npage map:\n");
+
+	for (i = 0, p = info.page.map; i < info.page.mapsz; ++i, ++p) {
+		if (p != info.page.map && (n = (p->addr - (p - 1)->addr) / SIZE_PAGE - (p - 1)->count)) {
+			if (n > 3) {
+				printf("[%ux]", n);
+			}
+			else {
+				while (n-- > 0)
+					printf("x");
+			}
+		}
+
+		if ((n = p->count) > 3) {
+			printf("[%u%c]", p->count, p->marker);
+			continue;
+		}
+
+		while (n-- > 0)
+			printf("%c", p->marker);
+	}
+	printf("\n\n");
+
+	printf("total map entries: %12u\n"
+	       "free map entries:  %12u\n"
+	       "map entry size:    %12u\n",
+	       info.entry.total, info.entry.free, info.entry.sz,
+	       info.entry.kmapsz, info.entry.mapsz);
+
+	printf("\nprocess memory map:\n");
+	printf("        address range      flags             offset\n");
+
+	for (i = 0, e = info.entry.map; i < info.entry.mapsz; ++i, ++e) {
+		printf("  %p : %p   % 8x   % 16llx\n", e->vaddr, e->vaddr + e->size, e->flags, e->offs);
+	}
+
+	printf("\nkernel memory map:\n");
+	printf("        address range      flags             offset\n");
+
+	for (i = 0, e = info.entry.kmap; i < info.entry.kmapsz; ++i, ++e) {
+		printf("  %p : %p   % 8x   % 16llx\n", e->vaddr, e->vaddr + e->size, e->flags, e->offs);
+	}
+
+	free(info.entry.map);
+	free(info.entry.kmap);
+	free(info.page.map);
 }
 
 
@@ -179,7 +286,7 @@ static void psh_ps(void)
 
 	info = malloc(n * sizeof(threadinfo_t));
 
-	while ((tcnt = threadslist(n, info)) >= n) {
+	while ((tcnt = threadsinfo(n, info)) >= n) {
 		n *= 2;
 		info = realloc(info, n * sizeof(threadinfo_t));
 	}
@@ -231,6 +338,9 @@ void psh_run(void)
 
 		else if (!strcmp(cmd, "ps"))
 			psh_ps();
+
+		else if (!strcmp(cmd, "touch"))
+			psh_touch(cmd + 6);
 
 		else if (!strcmp(cmd, "mkdir"))
 			psh_mkdir(cmd + 6);

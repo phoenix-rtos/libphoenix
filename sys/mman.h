@@ -17,6 +17,7 @@
 #define _SYS_MMAN_H_
 
 #include ARCH
+#include "../../phoenix-rtos-kernel/include/sysinfo.h"
 
 
 #define PROT_READ   0
@@ -34,6 +35,9 @@
 
 
 extern void mmdump(void);
+
+
+extern void meminfo(meminfo_t *info);
 
 
 extern void *mmap(void *vaddr, size_t size, int prot, int flags, oid_t *oid, offs_t offs);

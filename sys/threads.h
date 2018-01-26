@@ -17,7 +17,7 @@
 #define _LIBPHOENIX_SYS_THREADS_H_
 
 #include ARCH
-#include "../phoenix-rtos-kernel/include/threadinfo.h"
+#include "../phoenix-rtos-kernel/include/sysinfo.h"
 
 extern int beginthreadex(void (*start)(void *), unsigned int priority, void *stack, unsigned int stacksz, void *arg, handle_t *id);
 
@@ -31,7 +31,7 @@ static inline int beginthread(void (*start)(void *), unsigned int priority, void
 }
 
 
-extern int threadslist(int n, threadinfo_t *info);
+extern int threadsinfo(int n, threadinfo_t *info);
 
 
 extern int mutexCreate(handle_t *h);
