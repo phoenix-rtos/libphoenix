@@ -28,7 +28,7 @@ unsigned int strtoul(char *nptr, char **endptr, int base)
 		*endptr = nptr;
 	}
 
-	while (isdigit(*nptr)) {
+	while (isdigit(*nptr) || isalpha(*nptr)) {
 		t = *nptr - '0';
 		if (t > 9) {
 			if (base > 10) {

@@ -132,7 +132,7 @@ static void psh_ls(char *args)
 
 		while ((dir = readdir(stream)) != NULL) {
 			if (strcmp(dir->d_name, ".") && strcmp(dir->d_name, "..")) {
-				if (dir->d_type == 4)
+				if (dir->d_type == 0)
 					printf("\033[34m%-20s\033[0m",dir->d_name);
 				else
 					printf("%-20s",dir->d_name);
@@ -185,97 +185,148 @@ static void psh_touch(char *args)
 	}
 }
 
-
-static void psh_mem(void)
+static void psh_mem(char *args)
 {
+	char *arg, *end;
+	unsigned int len, i, n;
 	meminfo_t info;
-	int i;
-	unsigned int n;
-	entryinfo_t *e;
-	pageinfo_t *p;
-
-	unsigned kmapsz, mapsz, pmapsz;
+	int mapsz = 0;
+	entryinfo_t *e = NULL;
+	pageinfo_t *p = NULL;
 
 	memset(&info, 0, sizeof(info));
+	arg = psh_nextString(args, &len);
+	args += len + 1;
 
-	info.entry.kmapsz = 16;
-	info.entry.mapsz  = 16;
-	info.page.mapsz   = 16;
-
-	do {
-		kmapsz = info.entry.kmapsz;
-		mapsz  = info.entry.mapsz;
-		pmapsz = info.page.mapsz;
-
-		info.entry.map  = realloc(info.entry.map,  mapsz  * sizeof(entryinfo_t));
-		info.entry.kmap = realloc(info.entry.kmap, kmapsz * sizeof(entryinfo_t));
-		info.page.map   = realloc(info.page.map,   pmapsz * sizeof(pageinfo_t));
+	if (!len) {
+		/* show summary */
+		info.page.mapsz = -1;
+		info.entry.mapsz = -1;
+		info.entry.kmapsz = -1;
 
 		meminfo(&info);
-	}
-	while (info.entry.kmapsz > kmapsz || info.entry.mapsz > mapsz || info.page.mapsz > pmapsz);
 
-	if (info.entry.map == NULL || info.entry.kmap == NULL || info.page.map == NULL) {
-		free(info.entry.map);
-		free(info.entry.kmap);
-		free(info.page.map);
-		printf("mem: not enough memory\n");
+		printf(
+			"allocated memory:  %12u KB\n"
+			"incl. boot memory: %12u KB\n"
+			"unused memory:     %12u KB\n"
+			"total memory:      %12u KB\n\n",
+			info.page.alloc / 1024, info.page.boot / 1024, info.page.free / 1024,
+			(info.page.alloc + info.page.free) / 1024);
+
+		printf(
+			"total map entries: %12u\n"
+			"free map entries:  %12u\n"
+			"map entry size:    %12u\n",
+			info.entry.total, info.entry.free, info.entry.sz);
+
 		return;
 	}
 
-	printf("allocated memory:  %12u KB\n"
-	       "incl. boot memory: %12u KB\n"
-	       "unused memory:     %12u KB\n"
-	       "total memory:      %12u KB\n",
-	       info.page.alloc / 1024, info.page.boot / 1024, info.page.free / 1024,
-	       (info.page.alloc + info.page.free) / 1024);
+	if (!strcmp("-m", arg)) {
+		info.page.mapsz = -1;
+		arg = psh_nextString(args, &len);
 
-	printf("\npage map:\n");
+		if (!strcmp("kernel", arg))  {
+			/* show memory map of the kernel */
+			info.entry.mapsz = -1;
+			info.entry.kmapsz = 16;
 
-	for (i = 0, p = info.page.map; i < info.page.mapsz; ++i, ++p) {
-		if (p != info.page.map && (n = (p->addr - (p - 1)->addr) / SIZE_PAGE - (p - 1)->count)) {
-			if (n > 3) {
-				printf("[%ux]", n);
+			do {
+				mapsz = info.entry.kmapsz;
+				info.entry.kmap = realloc(info.entry.kmap, mapsz * sizeof(entryinfo_t));
+				meminfo(&info);
+			}
+			while (info.entry.kmapsz > mapsz);
+
+			mapsz = info.entry.kmapsz;
+			e = info.entry.kmap;
+		}
+		else {
+			/* show memory map of a process */
+			if (len) {
+				info.entry.pid = strtoul(arg, &end, 16);
+
+				if (end + 1 != args + len) {
+					printf("mem: could not parse process id: '%s'\n", arg);
+					return;
+				}
 			}
 			else {
-				while (n-- > 0)
-					printf("x");
+				info.entry.pid = getpid();
 			}
+
+			/* show memory map of current process */
+			info.entry.kmapsz = -1;
+			info.entry.mapsz = 16;
+
+			do {
+				mapsz = info.entry.mapsz;
+				info.entry.map = realloc(info.entry.map, mapsz * sizeof(entryinfo_t));
+				meminfo(&info);
+			}
+			while (info.entry.mapsz > mapsz);
+
+			if (info.entry.mapsz < 0) {
+				printf("mem: process with pid %x not found\n", info.entry.pid);
+				free(info.entry.map);
+				return;
+			}
+
+			mapsz = info.entry.mapsz;
+			e = info.entry.map;
 		}
 
-		if ((n = p->count) > 3) {
-			printf("[%u%c]", p->count, p->marker);
-			continue;
+		printf("        address range      flags             offset     object\n");
+
+		for (i = 0; i < mapsz; ++i, ++e)
+			printf("  %p : %p   % 8x   % 16llx   %8x\n", e->vaddr, e->vaddr + e->size, e->flags, e->offs, e->object);
+
+		free(info.entry.map);
+		free(info.entry.kmap);
+
+		return;
+	}
+
+	if (!strcmp("-p", arg)) {
+		/* show page map */
+		info.entry.mapsz = ~0;
+		info.entry.kmapsz = ~0;
+		info.page.mapsz = 16;
+
+		do {
+			mapsz = info.page.mapsz;
+			info.page.map = realloc(info.page.map, mapsz * sizeof(pageinfo_t));
+			meminfo(&info);
 		}
+		while (info.page.mapsz > mapsz);
 
-		while (n-- > 0)
-			printf("%c", p->marker);
+		for (i = 0, p = info.page.map; i < info.page.mapsz; ++i, ++p) {
+			if (p != info.page.map && (n = (p->addr - (p - 1)->addr) / SIZE_PAGE - (p - 1)->count)) {
+				if (n > 3) {
+					printf("[%ux]", n);
+				}
+				else {
+					while (n-- > 0)
+						printf("x");
+				}
+			}
+
+			if ((n = p->count) > 3) {
+				printf("[%u%c]", p->count, p->marker);
+				continue;
+			}
+
+			while (n-- > 0)
+				printf("%c", p->marker);
+		}
+		printf("\n");
+
+		free(info.page.map);
+		return;
 	}
-	printf("\n\n");
 
-	printf("total map entries: %12u\n"
-	       "free map entries:  %12u\n"
-	       "map entry size:    %12u\n",
-	       info.entry.total, info.entry.free, info.entry.sz,
-	       info.entry.kmapsz, info.entry.mapsz);
-
-	printf("\nprocess memory map:\n");
-	printf("        address range      flags             offset\n");
-
-	for (i = 0, e = info.entry.map; i < info.entry.mapsz; ++i, ++e) {
-		printf("  %p : %p   % 8x   % 16llx\n", e->vaddr, e->vaddr + e->size, e->flags, e->offs);
-	}
-
-	printf("\nkernel memory map:\n");
-	printf("        address range      flags             offset\n");
-
-	for (i = 0, e = info.entry.kmap; i < info.entry.kmapsz; ++i, ++e) {
-		printf("  %p : %p   % 8x   % 16llx\n", e->vaddr, e->vaddr + e->size, e->flags, e->offs);
-	}
-
-	free(info.entry.map);
-	free(info.entry.kmap);
-	free(info.page.map);
+	printf("mem: unrecognized option '%s'\n", arg);
 }
 
 
@@ -334,7 +385,7 @@ void psh_run(void)
 			psh_ls(cmd + 3);
 
 		else if (!strcmp(cmd, "mem"))
-			psh_mem();
+			psh_mem(cmd + 4);
 
 		else if (!strcmp(cmd, "ps"))
 			psh_ps();
