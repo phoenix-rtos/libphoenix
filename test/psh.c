@@ -345,7 +345,7 @@ static void psh_ps(void)
 	printf("%9s %5s %4s  %5s %5s %s\n", "PID", "TTY", "PRI", "STATE", "%CPU", "CMD");
 
 	for (i = 0; i < tcnt; ++i) {
-		printf("%9x %5s %4d  %5s %3d.%d  %-32s\n", info[i].pid, "-", info[i].priority, info[i].state ? "ready" : "sleep", info[i].load / 10, info[i].load % 10, info[i].name);
+		printf("%9x %5s %4d  %5s %3d.%d  %-32s\n", info[i].pid, "-", info[i].priority, info[i].state ? "sleep" : "ready", info[i].load / 10, info[i].load % 10, info[i].name);
 	}
 
 	free(info);
