@@ -247,7 +247,7 @@ static void psh_mem(char *args)
 			if (len) {
 				info.entry.pid = strtoul(arg, &end, 16);
 
-				if (end + 1 != args + len) {
+				if (end + 1 != args + len || (!info.entry.pid && *arg != '0')) {
 					printf("mem: could not parse process id: '%s'\n", arg);
 					return;
 				}
@@ -256,7 +256,6 @@ static void psh_mem(char *args)
 				info.entry.pid = getpid();
 			}
 
-			/* show memory map of current process */
 			info.entry.kmapsz = -1;
 			info.entry.mapsz = 16;
 
