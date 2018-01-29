@@ -63,11 +63,6 @@ static char *psh_nextString(char *buff, unsigned int *size)
 static int psh_readln(char *line, int size)
 {
 	int count = 0;
-
-#if 0
-	if ((count = read(0, line, size - 1)) >= 0)
-		memset(&line[count], '\0', size - count);
-#else
 	char c;
 
 	for (;;) {
@@ -90,7 +85,6 @@ static int psh_readln(char *line, int size)
 	}
 
 	memset(&line[count], '\0', size - count);
-#endif
 
 	return count;
 }
@@ -132,7 +126,7 @@ static void psh_ls(char *args)
 
 		while ((dir = readdir(stream)) != NULL) {
 			if (strcmp(dir->d_name, ".") && strcmp(dir->d_name, "..")) {
-				if (dir->d_type == 4)
+				if (!dir->d_type)
 					printf("\033[34m%-20s\033[0m",dir->d_name);
 				else
 					printf("%-20s",dir->d_name);
@@ -202,6 +196,12 @@ static void psh_mem(void)
 	info.entry.mapsz  = 16;
 	info.page.mapsz   = 16;
 
+info.entry.map = malloc(40 * sizeof(entryinfo_t));
+info.entry.kmap = malloc(40 * sizeof(entryinfo_t));
+info.page.map = malloc(1024 * sizeof(pageinfo_t));
+		meminfo(&info);
+
+/*
 	do {
 		kmapsz = info.entry.kmapsz;
 		mapsz  = info.entry.mapsz;
@@ -214,7 +214,7 @@ static void psh_mem(void)
 		meminfo(&info);
 	}
 	while (info.entry.kmapsz > kmapsz || info.entry.mapsz > mapsz || info.page.mapsz > pmapsz);
-
+*/
 	if (info.entry.map == NULL || info.entry.kmap == NULL || info.page.map == NULL) {
 		free(info.entry.map);
 		free(info.entry.kmap);
@@ -223,13 +223,12 @@ static void psh_mem(void)
 		return;
 	}
 
-	printf("allocated memory:  %12u KB\n"
-	       "incl. boot memory: %12u KB\n"
-	       "unused memory:     %12u KB\n"
-	       "total memory:      %12u KB\n",
-	       info.page.alloc / 1024, info.page.boot / 1024, info.page.free / 1024,
-	       (info.page.alloc + info.page.free) / 1024);
+	printf("(%u+%u)/%uKB\n", (info.page.alloc - info.page.boot) / 1024, info.page.boot / 1024, (info.page.alloc + info.page.free) / 1024);
 
+meminfo(&info);
+	printf("(%u+%u)/%uKB\n", (info.page.alloc - info.page.boot) / 1024, info.page.boot / 1024, (info.page.alloc + info.page.free) / 1024);
+
+#if 0
 	printf("\npage map:\n");
 
 	for (i = 0, p = info.page.map; i < info.page.mapsz; ++i, ++p) {
@@ -272,7 +271,7 @@ static void psh_mem(void)
 	for (i = 0, e = info.entry.kmap; i < info.entry.kmapsz; ++i, ++e) {
 		printf("  %p : %p   % 8x   % 16llx\n", e->vaddr, e->vaddr + e->size, e->flags, e->offs);
 	}
-
+#endif
 	free(info.entry.map);
 	free(info.entry.kmap);
 	free(info.page.map);
