@@ -154,7 +154,7 @@ int main(int argc, char **argv)
 {
 	oid_t oid;
 	char portname[] = "/test/msg";
-	unsigned count = 0;
+	unsigned count = 0, seed = 123;
 
 	/* Wait for console */
 	while (write(1, "", 0) < 0)
@@ -178,5 +178,8 @@ int main(int argc, char **argv)
 	if (argc > 1)
 		count = strtoul(argv[1], NULL, 10);
 
-	return test_ping(123, oid.port, count);
+	if (argc > 2)
+		seed = strtoul(argv[2], NULL, 10);
+
+	return test_ping(seed, oid.port, count);
 }
