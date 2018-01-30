@@ -133,7 +133,7 @@ static void psh_ls(char *args)
 		while ((dir = readdir(stream)) != NULL) {
 			if (strcmp(dir->d_name, ".") && strcmp(dir->d_name, "..")) {
 				if (dir->d_type == 0)
-					printf("\033[34m%-20s\033[0m",dir->d_name);
+					printf("\033[34m%-20s\033[0m", dir->d_name);
 				else
 					printf("%-20s",dir->d_name);
 
@@ -354,9 +354,24 @@ static void psh_ps(void)
 void psh_runfile(char *cmd)
 {
 	int pid;
+	int argc = 0;
+	char **argv = NULL;
+
+	char *arg = cmd;
+	unsigned int len;
+
+	while ((arg = psh_nextString(arg, &len)) && len) {
+		argv = realloc(argv, (1 + argc) * sizeof(char *));
+		argv[argc] = arg;
+
+		argc++;
+		arg += len + 1;
+	}
+
+	argv[argc] = NULL;
 
 	if (!(pid = vfork()))
-		exit(execle(cmd, cmd));
+		exit(execve(cmd, argv, NULL));
 
 	wait(0);
 }

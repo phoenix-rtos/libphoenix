@@ -117,6 +117,8 @@ int test_ping(unsigned seed, unsigned port, unsigned count)
 		}
 	}
 
+	printf("\n");
+
 	return 0;
 }
 
@@ -148,10 +150,11 @@ int test_pong(unsigned port)
 }
 
 
-int main(void)
+int main(int argc, char **argv)
 {
 	oid_t oid;
 	char portname[] = "/test/msg";
+	unsigned count = 0;
 
 	/* Wait for console */
 	while (write(1, "", 0) < 0)
@@ -172,5 +175,8 @@ int main(void)
 		return test_pong(oid.port);
 	}
 
-	return test_ping(123, oid.port, 0);
+	if (argc > 1)
+		count = strtoul(argv[1], NULL, 10);
+
+	return test_ping(123, oid.port, count);
 }
