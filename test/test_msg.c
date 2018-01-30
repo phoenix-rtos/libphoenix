@@ -31,7 +31,7 @@ unsigned test_randsize(unsigned *seed, unsigned bufsz)
 	else
 		sz = 1 + (rand_r(seed) % bufsz);
 
-	return sz ? sz : bufsz;
+	return sz ? sz : 1;
 }
 
 
@@ -45,8 +45,10 @@ unsigned test_offset(unsigned *seed, unsigned size, unsigned bufsz)
 		offs = SIZE_PAGE - (size & (SIZE_PAGE - 1));
 	else if (offs && rand_r(seed) % 10)
 		offs = SIZE_PAGE - (size & (SIZE_PAGE - 1)) / 2;
-	else
+	else if (bufsz - size)
 		offs = rand_r(seed) % (bufsz - size);
+	else
+		offs = 0;
 
 	return offs;
 }
