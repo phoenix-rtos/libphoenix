@@ -165,7 +165,12 @@ char *strchrnul(const char *str, int z)
 #define __MEMCMP
 int memcmp(const void *s1, const void *s2, size_t count)
 {
-	return strncmp(s1, s2, count);
+	int res;
+	while (count--)
+		if ((res = *((char *)s1++) - *((char *)s2++)))
+			return res < 0 ? -1 : 1;
+
+	return 0;
 }
 #endif
 
