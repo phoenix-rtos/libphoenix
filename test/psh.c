@@ -193,6 +193,7 @@ static void psh_mem(char *args)
 	int mapsz = 0;
 	entryinfo_t *e = NULL;
 	pageinfo_t *p = NULL;
+	char flags[8], *f;
 
 	memset(&info, 0, sizeof(info));
 	arg = psh_nextString(args, &len);
@@ -278,8 +279,21 @@ static void psh_mem(char *args)
 
 		printf("        address range      flags             offset     object\n");
 
-		for (i = 0; i < mapsz; ++i, ++e)
-			printf("  %p : %p   % 8x   % 16llx   %8x\n", e->vaddr, e->vaddr + e->size, e->flags, e->offs, e->object);
+		e += mapsz - 1;
+		for (i = 0; i < mapsz; ++i, --e) {
+			memset(f = flags, 0, sizeof(flags));
+
+			if (e->flags & MAP_PRIVATE)
+				*(f++) = 'P';
+
+			if (e->flags & MAP_FIXED)
+				*(f++) = 'F';
+
+			if (e->flags & MAP_ANONYMOUS)
+				*(f++) = 'A';
+
+			printf("  %p : %p   % 8s   % 16llx   %8x\n", e->vaddr, e->vaddr + e->size, flags, e->offs, e->object);
+		}
 
 		free(info.entry.map);
 		free(info.entry.kmap);
