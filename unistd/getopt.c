@@ -18,11 +18,21 @@
 
 
 char *optarg;
+
+
 int optind, opterr, optopt;
 
 
 int getopt(int argc, char * const argv[], const char *optstring)
 {
+	if (argv[optind] == NULL || *argv[optind] != '-' || !strcmp(argv[optind], "-"))
+		return -1;
+
+	if (!strcmp(argv[optind], "--")) {
+		optind++;
+		return -1;
+	}
+
 	return -1;
 }
 

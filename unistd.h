@@ -17,6 +17,7 @@
 #define _LIBPHOENIX_UNISTD_H_
 
 #include ARCH
+#include <sys/types.h>
 
 #define STDIN_FILENO 0
 #define STDOUT_FILENO 1
@@ -42,6 +43,12 @@ extern int execve(const char *path, char *const argv[], char *const envp[]);
 
 
 extern int execv(const char *path, char *const argv[]);
+
+
+extern pid_t getpid(void);
+
+
+extern pid_t getppid(void);
 
 
 extern int usleep(useconds_t usecs);
