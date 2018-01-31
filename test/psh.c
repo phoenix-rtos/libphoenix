@@ -201,19 +201,14 @@ static void psh_mem(char *args)
 
 		meminfo(&info);
 
-		printf(
-			"allocated memory:  %12u KB\n"
-			"incl. boot memory: %12u KB\n"
-			"unused memory:     %12u KB\n"
-			"total memory:      %12u KB\n\n",
-			info.page.alloc / 1024, info.page.boot / 1024, info.page.free / 1024,
+		printf("(%d+%d)/%dKB\n", (info.page.alloc - info.page.boot) / 1024, info.page.boot / 1024,
 			(info.page.alloc + info.page.free) / 1024);
 
-		printf(
+		/*printf(
 			"total map entries: %12u\n"
 			"free map entries:  %12u\n"
 			"map entry size:    %12u\n",
-			info.entry.total, info.entry.free, info.entry.sz);
+			info.entry.total, info.entry.free, info.entry.sz);*/
 
 		return;
 	}
@@ -271,7 +266,7 @@ static void psh_mem(char *args)
 			e = info.entry.map;
 		}
 
-		printf("        address range      flags             offset     object\n");
+		printf("%-17s  PROT  FLAGS  %16s  OBJECT\n", "SEGMENT", "OFFSET");
 
 		e += mapsz - 1;
 		for (i = 0; i < mapsz; ++i, --e) {
@@ -286,7 +281,16 @@ static void psh_mem(char *args)
 			if (e->flags & MAP_ANONYMOUS)
 				*(f++) = 'A';
 
-			printf("  %p : %p   % 8s   % 16llx   %8x\n", e->vaddr, e->vaddr + e->size, flags, e->offs, e->object);
+			char *s;
+
+			if (e->object == NULL)
+				s = "(anonymous)";
+			else if (e->object == (void *)-1)
+				s = "mem";
+			else
+				s = "1.1";
+
+			printf("%p:%p  rwx-  %5s  %16llx  %s\n", e->vaddr, e->vaddr + e->size - 1, flags, e->offs, s);
 		}
 
 		free(info.entry.map);

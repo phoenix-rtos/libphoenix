@@ -67,6 +67,7 @@ test_msg: test_msg.o
 
 psh: psh.o
 	$(SIL)$(LD) $(LDFLAGS) -o psh psh.o ../$(LIB) $(GCCLIB)
+	$(SIL)$(STRIP) ./psh
 
 
 depend: check

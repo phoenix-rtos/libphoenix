@@ -44,6 +44,8 @@ ifneq (, $(findstring ia32, $(TARGET)))
 
 	OBJCOPY = $(CROSS)objcopy
 	OBJDUMP = $(CROSS)objdump
+	
+	STRIP = i386-pc-phoenix-strip
 endif
 
 ############ ARMv7 (Cortex-M3/M4) ############
@@ -79,7 +81,7 @@ endif
 ARCH = code.a
 ARCHS := $(shell for i in $(SUBDIRS); do echo "$$i/$(ARCH)"; done)
 
-export SIL TARGET LIB CC CFLAGS MKDEP MKDEPFLAGS AR ARFLAGS LD LDFLAGS GCCLIB ARCH OBJDUMP
+export SIL TARGET LIB CC CFLAGS MKDEP MKDEPFLAGS AR ARFLAGS LD LDFLAGS GCCLIB ARCH OBJDUMP STRIP
 
 
 all: subsystems $(OBJS) $(LIB) tests
