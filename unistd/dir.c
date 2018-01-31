@@ -85,6 +85,7 @@ char *canonicalize_file_name(const char *path)
 struct dirent *readdir(DIR *s)
 {
 	msg_t msg;
+	memset(&msg, 0, sizeof(msg));
 
 	if (s->dirent == NULL) {
 		if ((s->dirent = calloc(1, sizeof(struct dirent) + NAME_MAX)) == NULL)
@@ -145,6 +146,7 @@ DIR *opendir(const char *dirname)
 		return NULL; /* ENOTDIR */
 #endif
 
+	memset(&msg, 0, sizeof(msg));
 	msg.type = mtOpen;
 	memcpy(&msg.i.openclose.oid, &s->oid, sizeof(oid_t));
 	msg.i.openclose.flags = 0;

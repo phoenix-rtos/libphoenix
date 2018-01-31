@@ -348,9 +348,24 @@ static void psh_ps(void)
 void psh_runfile(char *cmd)
 {
 	int pid;
+	int argc = 0;
+	char **argv = NULL;
+
+	char *arg = cmd;
+	unsigned int len;
+
+	while ((arg = psh_nextString(arg, &len)) && len) {
+		argv = realloc(argv, (1 + argc) * sizeof(char *));
+		argv[argc] = arg;
+
+		argc++;
+		arg += len + 1;
+	}
+
+	argv[argc] = NULL;
 
 	if (!(pid = vfork()))
-		exit(execle(cmd, cmd));
+		exit(execve(cmd, argv, NULL));
 
 	wait(0);
 }
