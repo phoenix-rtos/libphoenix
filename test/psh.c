@@ -363,9 +363,9 @@ static void psh_ps(void)
 }
 
 
-void psh_runfile(char *cmd)
+int psh_runfile(char *cmd)
 {
-	int pid;
+	int pid, exerr = 0;
 	int argc = 0;
 	char **argv = NULL;
 
@@ -383,9 +383,21 @@ void psh_runfile(char *cmd)
 	argv[argc] = NULL;
 
 	if (!(pid = vfork()))
-		exit(execve(cmd, argv, NULL));
+		exit(exerr = execve(cmd, argv, NULL));
 
-	wait(0);
+	if (exerr == EOK)
+		return wait(0);
+
+	if (exerr == -ENOMEM)
+		printf("psh: not enough memory to exec\n");
+
+	else if (exerr == -EINVAL)
+		printf("psh: invalid executable\n");
+
+	else
+		printf("psh: exec failed with code %d\n", exerr);
+
+	return exerr;
 }
 
 
