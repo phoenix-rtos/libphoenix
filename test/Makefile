@@ -42,32 +42,38 @@ check:
 
 
 test_mmap: test_mmap.o
-	$(SIL)$(LD) $(LDFLAGS) -o test_mmap test_mmap.o ../$(LIB) $(GCCLIB)
+	$(SIL)$(LD) $(LDFLAGS) -o test_mmap_unstripped test_mmap.o ../$(LIB) $(GCCLIB)
+	$(SIL)$(STRIP) test_mmap_unstripped -o test_mmap
 
 
 test_malloc: test_malloc.o
-	$(SIL)$(LD) $(LDFLAGS) -o test_malloc test_malloc.o ../$(LIB) $(GCCLIB)
+	$(SIL)$(LD) $(LDFLAGS) -o test_malloc_unstripped test_malloc.o ../$(LIB) $(GCCLIB)
+	$(SIL)$(STRIP) test_malloc_unstripped -o test_malloc
 
 
 test_threads: test_threads.o
-	$(SIL)$(LD) $(LDFLAGS) -o test_threads test_threads.o ../$(LIB) $(GCCLIB)
+	$(SIL)$(LD) $(LDFLAGS) -o test_threads_unstripped test_threads.o ../$(LIB) $(GCCLIB)
+	$(SIL)$(STRIP) test_threads_unstripped -o test_threads
 
 
 test_str2num: test_str2num.o
-	$(SIL)$(LD) $(LDFLAGS) -o test_str2num test_str2num.o ../$(LIB) $(GCCLIB)
+	$(SIL)$(LD) $(LDFLAGS) -o test_str2num_unstripped test_str2num.o ../$(LIB) $(GCCLIB)
+	$(SIL)$(STRIP) test_str2num_unstripped -o test_str2num
 
 
 test_scanf: test_scanf.o
-	$(SIL)$(LD) $(LDFLAGS) -o test_scanf test_scanf.o ../$(LIB) $(GCCLIB)
+	$(SIL)$(LD) $(LDFLAGS) -o test_scanf_unstripped test_scanf.o ../$(LIB) $(GCCLIB)
+	$(SIL)$(STRIP) test_scanf_unstripped -o test_scanf
 
 
 test_msg: test_msg.o
-	$(SIL)$(LD) $(LDFLAGS) -o test_msg test_msg.o ../$(LIB) $(GCCLIB)
+	$(SIL)$(LD) $(LDFLAGS) -o test_msg_unstripped test_msg.o ../$(LIB) $(GCCLIB)
+	$(SIL)$(STRIP) test_msg_unstripped -o test_msg
 
 
 psh: psh.o
-	$(SIL)$(LD) $(LDFLAGS) -o psh psh.o ../$(LIB) $(GCCLIB)
-	$(SIL)$(STRIP) ./psh
+	$(SIL)$(LD) $(LDFLAGS) -o psh_unstripped psh.o ../$(LIB) $(GCCLIB)
+	$(SIL)$(STRIP) psh_unstripped -o psh
 
 
 depend: check

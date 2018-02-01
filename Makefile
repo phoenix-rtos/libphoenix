@@ -44,8 +44,8 @@ ifneq (, $(findstring ia32, $(TARGET)))
 
 	OBJCOPY = $(CROSS)objcopy
 	OBJDUMP = $(CROSS)objdump
-	
-	STRIP = i386-pc-phoenix-strip
+
+	STRIP = $(CROSS)strip
 endif
 
 ############ ARMv7 (Cortex-M3/M4) ############
