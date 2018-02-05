@@ -18,15 +18,7 @@
 
 #include ARCH
 #include "../../phoenix-rtos-kernel/include/sysinfo.h"
-
-
-#define PROT_READ   0
-#define PROT_WRITE  1
-
-
-#define MAP_PRIVATE    1
-#define MAP_FIXED      2
-#define MAP_ANONYMOUS  4
+#include "../../phoenix-rtos-kernel/include/mman.h"
 
 
 /* Predefined oids */

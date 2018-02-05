@@ -62,8 +62,8 @@ int test_ping(unsigned seed, unsigned port, unsigned count)
 
 	printf("test_msg/ping: starting\n");
 
-	buf[0] = mmap(NULL, bufsz, 0, 0, NULL, 0);
-	buf[1] = mmap(NULL, bufsz, 0, 0, NULL, 0);
+	buf[0] = mmap(NULL, bufsz, PROT_READ | PROT_WRITE, 0, NULL, 0);
+	buf[1] = mmap(NULL, bufsz, PROT_READ | PROT_WRITE, 0, NULL, 0);
 
 	if (buf[0] == NULL || buf[1] == NULL) {
 		printf("test_msg/ping: could not allocate buffers\n");
@@ -97,6 +97,7 @@ int test_ping(unsigned seed, unsigned port, unsigned count)
 			printf("\ntest_msg/ping: sizes mismatch\n");
 			return 1;
 		}
+
 
 		if (memcmp(msg.o.data, msg.i.data, msg.i.size)) {
 			printf("\ntest_msg/ping: data mismatch\n");

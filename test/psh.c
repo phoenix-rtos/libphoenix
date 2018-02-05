@@ -187,7 +187,7 @@ static void psh_mem(char *args)
 	int mapsz = 0;
 	entryinfo_t *e = NULL;
 	pageinfo_t *p = NULL;
-	char flags[8], *f;
+	char flags[8], prot[5], *f, *s, *r;
 
 	memset(&info, 0, sizeof(info));
 	arg = psh_nextString(args, &len);
@@ -272,6 +272,9 @@ static void psh_mem(char *args)
 		for (i = 0; i < mapsz; ++i, --e) {
 			memset(f = flags, 0, sizeof(flags));
 
+			if (e->flags & MAP_NEEDSCOPY)
+				*(f++) = 'C';
+
 			if (e->flags & MAP_PRIVATE)
 				*(f++) = 'P';
 
@@ -281,7 +284,24 @@ static void psh_mem(char *args)
 			if (e->flags & MAP_ANONYMOUS)
 				*(f++) = 'A';
 
-			char *s;
+			memset(r = prot, 0, sizeof(prot));
+
+			if (e->prot & PROT_READ)
+				*(r++) = 'r';
+			else
+				*(r++) = '-';
+
+			if (e->prot & PROT_WRITE)
+				*(r++) = 'w';
+			else
+				*(r++) = '-';
+
+			if (e->prot & PROT_EXEC)
+				*(r++) = 'x';
+			else
+				*(r++) = '-';
+
+			*(r++) = '-';
 
 			if (e->object == NULL)
 				s = "(anonymous)";
@@ -290,7 +310,7 @@ static void psh_mem(char *args)
 			else
 				s = "1.1";
 
-			printf("%p:%p  rwx-  %5s  %16llx  %s\n", e->vaddr, e->vaddr + e->size - 1, flags, e->offs, s);
+			printf("%p:%p  %4s  %5s  %16llx  %s\n", e->vaddr, e->vaddr + e->size - 1, prot, flags, e->offs, s);
 		}
 
 		free(info.entry.map);
