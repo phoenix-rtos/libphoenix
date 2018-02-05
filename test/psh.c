@@ -109,11 +109,12 @@ static void psh_ls(char *args)
 	unsigned int len, n = 0;
 	DIR *stream;
 	struct dirent *dir;
+	char cwd[] = ".";
 
 	path = psh_nextString(path, &len);
 
 	if (!len)
-		path = ".";
+		path = cwd;
 
 	do {
 		stream = opendir(path);
