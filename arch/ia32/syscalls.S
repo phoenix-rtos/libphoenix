@@ -137,3 +137,5 @@ SYSCALLDEF(execve, 39)
 SYSCALLDEF(threadsinfo, 40)
 
 SYSCALLDEF(meminfo, 41)
+
+SYSCALLDEF(syspageprog, 42)

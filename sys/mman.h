@@ -32,6 +32,9 @@ extern void mmdump(void);
 extern void meminfo(meminfo_t *info);
 
 
+extern int syspageprog(syspageprog_t *prog, int index);
+
+
 extern void *mmap(void *vaddr, size_t size, int prot, int flags, oid_t *oid, offs_t offs);
 
 
