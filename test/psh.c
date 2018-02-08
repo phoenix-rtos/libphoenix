@@ -5,8 +5,8 @@
  *
  * test/psh
  *
- * Copyright 2017 Phoenix Systems
- * Author: Pawel Pisarczyk
+ * Copyright 2017, 2018 Phoenix Systems
+ * Author: Pawel Pisarczyk, Jan Sikorski
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -311,7 +311,10 @@ static void psh_mem(char *args)
 			else
 				s = "1.1";
 
-			printf("%p:%p  %4s  %5s  %16llx  %s\n", e->vaddr, e->vaddr + e->size - 1, prot, flags, e->offs, s);
+			if (e->offs != -1)
+				printf("%p:%p  %4s  %5s  %16llx  %s\n", e->vaddr, e->vaddr + e->size - 1, prot, flags, e->offs, s);
+			else
+				printf("%p:%p  %4s  %5s  %16s  %s\n", e->vaddr, e->vaddr + e->size - 1, prot, flags, "", s);
 		}
 
 		free(info.entry.map);
