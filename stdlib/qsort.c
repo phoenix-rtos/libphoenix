@@ -30,7 +30,7 @@ static void qsort_swap(char *a, char *b, size_t size)
 }
 
 
-static void qsort_aux(void *base, size_t first, size_t last, size_t size, int (*compar)(const void *, const void*))
+static void qsort_aux(void *base, int first, int last, size_t size, int (*compar)(const void *, const void*))
 {
 	int middle = (first + last) / 2, stop = first;
 
@@ -45,8 +45,8 @@ static void qsort_aux(void *base, size_t first, size_t last, size_t size, int (*
 	}
 
 	qsort_swap(base + first * size, base + stop * size, size);
-	qsort_aux(base, size, first, stop - 1, compar);
-	qsort_aux(base, size, stop, last, compar);
+	qsort_aux(base, first, stop - 1, size, compar);
+	qsort_aux(base, stop + 1, last, size, compar);
 }
 
 

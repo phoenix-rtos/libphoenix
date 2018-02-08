@@ -365,16 +365,51 @@ static void psh_mem(char *args)
 }
 
 
-static void psh_ps(void)
+static int psh_ps_cmp_name(const void *t1, const void *t2)
+{
+	return strcmp(((threadinfo_t *)t1)->name, ((threadinfo_t *)t2)->name);
+}
+
+
+static int psh_ps_cmp_pid(const void *t1, const void *t2)
+{
+	return (int)((threadinfo_t *)t2)->pid - (int)((threadinfo_t *)t1)->pid;
+}
+
+
+static int psh_ps_cmp_cpu(const void *t1, const void *t2)
+{
+	return ((threadinfo_t *)t2)->load - ((threadinfo_t *)t1)->load;
+}
+
+
+static void psh_ps(char *arg)
 {
 	threadinfo_t *info;
 	int tcnt, i, n = 32;
+	unsigned len;
 
 	info = malloc(n * sizeof(threadinfo_t));
 
 	while ((tcnt = threadsinfo(n, info)) >= n) {
 		n *= 2;
 		info = realloc(info, n * sizeof(threadinfo_t));
+	}
+
+	arg = psh_nextString(arg, &len);
+
+	if (len) {
+		if (!strcmp(arg, "-p"))
+			qsort(info, tcnt, sizeof(threadinfo_t), psh_ps_cmp_pid);
+
+		else if (!strcmp(arg, "-n"))
+			qsort(info, tcnt, sizeof(threadinfo_t), psh_ps_cmp_name);
+
+		else if (!strcmp(arg, "-c"))
+			qsort(info, tcnt, sizeof(threadinfo_t), psh_ps_cmp_cpu);
+
+		else
+			printf("ps: unknown option '%s'\n", arg);
 	}
 
 	printf("%9s %5s %4s  %5s %5s %s\n", "PID", "TTY", "PRI", "STATE", "%CPU", "CMD");
@@ -450,7 +485,7 @@ void psh_run(void)
 			psh_mem(cmd + 4);
 
 		else if (!strcmp(cmd, "ps"))
-			psh_ps();
+			psh_ps(cmd + 3);
 
 		else if (!strcmp(cmd, "touch"))
 			psh_touch(cmd + 6);
