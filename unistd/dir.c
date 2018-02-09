@@ -111,7 +111,7 @@ struct dirent *readdir(DIR *s)
 		return NULL;
 	}
 
-	s->pos += sizeof(struct dirent) + s->dirent->d_namlen;
+	s->pos += s->dirent->d_reclen;
 
 	return s->dirent;
 }
