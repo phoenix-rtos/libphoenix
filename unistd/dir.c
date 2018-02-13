@@ -134,7 +134,7 @@ DIR *opendir(const char *dirname)
 #if 1
 	memset(&msg, 0, sizeof(msg));
 	msg.type = mtGetAttr;
-	msg.i.attr.type = /*atType*/ 0;
+	msg.i.attr.type = /*atType*/ 4;
 	memcpy(&msg.i.attr.oid, &s->oid, sizeof(oid_t));
 
 	if (msgSend(s->oid.port, &msg) < 0) {
