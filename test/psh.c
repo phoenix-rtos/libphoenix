@@ -188,7 +188,7 @@ static void psh_mem(char *args)
 	int mapsz = 0;
 	entryinfo_t *e = NULL;
 	pageinfo_t *p = NULL;
-	char flags[8], prot[5], *f, *s, *r;
+	char flags[8], prot[5], *f, *r;
 
 	memset(&info, 0, sizeof(info));
 	arg = psh_nextString(args, &len);
@@ -304,17 +304,28 @@ static void psh_mem(char *args)
 
 			*(r++) = '-';
 
-			if (e->object == NULL)
-				s = "(anonymous)";
-			else if (e->object == (void *)-1)
-				s = "mem";
-			else
-				s = "1.1";
+			printf("%p:%p  %4s  %5s", e->vaddr, e->vaddr + e->size - 1, prot, flags);
 
 			if (e->offs != -1)
-				printf("%p:%p  %4s  %5s  %16llx  %s\n", e->vaddr, e->vaddr + e->size - 1, prot, flags, e->offs, s);
+				printf("  %16llx", e->offs);
+
 			else
-				printf("%p:%p  %4s  %5s  %16s  %s\n", e->vaddr, e->vaddr + e->size - 1, prot, flags, "", s);
+				printf("  %16s", "");
+
+			if (e->object == OBJECT_ANONYMOUS)
+				printf("  %s", "(anonymous)");
+
+			else if (e->object == OBJECT_MEMORY)
+				printf("  %s", "mem");
+
+			else
+				printf("  %d.%d", e->oid.port, e->oid.id);
+
+			if (e->object != OBJECT_ANONYMOUS && e->anonsz != ~0)
+				printf("/(%dKB)\n", e->anonsz / 1024);
+
+			else
+				printf("\n");
 		}
 
 		free(info.entry.map);
