@@ -15,6 +15,7 @@
 
 #include <unistd.h>
 #include <getopt.h>
+#include <string.h>
 
 
 char *optarg;

@@ -3,18 +3,18 @@
  *
  * libphoenix
  *
- * Architecture dependent part (arch/armv7)
+ * Architecture dependent part (arch/arm-imx)
  *
- * Copyright 2017 Phoenix Systems
- * Author: Pawel Pisarczyk
+ * Copyright 2017, 2018 Phoenix Systems
+ * Author: Pawel Pisarczyk, Aleksander Kaminski
  *
  * This file is part of Phoenix-RTOS.
  *
  * %LICENSE%
  */
 
-#ifndef _LIBPHOENIX_ARCH_ARMV7_ARCH_H_
-#define _LIBPHOENIX_ARCH_ARMV7_ARCH_H_
+#ifndef _LIBPHOENIX_ARCH_ARM_IMX_ARCH_H_
+#define _LIBPHOENIX_ARCH_ARM_IMX_ARCH_H_
 
 #include <stddef.h>
 
@@ -50,23 +50,22 @@ typedef unsigned short u16;
 typedef unsigned int u32;
 typedef unsigned long long u64;
 
-
 typedef signed char s8;
 typedef short s16;
 typedef int s32;
 typedef long long s64;
 
+typedef u32 addr_t;
+typedef u64 cycles_t;
 
 typedef unsigned int size_t;
 typedef int ssize_t;
 typedef unsigned long long time_t;
 typedef unsigned int useconds_t;
 
-
 typedef u64 offs_t;
 
-
-typedef u32 id_t;
+typedef u64 id_t;
 typedef struct _oid_t {
 	u32 port;
 	id_t id;
@@ -77,6 +76,6 @@ typedef u32 handle_t;
 
 #include "limits.h"
 
-#define SIZE_PAGE 0x100
+#define SIZE_PAGE 0x1000
 
 #endif

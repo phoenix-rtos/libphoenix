@@ -3,9 +3,9 @@
  *
  * libphoenix
  *
- * syscalls (armv7)
+ * syscalls (arm-imx)
  *
- * Copyright 2017 Phoenix Systems
+ * Copyright 2017, 2018 Phoenix Systems
  * Author; Pawel Pisarczyk, Aleksander Kaminski
  *
  * This file is part of Phoenix-RTOS.

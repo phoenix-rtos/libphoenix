@@ -8,6 +8,7 @@
 
 SIL ?= @
 
+#TARGET = arm-imx
 #TARGET = armv7-stm32-tiramisu
 TARGET = ia32-qemu
 
@@ -75,6 +76,34 @@ ifneq (, $(findstring armv7, $(TARGET)))
 
 	OBJCOPY = $(CROSS)objcopy
 	OBJDUMP = $(CROSS)objdump
+endif
+
+############ ARM (Cortex-A5/A7/A9) ############
+
+ifneq (, $(findstring arm-imx, $(TARGET)))
+	CROSS ?= arm-phoenix-
+	SUBDIRS = arch/arm-imx $(SUBSYSTEMS)
+
+	MKDEP = $(CROSS)gcc -MM
+	MKDEPFLAGS = $(CFLAGS)
+
+	CC = $(CROSS)gcc
+
+	CFLAGS += -O2 -Wall -Wstrict-prototypes -g -I$(SRCDIR) -nostartfiles -nostdlib\
+		-mcpu=cortex-a7 -mtune=cortex-a7 -mfloat-abi=hard \
+		-fomit-frame-pointer -ffreestanding\
+		-DVERSION=\"$(VERSION)\" -DARCH=\"arch/arm-imx/arch.h\"
+
+	AR = $(CROSS)ar
+	ARFLAGS = -r
+
+	LD = $(CROSS)ld
+	LDFLAGS = -nostdlib
+	GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
+
+	OBJCOPY = $(CROSS)objcopy
+	OBJDUMP = $(CROSS)objdump
+	STRIP = $(CROSS)strip
 endif
 
 
