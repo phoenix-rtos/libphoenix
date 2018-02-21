@@ -32,6 +32,9 @@ enum {
 #define WCOREDUMP(stat_val) 0
 
 
+extern pid_t waitpid(pid_t pid, int *status, int options);
+
+
 static pid_t wait(int *status)
 {
 	return waitpid(-1, status, 0);
