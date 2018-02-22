@@ -35,7 +35,9 @@ SYSCALLDEF(mmap, 1)
 
 SYSCALLDEF(munmap, 2)
 
-//SYSCALLDEF(vfork, 3)
+SYSCALLDEF(fork, 3)
+
+//SYSCALLDEF(vfork, 4)
 #if 1
 .bss
 vfork_address:
@@ -45,7 +47,7 @@ vfork_address:
 .type vfork, @function
 .align 4, 0x90
 vfork:
-	movl $3, %eax
+	movl $4, %eax
 	int $0x80
 	cmp $0, %eax
 	jz vfork_child
@@ -62,80 +64,80 @@ vfork_child:
 .size vfork, .-vfork
 #endif
 
-SYSCALLDEF(execle, 4)
+SYSCALLDEF(execle, 5)
 
-SYSCALLDEF(exit, 5)
+SYSCALLDEF(execve, 6)
 
-SYSCALLDEF(waitpid, 6)
+SYSCALLDEF(exit, 7)
 
-SYSCALLDEF(getpid, 7)
+SYSCALLDEF(waitpid, 8)
 
-SYSCALLDEF(getppid, 8)
+SYSCALLDEF(getpid, 9)
 
-SYSCALLDEF(beginthreadex, 9)
+SYSCALLDEF(getppid, 10)
 
-SYSCALLDEF(endthread, 10)
+SYSCALLDEF(beginthreadex, 11)
 
-SYSCALLDEF(usleep, 11)
+SYSCALLDEF(endthread, 12)
 
-SYSCALLDEF(mutexCreate, 12)
+SYSCALLDEF(usleep, 13)
 
-SYSCALLDEF(mutexLock, 13)
+SYSCALLDEF(mutexCreate, 14)
 
-SYSCALLDEF(mutexUnlock, 14)
+SYSCALLDEF(mutexLock, 15)
 
-SYSCALLDEF(semaphoreCreate, 15)
+SYSCALLDEF(mutexUnlock, 16)
 
-SYSCALLDEF(semaphoreDown, 16)
+SYSCALLDEF(semaphoreCreate, 17)
 
-SYSCALLDEF(semaphoreUp, 17)
+SYSCALLDEF(semaphoreDown, 18)
 
-SYSCALLDEF(condCreate, 18)
+SYSCALLDEF(semaphoreUp, 19)
 
-SYSCALLDEF(condWait, 19)
+SYSCALLDEF(condCreate, 20)
 
-SYSCALLDEF(condSignal, 20)
+SYSCALLDEF(condWait, 21)
 
-SYSCALLDEF(resourceDestroy, 21)
+SYSCALLDEF(condSignal, 22)
 
-SYSCALLDEF(interrupt, 22)
+SYSCALLDEF(resourceDestroy, 23)
 
-SYSCALLDEF(portCreate, 23)
+SYSCALLDEF(interrupt, 24)
 
-SYSCALLDEF(portDestroy, 24)
+SYSCALLDEF(portCreate, 25)
 
-SYSCALLDEF(portRegister, 25)
+SYSCALLDEF(portDestroy, 26)
 
-SYSCALLDEF(msgSend, 26)
+SYSCALLDEF(portRegister, 27)
 
-SYSCALLDEF(msgRecv, 27)
+SYSCALLDEF(msgSend, 28)
 
-SYSCALLDEF(msgRespond, 28)
+SYSCALLDEF(msgRecv, 29)
 
-SYSCALLDEF(lookup, 29)
+SYSCALLDEF(msgRespond, 30)
 
-SYSCALLDEF(gettime, 30)
+SYSCALLDEF(lookup, 31)
 
-SYSCALLDEF(keepidle, 31)
+SYSCALLDEF(gettime, 32)
 
-SYSCALLDEF(mmdump, 32)
+SYSCALLDEF(keepidle, 33)
 
-SYSCALLDEF(platformctl, 33)
+SYSCALLDEF(mmdump, 34)
 
-SYSCALLDEF(wdgreload, 34)
+SYSCALLDEF(platformctl, 35)
 
-SYSCALLDEF(fileAdd, 35)
+SYSCALLDEF(wdgreload, 36)
 
-SYSCALLDEF(fileSet, 36)
+SYSCALLDEF(fileAdd, 37)
 
-SYSCALLDEF(fileGet, 37)
+SYSCALLDEF(fileSet, 38)
 
-SYSCALLDEF(fileRemove, 38)
+SYSCALLDEF(fileGet, 39)
 
-SYSCALLDEF(execve, 39)
+SYSCALLDEF(fileRemove, 40)
 
-SYSCALLDEF(threadsinfo, 40)
+SYSCALLDEF(threadsinfo, 41)
 
-SYSCALLDEF(meminfo, 41)
+SYSCALLDEF(meminfo, 42)
 
-SYSCALLDEF(syspageprog, 42)
+SYSCALLDEF(syspageprog, 43)

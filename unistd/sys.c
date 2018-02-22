@@ -24,10 +24,7 @@ long sysconf(int name)
 }
 
 
-pid_t fork(void)
-{
-	return -ENOSYS;
-}
+pid_t fork(void);
 
 
 int execv(const char *path, char *const argv[])
