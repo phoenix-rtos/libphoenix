@@ -28,19 +28,10 @@ FILE stdin_file, stdout_file;
 
 void _start(int argc, char **argv, char **env)
 {
-	unsigned int h;
-	oid_t oid = { 0, 0 };
-
 	environ = env;
 	optind = 1;
-
 	stdin = &stdin_file;
 	stdout = &stdout_file;
-
-	fileAdd(&h, &oid);
-	fileAdd(&h, &oid);
-	fileAdd(&h, &oid);
-
 	_malloc_init();
 
 	exit(main(argc, argv));
