@@ -35,80 +35,82 @@ SYSCALLDEF(munmap, 2)
 
 SYSCALLDEF(vfork, 3)
 
-SYSCALLDEF(execle, 4)
+/* TODO - fork */
 
-SYSCALLDEF(exit, 5)
+SYSCALLDEF(execle, 5)
 
-SYSCALLDEF(waitpid, 6)
+SYSCALLDEF(execve, 6)
 
-SYSCALLDEF(getpid, 7)
+SYSCALLDEF(exit, 7)
 
-SYSCALLDEF(getppid, 8)
+SYSCALLDEF(waitpid, 8)
 
-SYSCALLDEF(beginthreadex, 9)
+SYSCALLDEF(getpid, 9)
 
-SYSCALLDEF(endthread, 10)
+SYSCALLDEF(getppid, 10)
 
-SYSCALLDEF(usleep, 11)
+SYSCALLDEF(beginthreadex, 11)
 
-SYSCALLDEF(mutexCreate, 12)
+SYSCALLDEF(endthread, 12)
 
-SYSCALLDEF(mutexLock, 13)
+SYSCALLDEF(usleep, 13)
 
-SYSCALLDEF(mutexUnlock, 14)
+SYSCALLDEF(mutexCreate, 14)
 
-SYSCALLDEF(semaphoreCreate, 15)
+SYSCALLDEF(mutexLock, 15)
 
-SYSCALLDEF(semaphoreDown, 16)
+SYSCALLDEF(mutexUnlock, 16)
 
-SYSCALLDEF(semaphoreUp, 17)
+SYSCALLDEF(semaphoreCreate, 17)
 
-SYSCALLDEF(condCreate, 18)
+SYSCALLDEF(semaphoreDown, 18)
 
-SYSCALLDEF(condWait, 19)
+SYSCALLDEF(semaphoreUp, 19)
 
-SYSCALLDEF(condSignal, 20)
+SYSCALLDEF(condCreate, 20)
 
-SYSCALLDEF(resourceDestroy, 21)
+SYSCALLDEF(condWait, 21)
 
-SYSCALLDEF(interrupt, 22)
+SYSCALLDEF(condSignal, 22)
 
-SYSCALLDEF(portCreate, 23)
+SYSCALLDEF(resourceDestroy, 23)
 
-SYSCALLDEF(portDestroy, 24)
+SYSCALLDEF(interrupt, 24)
 
-SYSCALLDEF(portRegister, 25)
+SYSCALLDEF(portCreate, 25)
 
-SYSCALLDEF(msgSend, 26)
+SYSCALLDEF(portDestroy, 26)
 
-SYSCALLDEF(msgRecv, 27)
+SYSCALLDEF(portRegister, 27)
 
-SYSCALLDEF(msgRespond, 28)
+SYSCALLDEF(msgSend, 28)
 
-SYSCALLDEF(lookup, 29)
+SYSCALLDEF(msgRecv, 29)
 
-SYSCALLDEF(gettime, 30)
+SYSCALLDEF(msgRespond, 30)
 
-SYSCALLDEF(keepidle, 31)
+SYSCALLDEF(lookup, 31)
 
-SYSCALLDEF(mmdump, 32)
+SYSCALLDEF(gettime, 32)
 
-SYSCALLDEF(platformctl, 33)
+SYSCALLDEF(keepidle, 33)
 
-SYSCALLDEF(wdgreload, 34)
+SYSCALLDEF(mmdump, 34)
 
-SYSCALLDEF(fileAdd, 35)
+SYSCALLDEF(platformctl, 35)
 
-SYSCALLDEF(fileSet, 36)
+SYSCALLDEF(wdgreload, 36)
 
-SYSCALLDEF(fileGet, 37)
+SYSCALLDEF(fileAdd, 37)
 
-SYSCALLDEF(fileRemove, 38)
+SYSCALLDEF(fileSet, 38)
 
-SYSCALLDEF(execve, 39)
+SYSCALLDEF(fileGet, 39)
 
-SYSCALLDEF(threadsinfo, 40)
+SYSCALLDEF(fileRemove, 40)
 
-SYSCALLDEF(meminfo, 41)
+SYSCALLDEF(threadsinfo, 41)
 
-SYSCALLDEF(syspageprog, 42)
+SYSCALLDEF(meminfo, 42)
+
+SYSCALLDEF(syspageprog, 43)

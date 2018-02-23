@@ -98,7 +98,7 @@ ifneq (, $(findstring arm-imx, $(TARGET)))
 	ARFLAGS = -r
 
 	LD = $(CROSS)ld
-	LDFLAGS = -nostdlib
+	LDFLAGS = -nostdlib -z max-page-size=0x1000
 	GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 
 	OBJCOPY = $(CROSS)objcopy
