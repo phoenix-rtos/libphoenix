@@ -434,6 +434,40 @@ static void psh_ps(char *arg)
 }
 
 
+int psh_exec(char *cmd)
+{
+	int exerr = 0;
+	int argc = 0;
+	char **argv = NULL;
+
+	char *arg = cmd;
+	unsigned int len;
+
+	while ((arg = psh_nextString(arg, &len)) && len) {
+		argv = realloc(argv, (1 + argc) * sizeof(char *));
+		argv[argc] = arg;
+
+		argc++;
+		arg += len + 1;
+	}
+
+	argv[argc] = NULL;
+
+	exerr = execve(cmd, argv, NULL);
+
+	if (exerr == -ENOMEM)
+		printf("psh: not enough memory to exec\n");
+
+	else if (exerr == -EINVAL)
+		printf("psh: invalid executable\n");
+
+	else if (exerr < 0)
+		printf("psh: exec failed with code %d\n", exerr);
+
+	return exerr;
+}
+
+
 int psh_runfile(char *cmd)
 {
 	int pid, exerr = 0;
@@ -472,6 +506,36 @@ int psh_runfile(char *cmd)
 }
 
 
+void psh_cat(char *args)
+{
+	char *arg = args, *buf;
+	int rsz;
+	unsigned int len;
+	FILE *file;
+
+	buf = malloc(1024);
+
+	while ((arg = psh_nextString(arg, &len)) && len) {
+		file = fopen(arg, "r");
+
+		if (file == NULL) {
+			printf("cat: %s no such file\n", arg);
+		}
+		else {
+			while ((rsz = fread(buf, 1, 1023, file))) {
+				buf[rsz] = 0;
+				puts(buf);
+			}
+		}
+
+		fclose(file);
+		arg += len + 1;
+	}
+
+	free(buf);
+}
+
+
 void psh_run(void)
 {
 	unsigned int n;
@@ -499,11 +563,17 @@ void psh_run(void)
 		else if (!strcmp(cmd, "ps"))
 			psh_ps(cmd + 3);
 
+		else if (!strcmp(cmd, "cat"))
+			psh_cat(cmd + 4);
+
 		else if (!strcmp(cmd, "touch"))
 			psh_touch(cmd + 6);
 
 		else if (!strcmp(cmd, "mkdir"))
 			psh_mkdir(cmd + 6);
+
+		else if (!strcmp(cmd, "exec"))
+			psh_exec(cmd + 5);
 
 		else if (cmd[0] == '/')
 			psh_runfile(cmd);

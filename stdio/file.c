@@ -29,22 +29,19 @@ FILE *stderr, *stdin, *stdout;
 
 int fclose(FILE *file)
 {
-	return 0;
-#if 0
+	msg_t msg = { 0 };
 	int err;
-	fsclose_t close;
 
 	if (file == NULL)
 		return -EINVAL;
 
-	close = file->oid.id;
+	msg.type = mtClose;
+	msg.i.openclose.oid = file->oid;
 
-	err = send(file->oid.port, CLOSE, &close, sizeof(close), NORMAL, NULL, 0);
+	if ((err = msgSend(file->oid.port, &msg)) < 0)
+		return err;
 
-	free(file);
-
-	return err;
-#endif
+	return msg.o.io.err;
 }
 
 
@@ -114,6 +111,7 @@ FILE *fopen(const char *filename, const char *mode)
 		msg.i.ln.dir = oid;
 		msg.type = mtLink;
 		memcpy(&msg.i.ln.oid, &msg.o.create.oid, sizeof(oid));
+		memcpy(&oid, &msg.o.create.oid, sizeof(oid));
 		msg.i.data = name;
 		msg.i.size = strlen(name) + 1;
 
@@ -143,125 +141,98 @@ FILE *fopen(const char *filename, const char *mode)
 
 size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
-	return 0;
-#if 0
-	fsdata_t data;
 	int err;
+	msg_t msg = { 0 };
 
 	if (ptr == NULL || stream == NULL)
 		return 0;
 
-	data.id = stream->oid.id;
-	data.pos = stream->pos;
+	msg.type = mtRead;
+	msg.i.io.oid = stream->oid;
+	msg.i.io.offs = stream->pos;
+	msg.i.io.len = 0;
 
-	err = send(stream->oid.port, READ, &data, sizeof(data), NORMAL, ptr, size * nmemb);
+	msg.o.data = ptr;
+	msg.o.size = size * nmemb;
 
-	if (err <= 0)
-		err = 0;
+	if ((err = msgSend(stream->oid.port, &msg)) < 0)
+		return err;
 
-	stream->pos += err;
+	if (msg.o.io.err < 0)
+		msg.o.io.err = 0;
 
-	return (size_t)err;
-#endif
+	stream->pos += msg.o.io.err;
+	return msg.o.io.err;
 }
 
 
 size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
-	return 0;
-#if 0
-	size_t cnt;
 	int err;
-	fsdata_t *data;
+	msg_t msg = { 0 };
 
 	if (ptr == NULL || stream == NULL)
 		return 0;
 
-	if ((data = malloc(sizeof(fsdata_t) + size * nmemb)) == NULL)
-		return 0;
+	msg.type = mtWrite;
+	msg.i.io.oid = stream->oid;
+	msg.i.io.offs = stream->pos;
+	msg.i.io.len = 0;
 
-	data->id = stream->oid.id;
-	data->pos = stream->pos;
-	memcpy(data->buff, ptr, size * nmemb);
+	msg.i.data = (void *)ptr;
+	msg.i.size = size * nmemb;
 
-	err = send(stream->oid.port, WRITE, data, sizeof(fsdata_t) + size * nmemb, NORMAL, &cnt, sizeof(cnt));
+	if ((err = msgSend(stream->oid.port, &msg)) < 0)
+		return err;
 
-	if (err == sizeof(cnt)) {
-		stream->pos += cnt;
-		return cnt;
-	}
+	if (msg.o.io.err < 0)
+		msg.o.io.err = 0;
 
-	return 0;
-#endif
+	stream->pos += msg.o.io.err;
+	return msg.o.io.err;
 }
 
 
 int fgetc(FILE *stream)
 {
-	int c;
-	read(0, &c, 1);
+	char c;
+	if (fread(&c, 1, 1, stream) != 1)
+		return EOF;
+
 	return c;
-#if 0
-	int err;
-	unsigned char c;
-	fsdata_t data;
-
-	if (stream == NULL)
-		return -EINVAL;
-
-	data.id = stream->oid.id;
-	data.pos = stream->pos;
-
-	err = send(stream->oid.port, READ, &data, sizeof(data), NORMAL, &c, sizeof(c));
-
-	if (err > 0)
-		return (int)c;
-
-	return err;
-#endif
 }
 
 
 int fputc(int c, FILE *stream)
 {
-	/* Temporary: stdout */
-	write(1, &c, 1);
-	return 0;
-#if 0
-	int err;
-	union {
-		fsdata_t data;
-		char buff[sizeof(fsdata_t) + 1];
-	} u;
+	if (fwrite(&c, 1, 1, stream) != 1)
+		return EOF;
 
-	if (stream == NULL)
-		return -EINVAL;
-
-	u.data.id = stream->oid.id;
-	u.data.pos = stream->pos;
-	u.data.buff[0] = (unsigned char)c;
-
-	err = send(stream->oid.port, WRITE, &u.data, sizeof(u.buff), NORMAL, NULL, 0);
-
-	if (err < 0)
-		return err;
-
-	++(stream->pos);
-
-	return EOK;
-#endif
+	return c;
 }
 
 
 char *fgets(char *str, int n, FILE *stream)
 {
-	return NULL;
+	int c, i = 0;
+	while ((c = fgetc(stream)) != EOF) {
+		str[i++] = c;
+		if (c == '\n' || i == n - 1)
+			break;
+	}
+
+	if (i)
+		str[i] = 0;
+	else
+		return NULL;
+
+	return str;
 }
 
 
 char *fgets_unlocked(char *str, int n, FILE *stream)
 {
-	return NULL;
+	return fgets(str, n, stream);
 }
 
 
@@ -274,8 +245,9 @@ int fileno_unlocked(FILE *stream)
 int getc_unlocked(FILE *stream)
 {
 	char c;
-	/* Temporary: stdin */
-	read(0, &c, 1);
+	if (fread(&c, 1, 1, stream) != 1)
+		return EOF;
+
 	return c;
 }
 
@@ -298,18 +270,22 @@ int putchar_unlocked(int c)
 
 int puts(const char *s)
 {
-	int len = strlen(s);
-	write(1, (void *)s, len);
-	return 0;
+	int len = strlen(s), l = 0, err;
+
+	while (l < len) {
+		if ((err = write(1, (void *)s + l, len - l)) < 0)
+			return -1;
+		l += err;
+	}
+
+	return l;
 }
 
 
 int fputs_unlocked(const char *s, FILE *stream)
 {
 	int len = strlen(s);
-	/* Temporary: stdout */
-	write(1, (void *)s, len);
-	return 0;
+	return fwrite(s, 1, len, stream);
 }
 
 
@@ -339,9 +315,7 @@ int fflush(FILE *stream)
 int fputs(const char *str, FILE *f)
 {
 	int len = strlen(str);
-	/* Temporary: stdout */
-	write(1, (void *)str, len);
-	return EOK;
+	return fwrite(str, 1, len, f);
 }
 
 

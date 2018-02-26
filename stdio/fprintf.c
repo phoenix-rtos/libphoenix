@@ -20,24 +20,57 @@
 #include "sys/debug.h"
 
 
+typedef struct _fprintf_ctx_t {
+	FILE *file;
+	char buff[16];
+	int n;
+	size_t total;
+} fprintf_ctx_t;
+
+
+static void fprintf_feed(void *context, char c)
+{
+	fprintf_ctx_t* ctx = (fprintf_ctx_t *)context;
+
+	ctx->buff[ctx->n++] = c;
+	ctx->buff[ctx->n] = '\0';
+
+	if (ctx->n == sizeof(ctx->buff) - 1) {
+		fwrite(ctx->buff, 1, ctx->n, ctx->file);
+		ctx->n = 0;
+	}
+
+	ctx->total++;
+}
+
+
 int fprintf(FILE *file, const char *format, ...)
 {
 	int err;
 	va_list arg;
 
 	va_start(arg, format);
-	err = vprintf(format, arg);
+	err = vfprintf(file, format, arg);
 	va_end(arg);
 
 	return err;
 }
 
 
-int vfprintf(FILE *f, const char *format, va_list args)
+int vfprintf(FILE *file, const char *format, va_list arg)
 {
-	int err;
-	err = vprintf(format, args);
-	return err;
+	fprintf_ctx_t ctx;
+
+	ctx.n = 0;
+	ctx.total = 0;
+	ctx.file = file;
+
+	format_parse(&ctx, fprintf_feed, format, arg);
+
+	if (ctx.n != 0)
+		fwrite(ctx.buff, 1, ctx.n, ctx.file);
+
+	return ctx.total;
 }
 
 

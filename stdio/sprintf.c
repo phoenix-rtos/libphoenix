@@ -66,6 +66,7 @@ int vsprintf(char *str, const char *format, va_list arg)
 	ctx.n = 0;
 
 	format_parse(&ctx, sprintf_feed, format, arg);
+	sprintf_feed(&ctx, '\0');
 
 	return ctx.n;
 }

@@ -101,7 +101,7 @@ ssize_t write(int fildes, void *buf, size_t nbyte)
 	if (msgSend(oid.port, &msg) < 0)
 		return -1;
 
-	return nbyte;
+	return msg.o.io.err;
 }
 
 
