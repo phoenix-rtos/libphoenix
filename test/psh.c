@@ -98,6 +98,8 @@ static void psh_help(void)
 	printf("  ls     - lists files in the namespace\n");
 	printf("  mkdir  - creates directory\n");
 	printf("  touch  - changes file timestamp\n");
+	printf("  cat    - concatenates files\n");
+	printf("  exec   - executes a file\n");
 	printf("  mem    - prints memory map\n");
 	printf("  ps     - prints list of processes and threads\n");
 	printf("  exit   - exits the shell\n");
