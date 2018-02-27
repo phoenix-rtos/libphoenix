@@ -91,7 +91,7 @@ ifneq (, $(findstring arm-imx, $(TARGET)))
 
 	CFLAGS += -O2 -Wall -Wstrict-prototypes -g -I$(SRCDIR) -nostartfiles -nostdlib\
 		-mcpu=cortex-a7 -mtune=cortex-a7 -mfloat-abi=hard \
-		-fomit-frame-pointer -ffreestanding\
+		-fomit-frame-pointer -ffreestanding -mno-unaligned-access\
 		-DVERSION=\"$(VERSION)\" -DARCH=\"arch/arm-imx/arch.h\"
 
 	AR = $(CROSS)ar
