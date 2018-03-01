@@ -440,16 +440,14 @@ int psh_exec(char *cmd)
 {
 	int exerr = 0;
 	int argc = 0;
-	char **argv = NULL;
+	char **argv = malloc(sizeof(char *));
 
 	char *arg = cmd;
 	unsigned int len;
 
 	while ((arg = psh_nextString(arg, &len)) && len) {
-		argv = realloc(argv, (1 + argc) * sizeof(char *));
-		argv[argc] = arg;
-
-		argc++;
+		argv = realloc(argv, (2 + argc) * sizeof(char *));
+		argv[argc++] = arg;
 		arg += len + 1;
 	}
 
@@ -474,16 +472,14 @@ int psh_runfile(char *cmd)
 {
 	int pid, exerr = 0;
 	int argc = 0;
-	char **argv = NULL;
+	char **argv = malloc(sizeof(char *));
 
 	char *arg = cmd;
 	unsigned int len;
 
 	while ((arg = psh_nextString(arg, &len)) && len) {
-		argv = realloc(argv, (1 + argc) * sizeof(char *));
-		argv[argc] = arg;
-
-		argc++;
+		argv = realloc(argv, (2 + argc) * sizeof(char *));
+		argv[argc++] = arg;
 		arg += len + 1;
 	}
 
