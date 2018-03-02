@@ -47,6 +47,8 @@ vfork_address:
 .type vfork, @function
 .align 4, 0x90
 vfork:
+	mov (%esp), %eax
+	mov %eax, (vfork_address)
 	movl $4, %eax
 	int $0x80
 	cmp $0, %eax
@@ -57,8 +59,6 @@ vfork:
 	pop %eax
 	ret
 vfork_child:
-	mov (%esp), %eax
-	mov %eax, (vfork_address)
 	mov $0, %eax
 	ret
 .size vfork, .-vfork
