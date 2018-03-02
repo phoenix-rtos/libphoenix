@@ -183,7 +183,7 @@ static void psh_touch(char *args)
 	}
 }
 
-static void psh_mem(char *args)
+static int psh_mem(char *args)
 {
 	char *arg, *end;
 	unsigned int len, i, n;
@@ -214,7 +214,7 @@ static void psh_mem(char *args)
 			"map entry size:    %12u\n",
 			info.entry.total, info.entry.free, info.entry.sz);*/
 
-		return;
+		return EOK;
 	}
 
 	if (!strcmp("-m", arg)) {
@@ -228,7 +228,10 @@ static void psh_mem(char *args)
 
 			do {
 				mapsz = info.entry.kmapsz;
-				info.entry.kmap = realloc(info.entry.kmap, mapsz * sizeof(entryinfo_t));
+				if ((info.entry.kmap = realloc(info.entry.kmap, mapsz * sizeof(entryinfo_t))) == NULL) {
+					printf("psh: out of memory\n");
+					return -ENOMEM;
+				}
 				meminfo(&info);
 			}
 			while (info.entry.kmapsz > mapsz);
@@ -243,7 +246,7 @@ static void psh_mem(char *args)
 
 				if (end + 1 != args + len || (!info.entry.pid && *arg != '0')) {
 					printf("mem: could not parse process id: '%s'\n", arg);
-					return;
+					return EOK;
 				}
 			}
 			else {
@@ -255,7 +258,10 @@ static void psh_mem(char *args)
 
 			do {
 				mapsz = info.entry.mapsz;
-				info.entry.map = realloc(info.entry.map, mapsz * sizeof(entryinfo_t));
+				if ((info.entry.map = realloc(info.entry.map, mapsz * sizeof(entryinfo_t))) == NULL) {
+					printf("psh: out of memory\n");
+					return -ENOMEM;
+				}
 				meminfo(&info);
 			}
 			while (info.entry.mapsz > mapsz);
@@ -263,7 +269,7 @@ static void psh_mem(char *args)
 			if (info.entry.mapsz < 0) {
 				printf("mem: process with pid %x not found\n", info.entry.pid);
 				free(info.entry.map);
-				return;
+				return EOK;
 			}
 
 			mapsz = info.entry.mapsz;
@@ -334,7 +340,7 @@ static void psh_mem(char *args)
 		free(info.entry.map);
 		free(info.entry.kmap);
 
-		return;
+		return EOK;
 	}
 
 	if (!strcmp("-p", arg)) {
@@ -345,7 +351,10 @@ static void psh_mem(char *args)
 
 		do {
 			mapsz = info.page.mapsz;
-			info.page.map = realloc(info.page.map, mapsz * sizeof(pageinfo_t));
+			if ((info.page.map = realloc(info.page.map, mapsz * sizeof(pageinfo_t))) == NULL) {
+				printf("psh: out of memory\n");
+				return -ENOMEM;
+			}
 			meminfo(&info);
 		}
 		while (info.page.mapsz > mapsz);
@@ -372,10 +381,11 @@ static void psh_mem(char *args)
 		printf("\n");
 
 		free(info.page.map);
-		return;
+		return EOK;
 	}
 
 	printf("mem: unrecognized option '%s'\n", arg);
+	return EOK;
 }
 
 
@@ -397,17 +407,23 @@ static int psh_ps_cmp_cpu(const void *t1, const void *t2)
 }
 
 
-static void psh_ps(char *arg)
+static int psh_ps(char *arg)
 {
 	threadinfo_t *info;
 	int tcnt, i, n = 32;
 	unsigned len;
 
-	info = malloc(n * sizeof(threadinfo_t));
+	if ((info = malloc(n * sizeof(threadinfo_t))) == NULL) {
+		printf("ps: out of memory\n");
+		return -ENOMEM;
+	}
 
 	while ((tcnt = threadsinfo(n, info)) >= n) {
 		n *= 2;
-		info = realloc(info, n * sizeof(threadinfo_t));
+		if ((info = realloc(info, n * sizeof(threadinfo_t))) == NULL) {
+			printf("ps: out of memory\n");
+			return -ENOMEM;
+		}
 	}
 
 	arg = psh_nextString(arg, &len);
@@ -433,6 +449,7 @@ static void psh_ps(char *arg)
 	}
 
 	free(info);
+	return EOK;
 }
 
 
@@ -446,7 +463,10 @@ int psh_exec(char *cmd)
 	unsigned int len;
 
 	while ((arg = psh_nextString(arg, &len)) && len) {
-		argv = realloc(argv, (2 + argc) * sizeof(char *));
+		if ((argv = realloc(argv, (2 + argc) * sizeof(char *))) == NULL) {
+			printf("psh: out of memory\n");
+			return -ENOMEM;
+		}
 		argv[argc++] = arg;
 		arg += len + 1;
 	}
@@ -470,7 +490,7 @@ int psh_exec(char *cmd)
 
 int psh_runfile(char *cmd)
 {
-	int pid, exerr = 0;
+	int pid, exerr = EOK;
 	int argc = 0;
 	char **argv = malloc(sizeof(char *));
 
@@ -478,15 +498,23 @@ int psh_runfile(char *cmd)
 	unsigned int len;
 
 	while ((arg = psh_nextString(arg, &len)) && len) {
-		argv = realloc(argv, (2 + argc) * sizeof(char *));
+		if ((argv = realloc(argv, (2 + argc) * sizeof(char *))) == NULL) {
+			printf("psh: out of memory\n");
+			return -ENOMEM;
+		}
 		argv[argc++] = arg;
 		arg += len + 1;
 	}
 
 	argv[argc] = NULL;
 
-	if (!(pid = vfork()))
+	if ((pid = vfork()) < 0) {
+		printf("psh: vfork failed\n");
+		return pid;
+	}
+	else if (!pid) {
 		exit(exerr = execve(cmd, argv, NULL));
+	}
 
 	if (exerr == EOK)
 		return wait(0);
@@ -504,14 +532,17 @@ int psh_runfile(char *cmd)
 }
 
 
-void psh_cat(char *args)
+int psh_cat(char *args)
 {
 	char *arg = args, *buf;
 	int rsz;
 	unsigned int len;
 	FILE *file;
 
-	buf = malloc(1024);
+	if ((buf = malloc(1024)) == NULL) {
+		printf("cat: out of memory\n");
+		return -ENOMEM;
+	}
 
 	while ((arg = psh_nextString(arg, &len)) && len) {
 		file = fopen(arg, "r");
@@ -531,6 +562,7 @@ void psh_cat(char *args)
 	}
 
 	free(buf);
+	return EOK;
 }
 
 
