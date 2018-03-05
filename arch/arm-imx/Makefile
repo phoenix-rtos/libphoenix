@@ -5,8 +5,8 @@
 # Author: Pawel Pisarczyk
 #
 
-ASMS = syscalls.S
-SRCS = _start.c string.c
+ASMS = _start.S syscalls.S
+SRCS = _startc.c string.c
 
 
 OBJS = $(SRCS:.c=.o) $(ASMS:.S=.o)

@@ -14,15 +14,25 @@
  */
 
 #include ARCH
-#include "stdlib.h"
+#include <sys/file.h>
+#include <stdlib.h>
+#include <getopt.h>
+#include <stdio.h>
 
 
 extern int main(int argc, char **argv);
 
 
-void _start(void)
+char **environ;
+FILE stdin_file, stdout_file;
+
+void _startc(int argc, char **argv, char **env)
 {
+	environ = env;
+	optind = 1;
+	stdin = &stdin_file;
+	stdout = &stdout_file;
 	_malloc_init();
 
-	exit(main(1, 0));
+	exit(main(argc, argv));
 }

@@ -29,15 +29,17 @@ void *memcpy(void *dst, const void *src, size_t l)
 		bne 2f; \
 	1: \
 		cmp r1, #4; \
+		ittt hs; \
 		ldrhs r2, [r3], #4; \
 		strhs r2, [r4], #4; \
-		subhss r1, #4; \
+		subshs r1, #4; \
 		bhs 1b; \
 	2: \
 		cmp r1, #0; \
-		ldrneb r2, [r3], #1; \
-		strneb r2, [r4], #1; \
-		subnes r1, #1; \
+		ittt ne; \
+		ldrbne r2, [r3], #1; \
+		strbne r2, [r4], #1; \
+		subsne r1, #1; \
 		bne 2b"
 	:
 	: "r" (dst), "r" (src), "r" (l)
@@ -61,15 +63,17 @@ void *memmove(void *dst, const void *src, size_t l)
 		bne 2f; \
 	1: \
 		cmp r1, #4; \
+		ittt hs; \
 		ldrhs r2, [r3], #4; \
 		strhs r2, [r4], #4; \
-		subhss r1, #4; \
+		subshs r1, #4; \
 		bhs 1b; \
 	2: \
 		cmp r1, #0; \
-		ldrneb r2, [r3], #1; \
-		strneb r2, [r4], #1; \
-		subnes r1, #1; \
+		ittt ne; \
+		ldrbne r2, [r3], #1; \
+		strbne r2, [r4], #1; \
+		subsne r1, #1; \
 		bne 2b; \
 		b 8f; \
 	3: \
@@ -147,13 +151,15 @@ void *memset(void *dst, int v, size_t l)
 		bne 2f; \
 	1: \
 		cmp r1, #4; \
+		itt hs; \
 		strhs r3, [r4], #4; \
-		subhss r1, #4; \
+		subshs r1, #4; \
 		bhs 1b; \
 	2: \
 		cmp r1, #0; \
-		strneb r3, [r4], #1; \
-		subnes r1, #1; \
+		itt ne; \
+		strbne r3, [r4], #1; \
+		subsne r1, #1; \
 		bne 2b"
 	:
 	: "r" (dst), "r" (v & 0xff), "r" (l)

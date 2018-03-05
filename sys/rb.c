@@ -234,7 +234,7 @@ rbnode_t *lib_rbInsert(rbtree_t *tree, rbnode_t *z)
 {
 	rbnode_t *y = NULL;
 	rbnode_t *x = tree->root;
-	int c;
+	int c = 0;
 
 	while (x != NULL) {
 		y = x;
