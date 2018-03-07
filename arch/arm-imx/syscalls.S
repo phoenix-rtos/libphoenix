@@ -14,6 +14,7 @@
  */
 
 #define __ASSEMBLY__
+#include "../../../phoenix-rtos-kernel/include/syscall.h"
 
 .text
 
@@ -27,90 +28,15 @@ sym: \
 .size sym, .-sym
 
 
-SYSCALLDEF(debug, 0)
+.globl vfork;
+.type vfork, %function;
+vfork:
+	b vforksvc
+.size vfork, .-vfork
 
-SYSCALLDEF(mmap, 1)
 
-SYSCALLDEF(munmap, 2)
+#define SYSCALLS_LIBC(n, kernel, libc) \
+	SYSCALLDEF(libc, n);
 
-SYSCALLDEF(vfork, 3)
 
-/* TODO - fork */
-
-SYSCALLDEF(execle, 5)
-
-SYSCALLDEF(execve, 6)
-
-SYSCALLDEF(exit, 7)
-
-SYSCALLDEF(waitpid, 8)
-
-SYSCALLDEF(getpid, 9)
-
-SYSCALLDEF(getppid, 10)
-
-SYSCALLDEF(beginthreadex, 11)
-
-SYSCALLDEF(endthread, 12)
-
-SYSCALLDEF(usleep, 13)
-
-SYSCALLDEF(mutexCreate, 14)
-
-SYSCALLDEF(mutexLock, 15)
-
-SYSCALLDEF(mutexUnlock, 16)
-
-SYSCALLDEF(semaphoreCreate, 17)
-
-SYSCALLDEF(semaphoreDown, 18)
-
-SYSCALLDEF(semaphoreUp, 19)
-
-SYSCALLDEF(condCreate, 20)
-
-SYSCALLDEF(condWait, 21)
-
-SYSCALLDEF(condSignal, 22)
-
-SYSCALLDEF(resourceDestroy, 23)
-
-SYSCALLDEF(interrupt, 24)
-
-SYSCALLDEF(portCreate, 25)
-
-SYSCALLDEF(portDestroy, 26)
-
-SYSCALLDEF(portRegister, 27)
-
-SYSCALLDEF(msgSend, 28)
-
-SYSCALLDEF(msgRecv, 29)
-
-SYSCALLDEF(msgRespond, 30)
-
-SYSCALLDEF(lookup, 31)
-
-SYSCALLDEF(gettime, 32)
-
-SYSCALLDEF(keepidle, 33)
-
-SYSCALLDEF(mmdump, 34)
-
-SYSCALLDEF(platformctl, 35)
-
-SYSCALLDEF(wdgreload, 36)
-
-SYSCALLDEF(fileAdd, 37)
-
-SYSCALLDEF(fileSet, 38)
-
-SYSCALLDEF(fileGet, 39)
-
-SYSCALLDEF(fileRemove, 40)
-
-SYSCALLDEF(threadsinfo, 41)
-
-SYSCALLDEF(meminfo, 42)
-
-SYSCALLDEF(syspageprog, 43)
+SYSCALLS(SYSCALLS_LIBC)
