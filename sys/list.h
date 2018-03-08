@@ -5,8 +5,8 @@
  *
  * Doubly-linked list
  *
- * Copyright 2017 Phoenix Systems
- * Author: Jakub Sejdak, Pawel Pisarczyk
+ * Copyright 2017, 2018 Phoenix Systems
+ * Author: Pawel Pisarczyk, Jan Sikorski, Aleksander Kaminski
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -19,29 +19,24 @@
 #include ARCH
 
 
-#define LIST_ADD(list, i) { \
-	if (*(list) == NULL) { \
-		i->next = i; \
-		i->prev = i; \
-		(*(list)) = i; \
-	} \
-	else { \
-		i->prev = (*(list))->prev; \
-		(*(list))->prev->next = i; \
-		i->next = (*list); \
-		(*(list))->prev = i; \
-	} \
-}
+extern void lib_listAdd(void **list, void *t, u32 next_off, u32 prev_off);
 
 
-#define  LIST_REMOVE(list, i) { \
-	i->prev->next = i->next; \
-	i->next->prev = i->prev; \
-	if ((i->next == i) && (i->prev == i)) \
-		(*(list)) = NULL; \
-	else if (i == (*(list))) \
-		(*(list)) = i->next; \
-}
+extern void lib_listRemove(void **list, void *t, u32 next_off, u32 prev_off);
+
+
+#define LIST_ADD_EX(list, t, next, prev) \
+	lib_listAdd((void **)(list), (void *)(t), (u32)&(((typeof(t))0)->next), (u32)&(((typeof(t))0)->prev))
+
+
+#define LIST_ADD(list, t) LIST_ADD_EX(list, t, next, prev)
+
+
+#define LIST_REMOVE_EX(list, t, next, prev) \
+	lib_listRemove((void **)(list), (void *)(t), (u32)&(((typeof(t))0)->next), (u32)&(((typeof(t))0)->prev))
+
+
+#define LIST_REMOVE(list, t) LIST_REMOVE_EX(list, t, next, prev)
 
 
 #endif
