@@ -357,7 +357,6 @@ size_t strspn(const char *s1, const char *s2)
 	}
 
 	return count;
-
 }
 
 
@@ -373,12 +372,11 @@ char *strtok(char *s1, const char *s2)
 	if (!*s1)
 		return NULL;
 
-	tokend = strpbrk(s1, s2);
+	tokend = s1 + strcspn(s1, s2);
 
 	string_common.next_token = tokend + strspn(tokend, s2);
 
-	if (tokend != NULL)
-		*tokend = 0;
+	*tokend = 0;
 
 	return s1;
 }
