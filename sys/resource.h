@@ -17,12 +17,20 @@
 #define _SYS_RESOURCE_H_
 
 #include <sys/time.h>
+#include <time.h>
 
 
 typedef int rlim_t;
 
 
-enum { RLIM_INFINITY = -1 };
+enum { RLIM_INFINITY = -1, RUSAGE_CHILDREN = -1 };
+enum { RUSAGE_SELF };
+
+
+struct rusage {
+	struct timeval ru_utime;
+	struct timeval ru_stime;
+};
 
 
 struct rlimit {

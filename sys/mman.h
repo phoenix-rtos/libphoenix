@@ -25,6 +25,10 @@
 #define OID_NULL         NULL
 #define OID_PHYSMEM      (void *)-1
 
+#define MAP_FAILED	(void *)-1
+
+#define MAP_ANON	MAP_ANONYMOUS
+
 
 #define MAP_FAILED     (void *)-1
 

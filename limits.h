@@ -104,6 +104,16 @@
 #endif
 
 
+#ifndef LLONG_MAX
+#define LLONG_MAX LONG_LONG_MAX
+#endif
+
+
+#ifndef LLONG_MIN
+#define LLONG_MIN LONG_LONG_MIN
+#endif
+
+
 #ifndef ULONG_MAX
 #define ULONG_MAX UINT_MAX
 #endif
@@ -111,6 +121,11 @@
 
 #ifndef ULONG_LONG_MAX
 #define ULONG_LONG_MAX (LONG_LONG_MAX * 2ULL + 1)
+#endif
+
+
+#ifndef SSIZE_MAX
+#define SSIZE_MAX ((ssize_t)((1ULL << (sizeof(ssize_t) * 8 - 1)) - 1))
 #endif
 
 
