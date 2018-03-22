@@ -16,7 +16,7 @@
 #ifndef _LIBPHOENIX_SYS_THREADS_H_
 #define _LIBPHOENIX_SYS_THREADS_H_
 
-#include ARCH
+#include <arch.h>
 #include <phoenix/sysinfo.h>
 #include <phoenix/signal.h>
 

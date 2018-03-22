@@ -16,7 +16,8 @@
 #ifndef _SYS_RESOURCE_H_
 #define _SYS_RESOURCE_H_
 
-#include ARCH
+#include <sys/time.h>
+
 
 typedef int rlim_t;
 

@@ -13,8 +13,6 @@
  * %LICENSE%
  */
 
-#include ARCH
-
 #include <glob.h>
 #include <errno.h>
 

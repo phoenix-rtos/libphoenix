@@ -16,7 +16,7 @@
 #ifndef _LIBPHOENIX_MSG_H_
 #define _LIBPHOENIX_MSG_H_
 
-#include ARCH
+#include <arch.h>
 #include <phoenix/msg.h>
 
 

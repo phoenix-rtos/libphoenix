@@ -16,7 +16,7 @@
 #ifndef _LIBPHOENIX_MATH_COMMON_H_
 #define _LIBPHOENIX_MATH_COMMON_H_
 
-#include ARCH
+#include <stdint.h>
 
 
 typedef union {

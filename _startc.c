@@ -13,7 +13,6 @@
  * %LICENSE%
  */
 
-#include ARCH
 #include <sys/file.h>
 #include <stdlib.h>
 #include <stdio.h>

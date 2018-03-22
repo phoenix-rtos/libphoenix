@@ -13,8 +13,6 @@
  * %LICENSE%
  */
 
-#include ARCH
-
 #include "time.h"
 #include "errno.h"
 

@@ -13,7 +13,6 @@
  * %LICENSE%
  */
 
-#include ARCH
 #include "../math.h"
 #include "../limits.h"
 #include "common.h"

@@ -13,8 +13,6 @@
  * %LICENSE%
  */
 
-#include ARCH
-
 #include "mount.h"
 #include "msg.h"
 #include "fs.h"

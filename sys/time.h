@@ -16,7 +16,7 @@
 #ifndef _SYS_TIME_H_
 #define _SYS_TIME_H_
 
-#include ARCH
+#include <arch.h>
 
 
 struct timeval {

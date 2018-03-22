@@ -16,6 +16,9 @@
 #ifndef _SYS_WAIT_H_
 #define _SYS_WAIT_H_
 
+#include <arch.h>
+
+
 enum {
 	WNOHANG = 1 << 0,
 	WUNTRACED = 1 << 1,

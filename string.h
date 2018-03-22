@@ -16,8 +16,7 @@
 #ifndef _LIBPHOENIX_STRING_H_
 #define _LIBPHOENIX_STRING_H_
 
-#include ARCH
-#include <stddef.h>
+#include <stdint.h>
 
 /*
  * Searches for the first occurrence of the character c (an unsigned char) in the first n bytes of the string

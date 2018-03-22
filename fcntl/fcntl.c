@@ -13,8 +13,6 @@
  * %LICENSE%
  */
 
-#include ARCH
-
 #include <stdio.h>
 #include <fcntl.h>
 #include <string.h>

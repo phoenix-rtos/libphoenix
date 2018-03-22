@@ -16,7 +16,6 @@
 #ifndef _LIBPHOENIX_UNISTD_H_
 #define _LIBPHOENIX_UNISTD_H_
 
-#include ARCH
 #include <sys/types.h>
 
 #define STDIN_FILENO 0

@@ -18,8 +18,6 @@
 #include "sys/threads.h"
 #include "sys/mman.h"
 
-#include ARCH
-
 /*
  * global data: list of page_sets protected by mutex if application is multi-threaded
  * data structures: page_set contains list of chunks

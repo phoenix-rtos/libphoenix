@@ -16,7 +16,7 @@
 #ifndef _LIBPHOENIX_STDINT_H_
 #define _LIBPHOENIX_STDINT_H_
 
-#include ARCH
+#include <arch.h>
 
 
 typedef u8 uint8_t;

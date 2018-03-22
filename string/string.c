@@ -13,14 +13,9 @@
  * %LICENSE%
  */
 
-#ifndef _LIBPHOENIX_ARCH_STRING_H_
-#define _LIBPHOENIX_ARCH_STRING_H_
-
-#include ARCH
-
 #include <ctype.h>
-#include <string.h>
 #include <stddef.h>
+#include <string.h>
 
 
 struct {
@@ -407,6 +402,3 @@ int strverscmp(const char *s1, const char *s2)
 	// TODO: implement proper algorithm
 	return strcmp(s1, s2);
 }
-
-
-#endif

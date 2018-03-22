@@ -16,7 +16,7 @@
 #ifndef _LIBPHOENIX_LIMITS_H_
 #define _LIBPHOENIX_LIMITS_H_
 
-#include ARCH
+#include <arch.h>
 
 
 #ifndef CHAR_BIT

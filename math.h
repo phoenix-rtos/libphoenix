@@ -17,7 +17,6 @@
 #define _LIBPHOENIX_MATH_H_
 
 
-#include ARCH
 #include "stdarg.h"
 #include "math/consts.h"
 

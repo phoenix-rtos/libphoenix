@@ -16,8 +16,6 @@
 #ifndef _LIBPHOENIX_TIME_H_
 #define _LIBPHOENIX_TIME_H_
 
-#include ARCH
-
 #define SECS_TO_USECS_T(secs) (1000000ULL * (secs))
 #define MSECS_TO_USECS_T(msecs) (1000ULL * (msecs))
 

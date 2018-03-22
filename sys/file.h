@@ -16,7 +16,7 @@
 #ifndef _LIBPHOENIX_SYS_FILE_H_
 #define _LIBPHOENIX_SYS_FILE_H_
 
-#include ARCH
+#include <arch.h>
 
 
 enum { otDir = 0, otFile, otDev, otUnknown };

@@ -13,9 +13,9 @@
  * %LICENSE%
  */
 
-#include ARCH
-
+#include <stddef.h>
 #include "ctype.h"
+
 
 unsigned int strtoul(char *nptr, char **endptr, int base)
 {

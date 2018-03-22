@@ -16,7 +16,7 @@
 #ifndef _LIBPHOENIX_SYS_LIST_H_
 #define _LIBPHOENIX_SYS_LIST_H_
 
-#include ARCH
+#include <stdint.h>
 
 
 extern void lib_listAdd(void **list, void *t, size_t next_off, size_t prev_off);

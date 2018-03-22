@@ -34,8 +34,7 @@ ifneq (, $(findstring ia32, $(TARGET)))
 
 	CFLAGS += -O2 -g -Wall -Wstrict-prototypes -I$(SRCDIR) -nostartfiles -nostdlib\
 		-m32 -mtune=generic -mno-mmx -mno-sse -fno-pic -fno-pie\
-		-fomit-frame-pointer -fno-strength-reduce -ffreestanding\
-		-DVERSION=\"$(VERSION)\" -DARCH=\"arch/ia32/arch.h\"
+		-fomit-frame-pointer -fno-strength-reduce -ffreestanding
 
 	AR = $(CROSS)ar
 	ARFLAGS = -r
@@ -65,7 +64,7 @@ ifneq (, $(findstring armv7, $(TARGET)))
 		-mcpu=cortex-m3 -mthumb \
 		-fomit-frame-pointer -ffreestanding\
 		-fpic -fpie -msingle-pic-base -mno-pic-data-is-text-relative\
-		-DVERSION=\"$(VERSION)\" -DARCH=\"arch/armv7/arch.h\" -DNOMMU
+		-DNOMMU
 
 	CFLAGS += -fdata-sections -ffunction-sections
 
@@ -96,8 +95,7 @@ ifneq (, $(findstring arm-imx, $(TARGET)))
 
 	CFLAGS += -Os -Wall -Wstrict-prototypes -g -I$(SRCDIR) -nostartfiles -nostdlib\
 		-mcpu=cortex-a7 -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard -mthumb\
-		-fomit-frame-pointer -ffreestanding -mno-unaligned-access\
-		-DVERSION=\"$(VERSION)\" -DARCH=\"arch/arm-imx/arch.h\"
+		-fomit-frame-pointer -ffreestanding -mno-unaligned-access
 
 	CFLAGS += -fdata-sections -ffunction-sections
 
@@ -114,6 +112,8 @@ ifneq (, $(findstring arm-imx, $(TARGET)))
 	STRIP = $(CROSS)strip
 endif
 
+
+CFLAGS += -DVERSION=\"$(VERSION)\"
 
 ARCH = code.a
 ARCHS := $(shell for i in $(SUBDIRS); do echo "$$i/$(ARCH)"; done)

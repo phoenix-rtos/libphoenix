@@ -13,7 +13,6 @@
  * %LICENSE%
  */
 
-#include ARCH
 #include "consts.h"
 #include "common.h"
 

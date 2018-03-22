@@ -16,8 +16,6 @@
 #ifndef _LIBPHOENIX_SYS_PWMAN_H_
 #define _LIBPHOENIX_SYS_PWMAN_H_
 
-#include ARCH
-
 
 extern void keepidle(int s);
 

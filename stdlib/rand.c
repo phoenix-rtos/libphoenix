@@ -13,7 +13,8 @@
  * %LICENSE%
  */
 
-#include ARCH
+#include <stdlib.h>
+
 
 unsigned int __randseed;
 

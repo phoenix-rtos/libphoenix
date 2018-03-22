@@ -17,8 +17,9 @@
 #define _LIBPHOENIX_STDIO_H_
 
 
-#include ARCH
-#include "stdarg.h"
+#include <arch.h>
+#include <stdarg.h>
+
 
 #define EOF (-1)
 

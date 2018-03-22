@@ -16,7 +16,8 @@
 #ifndef _LIBPHOENIX_PTHREAD_H_
 #define _LIBPHOENIX_PTHREAD_H_
 
-#include ARCH
+#include <stdint.h>
+
 
 
 extern int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_routine)(void *), void *arg);

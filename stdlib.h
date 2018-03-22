@@ -16,7 +16,7 @@
 #ifndef _LIBPHOENIX_STDLIB_H_
 #define _LIBPHOENIX_STDLIB_H_
 
-#include ARCH
+#include <arch.h>
 
 
 #define RAND_MAX   2147483647

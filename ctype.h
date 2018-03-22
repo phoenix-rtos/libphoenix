@@ -16,8 +16,6 @@
 #ifndef _LIBPHOENIX_CTYPES_H_
 #define _LIBPHOENIX_CTYPES_H_
 
-#include ARCH
-
 
 /* This function checks whether the passed character is alphanumeric. */
 extern int isalnum(int c);
