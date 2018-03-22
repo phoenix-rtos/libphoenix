@@ -36,6 +36,11 @@ enum {
 };
 
 
+enum {
+	_SC_OPEN_MAX,
+};
+
+
 static inline int getpagesize(void)
 {
 	return SIZE_PAGE;
@@ -110,6 +115,9 @@ extern off_t lseek(int fildes, off_t offset, int whence);
 
 
 extern int ftruncate(int fildes, off_t length);
+
+
+extern long sysconf(int name);
 
 
 extern char *optarg;
