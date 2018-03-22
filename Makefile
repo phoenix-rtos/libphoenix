@@ -7,6 +7,7 @@
 #
 
 SIL ?= @
+MAKEFLAGS += --no-print-directory
 
 #TARGET = arm-imx
 #TARGET = armv7-stm32-tiramisu
