@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * inttypes.h
+ * sys/statvfs.h
  *
  * Copyright 2018 Phoenix Systems
  * Author: Michał Mirosław
@@ -13,14 +13,18 @@
  * %LICENSE%
  */
 
-#ifndef _LIBPHOENIX_INTTYPES_H_
-#define _LIBPHOENIX_INTTYPES_H_
+#ifndef _LIBPHOENIX_SYS_STATVFS_H
+#define _LIBPHOENIX_SYS_STATVFS_H
 
 
-# define PRId8		"d"
-# define PRId16		"d"
-# define PRId32		"d"
-# define PRId64		"lld"
+struct statfs
+{
+};
 
 
-#endif
+struct statvfs
+{
+};
+
+
+#endif /* _LIBPHOENIX_SYS_STATVFS_H */

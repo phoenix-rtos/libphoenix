@@ -5,8 +5,8 @@
  *
  * stdio.h
  *
- * Copyright 2017 Phoenix Systems
- * Author: Pawel Pisarczyk, Kamil Amanowicz
+ * Copyright 2017-2018 Phoenix Systems
+ * Author: Pawel Pisarczyk, Kamil Amanowicz, Michał Mirosław
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -22,6 +22,7 @@
 
 
 #define EOF (-1)
+#define BUFSIZ 8192
 
 typedef offs_t fpos_t;
 
@@ -38,6 +39,15 @@ typedef struct _DIR {
 	size_t pos;
 	struct dirent *dirent;
 } DIR;
+
+
+typedef struct _IO_cookie_io_functions
+{
+	void *read;
+	void *write;
+	void *seek;
+	void *close;
+} cookie_io_functions_t;
 
 
 extern FILE *stderr, *stdin, *stdout;

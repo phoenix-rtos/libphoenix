@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * paths.h
+ * locale.c
  *
  * Copyright 2018 Phoenix Systems
  * Author: Michał Mirosław
@@ -12,12 +12,9 @@
  *
  * %LICENSE%
  */
-
-#ifndef _LIBPHOENIX_PATHS_H
-#define _LIBPHOENIX_PATHS_H
+#include "locale.h"
 
 
-extern const char *_PATH_TTY;
-
-
-#endif /* _LIBPHOENIX_PATHS_H */
+const struct lconv _fixed_locale = {
+	"."
+};

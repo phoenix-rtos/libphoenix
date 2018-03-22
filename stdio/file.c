@@ -288,3 +288,8 @@ int fseeko(FILE *stream, off_t offset, int whence)
 {
 	return fseek(stream, offset, whence);
 }
+
+
+void __fpurge(FILE *stream)
+{
+}

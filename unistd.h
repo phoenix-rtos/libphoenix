@@ -129,4 +129,7 @@ extern char *optarg;
 extern int optind, opterr, optopt;
 
 
+extern char **__environ, **environ;
+
+
 #endif

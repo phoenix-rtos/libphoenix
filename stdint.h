@@ -30,6 +30,16 @@ typedef s32 int32_t;
 typedef s64 int64_t;
 
 
+#ifndef INT64_MAX
+#define INT64_MAX 0x7fffffffffffffffll
+#endif
+
+
+#ifndef SIZE_MAX
+#define SIZE_MAX (~(size_t)0)
+#endif
+
+
 #define UINT32_MAX 0xffffffff
 
 #endif
