@@ -44,12 +44,6 @@ static int shebang(const char *path)
 }
 
 
-long sysconf(int name)
-{
-	return -ENOSYS;
-}
-
-
 int execv(const char *path, char *const argv[])
 {
 	return execve(path, argv, NULL);
