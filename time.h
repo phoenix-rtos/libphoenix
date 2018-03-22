@@ -43,7 +43,13 @@ struct timespec {
 };
 
 
+typedef int clockid_t;
+
+
 extern int gettime(time_t *tp);
+
+
+extern int clock_gettime(clockid_t clk_id, struct timespec *tp);
 
 
 extern time_t time(time_t *tp);
