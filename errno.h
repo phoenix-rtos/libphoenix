@@ -23,4 +23,25 @@ extern int errno;
 #include <phoenix/errno.h>
 
 
+/* Linux/x86-compatible numbers for easier debugging */
+
+#define EUNATCH         49
+#define ENODATA         61
+#define EPROTO          71
+#define ENOTSOCK        88
+#define EMSGSIZE        90
+#define EOPNOTSUPP      95
+#define EPFNOSUPPORT    96
+#define EAFNOSUPPORT    97
+#define EADDRNOTAVAIL   99
+#define ECONNRESET      104
+#define ENOBUFS         105
+#define EISCONN         106
+#define ENOTCONN        107
+#define ETIMEDOUT       110
+#define ECONNREFUSED    111
+#define EALREADY        114
+#define EINPROGRESS     115
+
+
 #endif
