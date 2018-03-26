@@ -137,4 +137,12 @@ extern char *strchr(const char *str, int z);
 
 extern char *strdup(const char *s1);
 
+
+__attribute__((always_inline))
+static inline void *bzero(void *p, size_t sz)
+{
+	return memset(p, 0, sz);
+}
+
+
 #endif
