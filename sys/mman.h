@@ -41,7 +41,7 @@ extern void *mmap(void *vaddr, size_t size, int prot, int flags, oid_t *oid, off
 extern int munmap(void *vaddr, size_t size);
 
 
-extern void *va2pa(void *va);
+extern addr_t va2pa(void *va);
 
 
 #endif
