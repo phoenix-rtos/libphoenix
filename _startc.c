@@ -29,7 +29,6 @@ extern const init_func_t __init_array_end[];
 
 
 char **environ;
-FILE stdin_file, stdout_file;
 
 void _startc(int argc, char **argv, char **env)
 {
@@ -38,8 +37,6 @@ void _startc(int argc, char **argv, char **env)
 
 	environ = env;
 	optind = 1;
-	stdin = &stdin_file;
-	stdout = &stdout_file;
 
 	for (fp = __init_array_start; fp != __init_array_end; ++fp) {
 		f = *fp;
