@@ -323,7 +323,8 @@ char *strdup(const char *s1)
 
 	len = strlen(s1) + 1;
 	result = malloc(len);
-	memcpy(result, s1, len);
+	if (result)
+		memcpy(result, s1, len);
 
 	return result;
 }
