@@ -8,7 +8,7 @@ ifeq (,$(SRCDIR))
 $(error Only main Makefile can be used for compilation)
 endif
 
-SRCS = file.c dir.c group.c user.c getopt.c pwd.c sys.c sysconf.c
+SRCS = file.c dir.c group.c user.c getopt.c pwd.c sys.c sysconf.c alarm.c
 OBJS = $(SRCS:.c=.o)
 
 

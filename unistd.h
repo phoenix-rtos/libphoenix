@@ -120,6 +120,9 @@ extern int ftruncate(int fildes, off_t length);
 extern long sysconf(int name);
 
 
+extern unsigned int alarm(unsigned int seconds);
+
+
 extern char *optarg;
 
 
