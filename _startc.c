@@ -16,7 +16,6 @@
 #include ARCH
 #include <sys/file.h>
 #include <stdlib.h>
-#include <getopt.h>
 #include <stdio.h>
 
 
@@ -36,7 +35,6 @@ void _startc(int argc, char **argv, char **env)
 	init_func_t f;
 
 	environ = env;
-	optind = 1;
 
 	for (fp = __init_array_start; fp != __init_array_end; ++fp) {
 		f = *fp;
