@@ -22,17 +22,31 @@
 
 extern int main(int argc, char **argv);
 
+typedef void (*init_func_t)(void);
+
+extern const init_func_t __init_array_start[];
+extern const init_func_t __init_array_end[];
+
 
 char **environ;
 FILE stdin_file, stdout_file;
 
 void _startc(int argc, char **argv, char **env)
 {
+	const init_func_t *fp;
+	init_func_t f;
+
 	environ = env;
 	optind = 1;
 	stdin = &stdin_file;
 	stdout = &stdout_file;
-	_malloc_init();
+
+	for (fp = __init_array_start; fp != __init_array_end; ++fp) {
+		f = *fp;
+		if (!f || !~(unsigned)f)
+			continue;
+		f();
+	}
 
 	exit(main(argc, argv));
 }
