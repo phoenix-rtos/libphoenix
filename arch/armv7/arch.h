@@ -26,6 +26,7 @@
 #define __MEMCMP
 #define __MEMSET
 #define __STRLEN
+#define __STRNLEN
 #define __STRCMP
 #define __STRNCMP
 #define __STRCPY
