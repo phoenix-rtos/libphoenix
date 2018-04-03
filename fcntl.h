@@ -33,6 +33,7 @@
 
 int fcntl(int fildes, int cmd, ...);
 
+int open(const char *path, int oflag, ...);
 
 /* cmd's for fcntl */
 enum { F_DUPFD, F_DUPFD_CLOEXEC, F_GETFD, F_SETFD, F_GETFL, F_SETFL,
