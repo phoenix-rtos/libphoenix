@@ -90,7 +90,7 @@ extern char *strerror(int errnum);
 extern size_t strlen(const char *str);
 
 
-/* Computes the length of the string str up to but not including the terminating null character, but at most maxlen */
+/* Computes the length of the string str up to but not including the terminating null character, but checks at most maxlen */
 extern size_t strnlen(const char *str, size_t maxlen);
 
 

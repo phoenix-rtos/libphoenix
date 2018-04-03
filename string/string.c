@@ -193,7 +193,7 @@ size_t strnlen(const char *s, size_t maxlen)
 {
 	unsigned int k;
 
-	for (k = 0; *s != '\0' && k < maxlen; s++, k++);
+	for (k = 0; k < maxlen && *s != '\0'; s++, k++);
 	return k;
 }
 #endif
