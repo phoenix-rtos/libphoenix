@@ -87,6 +87,9 @@ extern char *getcwd(char *buf, size_t size);
 extern int getopt(int argc, char * const argv[], const char *optstring);
 
 
+extern int close(int fildes);
+
+
 extern char *optarg;
 
 
