@@ -21,10 +21,7 @@
 .type _start, %function
 _start:
 	pop {lr}
-	pop {r0}
-	pop {r1}
-	pop {r2}
-	sub sp, #7
-	and sp, #~7
+	pop {r0-r2}
+	bic sp, #7
 	b _startc
 .size _start, .-_start
