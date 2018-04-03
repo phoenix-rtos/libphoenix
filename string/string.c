@@ -187,6 +187,18 @@ size_t strlen(const char *s)
 #endif
 
 
+#ifndef __STRNLEN
+#define __STRNLEN
+size_t strnlen(const char *s, size_t maxlen)
+{
+	unsigned int k;
+
+	for (k = 0; k < maxlen && *s != '\0'; s++, k++);
+	return k;
+}
+#endif
+
+
 #ifndef __STRCPY
 #define __STRCPY
 char *strcpy(char *dest, const char *src)

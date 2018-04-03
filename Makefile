@@ -139,7 +139,7 @@ subsystems:
 		if ! cd $$i; then\
 			exit 1;\
 		fi;\
-		if ! make; then\
+		if ! $(MAKE); then\
 			exit 1;\
 		fi;\
 		cd $$d;\
@@ -162,7 +162,7 @@ tests:
 	if ! cd test; then\
 		exit 1;\
 	fi;\
-	if ! make; then\
+	if ! $(MAKE); then\
 		exit 1;\
 	fi;\
 	cd $$d;\
@@ -175,7 +175,7 @@ depend:
 		if ! cd $$i; then\
 			exit 1;\
 		fi;\
-		if ! make -s depend; then\
+		if ! $(MAKE) -s depend; then\
 			exit 1;\
 		fi;\
 		cd $$d;\
@@ -190,7 +190,7 @@ clean:
 		if ! cd $$i; then\
 			exit 1;\
 		fi;\
-		if ! make clean; then\
+		if ! $(MAKE) clean; then\
 			exit 1;\
 		fi;\
 		cd $$d;\

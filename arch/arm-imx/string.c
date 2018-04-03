@@ -189,6 +189,29 @@ size_t strlen(const char *s)
 }
 
 
+size_t strnlen(const char *s, size_t maxlen)
+{
+	unsigned int k = 0;
+
+	__asm__ volatile
+	(" \
+	1: \
+		cmp %0, %2; \
+		bhs 2f; \
+		ldrb r1, [%1, %0]; \
+		add %0, #1; \
+		cmp r1, #0; \
+		bne 1b; \
+		sub %0, #1; \
+	2:"
+	: "+r" (k)
+	: "r" (s), "r" (maxlen)
+	: "r1", "cc");
+
+	return k;
+}
+
+
 int strcmp(const char *s1, const char *s2)
 {
 	int res = 0;

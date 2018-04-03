@@ -226,6 +226,31 @@ double fmod(double numer, double denom)
 }
 
 
+double round(double x)
+{
+	double ret, frac;
+
+	frac = modf(x, &ret);
+
+	if (frac >= 0.5)
+		ret += 1.0;
+	else if (frac <= -0.5)
+		ret -= 1.0;
+
+	return ret;
+}
+
+
+double trunc(double x)
+{
+	double ret;
+
+	modf(x, &ret);
+
+	return ret;
+}
+
+
 double fabs(double x)
 {
 	conv_t *conv = (conv_t *)&x;
