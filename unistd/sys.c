@@ -24,9 +24,6 @@ long sysconf(int name)
 }
 
 
-pid_t fork(void);
-
-
 int execv(const char *path, char *const argv[])
 {
 	return execve(path, argv, NULL);
