@@ -21,7 +21,6 @@
 #include <ctype.h>
 #include <string.h>
 #include <stddef.h>
-#include <stdlib.h>
 
 
 struct {
@@ -314,20 +313,6 @@ char *strrchr(const char *s, int c)
 	return (char *)p;
 }
 #endif
-
-
-char *strdup(const char *s1)
-{
-	int len;
-	char *result;
-
-	len = strlen(s1) + 1;
-	result = malloc(len);
-	if (result)
-		memcpy(result, s1, len);
-
-	return result;
-}
 
 
 char *strsignal(int signum)
