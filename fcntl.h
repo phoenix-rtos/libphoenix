@@ -26,9 +26,6 @@
 #define O_NONBLOCK 0x1000
 #define O_NOCTTY 0x2000
 
-#define SEEK_SET 0
-#define SEEK_CUR 1
-#define SEEK_END 2
 
 
 int fcntl(int fildes, int cmd, ...);
