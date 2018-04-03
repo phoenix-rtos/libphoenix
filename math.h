@@ -119,6 +119,14 @@ extern double floor(double x);
 extern double fmod(double numer, double denom);
 
 
+/* Return the integral value nearest to x */
+extern double round(double x);
+
+
+/* Rounds x toward zero, returning the nearest integral value that is not larger in magnitude than x. */
+extern double trunc(double x);
+
+
 /* Miscellaneous */
 
 
