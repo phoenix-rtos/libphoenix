@@ -17,7 +17,7 @@
 #define _LIBPHOENIX_PLATFORM_H_
 
 
-extern void platformctl(void *);
+extern int platformctl(void *);
 
 
 extern void wdgreload(void);
