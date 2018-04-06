@@ -18,7 +18,7 @@
 #include <stdio.h>
 #include <string.h>
 
-char **environ = NULL;
+extern char **environ;
 
 static size_t _size = 0; /* Total number of slots. */
 static size_t _cnt = 0; /* Number of currently used slots. */
@@ -31,10 +31,8 @@ static unsigned *_string_allocated = NULL;
 
 #define ENV_SIZE_INCR_DIV   (2)
 
-void _env_init(char **_environ)
+static __attribute__((constructor)) void _env_init(void)
 {
-    environ = _environ;
-
     if (environ) {
         char **c;
         for (c = environ; *c; c++)

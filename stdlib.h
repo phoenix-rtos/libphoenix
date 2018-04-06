@@ -101,10 +101,6 @@ extern void exit(int status) __attribute__((noreturn));
 extern void _Exit(int status);
 
 
-/* Initializes environment. */
-void _env_init(char **_environ);
-
-
 /* Removes variable from the environment. */
 int unsetenv(const char *name);
 
