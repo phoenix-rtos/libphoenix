@@ -101,8 +101,28 @@ extern void exit(int status) __attribute__((noreturn));
 extern void _Exit(int status);
 
 
+/* Initializes environment. */
+void _env_init(char **_environ);
+
+
+/* Removes variable from the environment. */
+int unsetenv(const char *name);
+
+
+/* Adds or changes value of environment variable. */
+int putenv(char *string);
+
+
+/* Removes all variables set in the environment. */
+int clearenv(void);
+
+
 /* Searches for the environment string pointed to by name and returns the associated value to the string. */
 extern char *getenv(const char *name);
+
+
+/* Adds or changes environment variable. If name already exists in environment, it's value is changed only if overwrite is non-zero. */
+extern int setenv(const char *name, const char *value, int overwrite);
 
 
 /* The command specified by string is passed to the host environment to be executed by the command processor. */
