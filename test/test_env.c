@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 
 #define NUM_OF_VARIABLES        (64)
 #define NUM_OF_TESTS            (1000)
@@ -36,13 +37,24 @@ typedef struct {
 static env_var_t vars[NUM_OF_VARIABLES];
 
 static int test_env_random(void);
+static int test_env_exec_start(char *path);
+static int test_env_exec_continue(void);
 
-int main(void)
+int main(int argc, char *argv[])
 {
     int res;
 
-    res = test_env_random();
-    printf("test_env: random test: %s\n", res == 0 ? "PASSED" : "FAILED");
+    if (argc == 2 && strcmp(argv[1], "-e") == 0) {
+        res = test_env_exec_continue();
+        printf("test_env: exec test: %s\n", res == 0 ? "PASSED" : "FAILED");
+
+    } else {
+        res = test_env_random();
+        printf("test_env: random test: %s\n", res == 0 ? "PASSED" : "FAILED");
+
+        res = test_env_exec_start(argv[0]);
+        printf("test_env: exec test: %s\n", res == 0 ? "PASSED" : "FAILED");
+    }
 
     return 0;
 }
@@ -141,6 +153,42 @@ static int test_env_random(void)
     }
 
     printf("\ntest_env: random test: setenv: %u, putenv: %u, unsetenv: %u, clearenv: %u\n", setenv_cnt, putenv_cnt, unsetenv_cnt, clearenv_cnt);
+
+    return 0;
+}
+
+extern char **environ;
+
+#define EXEC_TEST_VAR           ("TEST_VARIABLE")
+#define EXEC_TEST_VALUE         ("TEST_VALUE")
+
+static int test_env_exec_start(char *path)
+{
+    if (setenv(EXEC_TEST_VAR, EXEC_TEST_VALUE, 1) != 0) {
+        printf("test_env: exec test: setenv failed\n");
+        return -1;
+    }
+
+    char *argv[3];
+    argv[0] = path;
+    argv[1] = "-e";
+    argv[2] = NULL;
+
+    if (execve(path, argv, environ) != 0) {
+        printf("test_env: exec test: execve failed\n");
+        return -1;
+    }
+
+    return 0;
+}
+
+static int test_env_exec_continue(void)
+{
+    char *v = getenv(EXEC_TEST_VAR);
+    if (!v || strcmp(v, EXEC_TEST_VALUE) != 0) {
+        printf("test_env: exec test: Test variable is not set or has wrong value.\n");
+        return -1;
+    }
 
     return 0;
 }
