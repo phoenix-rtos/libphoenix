@@ -5,7 +5,7 @@
  *
  * fcntl.h
  *
- * Copyright 2017 Phoenix Systems
+ * Copyright 2017, 2018 Phoenix Systems
  * Author: Aleksander Kaminski
  *
  * This file is part of Phoenix-RTOS.
@@ -23,14 +23,16 @@
 #define O_CREAT 0x0100
 #define O_TRUNC 0x0200
 #define O_EXCL 0x0400
+#define O_SYNC 0x0800
 #define O_NONBLOCK 0x1000
 #define O_NOCTTY 0x2000
 
 
-
 int fcntl(int fildes, int cmd, ...);
 
+
 int open(const char *path, int oflag, ...);
+
 
 /* cmd's for fcntl */
 enum { F_DUPFD, F_DUPFD_CLOEXEC, F_GETFD, F_SETFD, F_GETFL, F_SETFL,
