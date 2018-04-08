@@ -31,7 +31,8 @@ static unsigned *_string_allocated = NULL;
 
 #define ENV_SIZE_INCR_DIV   (2)
 
-static __attribute__((constructor)) void _env_init(void)
+
+void _env_init(void)
 {
 	if (environ) {
 		char **c;

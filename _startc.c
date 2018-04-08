@@ -19,29 +19,19 @@
 #include <stdio.h>
 
 
+extern void _malloc_init(void);
+extern int _env_init(void);
 extern int main(int argc, char **argv);
-
-typedef void (*init_func_t)(void);
-
-extern const init_func_t __init_array_start[];
-extern const init_func_t __init_array_end[];
-
 
 char **environ;
 
+
 void _startc(int argc, char **argv, char **env)
 {
-	const init_func_t *fp;
-	init_func_t f;
-
 	environ = env;
 
-	for (fp = __init_array_start; fp != __init_array_end; ++fp) {
-		f = *fp;
-		if (!f || !~(unsigned)f)
-			continue;
-		f();
-	}
+	_malloc_init();
+	_env_init();
 
 	exit(main(argc, argv));
 }

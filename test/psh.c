@@ -627,7 +627,7 @@ int main(void)
 
 	/* Wait for console */
 	while (write(1, "", 0) < 0)
-		usleep(10000);
+		usleep(50000);
 
 	psh_run();
 	return 0;

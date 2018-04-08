@@ -67,7 +67,7 @@ extern int strcasecmp(const char *str1, const char *str2);
 
 
 /* Compares at most the first n bytes of str1 and str2. */
-extern int strncmp(const char *str1, const char *str2, size_t n);
+extern int strncmp(const char *str1, const char *str2, unsigned int n);
 
 
 /* Compares at most the first n bytes of str1 and str2 case-insensitively. */

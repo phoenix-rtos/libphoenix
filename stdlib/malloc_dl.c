@@ -539,8 +539,7 @@ void *realloc(void *ptr, size_t size)
 }
 
 
-__attribute__((constructor(10)))
-static void _malloc_init(void)
+void _malloc_init(void)
 {
 	int i;
 
