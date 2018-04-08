@@ -3,10 +3,10 @@
  *
  * libphoenix
  *
- * Entrypoint (arm-imx)
+ * Entrypoint (ia32)
  *
  * Copyright 2018 Phoenix Systems
- * Author; Aleksander Kaminski
+ * Author: Michał Mirosław
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -20,8 +20,5 @@
 .globl _start
 .type _start, %function
 _start:
-	pop {lr}
-	pop {r0-r2}
-	bic sp, #7
-	b _startc
+	jmp _startc
 .size _start, .-_start

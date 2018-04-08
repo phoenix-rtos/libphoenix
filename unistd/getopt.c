@@ -21,7 +21,7 @@
 char *optarg;
 
 
-int optind, opterr, optopt;
+int optind = 1, opterr, optopt;
 
 
 int getopt(int argc, char * const argv[], const char *optstring)

@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * cos, sin, acos, asin, atan
+ * cos, sin, tan, acos, asin, atan
  *
  * Copyright 2017, 2018 Phoenix Systems
  * Author: Aleksander Kaminski
@@ -92,6 +92,18 @@ double sin(double x)
 	}
 
 	return res;
+}
+
+
+double tan(double x)
+{
+	double c = cos(x);
+
+	if (c > 0.0 || c < 0.0)
+		return sin(x) / c;
+
+	/* TODO errno EDOM */
+	return NAN;
 }
 
 

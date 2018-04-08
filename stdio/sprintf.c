@@ -76,12 +76,3 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap)
 {
 	return 0;
 }
-
-
-int vasprintf(char **strp, const char *fmt, va_list ap)
-{
-	/* Temporary */
-	*strp = malloc(1024);
-	vsprintf(*strp, fmt, ap);
-	return 0;
-}

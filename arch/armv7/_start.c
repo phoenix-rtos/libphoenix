@@ -13,16 +13,11 @@
  * %LICENSE%
  */
 
-#include ARCH
-#include "stdlib.h"
-
-
-extern int main(int argc, char **argv);
+__attribute__((noreturn))
+extern int _startc(void);
 
 
 void _start(void)
 {
-	_malloc_init();
-
-	exit(main(1, 0));
+	_startc();
 }

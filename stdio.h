@@ -145,6 +145,10 @@ extern int printf(const char *format, ...);
 extern int sprintf(char *str, const char *format, ...);
 
 
+/* Sends formatted output to a string. */
+extern int snprintf(char *str, size_t n, const char *format, ...);
+
+
 /* Sends formatted output to a stream using an argument list. */
 extern int vfprintf(FILE *stream, const char *format, va_list arg);
 

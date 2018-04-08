@@ -24,6 +24,9 @@
 #include <sys/types.h>
 
 
+typedef enum { CLOCK_MONOTONIC = 0, CLOCK_REALTIME } clockid_t;
+
+
 struct tm {
 	int tm_sec;
 	int tm_min;
@@ -41,9 +44,6 @@ struct timespec {
 	time_t tv_sec;
 	long tv_nsec;
 };
-
-
-typedef int clockid_t;
 
 
 extern int gettime(time_t *tp);

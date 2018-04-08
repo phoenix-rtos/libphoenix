@@ -62,8 +62,16 @@ extern char *strchr(const char *str, int c);
 extern int strcmp(const char *str1, const char *str2);
 
 
-/* Compares at most the first n bytes of str1 and str2. - defined in stddef.h */
-//extern int strncmp(const char *str1, const char *str2, size_t n);
+/* Compares the string pointed to, by str1 to the string pointed to by str2 case-insensitively. */
+extern int strcasecmp(const char *str1, const char *str2);
+
+
+/* Compares at most the first n bytes of str1 and str2. */
+extern int strncmp(const char *str1, const char *str2, size_t n);
+
+
+/* Compares at most the first n bytes of str1 and str2 case-insensitively. */
+extern int strncasecmp(const char *s1, const char *s2, int n);
 
 
 /* Compares string str1 to str2. The result is dependent on the LC_COLLATE setting of the location. */
@@ -128,5 +136,13 @@ extern char *strchr(const char *str, int z);
 
 
 extern char *strdup(const char *s1);
+
+
+__attribute__((always_inline))
+static inline void *bzero(void *p, size_t sz)
+{
+	return memset(p, 0, sz);
+}
+
 
 #endif

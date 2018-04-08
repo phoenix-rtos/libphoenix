@@ -33,6 +33,10 @@ extern double cos(double x);
 extern double sin(double x);
 
 
+/* Returns the tangent of an angle of x radians. */
+extern double tan(double x);
+
+
 /* Returns the principal value of the arc cosine of x, expressed in radians. */
 extern double acos(double x);
 
@@ -132,6 +136,33 @@ extern double trunc(double x);
 
 /* Returns the absolute value of x: |x|. */
 extern double fabs(double x);
+
+
+/* C99 extensions */
+#define cosf(x) cos(x)
+#define sinf(x) sin(x)
+#define tanf(x) tan(x)
+#define acosf(x) acos(x)
+#define asinf(x) asin(x)
+#define atanf(x) atan(x)
+#define atan2f(y, x) atan2(y, x)
+#define coshf(x) cosh(x)
+#define sinhf(x) sinh(x)
+#define tanhf(x) tanh(x)
+#define expf(x) exp(x)
+#define frexpf(x, exp) frexp(x, exp)
+#define ldexpf(x, exp) ldexp(x, exp)
+#define logf(x) log(x)
+#define log10f(x) log10(x)
+#define modff(x, intpart) modf(x, intpart)
+#define powf(base, exponent) pow(base, exponent)
+#define sqrtf(x) sqrt(x)
+#define roundf(x) round(x)
+#define ceilf(x) ceil(x)
+#define floorf(x) floor(x)
+#define fmodf(numer, denom) fmod(numer, denom)
+#define truncf(x) trunc(x)
+#define fabsf(x) fabs(x)
 
 
 #endif

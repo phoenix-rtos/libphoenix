@@ -94,15 +94,31 @@ extern int atexit(void (*func)(void));
 
 
 /* Causes the program to terminate normally.*/
-extern void exit(int status);
+extern void exit(int status) __attribute__((noreturn));
 
 
 /* Causes the program to terminate without cleanup.*/
 extern void _Exit(int status);
 
 
+/* Removes variable from the environment. */
+int unsetenv(const char *name);
+
+
+/* Adds or changes value of environment variable. */
+int putenv(char *string);
+
+
+/* Removes all variables set in the environment. */
+int clearenv(void);
+
+
 /* Searches for the environment string pointed to by name and returns the associated value to the string. */
 extern char *getenv(const char *name);
+
+
+/* Adds or changes environment variable. If name already exists in environment, it's value is changed only if overwrite is non-zero. */
+extern int setenv(const char *name, const char *value, int overwrite);
 
 
 /* The command specified by string is passed to the host environment to be executed by the command processor. */
@@ -163,10 +179,6 @@ extern size_t wcstombs(char *str, const wchar_t *pwcs, size_t n);
 
 /* Examines the code which corresponds to a multibyte character given by the argument wchar. */
 extern int wctomb(char *str, wchar_t wchar);
-
-
-/* malloc constructor */
-extern void _malloc_init(void);
 
 
 /* Return canonicalized absolute path, to be deallocated with free() */

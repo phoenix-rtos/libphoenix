@@ -5,7 +5,7 @@
 # Author: Pawel Pisarczyk
 #
 
-SRCS = string.c fnmatch.c glob.c
+SRCS = string.c strdup.c fnmatch.c glob.c
 OBJS = $(SRCS:.c=.o)
 
 

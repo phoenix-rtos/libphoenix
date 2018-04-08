@@ -24,9 +24,11 @@
 .type sym, @function; \
 .align 4, 0x90; \
 sym: \
+	.cfi_startproc; \
 	movl $sn, %eax; \
 	int $0x80; \
 	ret; \
+	.cfi_endproc; \
 .size sym, .-sym
 
 
