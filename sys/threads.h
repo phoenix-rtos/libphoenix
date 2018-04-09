@@ -18,6 +18,7 @@
 
 #include ARCH
 #include "../phoenix-rtos-kernel/include/sysinfo.h"
+#include "../phoenix-rtos-kernel/include/signal.h"
 
 extern int beginthreadex(void (*start)(void *), unsigned int priority, void *stack, unsigned int stacksz, void *arg, handle_t *id);
 
@@ -51,5 +52,16 @@ extern int condWait(handle_t h, handle_t m, time_t timeout);
 
 extern int condSignal(handle_t h);
 
+
+extern int signalHandle(void (*handler)(int), unsigned mask, unsigned mmask);
+
+
+extern int signalPost(int pid, int signal);
+
+
+extern int signalReturn(int signal);
+
+
+extern int signalMask(unsigned mask, unsigned mmask);
 
 #endif

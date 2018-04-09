@@ -244,7 +244,7 @@ static int psh_mem(char *args)
 			if (len) {
 				info.entry.pid = strtoul(arg, &end, 16);
 
-				if (end + 1 != args + len || (!info.entry.pid && *arg != '0')) {
+				if (end != args + len || (!info.entry.pid && *arg != '0')) {
 					printf("mem: could not parse process id: '%s'\n", arg);
 					return EOK;
 				}
@@ -566,6 +566,30 @@ int psh_cat(char *args)
 }
 
 
+static int psh_kill(char *arg)
+{
+	unsigned len, pid;
+	char *end;
+
+	arg = psh_nextString(arg, &len);
+
+	if (!len) {
+		printf("kill: missing argument (pid)\n");
+		return -EINVAL;
+	}
+
+	pid = strtoul(arg, &end, 16);
+
+	if ((end != arg + len) || (pid == 0 && *arg != '0')) {
+		printf("kill: could not parse process id: '%s'\n", arg);
+		return -EINVAL;
+	}
+
+	return signalPost(pid, signal_kill);
+}
+
+
+
 void psh_run(void)
 {
 	unsigned int n;
@@ -604,6 +628,9 @@ void psh_run(void)
 
 		else if (!strcmp(cmd, "exec"))
 			psh_exec(cmd + 5);
+
+		else if (!strcmp(cmd, "kill"))
+			psh_kill(cmd + 5);
 
 		else if (cmd[0] == '/')
 			psh_runfile(cmd);
