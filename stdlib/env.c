@@ -42,15 +42,13 @@ void _env_init(void)
 	}
 }
 
-static char *_env_find(const char *name, int *idx)
+static char *_env_find(const char *name, size_t len, int *idx)
 {
-	unsigned i, len;
+	unsigned i;
 	char **c;
 
 	if (!environ)
 		return NULL;
-
-	len = strlen(name);
 
 	for (c = environ, i = 0; *c; c++, i++) {
 		if (strncmp(*c, name, len) == 0 && (*c)[len] == '=') {
@@ -64,9 +62,11 @@ static char *_env_find(const char *name, int *idx)
 
 static int _env_insert(int idx, char *v, unsigned allocated)
 {
+	size_t cnt = _cnt;
+
 	if (idx < 0) { /* If not reusing slot */
 
-		if (_cnt + 1 >= _size) { /* No free slots */
+		if (cnt + 1 >= _size) { /* No free slots */
 
 			size_t incr, new_size;
 			char **new_environ;
@@ -85,6 +85,7 @@ static int _env_insert(int idx, char *v, unsigned allocated)
 				}
 
 			} else {
+
 				new_environ = malloc(sizeof(char*) * new_size);
 				if (!new_environ) {
 					errno = ENOMEM;
@@ -104,7 +105,7 @@ static int _env_insert(int idx, char *v, unsigned allocated)
 				_string_allocated = realloc(_string_allocated, sizeof(unsigned) * new_size);
 		}
 
-		idx = _cnt;
+		idx = cnt++;
 	}
 
 	if (allocated && !_string_allocated) {
@@ -123,7 +124,7 @@ static int _env_insert(int idx, char *v, unsigned allocated)
 	}
 
 	environ[idx] = v;
-	_cnt++;
+	_cnt = cnt;
 
 	return 0;
 }
@@ -136,7 +137,7 @@ int unsetenv(const char *name)
 	}
 
 	int idx;
-	char *v = _env_find(name, &idx);
+	char *v = _env_find(name, strlen(name), &idx);
 	if (!v)
 		return 0;
 
@@ -157,7 +158,19 @@ int unsetenv(const char *name)
 
 int putenv(char *string)
 {
-	return _env_insert(-1, string, 0);
+	int idx = -1;
+	char *x;
+
+	if ((x = strchr(string, '=')) == NULL) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	size_t name_len = (size_t)(x - string);
+
+	_env_find(string, name_len, &idx);
+
+	return _env_insert(idx, string, 0);
 }
 
 
@@ -187,7 +200,7 @@ int clearenv(void)
 
 char *getenv(const char *name)
 {
-	char *v = _env_find(name, NULL);
+	char *v = _env_find(name, strlen(name), NULL);
 	if (!v)
 		return NULL;
 	v = strchr(v, '=') + 1;
@@ -206,7 +219,7 @@ int setenv(const char *name, const char *value, int overwrite)
 
 	len = strlen(name) + strlen(value) + 2; /* name, value, '=', '\0' */
 
-	char *v = _env_find(name, &idx);
+	char *v = _env_find(name, strlen(name), &idx);
 	if (v) {
 		if (!overwrite)
 			return 0;
@@ -224,7 +237,9 @@ int setenv(const char *name, const char *value, int overwrite)
 			v = NULL;
 		}
 
-	} else {
+	}
+
+	if (!v) {
 		v = malloc(sizeof(char) * len);
 		if (!v) {
 			errno = ENOMEM;
@@ -236,6 +251,7 @@ int setenv(const char *name, const char *value, int overwrite)
 		/* Insert can fail only if we're not reusing slot, so if it fails then
 		 * we know that v was dynamically allocated and has to be freed. */
 		free(v);
+		return -1;
 	}
 
 	char *c = v;

@@ -81,7 +81,7 @@ static int test_env_random(void)
 		if (rand()%CLEARENV_APPROX_EVERY == 0) {
 			clearenv_cnt++;
 			if ((res = clearenv()) != 0) {
-				printf("%u/%u: clearenv() failed (%d)", i, NUM_OF_TESTS, res);
+				printf("\n\rclearenv() failed (%d)", i, res);
 				return -1;
 			}
 
@@ -91,10 +91,11 @@ static int test_env_random(void)
 
 		} else {
 			unsigned idx = rand()%NUM_OF_VARIABLES;
-			if (vars[idx].set) { /* unsetenv */
+			unsigned action = rand()%3;
+			if (action == 2) { /* unsetenv */
 				unsetenv_cnt++;
 				if ((res = unsetenv(vars[idx].name)) != 0) {
-					printf("%u/%u: unsetenv(%s) failed (%d)", i, NUM_OF_TESTS, vars[idx].name, res);
+					printf("\n\runsetenv(%s) failed (%d)", vars[idx].name, res);
 					return -1;
 				}
 
@@ -104,24 +105,30 @@ static int test_env_random(void)
 
 				/* Generate random value */
 				unsigned len = rand()%MAX_VALUE_LEN;
+				char new_value[MAX_VALUE_LEN];
 				for (j = 0; j < len; j++) {
 					char c;
 					do {
 						c = 33 + rand()%94;
 					} while (c == '\0' || c == '=');
-					vars[idx].value[j] = c;
+					new_value[j] = c;
 				}
-				vars[idx].value[len] = '\0';
+				new_value[len] = '\0';
 
-				unsigned action = rand()%2;
 				if (action) { /* setenv */
+					unsigned overwrite = rand()%2;
+
 					setenv_cnt++;
-					if ((res = setenv(vars[idx].name, vars[idx].value, 1)) != 0) {
-						printf("%u/%u: setenv(%s, %s, 1) failed (%d)", i, NUM_OF_TESTS, vars[idx].name, vars[idx].value, res);
+					if ((res = setenv(vars[idx].name, new_value, overwrite)) != 0) {
+						printf("\n\rsetenv(%s, %s, %u) failed (%d)", vars[idx].name, new_value, overwrite, res);
 						return -1;
 					}
 
+					if (!vars[idx].set || overwrite) strcpy(vars[idx].value, new_value);
+
 				} else { /* putenv */
+					strcpy(vars[idx].value, new_value);
+
 					char *s = vars[idx].s;
 					strcpy(s, vars[idx].name);
 					s += strlen(vars[idx].name);
@@ -130,7 +137,7 @@ static int test_env_random(void)
 
 					putenv_cnt++;
 					if ((res = putenv(vars[idx].s)) != 0) {
-						printf("%u/%u: putenv(%s) failed (%d)", i, NUM_OF_TESTS, vars[idx].s, res);
+						printf("\n\rputenv(%s) failed (%d)", vars[idx].s, res);
 						return -1;
 					}
 				}
@@ -143,16 +150,16 @@ static int test_env_random(void)
 		for (j = 0; j < NUM_OF_VARIABLES; j++) {
 			char *v = getenv(vars[j].name);
 			if (!vars[j].set && v != NULL) {
-				printf("%u/%u: getenv returned value other than NULL for unset variable (%s)\n", i, NUM_OF_TESTS, vars[j].name);
+				printf("\n\rgetenv returned value other than NULL for unset variable (%s)\n", vars[j].name);
 				return -1;
 			} else if (vars[j].set && (!v || strcmp(v, vars[j].value) != 0)) {
-				printf("%u/%u: getenv returned invalid value for set variable (%s)\n", i, NUM_OF_TESTS, vars[j].name);
+				printf("\n\rgetenv returned invalid value for set variable (%s)\n", vars[j].name);
 				return -1;
 			}
 		}
 	}
 
-	printf("\ntest_env: random test: setenv: %u, putenv: %u, unsetenv: %u, clearenv: %u\n", setenv_cnt, putenv_cnt, unsetenv_cnt, clearenv_cnt);
+	printf("\n\rtest_env: random test: setenv: %u, putenv: %u, unsetenv: %u, clearenv: %u\n", setenv_cnt, putenv_cnt, unsetenv_cnt, clearenv_cnt);
 
 	return 0;
 }
