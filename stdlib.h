@@ -134,7 +134,10 @@ extern void qsort(void *base, size_t nitems, size_t size, int (*compar)(const vo
 
 
 /* Returns the absolute value of x. */
-extern int abs(int x);
+static inline int abs(int x)
+{
+	return x >= 0 ? x : -x;
+}
 
 
 /* Divides numer (numerator) by denom (denominator). */
@@ -142,7 +145,10 @@ extern div_t div(int numer, int denom);
 
 
 /* Returns the absolute value of x. */
-extern long int labs(long int x);
+static inline long int labs(long int x)
+{
+	return x >= 0 ? x : -x;
+}
 
 
 /* Divides numer (numerator) by denom (denominator). */
