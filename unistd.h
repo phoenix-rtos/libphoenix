@@ -39,7 +39,7 @@ enum {
 extern int vfork(void);
 
 
-extern id_t fork(void);
+extern pid_t fork(void);
 
 
 extern int execle(const char *path, const char *arg, ...);
