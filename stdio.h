@@ -157,6 +157,10 @@ extern int vprintf(const char *format, va_list arg);
 extern int vsprintf(char *str, const char *format, va_list arg);
 
 
+/* Sends formatted output to a string using an argument list. */
+int vsnprintf(char *str, size_t n, const char *format, va_list arg);
+
+
 /* Reads formatted input from a stream. */
 extern int fscanf(FILE *stream, const char *format, ...);
 
