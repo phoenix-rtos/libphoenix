@@ -6,7 +6,7 @@
  * stat.h
  *
  * Copyright 2018 Phoenix Systems
- * Author: Jan Sikorski
+ * Author: Jan Sikorski, Kamil Amanowicz
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -100,6 +100,9 @@ extern int lstat(const char *path, struct stat *buf);
 
 
 extern int stat(const char *path, struct stat *buf);
+
+
+extern int fstat(int fildes, struct stat *buf);
 
 
 extern mode_t umask(mode_t cmask);

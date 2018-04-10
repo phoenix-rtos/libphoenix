@@ -6,7 +6,7 @@
  * unistd.h
  *
  * Copyright 2017, 2018 Phoenix Systems
- * Author: Pawel Pisarczyk
+ * Author: Pawel Pisarczyk, Kamil Amanowicz
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -25,6 +25,9 @@
 
 #define _SC_CLK_TCK 0
 
+#define SEEK_SET 0
+#define SEEK_CUR 1
+#define SEEK_END 2
 
 enum {
 	F_OK = 0,
@@ -88,6 +91,12 @@ extern int getopt(int argc, char * const argv[], const char *optstring);
 
 
 extern int close(int fildes);
+
+
+extern off_t lseek(int fildes, off_t offset, int whence);
+
+
+extern int ftruncate(int fildes, off_t length);
 
 
 extern char *optarg;

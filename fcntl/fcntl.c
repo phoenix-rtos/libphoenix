@@ -34,7 +34,7 @@ int open(const char *path, int oflag, ...)
 	if (path == NULL)
 		return -EINVAL;
 
-	if (lookup((char *)path, &oid) == EOK)
+	if (lookup((char *)path, &oid) != EOK)
 		return -EACCES;
 
 	msg.type = mtOpen;

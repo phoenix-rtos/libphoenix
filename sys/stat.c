@@ -6,7 +6,7 @@
  * stat
  *
  * Copyright 2018 Phoenix Systems
- * Author: Jan Sikorski
+ * Author: Jan Sikorski, Kamil Amanowicz
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -15,6 +15,7 @@
 
 #include <sys/stat.h>
 #include <sys/msg.h>
+#include <sys/file.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
@@ -22,7 +23,52 @@
 
 int fstat(int fildes, struct stat *buf)
 {
-	return -ENOSYS;
+	oid_t oid;
+	msg_t msg = { 0 };
+
+	if (fileGet(fildes, 1, &oid, NULL) != EOK)
+	   return -EBADF;
+
+	buf->st_ino = oid.id;
+
+	msg.type = mtGetAttr;
+	msg.i.attr.oid = oid;
+	msg.i.attr.val = 0;
+
+	msg.i.attr.type = 1; /* Uid */
+	msgSend(oid.port, &msg);
+	buf->st_uid = msg.o.attr.val;
+
+	msg.i.attr.type = 2; /* Gid */
+	msgSend(oid.port, &msg);
+	buf->st_gid = msg.o.attr.val;
+
+	msg.i.attr.type = 3; /* Size */
+	msgSend(oid.port, &msg);
+	buf->st_size = msg.o.attr.val;
+
+	msg.i.attr.type = 4; /* Type */
+	msgSend(oid.port, &msg);
+
+	switch (msg.o.attr.val) {
+	case 0:
+		buf->st_mode = S_IFDIR;
+		break;
+
+	case 1:
+		buf->st_mode = S_IFREG;
+		break;
+
+	case 2:
+		buf->st_mode = S_IFCHR;
+		break;
+	}
+
+	msg.i.attr.type = 5; /* Port */
+	msgSend(oid.port, &msg);
+	buf->st_dev = msg.o.attr.val;
+
+	return EOK;
 }
 
 

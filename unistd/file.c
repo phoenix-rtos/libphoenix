@@ -6,7 +6,7 @@
  * unistd (POSIX routines for file operations)
  *
  * Copyright 2017-2018 Phoenix Systems
- * Author: Aleksander Kaminski, Pawel Pisarczyk
+ * Author: Aleksander Kaminski, Pawel Pisarczyk, Kamil Amanowicz
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -21,10 +21,11 @@
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <sys/msg.h>
 #include <sys/file.h>
 #include <sys/types.h>
-
+#include <sys/stat.h>
 
 int close(int fildes)
 {
@@ -125,6 +126,26 @@ int poll(struct pollfd *fds, nfds_t nfds, int timeout)
 
 int ftruncate(int fildes, off_t length)
 {
+	oid_t oid;
+	msg_t msg = { 0 };
+
+	if (length < 0)
+		return -EINVAL;
+
+	if (fileGet(fildes, 1, &oid, NULL) != EOK)
+		return -EBADF;
+
+	msg.type = mtTruncate;
+	memcpy(&msg.i.io.oid, &oid, sizeof(oid_t));
+
+	msg.i.io.len = length;
+
+	if (msgSend(oid.port, &msg) < 0)
+		return -1;
+
+	if (msg.o.io.err != EOK)
+		return -EIO;
+
 	return EOK;
 }
 
@@ -144,4 +165,53 @@ int unlink(const char *path)
 int symlink(const char *path1, const char *path2)
 {
 	return 0;
+}
+
+off_t lseek(int fildes, off_t offset, int whence)
+{
+	oid_t oid;
+	offs_t offs;
+	struct stat buf;
+
+	if (fileGet(fildes, 3, &oid, &offs) != EOK)
+		return -EBADF;
+
+	switch (whence) {
+
+	case SEEK_SET:
+		fileSet(fildes, 2, NULL, offset);
+		break;
+
+	case SEEK_CUR:
+		if (offset < 0 && ~offset + 1 > offs)
+			offs = 0;
+		else
+			offs += offset;
+
+		if (offset > 0 && offset > offs)
+			return -75; //EOVERFLOW;
+
+		fileSet(fildes, 2, NULL, offs);
+		break;
+
+	case SEEK_END:
+		if (fstat(fildes, &buf) != EOK)
+			return -EBADF;
+
+		if (offset < 0 && ~offset + 1 > buf.st_size)
+			offs = 0;
+		else
+			offs = buf.st_size + offset;
+
+		if (offset > 0 && offs < buf.st_size)
+			return -75; //EOVERFLOW;
+
+		fileSet(fildes, 2, NULL, offs);
+		break;
+
+	default:
+		return -EINVAL;
+	}
+
+	return EOK;
 }
