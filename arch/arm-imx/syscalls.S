@@ -23,7 +23,9 @@
 .globl sym; \
 .type sym, %function; \
 sym: \
+	push {r0-r3}; \
 	svc $sn; \
+	add sp, #16; \
 	blx lr; \
 .size sym, .-sym
 
