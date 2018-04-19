@@ -23,10 +23,18 @@
 .globl sym; \
 .type sym, %function; \
 sym: \
+	.cfi_startproc; \
 	push {r0-r3}; \
+	.cfi_adjust_cfa_offset 16; \
+	.cfi_rel_offset r0, 0; \
+	.cfi_rel_offset r1, 4; \
+	.cfi_rel_offset r2, 8; \
+	.cfi_rel_offset r3, 12; \
 	svc $sn; \
 	add sp, #16; \
+	.cfi_adjust_cfa_offset -16; \
 	blx lr; \
+	.cfi_endproc; \
 .size sym, .-sym
 
 
