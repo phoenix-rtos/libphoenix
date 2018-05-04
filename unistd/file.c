@@ -66,7 +66,7 @@ ssize_t read(int fildes, void *buf, size_t nbyte)
 	msg.type = mtRead;
 	memcpy(&msg.i.io.oid, &oid, sizeof(oid_t));
 
-	msg.i.io.offs = 0;
+	msg.i.io.offs = offs;
 	msg.i.data = NULL;
 	msg.i.size = 0;
 
@@ -75,6 +75,11 @@ ssize_t read(int fildes, void *buf, size_t nbyte)
 
 	if (msgSend(oid.port, &msg) < 0)
 		return -1;
+
+	if (msg.o.io.err > 0) {
+		offs += msg.o.io.err;
+		fileSet(fildes, 2, NULL, offs);
+	}
 
 	return msg.o.io.err;
 }
@@ -92,7 +97,7 @@ ssize_t write(int fildes, void *buf, size_t nbyte)
 	msg.type = mtWrite;
 	memcpy(&msg.i.io.oid, &oid, sizeof(oid_t));
 
-	msg.i.io.offs = 0;
+	msg.i.io.offs = offs;
 	msg.i.data = buf;
 	msg.i.size = nbyte;
 
@@ -101,6 +106,11 @@ ssize_t write(int fildes, void *buf, size_t nbyte)
 
 	if (msgSend(oid.port, &msg) < 0)
 		return -1;
+
+	if (msg.o.io.err > 0) {
+		offs += msg.o.io.err;
+		fileSet(fildes, 2, NULL, offs);
+	}
 
 	return msg.o.io.err;
 }
