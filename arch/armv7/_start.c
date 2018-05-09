@@ -14,10 +14,10 @@
  */
 
 __attribute__((noreturn))
-extern int _startc(void);
+extern int _startc(int argc, char **argv, char **env);
 
 
-void _start(void)
+void _start(int argc, char **argv, char **env)
 {
-	_startc();
+	_startc(argc, argv, env);
 }

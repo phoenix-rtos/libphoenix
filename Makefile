@@ -77,6 +77,8 @@ ifneq (, $(findstring armv7, $(TARGET)))
 
 	OBJCOPY = $(CROSS)objcopy
 	OBJDUMP = $(CROSS)objdump
+
+	STRIP = $(CROSS)strip
 endif
 
 ############ ARM (Cortex-A5/A7/A9) ############

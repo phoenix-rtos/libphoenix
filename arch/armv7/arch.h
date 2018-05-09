@@ -58,6 +58,9 @@ typedef int s32;
 typedef long long s64;
 
 
+typedef u32 addr_t;
+
+
 typedef unsigned int size_t;
 typedef int ssize_t;
 typedef unsigned long long time_t;
