@@ -7,7 +7,7 @@
 #
 
 SIL ?= @
-MAKEFLAGS += --no-print-directory
+MAKEFLAGS += --no-print-directory --output-sync
 
 #TARGET ?= arm-imx
 #TARGET ?= armv7-stm32-tiramisu
@@ -140,19 +140,13 @@ all: subsystems $(OBJS) $(LIB) tests
 	echo "data=$$datasz\t text=$$textsz")
 
 
-subsystems:
-	@for i in $(SUBDIRS); do\
-		d=`pwd`;\
-		echo "\033[1;32mCOMPILE $$i\033[0m";\
-		if ! cd $$i; then\
-			exit 1;\
-		fi;\
-		if ! $(MAKE); then\
-			exit 1;\
-		fi;\
-		cd $$d;\
-	done;
+subsystems: $(ARCHS)
 
+%/$(ARCH):
+	@+echo "\033[1;32mCOMPILE $(@D)\033[0m";\
+	if ! $(MAKE) -C "$(@D)"; then\
+		exit 1;\
+	fi;\
 
 $(LIB): $(ARCHS) $(OBJS)
 	@echo "\033[1;34mLD $@\033[0m"
@@ -164,7 +158,7 @@ $(LIB): $(ARCHS) $(OBJS)
 	echo "")
 
 
-tests:
+tests: $(LIB)
 	@d=`pwd`;\
 	echo "\033[1;32mCOMPILE test\033[0m";\
 	if ! cd test; then\
