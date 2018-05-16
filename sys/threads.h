@@ -53,6 +53,9 @@ extern int condWait(handle_t h, handle_t m, time_t timeout);
 extern int condSignal(handle_t h);
 
 
+extern int resourceDestroy(handle_t h);
+
+
 extern int signalHandle(void (*handler)(int), unsigned mask, unsigned mmask);
 
 
