@@ -67,13 +67,15 @@ ifneq (, $(findstring armv7, $(TARGET)))
 		-fpic -fpie -msingle-pic-base -mno-pic-data-is-text-relative\
 		-DVERSION=\"$(VERSION)\" -DARCH=\"arch/armv7/arch.h\" -DNOMMU
 
+	CFLAGS += -fdata-sections -ffunction-sections
+
 	AR = $(CROSS)ar
 	ARFLAGS = -r
 
 	LD = $(CROSS)ld
 	LDFLAGS = -nostdlib -e _start --section-start .text=0 -Tbss=20000000 -z max-page-size=0x10
+	LDFLAGS += --gc-sections
 	GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
-#GCCLIB := ../$(GCCLIB)
 
 	OBJCOPY = $(CROSS)objcopy
 	OBJDUMP = $(CROSS)objdump
@@ -93,15 +95,18 @@ ifneq (, $(findstring arm-imx, $(TARGET)))
 	CC = $(CROSS)gcc
 
 	CFLAGS += -Os -Wall -Wstrict-prototypes -g -I$(SRCDIR) -nostartfiles -nostdlib\
-		-mcpu=cortex-a7 -mtune=cortex-a7 -mfloat-abi=hard -mthumb\
+		-mcpu=cortex-a7 -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard -mthumb\
 		-fomit-frame-pointer -ffreestanding -mno-unaligned-access\
 		-DVERSION=\"$(VERSION)\" -DARCH=\"arch/arm-imx/arch.h\"
+
+	CFLAGS += -fdata-sections -ffunction-sections
 
 	AR = $(CROSS)ar
 	ARFLAGS = -r
 
 	LD = $(CROSS)ld
 	LDFLAGS = -nostdlib -z max-page-size=0x1000
+	LDFLAGS += --gc-sections
 	GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 
 	OBJCOPY = $(CROSS)objcopy
