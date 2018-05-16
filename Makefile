@@ -9,9 +9,9 @@
 SIL ?= @
 MAKEFLAGS += --no-print-directory
 
-#TARGET = arm-imx
-#TARGET = armv7-stm32-tiramisu
-TARGET = ia32-qemu
+#TARGET ?= arm-imx
+#TARGET ?= armv7-stm32-tiramisu
+TARGET ?= ia32-qemu
 
 VERSION = 0.2
 SRCDIR := $(CURDIR)
