@@ -117,6 +117,15 @@ endif
 ARCH = code.a
 ARCHS := $(shell for i in $(SUBDIRS); do echo "$$i/$(ARCH)"; done)
 OBJS := _startc.o
+HEADERS := $(shell find . $(SUBDIRS) -maxdepth 1  -name \*.h)
+
+SYSROOT 		:= $(shell $(CC) $(CFLAGS) -print-sysroot)
+MULTILIB_DIR 	:= $(shell $(CC) $(CFLAGS) -print-multi-directory)
+LIBC_INSTALL_DIR := $(SYSROOT)/lib/$(MULTILIB_DIR)
+HEADERS_INSTALL_DIR := $(SYSROOT)/usr/include/
+ifeq (/,$(SYSROOT))
+$(error Sysroot is not supported by Your toolchain. Use cross-toolchain to compile)
+endif
 
 export SIL TARGET LIB CC CFLAGS MKDEP MKDEPFLAGS AR ARFLAGS LD LDFLAGS GCCLIB ARCH OBJDUMP STRIP
 
@@ -182,6 +191,16 @@ depend:
 		cd $$d;\
 	done;
 
+install: $(LIB)
+	@mkdir -p "$(LIBC_INSTALL_DIR)" "$(HEADERS_INSTALL_DIR)"; \
+	cp -a "$<" "$(LIBC_INSTALL_DIR)"; \
+	for file in $(HEADERS); do\
+		install -m 644 -D $${file} $(HEADERS_INSTALL_DIR)/$${file};\
+	done
+
+uninstall:
+	rm -rf "$(LIBC_INSTALL_DIR)/$(LIB)"
+	rm -rf "$(HEADERS_INSTALL_DIR)"
 
 clean:
 	@rm -f core *.o $(LIB)
@@ -198,5 +217,5 @@ clean:
 	done;
 
 
-.PHONY: clean
+.PHONY: clean install uninstall
 # DO NOT DELETE
