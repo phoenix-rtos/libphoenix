@@ -20,7 +20,7 @@
 extern int errno;
 
 
-#include "../phoenix-rtos-kernel/include/errno.h"
+#include <phoenix/errno.h>
 
 
 #endif

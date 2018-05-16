@@ -17,8 +17,8 @@
 #define _LIBPHOENIX_SYS_THREADS_H_
 
 #include ARCH
-#include "../phoenix-rtos-kernel/include/sysinfo.h"
-#include "../phoenix-rtos-kernel/include/signal.h"
+#include <phoenix/sysinfo.h>
+#include <phoenix/signal.h>
 
 extern int beginthreadex(void (*start)(void *), unsigned int priority, void *stack, unsigned int stacksz, void *arg, handle_t *id);
 

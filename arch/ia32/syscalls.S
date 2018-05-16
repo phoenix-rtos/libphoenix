@@ -14,7 +14,7 @@
  */
 
 #define __ASSEMBLY__
-#include "../../../phoenix-rtos-kernel/include/syscalls.h"
+#include <phoenix/syscalls.h>
 
 .text
 

@@ -17,8 +17,8 @@
 #define _SYS_MMAN_H_
 
 #include ARCH
-#include "../../phoenix-rtos-kernel/include/sysinfo.h"
-#include "../../phoenix-rtos-kernel/include/mman.h"
+#include <phoenix/sysinfo.h>
+#include <phoenix/mman.h>
 
 
 /* Predefined oids */

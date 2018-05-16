@@ -17,7 +17,7 @@
 #define _LIBPHOENIX_MSG_H_
 
 #include ARCH
-#include "../phoenix-rtos-kernel/include/msg.h"
+#include <phoenix/msg.h>
 
 
 /* Port management */
