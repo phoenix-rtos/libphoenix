@@ -22,7 +22,7 @@ check:
 .c.o:
 	@(printf " CC  %-24s  " "$<"; $(CC) -c $(CFLAGS) $<)
 
-	@(file=`echo $< | sed "s/\.c/\.o/"`; \
+	@(file="$@"; \
 	datasz=0;\
 	textsz=0;\
 	for i in `$(OBJDUMP) -t $$file | grep -e " O " | awk '{ print $$4 }'`; do \
