@@ -192,7 +192,8 @@ depend:
 	done;
 
 install: $(LIB)
-	@mkdir -p "$(LIBC_INSTALL_DIR)" "$(HEADERS_INSTALL_DIR)"; \
+	@echo "Installing into: $(LIBC_INSTALL_DIR)" \
+	mkdir -p "$(LIBC_INSTALL_DIR)" "$(HEADERS_INSTALL_DIR)"; \
 	cp -a "$<" "$(LIBC_INSTALL_DIR)"; \
 	for file in $(HEADERS); do\
 		install -m 644 -D $${file} $(HEADERS_INSTALL_DIR)/$${file};\
