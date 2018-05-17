@@ -5,15 +5,15 @@
 
 
 .c.o:
-	@(printf " CC  %-24s  " "$<"; $(CC) -c $(CFLAGS) "$<" -o "$@")
+	$(SIL)(printf " CC  %-24s  " "$<"; $(CC) -c $(CFLAGS) "$<" -o "$@")
 
 	@(file="$@"; \
 	datasz=0;\
 	textsz=0;\
-	for i in `$(OBJDUMP) -t $$file | grep -e " O " | awk '{ print $$4 }'`; do \
+	for i in `$(OBJDUMP) -t $$file | grep -e " O " | cut -c 18- |awk '{print $$2}'`; do \
 	datasz=`echo $$(($$datasz + 0x$$i))`;\
 	done; \
-	for i in `$(OBJDUMP) -t $$file | grep -e "F" | awk '{ print $$5 }'`; do \
+	for i in `$(OBJDUMP) -t $$file | grep -e " F " | cut -c 18- |awk '{print $$2}'`; do \
 	textsz=`echo $$(($$textsz + 0x$$i))`;\
 	done;\
 	echo "data=$$datasz\t text=$$textsz")
@@ -24,10 +24,10 @@
 	@(file="$@"; \
 	datasz=0;\
 	textsz=0;\
-	for i in `$(OBJDUMP) -t $$file | grep -e " O " | awk '{ print $$4 }'`; do \
+	for i in `$(OBJDUMP) -t $$file | grep -e " O " | cut -c 18- |awk '{print $$2}'`; do \
 		datasz=`echo $$(($$datasz + 0x$$i))`;\
 	done; \
-	for i in `$(OBJDUMP) -t $$file | grep -e " F " | awk '{ print $$5 }'`; do \
+	for i in `$(OBJDUMP) -t $$file | grep -e " F " | cut -c 18- |awk '{print $$2}'`; do \
 		textsz=`echo $$(($$textsz + 0x$$i))`;\
 	done;\
 	echo "data=$$datasz\t text=$$textsz")
@@ -56,7 +56,7 @@ depend: check
 
 
 clean: check
-	$(SIL)rm -f core *.o $(ARCH) $(PROGS) $(PROGS:=_unstripped)
+	$(SIL)rm -f .depend core *.o $(ARCH) $(PROGS) $(PROGS:=_unstripped)
 
 
 .PHONY: clean
