@@ -1,0 +1,49 @@
+#
+# Makefile for libphoenix - pattern rules for compiling and linking
+#
+# Copyright 2012-2018 Phoenix Systems
+
+
+.c.o:
+	@(printf " CC  %-24s  " "$<"; $(CC) -c $(CFLAGS) "$<" -o "$@")
+
+	@(file="$@"; \
+	datasz=0;\
+	textsz=0;\
+	for i in `$(OBJDUMP) -t $$file | grep -e " O " | awk '{ print $$4 }'`; do \
+	datasz=`echo $$(($$datasz + 0x$$i))`;\
+	done; \
+	for i in `$(OBJDUMP) -t $$file | grep -e "F" | awk '{ print $$5 }'`; do \
+	textsz=`echo $$(($$textsz + 0x$$i))`;\
+	done;\
+	echo "data=$$datasz\t text=$$textsz")
+
+
+%.a:
+	@(printf " AR  %-24s  \n" "$<")
+	$(SIL)$(AR) $(ARFLAGS) $@ $^ 2>/dev/null
+
+
+%_unstripped: %.o
+	@(printf " LD  %-24s  \n" "$<")
+	$(SIL)$(LD) $(LDFLAGS) -o "$@" "$<" ../$(LIB) $(GCCLIB)
+
+$(PROGS): %: %_unstripped
+	@(printf " STR %-24s  \n" "$<")
+	$(SIL)$(STRIP) -s -o "$@" "$<"
+
+check:
+	@(if test -z "$(ARCH)"; then\
+		echo "Error: Only main Makefile can be used for compilation!";\
+		exit 1;\
+	fi;)
+
+depend: check
+	$(SIL)$(MKDEP) $(MKDEPFLAGS) $(SRCS) >.depend
+
+
+clean: check
+	$(SIL)rm -f core *.o $(ARCH) $(PROGS) $(PROGS:=_unstripped)
+
+
+.PHONY: clean

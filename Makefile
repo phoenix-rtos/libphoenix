@@ -127,7 +127,7 @@ ifeq (/,$(SYSROOT))
 $(error Sysroot is not supported by Your toolchain. Use cross-toolchain to compile)
 endif
 
-export SIL TARGET LIB CC CFLAGS MKDEP MKDEPFLAGS AR ARFLAGS LD LDFLAGS GCCLIB ARCH OBJDUMP STRIP
+export SRCDIR SIL TARGET LIB CC CFLAGS MKDEP MKDEPFLAGS AR ARFLAGS LD LDFLAGS GCCLIB ARCH OBJDUMP STRIP
 
 
 all: subsystems $(OBJS) $(LIB) tests
