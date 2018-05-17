@@ -4,64 +4,19 @@
 # Copyright 2017 Phoenix Systems
 # Author: Pawel Pisarczyk
 #
+ifeq (,$(SRCDIR))
+$(error Only main Makefile can be used for compilation)
+endif
 
-ASMS = syscalls.S
-SRCS = _start.c string.c
-
-
-OBJS = $(SRCS:.c=.o) $(ASMS:.S=.o)
-
-
-all: check $(ARCH)
-
-
-check:
-	@(if test -z "$(ARCH)"; then\
-		echo "Error: Only main Makefile can be used for compilation!";\
-		exit 1;\
-	fi;)
-
-
-.c.o:
-	@(printf " CC  %-24s  " "$<"; $(CC) -c $(CFLAGS) $<)
-
-	@(file=`echo $< | sed "s/\.c/\.o/"`; \
-	datasz=0;\
-	textsz=0;\
-	for i in `$(OBJDUMP) -t $$file | grep -e "O" | awk '{ print $$4 }'`; do \
-		datasz=`echo $$(($$datasz + 0x$$i))`;\
-	done; \
-	for i in `$(OBJDUMP) -t $$file | grep -e "F" | awk '{ print $$5 }'`; do \
-		textsz=`echo $$(($$textsz + 0x$$i))`;\
-	done;\
-	echo "data=$$datasz\t text=$$textsz")
-
-
-.S.o:
-	@(printf " ASM %-24s  " "$<"; $(CC) -c $(CFLAGS) $<)
-
-	@(file=`echo $< | sed "s/\.S/\.o/"`; \
-	datasz=0;\
-	textsz=0;\
-	for i in `$(OBJDUMP) -t $$file | grep -e "O" | awk '{ print $$4 }'`; do \
-		datasz=`echo $$(($$datasz + 0x$$i))`;\
-	done; \
-	for i in `$(OBJDUMP) -t $$file | grep -e "F" | awk '{ print $$5 }'`; do \
-		textsz=`echo $$(($$textsz + 0x$$i))`;\
-	done;\
-	echo "data=$$datasz\t text=$$textsz")
-
+ASMS := syscalls.S
+SRCS := _start.c string.c
+OBJS := $(SRCS:.c=.o) $(ASMS:.S=.o)
 
 -include .depend
 
+all: check $(ARCH)
 
 $(ARCH): $(OBJS)
-	$(SIL)$(AR) $(ARFLAGS) $(ARCH) $(OBJS) 2>/dev/null
 
-
-depend: check
-	$(SIL)$(MKDEP) $(MKDEPFLAGS) $(SRCS) >.depend
-
-
-clean: check
-	$(SIL)rm -f core *.o $(ARCH)
+# include after all dependencies are set
+include $(SRCDIR)/Makefile.rules

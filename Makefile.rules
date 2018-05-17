@@ -18,6 +18,19 @@
 	done;\
 	echo "data=$$datasz\t text=$$textsz")
 
+.S.o:
+	$(SIL)(printf " ASM %-24s  " "$<"; $(CC) -c $(CFLAGS) $< -o "$@")
+
+	@(file="$@"; \
+	datasz=0;\
+	textsz=0;\
+	for i in `$(OBJDUMP) -t $$file | grep -e " O " | awk '{ print $$4 }'`; do \
+		datasz=`echo $$(($$datasz + 0x$$i))`;\
+	done; \
+	for i in `$(OBJDUMP) -t $$file | grep -e " F " | awk '{ print $$5 }'`; do \
+		textsz=`echo $$(($$textsz + 0x$$i))`;\
+	done;\
+	echo "data=$$datasz\t text=$$textsz")
 
 %.a:
 	@(printf " AR  %-24s  \n" "$<")
