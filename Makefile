@@ -147,10 +147,11 @@ all: subsystems $(OBJS) $(LIB) tests
 	done;\
 	echo "data=$$datasz\t text=$$textsz")
 
+$(OBJS): $(filter clean,$(MAKECMDGOALS))
 
 subsystems: $(ARCHS)
 
-%/$(ARCH):
+%/$(ARCH): $(filter clean,$(MAKECMDGOALS))
 	@+echo "\033[1;32mCOMPILE $(@D)\033[0m";\
 	if ! $(MAKE) -C "$(@D)"; then\
 		exit 1;\
