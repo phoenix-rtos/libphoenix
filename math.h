@@ -95,6 +95,7 @@ extern double log10(double x);
 
 /* Breaks x into an integral and a fractional part. */
 extern double modf(double x, double* intpart);
+extern float modff(float x, float* intpart);
 
 
 /* Power functions */
@@ -154,7 +155,6 @@ extern double fabs(double x);
 #define ldexpf(x, exp) ldexp(x, exp)
 #define logf(x) log(x)
 #define log10f(x) log10(x)
-#define modff(x, intpart) modf(x, intpart)
 #define powf(base, exponent) pow(base, exponent)
 #define sqrtf(x) sqrt(x)
 #define roundf(x) round(x)

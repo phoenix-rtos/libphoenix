@@ -156,6 +156,15 @@ double modf(double x, double* intpart)
 	return x;
 }
 
+float modff(float x, float* intpart)
+{
+	double ret, tmp;
+
+	ret = modf(x, &tmp);
+	*intpart = tmp;
+
+	return ret;
+}
 
 /* Uses quick powering and Maclaurin series to calculate value of e^x */
 double exp(double x)
