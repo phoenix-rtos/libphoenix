@@ -34,7 +34,7 @@ void *memcpy(void *to, const void *from, size_t n)
 	: "g" (n), "g" (to), "g" (from)
 	: "ecx", "edx", "esi", "edi", "cc");
 
-	return NULL;
+	return to;
 }
 
 
@@ -65,7 +65,7 @@ void *memset(void *where, int v, size_t n)
 	: "m" (v), "m" (where)
 	: "eax", "ebx", "cc", "ecx", "edi" ,"memory");
 
-	return NULL;
+	return where;
 }
 
 
