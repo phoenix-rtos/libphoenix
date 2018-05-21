@@ -83,9 +83,9 @@ double sin(double x)
 
 	for (i = 0; i < 10; ++i) {
 		if (i & 1)
-			res -= xn / strong;
-		else
 			res += xn / strong;
+		else
+			res -= xn / strong;
 
 		xn *= xpow;
 		strong = strong * (2 * i + 4) * (2 * i + 5);
