@@ -20,7 +20,7 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/msg.h>
-
+#include <posix/utils.h>
 
 
 int chdir(const char *path)
@@ -194,11 +194,53 @@ ssize_t readlink(const char *pathname, char *buf, size_t bufsiz)
 
 int rmdir(const char *path)
 {
+	oid_t dir;
+	msg_t msg = { 0 };
+	char *canonical_name, *dirname, *name;
+
+	if (path == NULL)
+		return -1;
+
+	if ((canonical_name = canonicalize_file_name(path)) == NULL)
+		return -1;
+
+	splitname(canonical_name, &name, &dirname);
+
+	if (lookup(dirname, &dir)) {
+		free(canonical_name);
+		return -1;
+	}
+
+	msg.type = mtUnlink;
+	memcpy(&msg.i.ln.dir, &dir, sizeof(dir));
+	msg.i.data = name;
+	msg.i.size = strlen(name) + 1;
+
+	if (msgSend(dir.port, &msg) != EOK) {
+		free(canonical_name);
+		return -1;
+	}
+
+	free(canonical_name);
+
+	if (msg.o.io.err < 0)
+		return -1;
+
 	return 0;
 }
 
 
 char *dirname(char *path)
 {
-	return NULL;
+	char *slash;
+
+	if ((slash = strrchr(path, '/')) == NULL)
+		return ".";
+
+	if (slash != path) {
+		*slash = 0;
+		return path;
+	}
+
+	return "/";
 }

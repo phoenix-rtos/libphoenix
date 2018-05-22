@@ -25,7 +25,7 @@ typedef unsigned int sa_family_t;
 #define AF_INET6 3
 
 #define SOCK_STREAM 0
-#define SOCK_DGRAM 1
+//#define SOCK_DGRAM 1
 #define SOCK_RDM 2
 #define SOCK_DGRAM 3
 #define SOCK_SEQPACKET 4

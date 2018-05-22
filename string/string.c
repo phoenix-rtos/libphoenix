@@ -317,7 +317,10 @@ char *strrchr(const char *s, int c)
 
 char *strsignal(int signum)
 {
-	return NULL;
+	switch (signum) {
+	default:
+		return "strsignal not implemented";
+	}
 }
 
 
@@ -397,6 +400,13 @@ void *memrchr(const void *s, int c, size_t n)
 
 	return NULL;
 }
+
+
+void *mempcpy(void *dest, const void *src, size_t n)
+{
+	return memcpy(dest, src, n) + n;
+}
+
 
 
 #endif

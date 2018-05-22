@@ -19,6 +19,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
 
 
 int fstat(int fildes, struct stat *buf)
@@ -148,7 +149,7 @@ int lstat(const char *path, struct stat *buf)
 
 int creat(const char *pathname, int mode)
 {
-	return -ENOSYS;
+	return open(pathname, O_WRONLY | O_CREAT | O_TRUNC, mode);
 }
 
 

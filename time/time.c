@@ -18,6 +18,7 @@
 #include "time.h"
 #include "errno.h"
 
+
 time_t time(time_t *tp) {
 	time_t now;
 
@@ -32,6 +33,7 @@ time_t time(time_t *tp) {
 
 	return now;
 }
+
 
 int clock_gettime(clockid_t clk_id, struct timespec *tp)
 {
@@ -49,4 +51,10 @@ int clock_gettime(clockid_t clk_id, struct timespec *tp)
 	tp->tv_nsec = now * 1000;
 
 	return EOK;
+}
+
+
+struct tm *localtime(const time_t *timer)
+{
+	return NULL;
 }

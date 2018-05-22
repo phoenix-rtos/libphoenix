@@ -26,6 +26,8 @@
 #include <sys/file.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include "posix/utils.h"
+
 
 int close(int fildes)
 {
@@ -130,7 +132,7 @@ int pipe(int fildes[2])
 
 int poll(struct pollfd *fds, nfds_t nfds, int timeout)
 {
-	return -ENOSYS;
+	return 0;
 }
 
 
@@ -162,20 +164,102 @@ int ftruncate(int fildes, off_t length)
 
 int link(const char *path1, const char *path2)
 {
+	oid_t dir, oid;
+	msg_t msg = { 0 };
+	char *canonical_path1, *canonical_path2, *dir1, *name1, *dir2, *name2;
+
+	if (path1 == NULL || path2 == NULL)
+		return -1;
+
+	if ((canonical_path1 = canonicalize_file_name(path1)) == NULL)
+		return -1;
+
+	if (lookup(canonical_path1, &oid)) {
+		free(canonical_path1);
+		return -1;
+	}
+
+	splitname(canonical_path1, &name1, &dir1);
+
+	if ((canonical_path2 = canonicalize_file_name(path2)) == NULL) {
+		free(canonical_path1);
+		return -1;
+	}
+
+	splitname(canonical_path2, &name2, &dir2);
+
+	if (lookup(dir2, &dir)) {
+		free(canonical_path1);
+		free(canonical_path2);
+		return -1;
+	}
+
+	msg.type = mtLink;
+	memcpy(&msg.i.ln.dir, &dir, sizeof(dir));
+	memcpy(&msg.i.ln.oid, &oid, sizeof(oid));
+
+	msg.i.data = name2;
+	msg.i.size = strlen(name2) + 1;
+
+	if (msgSend(dir.port, &msg) != EOK) {
+		free(canonical_path1);
+		free(canonical_path2);
+		return -1;
+	}
+
+	free(canonical_path1);
+	free(canonical_path2);
+
+	if (msg.o.io.err < 0)
+		return -1;
+
 	return 0;
 }
 
 
 int unlink(const char *path)
 {
+	oid_t dir;
+	msg_t msg = { 0 };
+	char *canonical_name, *dirname, *name;
+
+	if (path == NULL)
+		return -1;
+
+	if ((canonical_name = canonicalize_file_name(path)) == NULL)
+		return -1;
+
+	splitname(canonical_name, &name, &dirname);
+
+	if (lookup(dirname, &dir)) {
+		free(canonical_name);
+		return -1;
+	}
+
+	msg.type = mtUnlink;
+	memcpy(&msg.i.ln.dir, &dir, sizeof(dir));
+	msg.i.data = name;
+	msg.i.size = strlen(name) + 1;
+
+	if (msgSend(dir.port, &msg) != EOK) {
+		free(canonical_name);
+		return -1;
+	}
+
+	free(canonical_name);
+
+	if (msg.o.io.err < 0)
+		return -1;
+
 	return 0;
 }
 
 
 int symlink(const char *path1, const char *path2)
 {
-	return 0;
+	return -1;
 }
+
 
 off_t lseek(int fildes, off_t offset, int whence)
 {

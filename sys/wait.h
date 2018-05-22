@@ -22,7 +22,7 @@ enum {
 };
 
 
-#define WIFEXITED(stat_val) 0
+#define WIFEXITED(stat_val) 1
 #define WEXITSTATUS(stat_val) 0
 #define WIFSIGNALED(stat_val) 0
 #define WTERMSIG(stat_val) 0

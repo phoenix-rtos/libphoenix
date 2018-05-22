@@ -26,4 +26,10 @@ struct utsname {
 };
 
 
+static inline int uname(struct utsname *name)
+{
+	return 0;
+}
+
+
 #endif

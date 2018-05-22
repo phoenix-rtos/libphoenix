@@ -16,7 +16,8 @@ TARGET ?= ia32-qemu
 VERSION = 0.2
 SRCDIR := $(CURDIR)
 
-SUBSYSTEMS := math stdio stdlib string sys ctype time fcntl unistd errno signal termios
+SUBSYSTEMS := math stdio stdlib string sys ctype time fcntl unistd errno signal termios posix
+EXTRA_HEADER_DIRS := net netinet arpa
 
 LIB := libphoenix.a
 
@@ -117,7 +118,7 @@ endif
 ARCH = code.a
 ARCHS := $(shell for i in $(SUBDIRS); do echo "$$i/$(ARCH)"; done)
 OBJS := _startc.o
-HEADERS := $(shell find . $(SUBDIRS) -maxdepth 1  -name \*.h)
+HEADERS := $(shell find . $(EXTRA_HEADER_DIRS) $(SUBDIRS) -maxdepth 1  -name \*.h)
 
 SYSROOT 		:= $(shell $(CC) $(CFLAGS) -print-sysroot)
 MULTILIB_DIR 	:= $(shell $(CC) $(CFLAGS) -print-multi-directory)
