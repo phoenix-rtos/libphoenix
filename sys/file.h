@@ -19,6 +19,12 @@
 #include ARCH
 
 
+enum { otDir = 0, otFile, otDev, otUnknown };
+
+
+enum { atMode = 0, atUid, atGid, atSize, atType, atPort };
+
+
 extern int fileAdd(unsigned int *h, oid_t *oid);
 
 
