@@ -85,7 +85,7 @@ ssize_t read(int fildes, void *buf, size_t nbyte)
 }
 
 
-ssize_t write(int fildes, void *buf, size_t nbyte)
+ssize_t write(int fildes, const void *buf, size_t nbyte)
 {
 	msg_t msg;
 	oid_t oid;

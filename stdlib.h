@@ -150,6 +150,12 @@ static inline long int labs(long int x)
 	return x >= 0 ? x : -x;
 }
 
+/* Returns the absolute value of x. */
+static inline long long int llabs(long long int x)
+{
+	return x >= 0 ? x : -x;
+}
+
 
 /* Divides numer (numerator) by denom (denominator). */
 extern ldiv_t ldiv(long int numer, long int denom);

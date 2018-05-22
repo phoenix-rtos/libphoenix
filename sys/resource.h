@@ -16,6 +16,7 @@
 #ifndef _SYS_RESOURCE_H_
 #define _SYS_RESOURCE_H_
 
+#include ARCH
 
 typedef int rlim_t;
 
@@ -29,7 +30,12 @@ struct rlimit {
 };
 
 
+#define PRIO_PROCESS	0
+#define PRIO_PGRP	1
+#define PRIO_USER	2
+
 extern int getrlimit(int resource, struct rlimit *rlp);
 extern int setrlimit(int resource, const struct rlimit *rlp);
+extern int setpriority(int which, id_t who, int prio);
 
 #endif

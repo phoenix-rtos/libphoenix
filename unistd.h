@@ -60,13 +60,16 @@ extern pid_t getppid(void);
 extern int usleep(useconds_t usecs);
 
 
+extern unsigned int sleep(unsigned int seconds);
+
+
 extern int chdir(const char *path);
 
 
 extern ssize_t read(int fildes, void *buf, size_t nbyte);
 
 
-extern ssize_t write(int fildes, void *buf, size_t nbyte);
+extern ssize_t write(int fildes, const void *buf, size_t nbyte);
 
 
 extern int dup(int fildes);
@@ -83,6 +86,10 @@ extern int symlink(const char *path1, const char *path2);
 
 extern int link(const char *path1, const char *path2);
 
+
+extern int unlink(const char *pathname);
+
+extern int access(const char *pathname, int mode);
 
 extern char *getcwd(char *buf, size_t size);
 

@@ -12,3 +12,11 @@
  *
  * %LICENSE%
  */
+
+#include "resource.h"
+
+int setpriority(int which, id_t who, int prio)
+{
+    return 0;
+}
+
