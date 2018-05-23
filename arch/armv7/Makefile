@@ -8,9 +8,9 @@ ifeq (,$(SRCDIR))
 $(error Only main Makefile can be used for compilation)
 endif
 
-ASMS := syscalls.S
-SRCS := _start.c string.c
-OBJS := $(SRCS:.c=.o) $(ASMS:.S=.o)
+ASMS := _start.S syscalls.S
+SRCS := string.c
+OBJS := $(ASMS:.S=.o) $(SRCS:.c=.o)
 
 -include .depend
 
