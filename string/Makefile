@@ -16,16 +16,24 @@ all: check $(ARCH)
 
 $(ARCH): $(OBJS)
 
-strerror.o: errstr.inc
+strerror.o: errstr.inc errtab.inc
 
-errstr.inc: $(HEADERS_INSTALL_DIR)/phoenix/errno.h $(SRCDIR)/errno.h
+errno.list: $(HEADERS_INSTALL_DIR)/phoenix/errno.h $(SRCDIR)/errno.h
 	@(printf " GEN %-24s  \n" "$@")
-	$(SIL)sed -En -e '/^\s*#\s*define\s+E\w+\s+[[:digit:]]+/{s/^[^d]*define\s+(\w+)\s+([[:digit:]]+).*/\t[\2] = "\1",/;p;d}' \
-		-e '/^\s*E\w+\s*=\s*[[:digit:]]+/{s/^\s*(\w+)\s*=\s*([[:digit:]]+).*/\t[\2] = "\1",/;p;d}' \
-		$^ > $@
+	$(SIL)sed -En -e '/^\s*#\s*define\s+E\w+\s+[[:digit:]]+/{s/^[^d]*define\s+(\w+)\s+([[:digit:]]+).*/\2\t\1/;p;d}' \
+		-e '/^\s*E\w+\s*=\s*[[:digit:]]+/{s/^\s*(\w+)\s*=\s*([[:digit:]]+).*/\2\t\1/;p;d}' \
+		$^ | sort -n > $@
+
+errstr.inc: errno.list Makefile
+	@(printf " GEN %-24s  \n" "$@")
+	$(SIL)sed -e 's/^.*\t\(.*\)$$/"\1\\0"/' $< > $@
+
+errtab.inc: errno.list Makefile
+	@(printf " GEN %-24s  \n" "$@")
+	$(SIL)bash -c 'o=0; while read num name; do echo "{ $$num, $$o },"; o=$$((o+$${#name}+1)); done' < $< > $@
 
 clean-errstr:
-	$(SIL)rm -f errstr.inc
+	$(SIL)rm -f errno.list errstr.inc errtab.inc
 
 clean: clean-errstr
 
