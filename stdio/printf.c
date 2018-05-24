@@ -73,3 +73,14 @@ int vprintf(const char *format, va_list arg)
 
 	return ctx.total;
 }
+
+
+int putchar(int ci)
+{
+	char c[2] = { ci, 0 };
+
+	if (write(1, c, 1) < 0)
+		debug(c);
+
+	return ci & 0xFF;
+}
