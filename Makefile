@@ -66,14 +66,11 @@ ifneq (, $(findstring armv7, $(TARGET)))
 		-fpic -fpie -msingle-pic-base -mno-pic-data-is-text-relative\
 		-DNOMMU
 
-	CFLAGS += -fdata-sections -ffunction-sections
-
 	AR = $(CROSS)ar
 	ARFLAGS = -r
 
 	LD = $(CROSS)ld
 	LDFLAGS = -nostdlib -e _start --section-start .text=0 -Tbss=20000000 -z max-page-size=0x10
-	LDFLAGS += --gc-sections
 	GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 
 	OBJCOPY = $(CROSS)objcopy
@@ -97,14 +94,11 @@ ifneq (, $(findstring arm-imx, $(TARGET)))
 		-mcpu=cortex-a7 -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard -mthumb\
 		-fomit-frame-pointer -ffreestanding -mno-unaligned-access
 
-	CFLAGS += -fdata-sections -ffunction-sections
-
 	AR = $(CROSS)ar
 	ARFLAGS = -r
 
 	LD = $(CROSS)ld
 	LDFLAGS = -nostdlib -z max-page-size=0x1000
-	LDFLAGS += --gc-sections
 	GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 
 	OBJCOPY = $(CROSS)objcopy
@@ -114,6 +108,8 @@ endif
 
 
 CFLAGS += -DVERSION=\"$(VERSION)\"
+CFLAGS += -fdata-sections -ffunction-sections
+LDFLAGS += --gc-sections
 
 ARCH = code.a
 ARCHS := $(shell for i in $(SUBDIRS); do echo "$$i/$(ARCH)"; done)
