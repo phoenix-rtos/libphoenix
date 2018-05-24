@@ -95,7 +95,7 @@ extern size_t strcspn(const char *str1, const char *str2);
 
 
 /* Searches an internal array for the error number errnum and returns a pointer to an error message string. */
-extern char *strerror(int errnum);
+extern const char *strerror(int errnum);
 
 
 /* Computes the length of the string str up to but not including the terminating null character. */

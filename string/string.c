@@ -324,12 +324,6 @@ char *strsignal(int signum)
 }
 
 
-char *strerror(int errnum)
-{
-	return NULL;
-}
-
-
 char *strstr(const char *s1, const char *s2)
 {
 	const char *p1, *p2;
