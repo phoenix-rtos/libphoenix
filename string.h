@@ -34,6 +34,10 @@ extern int memcmp(const void *str1, const void *str2, size_t n);
 extern void *memcpy(void *dest, const void *src, size_t n);
 
 
+/* Copies n characters from src to dest. Return from dest + n. */
+extern void *mempcpy(void *dest, const void *src, size_t n);
+
+
 /* Another function to copy n characters from str2 to str1. */
 extern void *memmove(void *dest, const void *src, size_t n);
 
