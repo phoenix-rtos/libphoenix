@@ -26,6 +26,8 @@
 #include <sys/threads.h>
 #include <sys/list.h>
 #include <sys/mman.h>
+#include <errno.h>
+#include <string.h>
 
 #include "posix/idtree.h"
 
