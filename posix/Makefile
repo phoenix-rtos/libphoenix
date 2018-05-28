@@ -8,9 +8,8 @@ ifeq (,$(SRCDIR))
 $(error Only main Makefile can be used for compilation)
 endif
 
-SRCS = stubs.c utils.c
-OBJS = $(SRCS:.c=.o)
-
+SRCS := stubs.c utils.c idtree.c
+OBJS := $(SRCS:.c=.o)
 
 all: check $(ARCH)
 

@@ -100,7 +100,7 @@ ssize_t write(int fildes, const void *buf, size_t nbyte)
 	memcpy(&msg.i.io.oid, &oid, sizeof(oid_t));
 
 	msg.i.io.offs = offs;
-	msg.i.data = buf;
+	msg.i.data = (void *)buf;
 	msg.i.size = nbyte;
 
 	msg.o.data = NULL;
@@ -126,7 +126,29 @@ int isatty(int fildes)
 
 int pipe(int fildes[2])
 {
-	return -ENOSYS;
+	oid_t posix;
+	msg_t msg;
+
+	if (lookup("/posix", &posix) < 0)
+		return -1;
+
+	msg.type = mtCreate;
+
+	msg.i.data = NULL;
+	msg.i.size = 0;
+
+	msg.o.data = NULL;
+	msg.o.size = 0;
+
+	if (msgSend(posix.port, &msg) < 0)
+		return -1;
+
+	fileAdd((unsigned *)fildes, &msg.o.create.oid);
+
+	msg.o.create.oid.id |= 1;
+	fileAdd((unsigned *)fildes + 1, &msg.o.create.oid);
+
+	return 0;
 }
 
 

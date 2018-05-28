@@ -143,7 +143,7 @@ int access(const char *path, int amode)
 int dup(int fildes)
 {
 	unsigned int h;
-	oid_t oid;
+	oid_t oid = {0};
 
 	if (fileGet(fildes, 1, &oid, NULL) < 0)
 		return -EBADF;
@@ -164,20 +164,37 @@ int dup2(int fildes, int fildes2)
 	if (fildes == fildes2)
 		return fildes2;
 
-	if (fildes2 < 0 || fileGet(fildes, 3, &oid, &offs) < 0 || fileGet(fildes2, 1, &oid2, NULL) < 0)
+	if (fildes2 < 0 || fileGet(fildes, 3, &oid, &offs) < 0)
 		return -1; // EBADF
 
-	msg.type = mtClose;
-	memcpy(&msg.i.openclose.oid, &oid2, sizeof(oid_t));
+	if (fileGet(fildes2, 1, &oid2, NULL) < 0) {
+		fileAdd((unsigned *)&fildes2, &oid2);
+	}
+	else {
+		msg.type = mtClose;
+		memcpy(&msg.i.openclose.oid, &oid2, sizeof(oid_t));
+
+		msg.i.data = NULL;
+		msg.i.size = 0;
+		msg.o.data = NULL;
+		msg.o.size = 0;
+
+		/* NOTE: what happens when oid2 was not open? */
+		if (msgSend(oid2.port, &msg) < 0)
+			return -1; // EIO
+	}
+
+	msg.type = mtOpen;
+	memcpy(&msg.i.openclose.oid, &oid, sizeof(oid_t));
 
 	msg.i.data = NULL;
 	msg.i.size = 0;
 	msg.o.data = NULL;
 	msg.o.size = 0;
 
-	/* NOTE: what happens when oid2 was not open? */
-	if (msgSend(oid2.port, &msg) < 0)
+	if (msgSend(oid.port, &msg) < 0)
 		return -1; // EIO
+
 
 	fileSet(fildes2, 3, &oid, offs);
 	return fildes2;
