@@ -17,8 +17,9 @@
 #define _LIBPHOENIX_ARCH_ARMV7_ARCH_H_
 
 #include <stddef.h>
+#include <endian.h>
 
-#define __LITTLE_ENDIAN
+#define __BYTE_ORDER __LITTLE_ENDIAN
 
 
 /* #define NULL (void *)0 - defined in stddef.h */
