@@ -8,7 +8,7 @@ ifeq (,$(SRCDIR))
 $(error Only main Makefile can be used for compilation)
 endif
 
-PROGS := test_mmap test_malloc test_threads test_str2num test_scanf test_msg test_env test_signals psh
+PROGS := posixsrv
 SRCS  := $(PROGS:=.c)
 
 -include .depend

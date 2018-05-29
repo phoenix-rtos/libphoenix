@@ -131,7 +131,7 @@ endif
 export SRCDIR SIL TARGET LIB CC CFLAGS MKDEP MKDEPFLAGS AR ARFLAGS LD LDFLAGS GCCLIB ARCH OBJDUMP STRIP
 
 
-all: subsystems $(OBJS) $(LIB) tests
+all: subsystems $(OBJS) $(LIB) tests posixsrv
 
 
 .c.o:
@@ -183,6 +183,18 @@ tests: $(LIB)
 	cd $$d;\
 
 
+posixsrv: $(LIB)
+	@d=`pwd`;\
+	echo "\033[1;32mCOMPILE posixsrv\033[0m";\
+	if ! cd posixsrv; then\
+		exit 1;\
+	fi;\
+	if ! $(MAKE); then\
+		exit 1;\
+	fi;\
+	cd $$d;\
+
+
 depend:
 	@for i in $(SUBDIRS) test; do\
 		d=`pwd`;\
@@ -210,7 +222,7 @@ uninstall:
 
 clean:
 	@rm -f core *.o $(LIB)
-	@for i in $(SUBDIRS) test; do\
+	@for i in $(SUBDIRS) test posixsrv; do\
 		d=`pwd`;\
 		echo "CLEAN $$i";\
 		if ! cd $$i; then\
