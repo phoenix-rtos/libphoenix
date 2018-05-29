@@ -19,7 +19,7 @@
 
 void *bsearch(const void *key, const void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *))
 {
-	size_t l = 0, r = nmemb - 1, m;
+	ssize_t l = 0, r = nmemb - 1, m;
 	int cmp;
 
 	if (nmemb == 0)
