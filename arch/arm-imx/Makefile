@@ -9,7 +9,7 @@ $(error Only main Makefile can be used for compilation)
 endif
 
 ASMS := _start.S syscalls.S
-SRCS := string.c
+SRCS := string.c jmp.c
 OBJS := $(SRCS:.c=.o) $(ASMS:.S=.o)
 
 -include .depend
