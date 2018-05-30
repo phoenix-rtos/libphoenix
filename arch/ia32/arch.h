@@ -21,6 +21,7 @@
 #include <stddef.h>
 
 #define __BYTE_ORDER __LITTLE_ENDIAN
+#define HAVE_EFFICIENT_UNALIGNED_ACCESS 1
 
 /* #define NULL (void *)0 - defined in stddef */
 
