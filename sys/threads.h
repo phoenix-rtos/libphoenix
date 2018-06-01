@@ -41,6 +41,9 @@ extern int mutexCreate(handle_t *h);
 extern int mutexLock(handle_t h);
 
 
+extern int mutexTry(handle_t h);
+
+
 extern int mutexUnlock(handle_t h);
 
 
