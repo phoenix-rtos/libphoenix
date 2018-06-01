@@ -5,8 +5,8 @@
  *
  * sys/threads
  *
- * Copyright 2017 Phoenix Systems
- * Author: Pawel Pisarczyk
+ * Copyright 2017, 2018 Phoenix Systems
+ * Author: Pawel Pisarczyk, Aleksander Kaminski
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -45,6 +45,15 @@ extern int mutexTry(handle_t h);
 
 
 extern int mutexUnlock(handle_t h);
+
+
+extern int semaphoreCreate(handle_t *h, unsigned int v);
+
+
+extern int semaphoreDown(handle_t h, time_t timeout);
+
+
+extern int semaphoreUp(handle_t h);
 
 
 extern int condCreate(handle_t *h);
