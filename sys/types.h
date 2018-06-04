@@ -33,6 +33,4 @@ typedef int blkcnt_t;
 typedef int suseconds_t;
 typedef int clock_t;
 
-typedef uint64_t uintptr_t;
-
 #endif

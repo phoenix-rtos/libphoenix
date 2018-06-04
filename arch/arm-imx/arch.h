@@ -58,6 +58,7 @@ typedef long long s64;
 
 typedef u32 addr_t;
 typedef u64 cycles_t;
+typedef u32 uintptr_t;
 
 typedef unsigned int size_t;
 typedef int ssize_t;

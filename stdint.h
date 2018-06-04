@@ -30,8 +30,6 @@ typedef s32 int32_t;
 typedef s64 int64_t;
 
 
-#endif
-
-
-
 #define UINT32_MAX 0xffffffff
+
+#endif
