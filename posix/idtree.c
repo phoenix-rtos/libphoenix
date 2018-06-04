@@ -13,7 +13,6 @@
  * %LICENSE%
  */
 
-#include ARCH
 #include <sys/rb.h>
 
 #include "posix/idtree.h"
@@ -64,19 +63,17 @@ static int idtree_gapcmp(rbnode_t *n1, rbnode_t *n2)
 static void idtree_augment(rbnode_t *node)
 {
 	rbnode_t *it;
-	rbnode_t *parent = node->parent;
 	idnode_t *n = lib_treeof(idnode_t, linkage, node);
-	idnode_t *p = lib_treeof(idnode_t, linkage, parent);
-	idnode_t *pp = (parent != NULL) ? lib_treeof(idnode_t, linkage, parent->parent) : NULL;
-	idnode_t *l, *r;
+	idnode_t *p = n, *r, *l;
 
 	if (node->left == NULL) {
-		if (parent != NULL && parent->right == node)
-			n->lmaxgap = n->id - p->id - 1;
-		else if (parent != NULL && parent->parent != NULL && parent->parent->right == parent)
-			n->lmaxgap = n->id - pp->id - 1;
-		else
-			n->lmaxgap = n->id;
+		for (it = node; it->parent != NULL; it = it->parent) {
+			p = lib_treeof(idnode_t, linkage, it->parent);
+			if (it->parent->right == it)
+				break;
+		}
+
+		n->lmaxgap = (n->id <= p->id) ? n->id : n->id - p->id - 1;
 	}
 	else {
 		l = lib_treeof(idnode_t, linkage, node->left);
@@ -84,12 +81,13 @@ static void idtree_augment(rbnode_t *node)
 	}
 
 	if (node->right == NULL) {
-		if (parent != NULL && parent->left == node)
-			n->rmaxgap = p->id - n->id - 1;
-		else if (parent != NULL && parent->parent != NULL && parent->parent->left == parent)
-			n->rmaxgap = pp->id - n->id - 1;
-		else
-			n->rmaxgap = (unsigned int)-1 - n->id - 1;
+		for (it = node; it->parent != NULL; it = it->parent) {
+			p = lib_treeof(idnode_t, linkage, it->parent);
+			if (it->parent->left == it)
+				break;
+		}
+
+		n->rmaxgap = (n->id >= p->id) ? (unsigned)-1 - n->id - 1 : p->id - n->id - 1;
 	}
 	else {
 		r = lib_treeof(idnode_t, linkage, node->right);
