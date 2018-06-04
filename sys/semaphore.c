@@ -15,6 +15,7 @@
 
 #include "../errno.h"
 #include "threads.h"
+#include "../time.h"
 #include "../sys/resource.h"
 
 
@@ -38,9 +39,15 @@ int semaphoreCreate(semaphore_t *s, unsigned int v)
 int semaphoreDown(semaphore_t *s, time_t timeout)
 {
 	int err = EOK;
+	time_t now, when;
 
 	if (s == NULL)
 		return -EINVAL;
+
+	if (timeout) {
+		gettime(&now);
+		when = now + timeout;
+	}
 
 	mutexLock(s->mutex);
 	for (;;) {
@@ -51,6 +58,15 @@ int semaphoreDown(semaphore_t *s, time_t timeout)
 
 		if ((err = condWait(s->cond, s->mutex, timeout)) == -ETIME)
 			break;
+
+		if (timeout) {
+			gettime(&now);
+
+			if (now >= when)
+				timeout = 1;
+			else
+				timeout = when - now;
+		}
 	}
 	mutexUnlock(s->mutex);
 
@@ -64,8 +80,15 @@ int semaphoreUp(semaphore_t *s)
 		return -EINVAL;
 
 	mutexLock(s->mutex);
-	++s->v;
+
 	condSignal(s->cond);
+
+	if (s->v == (unsigned int)-1) {
+		mutexUnlock(s->mutex);
+		return -EAGAIN;
+	}
+
+	++s->v;
 	mutexUnlock(s->mutex);
 
 	return EOK;
