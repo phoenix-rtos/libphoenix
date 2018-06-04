@@ -39,7 +39,7 @@ int semaphoreCreate(semaphore_t *s, unsigned int v)
 int semaphoreDown(semaphore_t *s, time_t timeout)
 {
 	int err = EOK;
-	time_t now, when;
+	time_t now, when = 0;
 
 	if (s == NULL)
 		return -EINVAL;
