@@ -81,7 +81,8 @@ int stat(const char *path, struct stat *buf)
 
 	if (lookup(canonical_name, &oid) < 0) {
 		free(canonical_name);
-		return -ENOENT;
+		errno = ENOENT;
+		return -1;
 	}
 
 	free(canonical_name);
@@ -228,6 +229,14 @@ int mknod(const char *path, mode_t mode, dev_t dev)
 
 int rename(const char *old, const char *new)
 {
+	int err;
+
+	if ((err = link(old, new)) < 0)
+		return err;
+
+	if ((err = unlink(old)) < 0)
+		return err;
+
 	return 0;
 }
 

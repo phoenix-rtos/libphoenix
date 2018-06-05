@@ -20,29 +20,65 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/msg.h>
+#include <sys/stat.h>
 #include <posix/utils.h>
+
+
+static struct {
+	char *cwd;
+} dir_common;
 
 
 int chdir(const char *path)
 {
+	struct stat s;
+	int len;
+
+	if (stat(path, &s) < 0 || !S_ISDIR(s.st_mode))
+		return -1;
+
+	len = strlen(path) + 1;
+	if (realloc(dir_common.cwd, len) == NULL)
+		return -1; /* ENOMEM */
+
+	memcpy(dir_common.cwd, path, len);
+
 	return EOK;
 }
 
 
 static int getcwd_len(void)
 {
-	return 1;
+	int len;
+	char *wd;
+
+	if (dir_common.cwd == NULL) {
+		if ((wd = getenv("PWD")) == NULL)
+			wd = "/";
+
+		len = strlen(wd);
+
+		if ((dir_common.cwd = malloc(len + 1)) == NULL)
+			return -1;
+
+		memcpy(dir_common.cwd, wd, len + 1);
+		return len;
+	}
+
+	return strlen(dir_common.cwd);
 }
 
 
 char *getcwd(char *buf, size_t size)
 {
+	int len = getcwd_len();
+
 	if (buf == NULL)
-		buf = malloc(getcwd_len() + 1);
+		buf = malloc(len);
+	else if (size < len)
+		return NULL; /* ERANGE */
 
-	buf[0] = '/';
-	buf[1] = 0;
-
+	memcpy(buf, dir_common.cwd, len + 1);
 	return buf;
 }
 
@@ -60,12 +96,17 @@ char *canonicalize_file_name(const char *path)
 	pathlen = strlen(path);
 
 	if (*path != '/') {
-		if ((buf = malloc(cwdlen + pathlen + 2)) == NULL)
+		if ((buf = malloc(cwdlen + pathlen + 3)) == NULL)
 			return NULL; /* ENOMEM */
 
-		buf = strcat(getcwd(buf, cwdlen), path);
+		buf = getcwd(buf, cwdlen);
+		if (buf[cwdlen - 1] != '/') {
+			buf[cwdlen] = '/';
+			buf[cwdlen + 1] = 0;
+		}
+		buf = strcat(buf, path);
 
-		pathlen += cwdlen;
+		pathlen += cwdlen + 1;
 	}
 	else {
 		if ((buf = malloc(pathlen + 2)) == NULL)

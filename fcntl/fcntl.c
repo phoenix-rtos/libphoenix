@@ -134,8 +134,7 @@ int open(const char *path, int oflag, ...)
 
 int access(const char *path, int amode)
 {
-	printf("access: not implemented\n");
-	return -ENOENT;
+	return 0;
 }
 
 
