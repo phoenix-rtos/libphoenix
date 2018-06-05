@@ -13,7 +13,6 @@
  * %LICENSE%
  */
 
-#include ARCH
 
 #include <unistd.h>
 #include <stdio.h>
@@ -33,6 +32,8 @@
 
 #define PIPE_BUFSZ 0x1000
 
+//#define TRACE(str, ...) printf("posixsrv trace: " str "\n", ##__VA_ARGS__)
+#define TRACE(str, ...)
 
 typedef struct request_t {
 	struct request_t *next, *prev;
@@ -88,6 +89,7 @@ static void fail(char *err)
 
 static void _pipe_wakeup(pipe_t *p, request_t *r, int retval)
 {
+	TRACE("wakeup");
 	LIST_REMOVE(&p->queue, r);
 	r->msg.o.io.err = retval;
 	msgRespond(posixsrv_common.port, &r->msg, r->rid);
@@ -115,7 +117,9 @@ static int pipe_create(oid_t *oid)
 	p->r = p->w = p->full = 0;
 	p->rrefs = p->wrefs = 1;
 	p->queue = NULL;
-	mutexCreate(&p->mutex);
+	p->mutex = 0;
+	if (mutexCreate(&p->mutex) < 0)
+		printf("mutex failed!\n");
 
 	mutexLock(posixsrv_common.pipesLock);
 	idtree_alloc(&posixsrv_common.pipes, &p->linkage);
@@ -130,6 +134,7 @@ static int pipe_create(oid_t *oid)
 
 static void pipe_destroy(pipe_t *p)
 {
+	TRACE("destroy");
 	mutexLock(posixsrv_common.pipesLock);
 	idtree_remove(&posixsrv_common.pipes, &p->linkage);
 	mutexUnlock(posixsrv_common.pipesLock);
@@ -156,8 +161,13 @@ static int _pipe_write(pipe_t *p, void *buf, size_t sz)
 {
 	int bytes = 0;
 
-	if (p->r == p->w && p->full)
+	if (!sz)
+		return 0;
+
+	if (p->r == p->w && p->full) {
+		TRACE("write was full");
 		return bytes;
+	}
 
 	if (p->r > p->w) {
 		memcpy(p->buf + p->w, buf, bytes = min(sz, p->r - p->w));
@@ -178,6 +188,8 @@ static int _pipe_write(pipe_t *p, void *buf, size_t sz)
 	if (p->w == p->r)
 		p->full = 1;
 
+	TRACE("write %d bytes to %d", bytes, p->linkage.id);
+
 	return bytes;
 }
 
@@ -186,8 +198,13 @@ static int _pipe_read(pipe_t *p, void *buf, size_t sz)
 {
 	int bytes = 0;
 
-	if (p->r == p->w && !p->full)
+	if (!sz)
+		return 0;
+
+	if (p->r == p->w && !p->full) {
+		TRACE("read was empty");
 		return bytes;
+	}
 
 	if (p->w > p->r) {
 		memcpy(buf, p->buf + p->r, bytes = min(sz, p->w - p->r));
@@ -208,6 +225,8 @@ static int _pipe_read(pipe_t *p, void *buf, size_t sz)
 	if (p->w == p->r)
 		p->full = 0;
 
+	TRACE("read %d bytes from %d", bytes, p->linkage.id);
+
 	return bytes;
 }
 
@@ -221,19 +240,25 @@ static int pipe_write(request_t *r)
 	if ((p = pipe_find(rq_id(r))) == NULL)
 		return -EINVAL;
 
+	if (!sz)
+		return 0;
+
 	mutexLock(p->mutex);
 
 	if (p->rrefs) {
 		/* write to pending readers */
 		while (p->queue != NULL && !p->full && bytes < sz) {
 			memcpy(rq_buf(p->queue), buf + bytes, c = min(sz - bytes, rq_sz(p->queue)));
+			TRACE("writing %d to pending reader\n", c);
 			_pipe_wakeup(p, p->queue, c);
 			bytes += c;
 		}
 
 		/* write to buffer */
-		if (!(bytes += _pipe_write(p, buf + bytes, sz - bytes)))
+		if (!(bytes += _pipe_write(p, buf + bytes, sz - bytes))) {
+			TRACE("write blocked");
 			LIST_ADD(&p->queue, r);
+		}
 	}
 	else {
 		bytes = -EPIPE;
@@ -254,6 +279,9 @@ static int pipe_read(request_t *r)
 	if ((p = pipe_find(rq_id(r))) == NULL)
 		return -EINVAL;
 
+	if (!sz)
+		return 0;
+
 	mutexLock(p->mutex);
 
 	if (p->wrefs) {
@@ -265,6 +293,7 @@ static int pipe_read(request_t *r)
 			/* read from pending writers */
 			while (p->queue != NULL && bytes < sz) {
 				memcpy(buf + bytes, rq_buf(p->queue), c = min(sz - bytes, rq_sz(p->queue)));
+				TRACE("reading %d from pending writer\n", c);
 				_pipe_wakeup(p, p->queue, c);
 				bytes += c;
 			}
@@ -274,8 +303,10 @@ static int pipe_read(request_t *r)
 				_pipe_wakeup(p, p->queue, c);
 		}
 
-		if (!bytes)
+		if (!bytes) {
+			TRACE("read blocked");
 			LIST_ADD(&p->queue, r);
+		}
 	}
 	else {
 		bytes = -EPIPE;
@@ -290,6 +321,7 @@ static int pipe_read(request_t *r)
 static int pipe_open(int id, int w)
 {
 	pipe_t *p;
+	TRACE("open %d/%d", id, w);
 
 	if ((p = pipe_find(id)) == NULL)
 		return -EINVAL;
@@ -308,6 +340,7 @@ static int pipe_open(int id, int w)
 static int pipe_close(int id, int w)
 {
 	pipe_t *p;
+	TRACE("close %d/%d", id, w);
 
 	if ((p = pipe_find(id)) == NULL)
 		return -EINVAL;
