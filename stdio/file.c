@@ -27,169 +27,110 @@
 FILE *stderr, *stdin, *stdout;
 
 
+static int string2mode(const char *mode)
+{
+	if (strcmp(mode, "r") == 0)
+		return O_RDONLY;
+	else if (strcmp(mode, "w") == 0)
+		return O_WRONLY | O_CREAT | O_TRUNC;
+	else if (strcmp(mode, "a") == 0)
+		return O_APPEND | O_CREAT;
+	else if (strcmp(mode, "r+") == 0)
+		return O_RDWR;
+	else if (strcmp(mode, "w+") == 0)
+		return O_RDWR | O_CREAT | O_TRUNC;
+	else if (strcmp(mode, "a+") == 0)
+		return O_RDWR | O_CREAT | O_APPEND;
+	else
+		return -1;
+}
+
+
 int fclose(FILE *file)
 {
-	msg_t msg = { 0 };
 	int err;
 
 	if (file == NULL)
 		return -EINVAL;
 
-	msg.type = mtClose;
-	msg.i.openclose.oid = file->oid;
+	err = close(file->fd);
+	free(file);
 
-	if ((err = msgSend(file->oid.port, &msg)) < 0)
-		return err;
-
-	return msg.o.io.err;
+	return err;
 }
 
 
 FILE *fopen(const char *filename, const char *mode)
 {
-	oid_t oid;
 	unsigned int m;
-	msg_t msg = { 0 };
 	FILE *f;
-	char *canonical_name, *name, *parent;
+	int fd;
 
 	if (filename == NULL || mode == NULL)
 		return NULL;
 
-	canonical_name = canonicalize_file_name(filename);
-
-	if (strcmp(mode, "r") == 0)
-		m = O_RDONLY;
-	else if (strcmp(mode, "w") == 0)
-		m = O_WRONLY | O_CREAT | O_TRUNC;
-	else if (strcmp(mode, "a") == 0)
-		m = O_APPEND | O_CREAT;
-	else if (strcmp(mode, "r+") == 0)
-		m = O_RDWR;
-	else if (strcmp(mode, "w+") == 0)
-		m = O_RDWR | O_CREAT | O_TRUNC;
-	else if (strcmp(mode, "a+") == 0)
-		m = O_RDWR | O_CREAT | O_APPEND;
-	else
+	if ((m = string2mode(mode)) < 0)
 		return NULL;
 
-	if (lookup(canonical_name, &oid) == EOK) {
-		msg.type = mtOpen;
-		memcpy(&msg.i.openclose.oid, &oid, sizeof(oid));
-
-		if (msgSend(oid.port, &msg) != EOK)
-			return NULL;
-
-		if (msg.o.io.err < 0)
-			return NULL;
-	}
-	else if (m & O_CREAT) {
-		msg.type = mtCreate;
-		msg.i.create.type = 1;
-
-		name = strrchr(canonical_name, '/');
-
-		if (name == canonical_name) {
-			name++;
-			parent = "/";
-		}
-		else {
-			*(name++) = 0;
-			parent = canonical_name;
-		}
-
-		if (lookup(parent, &oid) < EOK) {
-			free(canonical_name);
-			return NULL;
-		}
-
-		if (msgSend(oid.port, &msg) != EOK) {
-			free(canonical_name);
-			return NULL;
-		}
-
-		msg.i.ln.dir = oid;
-		msg.type = mtLink;
-		memcpy(&msg.i.ln.oid, &msg.o.create.oid, sizeof(oid));
-		memcpy(&oid, &msg.o.create.oid, sizeof(oid));
-		msg.i.data = name;
-		msg.i.size = strlen(name) + 1;
-
-		if (msgSend(oid.port, &msg) != EOK) {
-			free(canonical_name);
-			return NULL;
-		}
-
-		free(canonical_name);
-	}
-	else {
+	if ((fd = open(filename, m)) < 0)
 		return NULL;
-	}
 
-	/* Now we have valid OID */
 	if ((f = malloc(sizeof(FILE))) == NULL)
 		return NULL;
 
-	memcpy(&f->oid, &oid, sizeof(oid));
+	f->fd = fd;
 	f->buff = NULL;
 	f->buffsz = 0;
-	f->pos = 0; /* TODO - get filesize and set pos if append */
 
 	return f;
+}
+
+
+FILE *freopen(const char *pathname, const char *mode, FILE *stream)
+{
+	int m;
+
+	if (mode == NULL || stream == NULL)
+		return NULL;
+
+	fflush(stream);
+
+	if (pathname != NULL) {
+		close(stream->fd);
+		if ((m = string2mode(mode)) < 0)
+			return NULL;
+
+		stream->fd = open(pathname, m);
+	}
+	else {
+		/* change mode */
+	}
+
+	return stream;
 }
 
 
 size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
 	int err;
-	msg_t msg = { 0 };
 
 	if (ptr == NULL || stream == NULL)
 		return 0;
 
-	msg.type = mtRead;
-	msg.i.io.oid = stream->oid;
-	msg.i.io.offs = stream->pos;
-	msg.i.io.len = 0;
-
-	msg.o.data = ptr;
-	msg.o.size = size * nmemb;
-
-	if ((err = msgSend(stream->oid.port, &msg)) < 0)
-		return err;
-
-	if (msg.o.io.err < 0)
-		msg.o.io.err = 0;
-
-	stream->pos += msg.o.io.err;
-	return msg.o.io.err;
+	err = read(stream->fd, ptr, size * nmemb);
+	return err < 0 ? 0 : err;
 }
 
 
 size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
 	int err;
-	msg_t msg = { 0 };
 
 	if (ptr == NULL || stream == NULL)
 		return 0;
 
-	msg.type = mtWrite;
-	msg.i.io.oid = stream->oid;
-	msg.i.io.offs = stream->pos;
-	msg.i.io.len = 0;
-
-	msg.i.data = (void *)ptr;
-	msg.i.size = size * nmemb;
-
-	if ((err = msgSend(stream->oid.port, &msg)) < 0)
-		return err;
-
-	if (msg.o.io.err < 0)
-		msg.o.io.err = 0;
-
-	stream->pos += msg.o.io.err;
-	return msg.o.io.err;
+	err = write(stream->fd, ptr, size * nmemb);
+	return err < 0 ? 0 : err;
 }
 
 
@@ -336,4 +277,16 @@ int getchar_unlocked(void)
 	int c;
 	read(0, &c, 1);
 	return c;
+}
+
+
+int fseek(FILE *stream, long offset, int whence)
+{
+	return lseek(stream->fd, offset, whence);
+}
+
+
+int fseeko(FILE *stream, off_t offset, int whence)
+{
+	return fseek(stream, offset, whence);
 }

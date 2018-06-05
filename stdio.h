@@ -26,10 +26,9 @@ typedef offs_t fpos_t;
 
 
 typedef struct _FILE {
-	oid_t oid;
+	int fd;
 	char *buff;
 	size_t buffsz;
-	size_t pos;
 } FILE;
 
 
