@@ -227,6 +227,11 @@ int mknod(const char *path, mode_t mode, dev_t dev)
 	return 0;
 }
 
+int mkfifo(const char *pathname, mode_t mode)
+{
+	return -1;
+}
+
 
 int rename(const char *old, const char *new)
 {

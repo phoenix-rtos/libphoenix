@@ -402,5 +402,11 @@ void *mempcpy(void *dest, const void *src, size_t n)
 }
 
 
+int strverscmp(const char *s1, const char *s2)
+{
+	// TODO: implement proper algorithm
+	return strcmp(s1, s2);
+}
+
 
 #endif

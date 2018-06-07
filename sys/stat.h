@@ -110,5 +110,8 @@ extern mode_t umask(mode_t cmask);
 
 extern int mkdir(const char *pathname, mode_t mode);
 
+extern int mkfifo(const char *pathname, mode_t mode);
+
+extern int mknod(const char *pathname, mode_t mode, dev_t dev);
 
 #endif

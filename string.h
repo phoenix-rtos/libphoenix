@@ -141,6 +141,8 @@ extern char *strchr(const char *str, int z);
 
 extern char *strdup(const char *s1);
 
+extern int strverscmp(const char *s1, const char *s2);
+
 
 __attribute__((always_inline))
 static inline void *bzero(void *p, size_t sz)
