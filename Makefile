@@ -123,6 +123,7 @@ HEADERS := $(shell find . $(EXTRA_HEADER_DIRS) $(SUBDIRS) -maxdepth 1  -name \*.
 SYSROOT 		:= $(shell $(CC) $(CFLAGS) -print-sysroot)
 MULTILIB_DIR 	:= $(shell $(CC) $(CFLAGS) -print-multi-directory)
 LIBC_INSTALL_DIR := $(SYSROOT)/lib/$(MULTILIB_DIR)
+LIBC_INSTALL_NAMES := libc.a libm.a crt0.o libg.a
 HEADERS_INSTALL_DIR := $(SYSROOT)/usr/include/
 ifeq (/,$(SYSROOT))
 $(error Sysroot is not supported by Your toolchain. Use cross-toolchain to compile)
@@ -212,13 +213,21 @@ install: $(LIB)
 	@echo "Installing into: $(LIBC_INSTALL_DIR)"; \
 	mkdir -p "$(LIBC_INSTALL_DIR)" "$(HEADERS_INSTALL_DIR)"; \
 	cp -a "$<" "$(LIBC_INSTALL_DIR)"; \
+	for lib in $(LIBC_INSTALL_NAMES); do \
+		ln -sf "$(LIBC_INSTALL_DIR)/$<" "$(LIBC_INSTALL_DIR)/$$lib"; \
+	done; \
 	for file in $(HEADERS); do\
 		install -m 644 -D $${file} $(HEADERS_INSTALL_DIR)/$${file};\
 	done
 
 uninstall:
 	rm -rf "$(LIBC_INSTALL_DIR)/$(LIB)"
-	rm -rf "$(HEADERS_INSTALL_DIR)"
+	@for lib in $(LIBC_INSTALL_NAMES); do \
+		rm -rf "$(LIBC_INSTALL_DIR)/$$lib"; \
+	done
+	@for file in $(HEADERS); do \
+		rm -rf "$(HEADERS_INSTALL_DIR)/$${file}"; \
+	done
 
 clean:
 	@rm -f core *.o $(LIB)
