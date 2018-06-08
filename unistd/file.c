@@ -26,7 +26,9 @@
 #include <sys/file.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
 #include "posix/utils.h"
+#include "posixsrv/posixsrv.h"
 
 
 int close(int fildes)
@@ -126,27 +128,39 @@ int isatty(int fildes)
 
 int pipe(int fildes[2])
 {
-	oid_t posix;
+	oid_t posix, p;
 	msg_t msg;
 
 	if (lookup("/posix", &posix) < 0)
 		return -1;
 
 	msg.type = mtCreate;
-
+	msg.i.create.type = pxBufferedPipe;
 	msg.i.data = NULL;
 	msg.i.size = 0;
-
 	msg.o.data = NULL;
 	msg.o.size = 0;
 
 	if (msgSend(posix.port, &msg) < 0)
 		return -1;
 
-	fileAdd((unsigned *)fildes, &msg.o.create.oid);
+	memcpy(&p, &msg.o.create.oid, sizeof(p));
 
-	msg.o.create.oid.id |= 1;
-	fileAdd((unsigned *)fildes + 1, &msg.o.create.oid);
+	/* open for reading */
+	fileAdd((unsigned *)fildes, &p);
+	msg.type = mtOpen;
+	memcpy(&msg.i.openclose.oid, &p, sizeof(p));
+
+	if (msgSend(posix.port, &msg) < 0)
+		return -1;
+
+	/* open for writing */
+	p.id |= 1;
+	fileAdd((unsigned *)fildes + 1, &p);
+	memcpy(&msg.i.openclose.oid, &p, sizeof(p));
+
+	if (msgSend(posix.port, &msg) < 0)
+		return -1;
 
 	return 0;
 }

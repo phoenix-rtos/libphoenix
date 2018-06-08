@@ -27,8 +27,10 @@
 #include <sys/mman.h>
 #include <errno.h>
 #include <string.h>
+#include <fcntl.h>
 
 #include "posix/idtree.h"
+#include "posixsrv.h"
 
 #define PIPE_BUFSZ 0x1000
 
@@ -49,7 +51,8 @@ typedef struct {
 	void *buf;
 	unsigned r, w, full;
 	handle_t mutex;
-	int rrefs, wrefs;
+	int rrefs, wrefs, link;
+	int mark;
 
 	request_t *queue;
 } pipe_t;
@@ -90,6 +93,7 @@ static void fail(char *err)
 static void _pipe_wakeup(pipe_t *p, request_t *r, int retval)
 {
 	TRACE("wakeup");
+	p->mark = 1;
 	LIST_REMOVE(&p->queue, r);
 	r->msg.o.io.err = retval;
 	msgRespond(posixsrv_common.port, &r->msg, r->rid);
@@ -97,29 +101,33 @@ static void _pipe_wakeup(pipe_t *p, request_t *r, int retval)
 }
 
 
-static int pipe_create(oid_t *oid)
+static int pipe_create(oid_t *oid, int type)
 {
 	pipe_t *p;
 
 	if ((p = malloc(sizeof(pipe_t))) == NULL)
 		return -ENOMEM;
 
-	if (PIPE_BUFSZ & (SIZE_PAGE - 1))
-		p->buf = malloc(PIPE_BUFSZ);
-	else
+	if (type == pxBufferedPipe) {
 		p->buf = mmap(NULL, PIPE_BUFSZ, PROT_READ | PROT_WRITE, MAP_NONE, OID_NULL, 0);
 
-	if (p->buf == NULL || p->buf == (void *)-1) {
-		free(p);
-		return -ENOMEM;
+		if (p->buf == MAP_FAILED) {
+			free(p);
+			return -ENOMEM;
+		}
+		p->full = 0;
+	}
+	else {
+		p->buf = NULL;
+		p->full = 1;
 	}
 
-	p->r = p->w = p->full = 0;
-	p->rrefs = p->wrefs = 1;
+	p->rrefs = p->wrefs = p->link = 0;
+	p->mark = 0;
+
+	p->r = p->w = 0;
 	p->queue = NULL;
-	p->mutex = 0;
-	if (mutexCreate(&p->mutex) < 0)
-		printf("mutex failed!\n");
+	mutexCreate(&p->mutex);
 
 	mutexLock(posixsrv_common.pipesLock);
 	idtree_alloc(&posixsrv_common.pipes, &p->linkage);
@@ -161,7 +169,7 @@ static int _pipe_write(pipe_t *p, void *buf, size_t sz)
 {
 	int bytes = 0;
 
-	if (!sz)
+	if (!sz || p->buf == NULL)
 		return 0;
 
 	if (p->r == p->w && p->full) {
@@ -198,7 +206,7 @@ static int _pipe_read(pipe_t *p, void *buf, size_t sz)
 {
 	int bytes = 0;
 
-	if (!sz)
+	if (!sz || p->buf == NULL)
 		return 0;
 
 	if (p->r == p->w && !p->full) {
@@ -245,11 +253,11 @@ static int pipe_write(request_t *r)
 
 	mutexLock(p->mutex);
 
-	if (p->rrefs) {
+	if (p->rrefs || p->link) {
 		/* write to pending readers */
 		while (p->queue != NULL && !p->full && bytes < sz) {
 			memcpy(rq_buf(p->queue), buf + bytes, c = min(sz - bytes, rq_sz(p->queue)));
-			TRACE("writing %d to pending reader\n", c);
+			TRACE("writing %d to pending reader", c);
 			_pipe_wakeup(p, p->queue, c);
 			bytes += c;
 		}
@@ -284,32 +292,36 @@ static int pipe_read(request_t *r)
 
 	mutexLock(p->mutex);
 
-	if (p->wrefs) {
-		/* read from buffer */
-		was_full = p->full;
-		bytes += _pipe_read(p, buf, sz);
+	/* read from buffer */
+	was_full = p->full;
+	bytes += _pipe_read(p, buf, sz);
 
-		if (was_full) {
-			/* read from pending writers */
-			while (p->queue != NULL && bytes < sz) {
-				memcpy(buf + bytes, rq_buf(p->queue), c = min(sz - bytes, rq_sz(p->queue)));
-				TRACE("reading %d from pending writer\n", c);
-				_pipe_wakeup(p, p->queue, c);
-				bytes += c;
-			}
-
-			/* discharge remaining pending writers */
-			while (p->queue != NULL && (c = _pipe_write(p, rq_buf(p->queue), rq_sz(p->queue))))
-				_pipe_wakeup(p, p->queue, c);
+	if (was_full) {
+		/* read from pending writers */
+		while (p->queue != NULL && bytes < sz) {
+			memcpy(buf + bytes, rq_buf(p->queue), c = min(sz - bytes, rq_sz(p->queue)));
+			TRACE("reading %d from pending writer\n", c);
+			_pipe_wakeup(p, p->queue, c);
+			bytes += c;
 		}
 
-		if (!bytes) {
-			TRACE("read blocked");
-			LIST_ADD(&p->queue, r);
-		}
+		/* discharge remaining pending writers */
+		while (p->queue != NULL && (c = _pipe_write(p, rq_buf(p->queue), rq_sz(p->queue))))
+			_pipe_wakeup(p, p->queue, c);
 	}
-	else {
+
+	if (!bytes && !p->link && !p->wrefs) {
+		/* EOF for anonymous pipe */
 		bytes = -EPIPE;
+	}
+	if (!bytes && p->link && !p->wrefs && p->mark) {
+		/* EOF for named pipe */
+		p->mark = 0;
+		bytes = -EPIPE;
+	}
+	else if (!bytes) {
+		TRACE("read blocked");
+		LIST_ADD(&p->queue, r);
 	}
 
 	mutexUnlock(p->mutex);
@@ -318,16 +330,16 @@ static int pipe_read(request_t *r)
 }
 
 
-static int pipe_open(int id, int w)
+static int pipe_open(int id, int w, int f)
 {
 	pipe_t *p;
-	TRACE("open %d/%d", id, w);
+	TRACE("open %d/%d/%x", id, w, f);
 
 	if ((p = pipe_find(id)) == NULL)
 		return -EINVAL;
 
 	mutexLock(p->mutex);
-	if (w)
+	if (w || f & O_WRONLY)
 		p->wrefs++;
 	else
 		p->rrefs++;
@@ -373,7 +385,7 @@ static int pipe_close(int id, int w)
 		}
 	}
 
-	if (!p->wrefs && !p->rrefs) {
+	if (!p->wrefs && !p->rrefs && !p->link) {
 		mutexUnlock(p->mutex);
 		pipe_destroy(p);
 		return EOK;
@@ -385,12 +397,70 @@ static int pipe_close(int id, int w)
 }
 
 
+static int pipe_link(int id)
+{
+	pipe_t *p;
+	TRACE("link %d", id);
+
+	if ((p = pipe_find(id)) == NULL)
+		return -EINVAL;
+
+	mutexLock(p->mutex);
+	p->link++;
+	mutexUnlock(p->mutex);
+
+	return EOK;
+}
+
+
+static int pipe_unlink(int id)
+{
+	pipe_t *p;
+	TRACE("unlink %d", id);
+
+	if ((p = pipe_find(id)) == NULL)
+		return -EINVAL;
+
+	mutexLock(p->mutex);
+	if (!p->link) {
+		mutexUnlock(p->mutex);
+		return -EINVAL;
+	}
+	p->link--;
+	if (!p->wrefs && !p->rrefs) {
+		mutexUnlock(p->mutex);
+		pipe_destroy(p);
+		return EOK;
+	}
+	mutexUnlock(p->mutex);
+
+	return EOK;
+}
+
+
+static int srv_create(int type, oid_t *oid)
+{
+	int err;
+
+	switch (type) {
+	case pxBufferedPipe:
+	case pxPipe:
+		err = pipe_create(oid, type);
+		break;
+	default:
+		err = -EINVAL;
+		break;
+	}
+
+	return err;
+}
+
+
 int main(int argc, char **argv)
 {
 	msg_t msg;
-	oid_t oid = {0}, fs;
+	oid_t fs;
 	request_t *r = NULL;
-	int id, tag;
 
 	mutexCreate(&posixsrv_common.pipesLock);
 	idtree_init(&posixsrv_common.pipes);
@@ -403,28 +473,16 @@ int main(int argc, char **argv)
 
 	msg.type = mtCreate;
 	msg.i.create.type = otDev;
-	msg.i.create.port = posixsrv_common.port;
+	msg.i.create.dev.port = posixsrv_common.port;
+	msg.i.create.dev.id = (id_t)-1;
 	msg.i.create.mode = 0;
+	msg.i.create.dir = fs;
 
-	msg.i.data = NULL;
-	msg.i.size = 0;
-
-	msg.o.data = NULL;
-	msg.o.size = 0;
-
-	if (msgSend(fs.port, &msg) < 0 || msg.o.io.err < 0)
-		fail("create dev in filesystem");
-
-	oid = msg.o.create.oid;
-
-	msg.type = mtLink;
-	msg.i.ln.dir = fs;
-	msg.i.ln.oid = oid;
 	msg.i.data = "posix";
 	msg.i.size = sizeof("posix");
 
 	if (msgSend(fs.port, &msg) < 0 || msg.o.io.err < 0)
-		fail("link in filesystem");
+		fail("create dev in filesystem");
 
 	for (;;) {
 		if (r == NULL)
@@ -435,12 +493,9 @@ int main(int argc, char **argv)
 			continue;
 		}
 
-		id = r->msg.i.openclose.oid.id >> 1;
-		tag = r->msg.i.openclose.oid.id & 1;
-
 		switch (r->msg.type) {
 		case mtCreate:
-			r->msg.o.create.err = pipe_create(&r->msg.o.create.oid);
+			r->msg.o.create.err = srv_create(r->msg.i.create.type, &r->msg.o.create.oid);
 			break;
 		case mtRead:
 			if (!(r->msg.o.io.err = pipe_read(r))) {
@@ -459,10 +514,16 @@ int main(int argc, char **argv)
 			}
 			break;
 		case mtOpen:
-			r->msg.o.io.err = pipe_open(id, tag);
+			r->msg.o.io.err = pipe_open(r->msg.i.openclose.oid.id >> 1, r->msg.i.openclose.oid.id & 1, r->msg.i.openclose.flags);
 			break;
 		case mtClose:
-			r->msg.o.io.err = pipe_close(id, tag);
+			r->msg.o.io.err = pipe_close(r->msg.i.openclose.oid.id >> 1, r->msg.i.openclose.oid.id & 1);
+			break;
+		case mtLink:
+			r->msg.o.io.err = pipe_link(r->msg.i.ln.oid.id);
+			break;
+		case mtUnlink:
+			r->msg.o.io.err = pipe_unlink(r->msg.i.ln.oid.id);
 			break;
 		default:
 			r->msg.o.io.err = -EINVAL;

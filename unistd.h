@@ -36,6 +36,13 @@ enum {
 	X_OK = 1 << 2,
 };
 
+
+static inline int getpagesize(void)
+{
+	return SIZE_PAGE;
+}
+
+
 extern int vfork(void);
 
 

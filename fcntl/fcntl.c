@@ -41,6 +41,7 @@ int open(const char *path, int oflag, ...)
 	if (lookup(canonical_name, &oid) == EOK) {
 		msg.type = mtOpen;
 		memcpy(&msg.i.openclose.oid, &oid, sizeof(oid));
+		msg.i.openclose.flags = oflag;
 
 		if (msgSend(oid.port, &msg) != EOK) {
 			free(canonical_name);

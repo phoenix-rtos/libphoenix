@@ -22,6 +22,12 @@ struct passwd *getpwnam(const char *name)
 }
 
 
+struct passwd *getpwuid(uid_t uid)
+{
+	return NULL;
+}
+
+
 int getpwnam_r(const char *name, struct passwd *pwd, char *buffer,
 	       size_t bufsize, struct passwd **result)
 {

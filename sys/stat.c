@@ -22,6 +22,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include "posix/utils.h"
+#include "posixsrv/posixsrv.h"
 
 int fstat(int fildes, struct stat *buf)
 {
@@ -184,7 +186,6 @@ int mkdir(const char *path, mode_t mode)
 	msg.type = mtCreate;
 	msg.i.create.type = otDir;
 	msg.i.create.mode = 0;
-	msg.i.create.port = dir.port;
 	msg.i.create.dir = dir;
 	msg.i.data = name;
 	msg.i.size = strlen(name) + 1;
@@ -217,12 +218,6 @@ int mknod(const char *path, mode_t mode, dev_t dev)
 }
 
 
-int mkfifo(const char *pathname, mode_t mode)
-{
-	return -1;
-}
-
-
 int rename(const char *old, const char *new)
 {
 	int err;
@@ -239,5 +234,47 @@ int rename(const char *old, const char *new)
 
 int chown(const char *path, uid_t owner, gid_t group)
 {
+	return 0;
+}
+
+
+int mkfifo(const char *pathname, mode_t mode)
+{
+	char *canonical_name, *dir, *base;
+	oid_t odir, posix;
+	msg_t msg;
+
+	if (lookup("/posix", &posix) < 0)
+		return -1; /* ENOSYS */
+
+	canonical_name = canonicalize_file_name(pathname);
+	splitname(canonical_name, &base, &dir);
+
+	lookup(dir, &odir);
+
+	msg.type = mtCreate;
+	msg.i.create.type = pxPipe;
+	msg.i.data = NULL;
+	msg.i.size = 0;
+
+	if (msgSend(posix.port, &msg) < 0) {
+		free(canonical_name);
+		return -1;
+	}
+
+	msg.type = mtCreate;
+	msg.i.create.type = otDev;
+	msg.i.create.dev = msg.o.create.oid;
+	msg.i.create.mode = 0;
+	msg.i.create.dir = odir;
+	msg.i.data = base;
+	msg.i.size = strlen(base) + 1;
+
+	if (msgSend(odir.port, &msg) < 0) {
+		free(canonical_name);
+		return -1;
+	}
+
+	free(canonical_name);
 	return 0;
 }
