@@ -54,7 +54,7 @@ int open(const char *path, int oflag, ...)
 	}
 	else if (oflag & O_CREAT) {
 		msg.type = mtCreate;
-		msg.i.create.type = 1;
+		msg.i.create.type = otFile;
 
 		splitname(canonical_name, &name, &parent);
 
@@ -63,16 +63,7 @@ int open(const char *path, int oflag, ...)
 			return -1;
 		}
 
-		if (msgSend(oid.port, &msg) != EOK) {
-			free(canonical_name);
-			return -1;
-		}
-
-		msg.type = mtLink;
-		memcpy(&msg.i.ln.dir, &oid, sizeof(oid));
-		memcpy(&msg.i.ln.oid, &msg.o.create.oid, sizeof(oid));
-		memcpy(&oid, &msg.o.create.oid, sizeof(oid));
-
+		memcpy(&msg.i.create.dir, &oid, sizeof(oid_t));
 		msg.i.data = name;
 		msg.i.size = strlen(name) + 1;
 
@@ -82,6 +73,7 @@ int open(const char *path, int oflag, ...)
 		}
 
 		msg.type = mtOpen;
+		memcpy(&oid, &msg.o.create.oid, sizeof(oid));
 		memcpy(&msg.i.openclose.oid, &oid, sizeof(oid));
 
 		if (msgSend(oid.port, &msg) != EOK) {

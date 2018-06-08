@@ -158,7 +158,7 @@ int creat(const char *pathname, int mode)
 int mkdir(const char *path, mode_t mode)
 {
 	msg_t msg = { 0 };
-	oid_t oid, dir;
+	oid_t dir;
 	char *canonical_name, *name, *parent;
 
 	if (path == NULL)
@@ -182,27 +182,16 @@ int mkdir(const char *path, mode_t mode)
 	}
 
 	msg.type = mtCreate;
-	msg.i.create.type = 0; /* otDir */
+	msg.i.create.type = otDir;
 	msg.i.create.mode = 0;
 	msg.i.create.port = dir.port;
+	msg.i.create.dir = dir;
+	msg.i.data = name;
+	msg.i.size = strlen(name) + 1;
 
 	if (msgSend(dir.port, &msg) < 0) {
 		free(canonical_name);
 		return -ENOMEM;
-	}
-
-	oid = msg.o.create.oid;
-
-	msg.type = mtLink;
-	msg.i.ln.dir = dir;
-	msg.i.ln.oid = oid;
-
-	msg.i.size = strlen(name) + 1;
-	msg.i.data = name;
-
-	if (msgSend(oid.port, &msg) < 0 || msg.o.io.err < 0) {
-		free(canonical_name);
-		return -EEXIST;
 	}
 
 	free(canonical_name);
@@ -226,6 +215,7 @@ int mknod(const char *path, mode_t mode, dev_t dev)
 {
 	return 0;
 }
+
 
 int mkfifo(const char *pathname, mode_t mode)
 {
