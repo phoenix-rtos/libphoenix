@@ -84,7 +84,7 @@ static void rb_rotateRight(rbtree_t *tree, rbnode_t *x)
 }
 
 
-static void lib_rbInsertBalance(rbtree_t *tree, rbnode_t *node)
+void lib_rbInsertBalance(rbtree_t *tree, rbnode_t *node)
 {
 	rbnode_t *z = node;
 	rbnode_t *y;
