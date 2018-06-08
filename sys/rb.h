@@ -21,8 +21,8 @@
 
 #define lib_treeof(type, node_field, node) ({					\
 	int _off = (int) &(((type *) 0)->node_field);				\
-	rbnode_t *tmpnode = (node);					\
-	(type *) ((tmpnode == NULL) ? NULL : ((void *) tmpnode - _off));	\
+	void *tmpnode = (node);					\
+	(type *) ((tmpnode == NULL) ? NULL : (tmpnode - _off));	\
 })
 
 
