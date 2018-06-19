@@ -61,30 +61,6 @@ int fchdir(int fildes)
 }
 
 
-int socket(int domain, int type, int protocol)
-{
-	return 0;
-}
-
-
-int bind(int socket, const struct sockaddr *address, socklen_t address_len)
-{
-	return 0;
-}
-
-
-int listen(int socket, int backlog)
-{
-	return 0;
-}
-
-
-ssize_t sendto(int socket, const void *message, size_t length, int flags, const struct sockaddr *dest_addr, socklen_t dest_len)
-{
-	return 0;
-}
-
-
 char *ttyname(int fildes)
 {
 	return NULL;
