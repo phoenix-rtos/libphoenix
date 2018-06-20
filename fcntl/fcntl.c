@@ -74,6 +74,10 @@ int open(const char *path, int oflag, ...)
 		msg.type = mtOpen;
 		memcpy(&oid, &msg.o.create.oid, sizeof(oid));
 		memcpy(&msg.i.openclose.oid, &oid, sizeof(oid));
+		msg.i.openclose.flags = oflag;
+
+		msg.i.data = NULL;
+		msg.i.size = 0;
 
 		if (msgSend(oid.port, &msg) != EOK) {
 			free(canonical_name);
@@ -92,7 +96,7 @@ int open(const char *path, int oflag, ...)
 
 	free(canonical_name);
 
-	if (fileAdd(&h, &oid) < 0)
+	if (fileAdd(&h, &oid, oflag) < 0)
 		return -1;
 
 	if (oflag & O_TRUNC) {
@@ -115,7 +119,7 @@ int open(const char *path, int oflag, ...)
 		if (msgSend(oid.port, &msg) < 0)
 			return -1;
 
-		if (fileSet(h, 2, NULL, msg.o.attr.val) < 0)
+		if (fileSet(h, 2, NULL, msg.o.attr.val, 0) < 0)
 			return -1;
 	}
 
@@ -132,13 +136,13 @@ int access(const char *path, int amode)
 /* UNTESTED */
 int dup(int fildes)
 {
-	unsigned int h;
+	unsigned int h, mode;
 	oid_t oid = {0};
 
-	if (fileGet(fildes, 1, &oid, NULL) < 0)
+	if (fileGet(fildes, 1 | 4, &oid, NULL, &mode) < 0)
 		return -EBADF;
 
-	if (fileAdd(&h, &oid) < 0)
+	if (fileAdd(&h, &oid, mode) < 0)
 		return -EMFILE;
 
 	return h;
@@ -150,19 +154,21 @@ int dup2(int fildes, int fildes2)
 	oid_t oid, oid2;
 	msg_t msg;
 	offs_t offs;
+	unsigned mode;
 
 	if (fildes == fildes2)
 		return fildes2;
 
-	if (fildes2 < 0 || fileGet(fildes, 3, &oid, &offs) < 0)
+	if (fildes2 < 0 || fileGet(fildes, 7, &oid, &offs, &mode) < 0)
 		return -1; // EBADF
 
-	if (fileGet(fildes2, 1, &oid2, NULL) < 0) {
-		fileAdd((unsigned *)&fildes2, &oid2);
+	if (fileGet(fildes2, 1, &oid2, NULL, NULL) < 0) {
+		fileAdd((unsigned *)&fildes2, &oid2, mode);
 	}
 	else {
 		msg.type = mtClose;
 		memcpy(&msg.i.openclose.oid, &oid2, sizeof(oid_t));
+		msg.i.openclose.flags = mode;
 
 		msg.i.data = NULL;
 		msg.i.size = 0;
@@ -176,6 +182,7 @@ int dup2(int fildes, int fildes2)
 
 	msg.type = mtOpen;
 	memcpy(&msg.i.openclose.oid, &oid, sizeof(oid_t));
+	msg.i.openclose.flags = mode;
 
 	msg.i.data = NULL;
 	msg.i.size = 0;
@@ -185,20 +192,19 @@ int dup2(int fildes, int fildes2)
 	if (msgSend(oid.port, &msg) < 0)
 		return -1; // EIO
 
-
-	fileSet(fildes2, 3, &oid, offs);
+	fileSet(fildes2, 7, &oid, offs, mode);
 	return fildes2;
 }
 
 
 int fcntl(int fildes, int cmd, ...)
 {
-	unsigned min;
+	unsigned min, mode;
 	va_list args;
 	offs_t offs;
 	oid_t oid;
 
-	if (fileGet(fildes, 3, &oid, &offs) < 0)
+	if (fileGet(fildes, 7, &oid, &offs, &mode) < 0)
 		return -1;
 
 	va_start(args, cmd);
@@ -206,10 +212,10 @@ int fcntl(int fildes, int cmd, ...)
 	switch (cmd) {
 	case F_DUPFD:
 		min = va_arg(args, int);
-		if (fileAdd(&min, &oid) < 0)
+		if (fileAdd(&min, &oid, mode) < 0)
 			return -1;
 
-		if (fileSet(min, 2, NULL, offs) < 0)
+		if (fileSet(min, 2, NULL, offs, mode) < 0)
 			return -1;
 
 		return min;

@@ -30,7 +30,7 @@ int fstat(int fildes, struct stat *buf)
 	oid_t oid;
 	msg_t msg = { 0 };
 
-	if (fileGet(fildes, 1, &oid, NULL) != EOK)
+	if (fileGet(fildes, 1, &oid, NULL, NULL) != EOK)
 	   return -EBADF;
 
 	buf->st_ino = oid.id;

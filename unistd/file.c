@@ -33,13 +33,14 @@ int close(int fildes)
 {
 	oid_t oid;
 	msg_t msg;
+	unsigned mode;
 
-	if (fileGet(fildes, 1, &oid, NULL) < 0)
+	if (fileGet(fildes, 1 | 4, &oid, NULL, &mode) < 0)
 		return -EBADF;
 
 	msg.type = mtClose;
 	memcpy(&msg.i.openclose.oid, &oid, sizeof(oid_t));
-
+	msg.i.openclose.flags = mode;
 	msg.i.data = NULL;
 	msg.i.size = 0;
 
@@ -61,14 +62,16 @@ ssize_t read(int fildes, void *buf, size_t nbyte)
 	msg_t msg;
 	oid_t oid;
 	offs_t offs;
+	unsigned mode;
 
-	if (fileGet(fildes, 3, &oid, &offs) < 0)
+	if (fileGet(fildes, 7, &oid, &offs, &mode) < 0)
 		return -EBADF;
 
 	msg.type = mtRead;
 	memcpy(&msg.i.io.oid, &oid, sizeof(oid_t));
 
 	msg.i.io.offs = offs;
+	msg.i.io.mode = mode;
 	msg.i.data = NULL;
 	msg.i.size = 0;
 
@@ -80,7 +83,7 @@ ssize_t read(int fildes, void *buf, size_t nbyte)
 
 	if (msg.o.io.err > 0) {
 		offs += msg.o.io.err;
-		fileSet(fildes, 2, NULL, offs);
+		fileSet(fildes, 2, NULL, offs, 0);
 	}
 
 	return msg.o.io.err;
@@ -92,14 +95,16 @@ ssize_t write(int fildes, const void *buf, size_t nbyte)
 	msg_t msg;
 	oid_t oid;
 	offs_t offs;
+	unsigned mode;
 
-	if (fileGet(fildes, 3, &oid, &offs) < 0)
+	if (fileGet(fildes, 7, &oid, &offs, &mode) < 0)
 		return -EBADF;
 
 	msg.type = mtWrite;
 	memcpy(&msg.i.io.oid, &oid, sizeof(oid_t));
 
 	msg.i.io.offs = offs;
+	msg.i.io.mode = mode;
 	msg.i.data = (void *)buf;
 	msg.i.size = nbyte;
 
@@ -111,7 +116,7 @@ ssize_t write(int fildes, const void *buf, size_t nbyte)
 
 	if (msg.o.io.err > 0) {
 		offs += msg.o.io.err;
-		fileSet(fildes, 2, NULL, offs);
+		fileSet(fildes, 2, NULL, offs, 0);
 	}
 
 	return msg.o.io.err;
@@ -126,7 +131,7 @@ int isatty(int fildes)
 
 int pipe(int fildes[2])
 {
-	oid_t posix, p;
+	oid_t posix;
 	msg_t msg;
 
 	if (lookup("/posix", &posix) < 0)
@@ -142,23 +147,26 @@ int pipe(int fildes[2])
 	if (msgSend(posix.port, &msg) < 0)
 		return -1;
 
-	memcpy(&p, &msg.o.create.oid, sizeof(p));
-
 	/* open for reading */
-	fileAdd((unsigned *)fildes, &p);
 	msg.type = mtOpen;
-	memcpy(&msg.i.openclose.oid, &p, sizeof(p));
+	memcpy(&msg.i.openclose.oid, &msg.o.create.oid, sizeof(oid_t));
 
-	if (msgSend(posix.port, &msg) < 0)
+	fileAdd((unsigned *)fildes, &msg.i.openclose.oid, O_RDONLY);
+	msg.i.openclose.flags = O_RDONLY;
+
+	if (msgSend(posix.port, &msg) < 0) {
+		fileRemove(fildes[0]);
 		return -1;
+	}
 
 	/* open for writing */
-	p.id |= 1;
-	fileAdd((unsigned *)fildes + 1, &p);
-	memcpy(&msg.i.openclose.oid, &p, sizeof(p));
+	fileAdd((unsigned *)fildes + 1, &msg.i.openclose.oid, O_WRONLY);
+	msg.i.openclose.flags = O_WRONLY;
 
-	if (msgSend(posix.port, &msg) < 0)
+	if (msgSend(posix.port, &msg) < 0) {
+		fileRemove(fildes[1]);
 		return -1;
+	}
 
 	return 0;
 }
@@ -178,7 +186,7 @@ int ftruncate(int fildes, off_t length)
 	if (length < 0)
 		return -EINVAL;
 
-	if (fileGet(fildes, 1, &oid, NULL) != EOK)
+	if (fileGet(fildes, 1, &oid, NULL, NULL) != EOK)
 		return -EBADF;
 
 	msg.type = mtTruncate;
@@ -301,13 +309,13 @@ off_t lseek(int fildes, off_t offset, int whence)
 	offs_t offs;
 	struct stat buf;
 
-	if (fileGet(fildes, 3, &oid, &offs) != EOK)
+	if (fileGet(fildes, 3, &oid, &offs, NULL) != EOK)
 		return -EBADF;
 
 	switch (whence) {
 
 	case SEEK_SET:
-		fileSet(fildes, 2, NULL, offset);
+		fileSet(fildes, 2, NULL, offset, 0);
 		break;
 
 	case SEEK_CUR:
@@ -319,7 +327,7 @@ off_t lseek(int fildes, off_t offset, int whence)
 		if (offset > 0 && offset > offs)
 			return -75; //EOVERFLOW;
 
-		fileSet(fildes, 2, NULL, offs);
+		fileSet(fildes, 2, NULL, offs, 0);
 		break;
 
 	case SEEK_END:
@@ -334,7 +342,7 @@ off_t lseek(int fildes, off_t offset, int whence)
 		if (offset > 0 && offs < buf.st_size)
 			return -75; //EOVERFLOW;
 
-		fileSet(fildes, 2, NULL, offs);
+		fileSet(fildes, 2, NULL, offs, 0);
 		break;
 
 	default:
