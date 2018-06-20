@@ -67,7 +67,7 @@ struct {
 
 static inline int rq_id(request_t *r)
 {
-	return r->msg.i.io.oid.id >> 1;
+	return r->msg.i.io.oid.id;
 }
 
 
@@ -134,7 +134,7 @@ static int pipe_create(oid_t *oid, int type)
 	mutexUnlock(posixsrv_common.pipesLock);
 
 	oid->port = posixsrv_common.port;
-	oid->id = idtree_id(&p->linkage) << 1;
+	oid->id = idtree_id(&p->linkage);
 
 	return EOK;
 }
@@ -312,10 +312,12 @@ static int pipe_read(request_t *r)
 
 	if (!bytes && !p->link && !p->wrefs) {
 		/* EOF for anonymous pipe */
+		TRACE("EOF anon");
 		bytes = -EPIPE;
 	}
 	if (!bytes && p->link && !p->wrefs && p->mark) {
 		/* EOF for named pipe */
+		TRACE("EOF named");
 		p->mark = 0;
 		bytes = -EPIPE;
 	}
@@ -330,16 +332,16 @@ static int pipe_read(request_t *r)
 }
 
 
-static int pipe_open(int id, int w, int f)
+static int pipe_open(int id, unsigned flags)
 {
 	pipe_t *p;
-	TRACE("open %d/%d/%x", id, w, f);
+	TRACE("open %d/%x %s", id, flags, flags & O_WRONLY ? "W" : "R");
 
 	if ((p = pipe_find(id)) == NULL)
 		return -EINVAL;
 
 	mutexLock(p->mutex);
-	if (w || f & O_WRONLY)
+	if (flags & O_WRONLY)
 		p->wrefs++;
 	else
 		p->rrefs++;
@@ -349,16 +351,16 @@ static int pipe_open(int id, int w, int f)
 }
 
 
-static int pipe_close(int id, int w)
+static int pipe_close(int id, unsigned flags)
 {
 	pipe_t *p;
-	TRACE("close %d/%d", id, w);
+	TRACE("close %d/%x %s", id, flags, flags & O_WRONLY ? "W" : "R");
 
 	if ((p = pipe_find(id)) == NULL)
 		return -EINVAL;
 
 	mutexLock(p->mutex);
-	if (w) {
+	if (flags & O_WRONLY) {
 		if (!p->wrefs) {
 			mutexUnlock(p->mutex);
 			return -EINVAL;
@@ -514,10 +516,10 @@ int main(int argc, char **argv)
 			}
 			break;
 		case mtOpen:
-			r->msg.o.io.err = pipe_open(r->msg.i.openclose.oid.id >> 1, r->msg.i.openclose.oid.id & 1, r->msg.i.openclose.flags);
+			r->msg.o.io.err = pipe_open(r->msg.i.openclose.oid.id, r->msg.i.openclose.flags);
 			break;
 		case mtClose:
-			r->msg.o.io.err = pipe_close(r->msg.i.openclose.oid.id >> 1, r->msg.i.openclose.oid.id & 1);
+			r->msg.o.io.err = pipe_close(r->msg.i.openclose.oid.id, r->msg.i.openclose.flags);
 			break;
 		case mtLink:
 			r->msg.o.io.err = pipe_link(r->msg.i.ln.oid.id);
