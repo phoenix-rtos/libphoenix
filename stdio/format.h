@@ -16,7 +16,7 @@
 #ifndef _LIBPHOENIX_STDIO_FORMAT_H
 #define _LIBPHOENIX_STDIO_FORMAT_H
 
-#include "stdarg.h"
+#include <stdarg.h>
 
 
 typedef void (*feedfunc)(void *, char);

@@ -17,8 +17,8 @@
 #define _LIBPHOENIX_MATH_H_
 
 
-#include "stdarg.h"
-#include "math/consts.h"
+#include <stdarg.h>
+#include <math/consts.h>
 
 
 /* Trigonometric functions */
