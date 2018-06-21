@@ -16,7 +16,7 @@
 #ifndef _LIBPHOENIX_LIB_RB_H_
 #define _LIBPHOENIX_LIB_RB_H_
 
-#include "stdio.h"
+#include <stdio.h>
 
 
 #define lib_treeof(type, node_field, node) ({					\
