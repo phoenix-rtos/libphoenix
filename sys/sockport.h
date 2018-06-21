@@ -22,7 +22,7 @@
 
 
 enum {
-	sockmSocket = 0x50c30000,
+	sockmSocket = 0x50c30000, sockmShutdown,
 	sockmConnect, sockmBind, sockmListen, sockmAccept,
 	sockmSend, sockmRecv, sockmGetSockName, sockmGetPeerName,
 	sockmGetFl, sockmSetFl, sockmGetOpt, sockmSetOpt,

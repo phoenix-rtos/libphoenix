@@ -51,6 +51,10 @@ typedef unsigned int sa_family_t;
 #define SO_SNDTIMEO 0x1005
 #define SO_TYPE 0x1008
 
+#define SHUT_RD 0
+#define SHUT_WR 1
+#define SHUT_RDWR 2
+
 
 struct sockaddr {
 	sa_family_t sa_family;
@@ -93,6 +97,7 @@ int __sock_getfl(int socket);
 int __sock_setfl(int socket, int val);
 int getsockopt(int socket, int level, int optname, void *optval, socklen_t *optlen);
 int setsockopt(int socket, int level, int optname, const void *optval, socklen_t optlen);
+int shutdown(int socket, int how);
 
 
 #endif
