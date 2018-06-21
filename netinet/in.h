@@ -6,7 +6,7 @@
  * netinet/in.h
  *
  * Copyright 2018 Phoenix Systems
- * Author: Jan Sikorski
+ * Author: Jan Sikorski, Michał Mirosław
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -28,7 +28,11 @@ struct in_addr {
 };
 
 struct in6_addr {
-	unsigned char s6_addr[16];
+	union {
+		u8 s6_addr[16];
+		u16 s6_addr16[8];
+		u32 s6_addr32[4];
+	};
 };
 
 
@@ -47,7 +51,34 @@ struct sockaddr_in6 {
 };
 
 
-enum { INADDR_ANY, INADDR_BROADCAST };
+enum {
+	IPPROTO_IP = 0,
+	IPPROTO_ICMP = 1,
+	IPPROTO_IGMP = 2,
+	IPPROTO_IPIP = 4,
+	IPPROTO_TCP = 6,
+	IPPROTO_UDP = 17,
+	IPPROTO_DCCP = 33,
+	IPPROTO_IPV6 = 41,
+	IPPROTO_GRE = 47,
+	IPPROTO_ESP = 50,
+	IPPROTO_AH = 51,
+	IPPROTO_SCTP = 132,
+	IPPROTO_UDPLITE = 136,
+	IPPROTO_RAW = 255,
+	IPPROTO_MAX = IPPROTO_RAW
+};
 
 
-#endif
+enum {
+	INADDR_ANY = 0,
+	INADDR_BROADCAST = ~(uint32_t)0,
+};
+
+
+enum {
+	IP_TOS,
+	IP_TTL,
+};
+
+#endif /* _NETINET_IN_H_ */

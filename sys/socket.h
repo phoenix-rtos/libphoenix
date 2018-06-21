@@ -29,6 +29,11 @@ typedef unsigned int sa_family_t;
 #define AF_INET 2
 #define AF_INET6 10
 
+#define PF_UNSPEC AF_UNSPEC
+#define PF_UNIX AF_UNIX
+#define PF_INET AF_INET
+#define PF_INET6 AF_INET6
+
 #define SOCK_STREAM 1
 #define SOCK_DGRAM 2
 #define SOCK_RAW 3
@@ -53,6 +58,9 @@ typedef unsigned int sa_family_t;
 #define SO_SNDTIMEO 0x1005
 #define SO_TYPE 0x1008
 
+#define MSG_OOB  0x01
+#define MSG_PEEK 0x02
+
 #define SHUT_RD 0
 #define SHUT_WR 1
 #define SHUT_RDWR 2
@@ -64,6 +72,12 @@ struct sockaddr {
 	sa_family_t sa_family;
 	char        sa_data[];
 
+};
+
+
+struct sockaddr_storage {
+	sa_family_t ss_family;
+	char        ss_data[128-sizeof(sa_family_t)];
 };
 
 
