@@ -17,6 +17,7 @@
 #define _SYS_SOCKET_H_
 
 #include <stdint.h>
+#include <time.h>
 #include <sys/sockdefs.h>
 #include <sys/uio.h>
 
@@ -119,6 +120,7 @@ int __sock_getfl(int socket);
 int __sock_setfl(int socket, int val);
 int getsockopt(int socket, int level, int optname, void *optval, socklen_t *optlen);
 int setsockopt(int socket, int level, int optname, const void *optval, socklen_t optlen);
+int __sock_poll(int socket, int events, time_t timeout);
 int shutdown(int socket, int how);
 
 
