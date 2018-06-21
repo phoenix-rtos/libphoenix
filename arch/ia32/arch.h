@@ -16,8 +16,6 @@
 #ifndef _LIBPHOENIX_ARCH_IA32_ARCH_H_
 #define _LIBPHOENIX_ARCH_IA32_ARCH_H_
 
-#include <errno.h>
-#include <arch/ia32/syscalls.h>
 #include <stddef.h>
 
 #define __BYTE_ORDER __LITTLE_ENDIAN
@@ -78,7 +76,6 @@ typedef u32 handle_t;
 
 
 #include <arch/ia32/io.h>
-#include <string.h>
 
 
 #endif
