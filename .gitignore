@@ -2,3 +2,4 @@
 *.depend
 *.a
 .DS_store
+*_unstripped
