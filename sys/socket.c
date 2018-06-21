@@ -257,3 +257,39 @@ int __sock_setfl(int socket, int val)
 
 	return sockcall(socket, &msg);
 }
+
+
+int getsockopt(int socket, int level, int optname, void *optval, socklen_t *optlen)
+{
+	msg_t msg = { 0 };
+	sockport_msg_t *smi = (void *)msg.i.raw;
+	ssize_t ret;
+
+	msg.type = sockmGetOpt;
+	smi->opt.level = level;
+	smi->opt.optname = optname;
+	msg.o.data = optval;
+	msg.o.size = *optlen;
+
+	ret = sockcall(socket, &msg);
+	if (ret < 0)
+		return ret;
+
+	*optlen = ret;
+	return 0;
+}
+
+
+int setsockopt(int socket, int level, int optname, const void *optval, socklen_t optlen)
+{
+	msg_t msg = { 0 };
+	sockport_msg_t *smi = (void *)msg.i.raw;
+
+	msg.type = sockmSetOpt;
+	smi->opt.level = level;
+	smi->opt.optname = optname;
+	msg.i.data = (void *)optval;
+	msg.i.size = optlen;
+
+	return sockcall(socket, &msg);
+}
