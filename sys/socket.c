@@ -20,7 +20,18 @@
 #include <string.h>
 
 
-// FIXME: return -1 and set errno, instead of returning -errno
+#ifdef ERRNO_IN_RETURN
+#define set_errno
+#else
+static ssize_t set_errno(ssize_t ret)
+{
+	if (ret < 0) {
+		errno = -ret;
+		return -1;
+	} else
+		return ret;
+}
+#endif
 
 
 int socket(int domain, int type, int protocol)
@@ -31,21 +42,21 @@ int socket(int domain, int type, int protocol)
 	unsigned fd;
 	int err;
 
-	if ((err = lookup(PATH_SOCKSRV, &oid)) != EOK)
-		return err;
+	if ((err = lookup(PATH_SOCKSRV, &oid)) < 0)
+		return set_errno(err);
 
 	msg.type = sockmSocket;
 	smi->socket.domain = domain;
 	smi->socket.type = type;
 	smi->socket.protocol = protocol;
 
-	if ((err = msgSend(oid.port, &msg)) != EOK)
-		return err;
+	if ((err = msgSend(oid.port, &msg)) < 0)
+		return set_errno(err);
 	if (msg.o.lookup.err < 0)
-		return msg.o.lookup.err;
+		return set_errno(msg.o.lookup.err);
 
 	if ((err = fileAdd(&fd, &msg.o.lookup.res, 0)) < 0)
-		return err;
+		return set_errno(err);
 
 	return fd;
 }
@@ -61,10 +72,10 @@ static ssize_t sockcall(int socket, msg_t *msg)
 		return -EBADF;
 	// FIXME: check and report ENOTSOCK?
 
-	if ((err = msgSend(oid.port, msg)) != EOK)
-		return err;
+	if ((err = msgSend(oid.port, msg)) < 0)
+		return set_errno(err);
 
-	return smo->ret;
+	return set_errno(smo->ret);
 }
 
 
@@ -73,7 +84,7 @@ static ssize_t socknamecall(int socket, msg_t *msg, struct sockaddr *address, so
 	sockport_resp_t *smo = (void *)msg->o.raw;
 	ssize_t err;
 
-	if ((err = sockcall(socket, msg)) != EOK)
+	if ((err = sockcall(socket, msg)) < 0)
 		return err;
 
 	if (smo->sockname.addrlen > *address_len)
@@ -91,7 +102,7 @@ static ssize_t sockdestcall(int socket, msg_t *msg, const struct sockaddr *addre
 	sockport_msg_t *smi = (void *)msg->i.raw;
 
 	if (address_len > sizeof(smi->send.addr))
-		return -EINVAL;
+		return set_errno(-EINVAL);
 
 	smi->send.addrlen = address_len;
 	memcpy(smi->send.addr, address, address_len);
@@ -141,15 +152,14 @@ int accept(int socket, struct sockaddr *address, socklen_t *address_len)
 
 	msg.type = sockmAccept;
 
-	err = socknamecall(socket, &msg, address, address_len);
-	if (err < 0)
+	if ((err = socknamecall(socket, &msg, address, address_len)) < 0)
 		return err;
 	oid.port = err;
 
 	if ((err = fileAdd(&fd, &oid, 0)) < 0) {
 		msg.type = mtClose;
 		msgSend(oid.port, &msg);
-		return err;
+		return set_errno(err);
 	}
 
 	return fd;
