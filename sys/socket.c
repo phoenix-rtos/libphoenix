@@ -15,6 +15,7 @@
 
 #include <sys/sockport.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <sys/file.h>
 #include <errno.h>
 #include <string.h>
@@ -55,7 +56,7 @@ int socket(int domain, int type, int protocol)
 	if (msg.o.lookup.err < 0)
 		return set_errno(msg.o.lookup.err);
 
-	if ((err = fileAdd(&fd, &msg.o.lookup.res, 0)) < 0)
+	if ((err = fileAdd(&fd, &msg.o.lookup.res, S_IFSOCK)) < 0)
 		return set_errno(err);
 
 	return fd;
@@ -65,12 +66,14 @@ int socket(int domain, int type, int protocol)
 static ssize_t sockcall(int socket, msg_t *msg)
 {
 	sockport_resp_t *smo = (void *)msg->o.raw;
+	unsigned mode;
 	oid_t oid;
 	int err;
 
-	if (fileGet(socket, 1, &oid, NULL, NULL) != EOK)
+	if (fileGet(socket, 1, &oid, NULL, &mode) != EOK)
 		return -EBADF;
-	// FIXME: check and report ENOTSOCK?
+	if (!S_ISSOCK(mode))
+		return -ENOTSOCK;
 
 	if ((err = msgSend(oid.port, msg)) < 0)
 		return set_errno(err);
@@ -143,14 +146,16 @@ int listen(int socket, int backlog)
 }
 
 
-int accept(int socket, struct sockaddr *address, socklen_t *address_len)
+int accept4(int socket, struct sockaddr *address, socklen_t *address_len, int flags)
 {
 	unsigned fd;
 	ssize_t err;
 	msg_t msg = { 0 };
 	oid_t oid = { 0 };
+	sockport_msg_t *smi = (void *)msg.i.raw;
 
 	msg.type = sockmAccept;
+	smi->send.flags = flags;
 
 	if ((err = socknamecall(socket, &msg, address, address_len)) < 0)
 		return err;
@@ -163,6 +168,12 @@ int accept(int socket, struct sockaddr *address, socklen_t *address_len)
 	}
 
 	return fd;
+}
+
+
+int accept(int socket, struct sockaddr *address, socklen_t *address_len)
+{
+	return accept4(socket, address, address_len, 0);
 }
 
 
@@ -223,4 +234,26 @@ int getpeername(int socket, struct sockaddr *address, socklen_t *address_len)
 	msg.type = sockmGetPeerName;
 
 	return socknamecall(socket, &msg, address, address_len);
+}
+
+
+int __sock_getfl(int socket)
+{
+	msg_t msg = { 0 };
+
+	msg.type = sockmGetFl;
+
+	return sockcall(socket, &msg);
+}
+
+
+int __sock_setfl(int socket, int val)
+{
+	msg_t msg = { 0 };
+	sockport_msg_t *smi = (void *)msg.i.raw;
+
+	msg.type = sockmSetFl;
+	smi->send.flags = val;
+
+	return sockcall(socket, &msg);
 }

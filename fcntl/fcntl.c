@@ -19,6 +19,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h>
 #include <sys/msg.h>
 #include <sys/file.h>
 #include <posix/utils.h>
@@ -227,7 +228,11 @@ int fcntl(int fildes, int cmd, ...)
 		return 0;
 
 	case F_GETFL:
+		return __sock_getfl(fildes);
+
 	case F_SETFL:
+		return __sock_setfl(fildes, va_arg(args, int));
+
 	case F_GETLK:
 	case F_SETLK:
 	case F_SETLKW:
