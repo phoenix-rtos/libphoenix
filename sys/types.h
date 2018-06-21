@@ -33,4 +33,7 @@ typedef int blkcnt_t;
 typedef int suseconds_t;
 typedef int clock_t;
 
+typedef char *caddr_t;
+
+
 #endif
