@@ -17,6 +17,7 @@
 #define _SYS_SOCKET_H_
 
 #include <stdint.h>
+#include <sys/sockdefs.h>
 
 typedef int socklen_t;
 typedef unsigned int sa_family_t;
@@ -80,6 +81,7 @@ int socket(int domain, int type, int protocol);
 int connect(int socket, const struct sockaddr *address, socklen_t address_len);
 int bind(int socket, const struct sockaddr *address, socklen_t address_len);
 int listen(int socket, int backlog);
+int accept4(int socket, struct sockaddr *address, socklen_t *address_len, int flags);
 int accept(int socket, struct sockaddr *address, socklen_t *address_len);
 ssize_t sendto(int socket, const void *message, size_t length, int flags, const struct sockaddr *dest_addr, socklen_t dest_len);
 ssize_t send(int socket, const void *message, size_t length, int flags);
@@ -87,6 +89,8 @@ ssize_t recvfrom(int socket, void *message, size_t length, int flags, struct soc
 ssize_t recv(int socket, void *message, size_t length, int flags);
 int getpeername(int socket, struct sockaddr *address, socklen_t *address_len);
 int getsockname(int socket, struct sockaddr *address, socklen_t *address_len);
+int __sock_getfl(int socket);
+int __sock_setfl(int socket, int val);
 
 
 #endif
