@@ -18,6 +18,7 @@
 #include <sys/stat.h>
 #include <sys/file.h>
 #include <errno.h>
+#include <stdlib.h>
 #include <string.h>
 
 
@@ -197,6 +198,53 @@ ssize_t send(int socket, const void *message, size_t length, int flags)
 }
 
 
+static size_t iov_total_len(const struct iovec *iov, size_t n)
+{
+	size_t sz = 0;
+
+	while (n--)
+		sz += (iov++)->iov_len;
+
+	return sz;
+}
+
+
+// FIXME: no scatter-gather support in kernel
+ssize_t sendmsg(int socket, const struct msghdr *msg, int flags)
+{
+	ssize_t ret;
+	size_t sz = 0, i;
+	void *buf = NULL;
+
+	if (msg->msg_controllen)
+		return set_errno(-ENOSYS);	// FIXME: pass ancillary data
+
+	sz = iov_total_len(msg->msg_iov, msg->msg_iovlen);
+	if (msg->msg_iovlen <= 1 || !sz) {
+		if (msg->msg_iovlen) {
+			buf = msg->msg_iov->iov_base;
+			sz = msg->msg_iov->iov_len;
+		}
+		return sendto(socket, buf, sz, flags, msg->msg_name, msg->msg_namelen);
+	}
+
+	buf = malloc(sz);
+	if (!buf)
+		return set_errno(-ENOMEM);
+
+	for (sz = 0, i = 0; i < msg->msg_iovlen; ++i) {
+		memcpy(buf + sz, msg->msg_iov[i].iov_base, msg->msg_iov[i].iov_len);
+		sz += msg->msg_iov[i].iov_len;
+	}
+
+	ret = sendto(socket, buf, sz, flags, msg->msg_name, msg->msg_namelen);
+
+	free(buf);
+
+	return ret;
+}
+
+
 ssize_t recvfrom(int socket, void *message, size_t length, int flags, struct sockaddr *src_addr, socklen_t *src_len)
 {
 	msg_t msg = { 0 };
@@ -214,6 +262,47 @@ ssize_t recvfrom(int socket, void *message, size_t length, int flags, struct soc
 ssize_t recv(int socket, void *message, size_t length, int flags)
 {
 	return recvfrom(socket, message, length, flags, NULL, 0);
+}
+
+
+// FIXME: no scatter-gather support in kernel
+ssize_t recvmsg(int socket, struct msghdr *msg, int flags)
+{
+	ssize_t ret;
+	size_t sz = 0, i;
+	void *buf = NULL;
+
+	msg->msg_controllen = 0;	// FIXME: pass ancillary data
+	msg->msg_flags = 0;
+
+	sz = iov_total_len(msg->msg_iov, msg->msg_iovlen);
+	if (msg->msg_iovlen <= 1 || !sz) {
+		if (msg->msg_iovlen) {
+			buf = msg->msg_iov->iov_base;
+			sz = msg->msg_iov->iov_len;
+		}
+		return recvfrom(socket, buf, sz, flags, msg->msg_name, &msg->msg_namelen);
+	}
+
+	buf = malloc(sz);
+	if (!buf)
+		return set_errno(-ENOMEM);
+
+	ret = recvfrom(socket, buf, sz, flags, msg->msg_name, &msg->msg_namelen);
+
+	if (ret > 0) {
+		for (sz = 0, i = 0; i < msg->msg_iovlen && sz < ret; ++i) {
+			size_t left = ret - sz;
+			if (left > msg->msg_iov[i].iov_len)
+				left = msg->msg_iov[i].iov_len;
+			memcpy(msg->msg_iov[i].iov_base, buf + sz, left);
+			sz += left;
+		}
+	}
+
+	free(buf);
+
+	return ret;
 }
 
 

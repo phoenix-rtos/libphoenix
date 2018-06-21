@@ -18,6 +18,7 @@
 
 #include <stdint.h>
 #include <sys/sockdefs.h>
+#include <sys/uio.h>
 
 typedef int socklen_t;
 typedef unsigned int sa_family_t;
@@ -55,6 +56,8 @@ typedef unsigned int sa_family_t;
 #define SHUT_WR 1
 #define SHUT_RDWR 2
 
+#define SCM_RIGHTS 1
+
 
 struct sockaddr {
 	sa_family_t sa_family;
@@ -81,16 +84,35 @@ struct cmsghdr {
 };
 
 
+#define CMSG_ALIGN(x) (((x) + _Alignof(struct cmsghdr) - 1) & ~_Alignof(struct cmsghdr))
+#define CMSG_SPACE(x) (CMSG_ALIGN(x) + sizeof(struct cmsghdr))
+#define CMSG_LEN(x) (x)
+#define CMSG_DATA(x) ((unsigned char *)((x) + 1))
+
+static inline struct cmsghdr *CMSG_FIRSTHDR(struct msghdr *m)
+{
+	return m->msg_controllen ? m->msg_control : NULL;
+}
+
+static inline struct cmsghdr *CMSG_NXTHDR(struct msghdr *m, struct cmsghdr *c)
+{
+	c = (void *)c + CMSG_SPACE(c->cmsg_len);
+	return (void *)c < m->msg_control + m->msg_controllen ? c : NULL;
+}
+
+
 int socket(int domain, int type, int protocol);
 int connect(int socket, const struct sockaddr *address, socklen_t address_len);
 int bind(int socket, const struct sockaddr *address, socklen_t address_len);
 int listen(int socket, int backlog);
 int accept4(int socket, struct sockaddr *address, socklen_t *address_len, int flags);
 int accept(int socket, struct sockaddr *address, socklen_t *address_len);
-ssize_t sendto(int socket, const void *message, size_t length, int flags, const struct sockaddr *dest_addr, socklen_t dest_len);
 ssize_t send(int socket, const void *message, size_t length, int flags);
-ssize_t recvfrom(int socket, void *message, size_t length, int flags, struct sockaddr *src_addr, socklen_t *src_len);
+ssize_t sendto(int socket, const void *message, size_t length, int flags, const struct sockaddr *dest_addr, socklen_t dest_len);
+ssize_t sendmsg(int socket, const struct msghdr *msg, int flags) __attribute__((warning("sendmsg() is not fully supported")));
 ssize_t recv(int socket, void *message, size_t length, int flags);
+ssize_t recvfrom(int socket, void *message, size_t length, int flags, struct sockaddr *src_addr, socklen_t *src_len);
+ssize_t recvmsg(int socket, struct msghdr *msg, int flags) __attribute__((warning("recvmsg() is not fully supported")));
 int getpeername(int socket, struct sockaddr *address, socklen_t *address_len);
 int getsockname(int socket, struct sockaddr *address, socklen_t *address_len);
 int __sock_getfl(int socket);
