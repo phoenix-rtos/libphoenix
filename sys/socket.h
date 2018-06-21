@@ -78,6 +78,7 @@ struct cmsghdr {
 
 
 int socket(int domain, int type, int protocol);
+int connect(int socket, const struct sockaddr *address, socklen_t address_len);
 int bind(int socket, const struct sockaddr *address, socklen_t address_len);
 int listen(int socket, int backlog);
 int accept(int socket, struct sockaddr *address, socklen_t *address_len);
