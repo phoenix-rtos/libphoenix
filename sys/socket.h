@@ -91,6 +91,8 @@ int getpeername(int socket, struct sockaddr *address, socklen_t *address_len);
 int getsockname(int socket, struct sockaddr *address, socklen_t *address_len);
 int __sock_getfl(int socket);
 int __sock_setfl(int socket, int val);
+int getsockopt(int socket, int level, int optname, void *optval, socklen_t *optlen);
+int setsockopt(int socket, int level, int optname, const void *optval, socklen_t optlen);
 
 
 #endif
