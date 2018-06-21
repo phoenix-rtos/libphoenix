@@ -293,3 +293,15 @@ int setsockopt(int socket, int level, int optname, const void *optval, socklen_t
 
 	return sockcall(socket, &msg);
 }
+
+
+int shutdown(int socket, int how)
+{
+	msg_t msg = { 0 };
+	sockport_msg_t *smi = (void *)msg.i.raw;
+
+	msg.type = sockmShutdown;
+	smi->send.flags = how;
+
+	return sockcall(socket, &msg);
+}
