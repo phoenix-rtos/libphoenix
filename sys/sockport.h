@@ -17,6 +17,7 @@
 #define _SYS_SOCKPORT_H_
 
 #include <sys/msg.h>
+#include <sys/sockdefs.h>
 #include <stdint.h>
 
 
