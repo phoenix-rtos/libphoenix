@@ -6,7 +6,7 @@
  * netdb.h
  *
  * Copyright 2018 Phoenix Systems
- * Author: Jan Sikorski
+ * Author: Jan Sikorski, Michał Mirosław
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -60,6 +60,23 @@ enum {
 	NI_NUMERICSERV = 1 << 3,
 	NI_NUMERICSCOPE = 1 << 4,
 	NI_DGRAM = 1 << 5,
+
+	NI_MAXHOST = 1025,
+	NI_MAXSERV = 32,
+};
+
+
+enum {
+	EAI_BADFLAGS = -1,
+	EAI_NONAME = -2,
+	EAI_AGAIN = -3,
+	EAI_FAIL = -4,
+	EAI_FAMILY = -6,
+	EAI_SOCKTYPE = -7,
+	EAI_SERVICE = -8,
+	EAI_MEMORY = -10,
+	EAI_SYSTEM = -11,
+	EAI_OVERFLOW = -12,
 };
 
 
@@ -69,5 +86,20 @@ struct servent {
 	int    s_port;
 	char  *s_proto;
 };
+
+
+struct servent *getservbyname(const char *name, const char *proto);
+struct servent *getservbyport(int port, const char *proto);
+
+
+int getnameinfo(const struct sockaddr *addr, socklen_t addrlen,
+                char *host, socklen_t hostlen,
+                char *serv, socklen_t servlen, int flags);
+int getaddrinfo(const char *node, const char *service,
+                const struct addrinfo *hints,
+                struct addrinfo **res);
+void freeaddrinfo(struct addrinfo *res);
+const char *gai_strerror(int errcode);
+
 
 #endif
