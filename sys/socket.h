@@ -6,7 +6,7 @@
  * sys/socket.h
  *
  * Copyright 2018 Phoenix Systems
- * Author: Jan Sikorski
+ * Author: Jan Sikorski, Michał Mirosław
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -21,35 +21,34 @@
 typedef int socklen_t;
 typedef unsigned int sa_family_t;
 
-#define AF_UNIX 0
-#define AF_UNSPEC 1
+#define AF_UNSPEC 0
+#define AF_UNIX 1
 #define AF_INET 2
-#define AF_INET6 3
+#define AF_INET6 10
 
-#define SOCK_STREAM 0
-//#define SOCK_DGRAM 1
-#define SOCK_RDM 2
-#define SOCK_DGRAM 3
+#define SOCK_STREAM 1
+#define SOCK_DGRAM 2
+#define SOCK_RAW 3
 #define SOCK_SEQPACKET 4
-#define SOCK_RAW 5
+#define SOCK_RDM 5
 
-#define SOL_SOCKET 0
-#define SO_ACCEPTCONN 1
-#define SO_BROADCAST 2
-#define SO_DEBUG 3
-#define SO_DONTROUTE 4
-#define SO_ERROR 5
-#define SO_KEEPALIVE 6
-#define SO_LINGER 7
-#define SO_OOBINLINE 8
-#define SO_RCVBUF 9
-#define SO_RCVLOWAT 10
-#define SO_RCVTIMEO 11
-#define SO_REUSEADDR 12
-#define SO_SNDBUF 13
-#define SO_SNDLOWAT 14
-#define SO_SNDTIMEO 15
-#define SO_TYPE 16
+#define SOL_SOCKET 0xFFF
+#define SO_ACCEPTCONN 0x0002
+#define SO_BROADCAST 0x0020
+#define SO_DEBUG 0x0001
+#define SO_DONTROUTE 0x0010
+#define SO_ERROR 0x1007
+#define SO_KEEPALIVE 0x0008
+#define SO_LINGER 0x0080
+#define SO_OOBINLINE 0x0100
+#define SO_RCVBUF 0x1002
+#define SO_RCVLOWAT 0x1004
+#define SO_RCVTIMEO 0x1006
+#define SO_REUSEADDR 0x0004
+#define SO_SNDBUF 0x1001
+#define SO_SNDLOWAT 0x1003
+#define SO_SNDTIMEO 0x1005
+#define SO_TYPE 0x1008
 
 
 struct sockaddr {
