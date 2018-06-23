@@ -172,12 +172,6 @@ int pipe(int fildes[2])
 }
 
 
-int poll(struct pollfd *fds, nfds_t nfds, int timeout)
-{
-	return 0;
-}
-
-
 int ftruncate(int fildes, off_t length)
 {
 	oid_t oid;
