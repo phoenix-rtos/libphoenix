@@ -21,9 +21,6 @@
 #include <sys/sockdefs.h>
 #include <sys/uio.h>
 
-typedef int socklen_t;
-typedef unsigned int sa_family_t;
-
 #define AF_UNSPEC 0
 #define AF_UNIX 1
 #define AF_INET 2
