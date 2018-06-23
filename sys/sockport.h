@@ -27,6 +27,7 @@ enum {
 	sockmConnect, sockmBind, sockmListen, sockmAccept,
 	sockmSend, sockmRecv, sockmGetSockName, sockmGetPeerName,
 	sockmGetFl, sockmSetFl, sockmGetOpt, sockmSetOpt,
+	sockmGetNameInfo, sockmGetAddrInfo,
 };
 
 enum { MAX_SOCKNAME_LEN = sizeof(((msg_t *)0)->o.raw) - 2 * sizeof(size_t) };
@@ -37,7 +38,8 @@ enum { MAX_SOCKNAME_LEN = sizeof(((msg_t *)0)->o.raw) - 2 * sizeof(size_t) };
 
 typedef union sockport_msg_ {
 	struct {
-		int domain, type, protocol;
+		int domain, type, protocol, flags;
+		size_t ai_node_sz;
 	} socket;
 	struct {
 		int backlog;
@@ -65,6 +67,14 @@ typedef struct sockport_resp_ {
 			size_t addrlen;
 			char addr[MAX_SOCKNAME_LEN];
 		} sockname;
+		struct {
+			size_t hostlen;
+			size_t servlen;
+		} nameinfo;
+		struct {
+			int errno;
+			size_t buflen;
+		} sys;
 	};
 } sockport_resp_t;
 

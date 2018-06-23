@@ -16,9 +16,10 @@
 #ifndef _LIBPHOENIX_NETDB_H_
 #define _LIBPHOENIX_NETDB_H_
 
-#include <netinet/in.h>
+#include <sys/types.h>
 
-extern int h_errno;
+
+struct sockaddr;
 
 
 struct hostent {
@@ -39,6 +40,15 @@ struct addrinfo {
 	struct sockaddr *ai_addr;
 	char            *ai_canonname;
 	struct addrinfo *ai_next;
+};
+
+
+enum {
+	RESOLVED_OK,
+	HOST_NOT_FOUND,
+	TRY_AGAIN,
+	NO_RECOVERY,
+	NO_DATA,
 };
 
 
@@ -86,6 +96,9 @@ struct servent {
 	int    s_port;
 	char  *s_proto;
 };
+
+
+extern int h_errno;
 
 
 struct servent *getservbyname(const char *name, const char *proto);

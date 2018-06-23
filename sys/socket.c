@@ -19,12 +19,13 @@
 #include <sys/poll.h>
 #include <sys/file.h>
 #include <errno.h>
+#include <netdb.h>
 #include <stdlib.h>
 #include <string.h>
 
 
 #ifdef ERRNO_IN_RETURN
-#define set_errno
+#define set_errno(x) (x)
 #else
 static ssize_t set_errno(ssize_t ret)
 {
@@ -37,24 +38,33 @@ static ssize_t set_errno(ssize_t ret)
 #endif
 
 
-int socket(int domain, int type, int protocol)
+static int socksrvcall(msg_t *msg)
 {
 	oid_t oid;
-	msg_t msg = { 0 };
-	sockport_msg_t *smi = (void *)msg.i.raw;
-	unsigned fd;
 	int err;
 
 	if ((err = lookup(PATH_SOCKSRV, &oid)) < 0)
 		return set_errno(err);
+	if ((err = msgSend(oid.port, msg)) < 0)
+		return set_errno(err);
+	return 0;
+}
+
+
+int socket(int domain, int type, int protocol)
+{
+	msg_t msg = { 0 };
+	sockport_msg_t *smi = (void *)msg.i.raw;
+	unsigned fd;
+	int err;
 
 	msg.type = sockmSocket;
 	smi->socket.domain = domain;
 	smi->socket.type = type;
 	smi->socket.protocol = protocol;
 
-	if ((err = msgSend(oid.port, &msg)) < 0)
-		return set_errno(err);
+	if ((err = socksrvcall(&msg)) < 0)
+		return err;
 	if (msg.o.lookup.err < 0)
 		return set_errno(msg.o.lookup.err);
 
@@ -409,4 +419,188 @@ int shutdown(int socket, int how)
 	smi->send.flags = how;
 
 	return sockcall(socket, &msg);
+}
+
+
+struct servent *getservbyname(const char *name, const char *proto)
+{
+	return NULL;
+}
+
+
+struct servent *getservbyport(int port, const char *proto)
+{
+	return NULL;
+}
+
+
+int getnameinfo(const struct sockaddr *addr, socklen_t addrlen,
+                char *host, socklen_t hostlen,
+                char *serv, socklen_t servlen, int flags)
+{
+	msg_t msg = { 0 };
+	sockport_msg_t *smi = (void *)msg.i.raw;
+	sockport_resp_t *smo = (void *)msg.o.raw;
+	size_t hlen = hostlen;
+	char *buf;
+
+	if (addrlen > sizeof(smi->send.addr))
+		return EAI_FAMILY;
+
+	buf = malloc(hostlen + servlen);
+	if (!buf)
+		return EAI_MEMORY;
+
+	msg.type = sockmGetNameInfo;
+	smi->send.flags = flags;
+	smi->send.addrlen = addrlen;
+	memcpy(smi->send.addr, addr, addrlen);
+	msg.i.data = &hlen;
+	msg.i.size = sizeof(hlen);
+	msg.o.data = buf;
+	msg.o.size = hostlen + servlen;
+
+	if (socksrvcall(&msg) < 0) {
+		free(buf);
+		return EAI_SYSTEM;
+	}
+
+	if (!smo->ret) {
+		if (hostlen < smo->nameinfo.hostlen)
+			smo->ret = EAI_OVERFLOW;
+		if (servlen < smo->nameinfo.servlen)
+			smo->ret = EAI_OVERFLOW;
+	}
+
+	if (!smo->ret) {
+		memcpy(host, buf, smo->nameinfo.hostlen);
+		memcpy(serv, buf + smo->nameinfo.hostlen, smo->nameinfo.servlen);
+	}
+
+	if (smo->ret == EAI_SYSTEM)
+		(void)set_errno(smo->sys.errno);
+
+	free(buf);
+	return smo->ret;
+}
+
+
+int getaddrinfo(const char *node, const char *service,
+                const struct addrinfo *hints,
+                struct addrinfo **res)
+{
+	struct addrinfo *ai;
+	msg_t msg = { 0 };
+	sockport_msg_t *smi = (void *)msg.i.raw;
+	sockport_resp_t *smo = (void *)msg.o.raw;
+	size_t nodesz, servsz, bufsz;
+	char *p;
+
+	if (hints && (hints->ai_addrlen || hints->ai_canonname || hints->ai_next))
+		return EAI_BADFLAGS;
+
+	nodesz = node ? strlen(node) + 1 : 0;
+	servsz = service ? strlen(service) + 1 : 0;
+
+	msg.type = sockmGetAddrInfo;
+	smi->socket.domain = hints ? hints->ai_family : AF_UNSPEC;
+	smi->socket.type = hints ? hints->ai_socktype : 0;
+	smi->socket.protocol = hints ? hints->ai_protocol : 0;
+	smi->socket.flags = hints ? hints->ai_flags : (AI_V4MAPPED | AI_ADDRCONFIG);
+	smi->socket.ai_node_sz = nodesz;
+
+	if (nodesz + servsz) {
+		msg.i.size = nodesz + servsz;
+		msg.i.data = malloc(msg.i.size);
+		if (!msg.i.data)
+			return EAI_MEMORY;
+		memcpy(msg.i.data, node, nodesz);
+		memcpy(msg.i.data + nodesz, service, servsz);
+	}
+
+	msg.o.size = 128;
+	for (;;) {
+		void *buf = realloc(msg.o.data, msg.o.size);
+		if (!buf) {
+			realloc(msg.i.data, 0);
+			realloc(msg.o.data, 0);
+			return EAI_MEMORY;
+		}
+		msg.o.data = buf;
+
+		if (socksrvcall(&msg) < 0) {
+			realloc(msg.i.data, 0);
+			realloc(msg.o.data, 0);
+			return EAI_SYSTEM;
+		}
+
+		if (smo->ret != EAI_OVERFLOW)
+			break;
+
+		if (msg.o.size < smo->sys.buflen)
+			msg.o.size = smo->sys.buflen;
+		else
+			msg.o.size *= 2;
+	}
+
+	realloc(msg.i.data, 0);
+
+	bufsz = smo->sys.buflen;
+	if (smo->ret || bufsz > msg.o.size) {
+		free(msg.o.data);
+		if (smo->ret == EAI_SYSTEM)
+			(void)set_errno(smo->sys.errno);
+		return smo->ret;
+	}
+
+	*res = msg.o.data = realloc(msg.o.data, bufsz);
+
+	for (ai = msg.o.data; ai; ai = ai->ai_next) {
+		if (bufsz < (void *)ai - msg.o.data + sizeof(*ai))
+			goto out_overflow;
+
+		if (ai->ai_addrlen) {
+			if (bufsz < (uintptr_t)ai->ai_addr + ai->ai_addrlen)
+				goto out_overflow;
+			ai->ai_addr = msg.o.data + (uintptr_t)ai->ai_addr;
+		}
+
+		if (ai->ai_canonname) {
+			if (bufsz <= (uintptr_t)ai->ai_canonname)
+				goto out_overflow;
+
+			p = msg.o.data + (uintptr_t)ai->ai_canonname;
+			nodesz = strnlen(p, bufsz - (uintptr_t)ai->ai_canonname) + 1;
+
+			if (bufsz < (uintptr_t)ai->ai_canonname + nodesz)
+				goto out_overflow;
+
+			ai->ai_canonname = p;
+		}
+
+		if (ai->ai_next) {
+			if (bufsz < (uintptr_t)ai->ai_next)
+				goto out_overflow;
+			ai->ai_next = msg.o.data + (uintptr_t)ai->ai_next;
+		}
+	}
+
+	return 0;
+
+out_overflow:
+	free(msg.o.data);
+	(void)set_errno(EPROTO);
+	return EAI_SYSTEM;
+}
+
+
+void freeaddrinfo(struct addrinfo *res)
+{
+	free(res);
+}
+
+
+const char *gai_strerror(int errcode)
+{
+	return NULL;
 }

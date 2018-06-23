@@ -40,5 +40,8 @@ typedef char *caddr_t;
 struct _FILE;
 typedef struct _FILE FILE;
 
+typedef size_t socklen_t;
+typedef unsigned int sa_family_t;
+
 
 #endif
