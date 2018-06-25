@@ -17,7 +17,7 @@
 #define _LIBPHOENIX_ARPA_INET_H_
 
 #include <endian.h>
-
+#include <netinet/in.h>
 
 #define ntohs be16toh
 #define ntohl be32toh
