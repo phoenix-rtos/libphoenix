@@ -490,7 +490,8 @@ int psh_exec(char *cmd)
 
 int psh_runfile(char *cmd)
 {
-	int pid, exerr = EOK;
+	volatile int exerr = EOK;
+	int pid;
 	int argc = 0;
 	char **argv = malloc(sizeof(char *));
 
