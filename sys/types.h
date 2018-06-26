@@ -17,6 +17,7 @@
 #define _SYS_TYPES_H
 
 #include <stdint.h>
+#include <arch.h>
 
 
 typedef int pid_t;

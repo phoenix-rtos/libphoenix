@@ -16,10 +16,10 @@
 #include <sys/sockport.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
-#include <sys/poll.h>
 #include <sys/file.h>
 #include <errno.h>
 #include <netdb.h>
+#include <poll.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -392,21 +392,6 @@ int setsockopt(int socket, int level, int optname, const void *optval, socklen_t
 	msg.i.size = optlen;
 
 	return sockcall(socket, &msg);
-}
-
-
-int __sock_poll(int socket, int events, time_t timeout)
-{
-	msg_t msg = { 0 };
-	sockport_msg_t *smi = (void *)msg.i.raw;
-	int err;
-
-	msg.type = sockmPoll;
-	smi->poll.events = events;
-	smi->poll.timeout = timeout;
-
-	err = sockcall(socket, &msg);
-	return err < 0 ? POLLNVAL : err;
 }
 
 

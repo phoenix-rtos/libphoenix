@@ -14,63 +14,88 @@
  */
 
 #include <sys/file.h>
-#include <sys/poll.h>
-#include <sys/stat.h>
-#include <sys/socket.h>
+#include <sys/msg.h>
 #include <errno.h>
-#include <unistd.h>
+#include <poll.h>
 #include <time.h>
+#include <unistd.h>
 
 
-// FIXME: no poll() in kernel -> single socket poll only for now
-static int do_poll(struct pollfd *fds, nfds_t nfds, int timeout_)
+/* hack around missing msgPoll() in kernel */
+
+
+#define POLL_INTERVAL 25000
+
+
+static int do_poll_iteration(struct pollfd *fds, nfds_t nfds)
 {
-	struct pollfd *fd = fds;
-	unsigned mode;
-	time_t timeout;
-	size_t i, n;
+	msg_t msg = {0};
+	size_t ready, i;
+	int err;
 
-	for (i = n = 0; i < nfds; ++i) {
-		if (fds[i].fd >= 0) {
-			++n;
-			fd = fds + i;
-		} else
-			fds[i].revents = 0;
+	msg.type = mtGetAttr;
+	msg.i.attr.type = atPollStatus;
+
+	for (ready = i = 0; i < nfds; ++i) {
+		if (fds[i].fd < 0)
+			continue;
+
+		msg.i.attr.val = fds[i].events;
+
+		if (fileGet(fds[i].fd, 1, &msg.i.attr.oid, NULL, NULL) < 0)
+			err = -EBADF;
+		else if (!(err = msgSend(msg.i.attr.oid.port, &msg)))
+			err = msg.o.attr.val;
+
+		if (err < 0)
+			fds[i].revents |= POLLNVAL;
+		else if (err > 0)
+			fds[i].revents |= err;
+
+		fds[i].revents &= ~(~fds[i].events & (POLLIN|POLLOUT|POLLPRI|POLLRDNORM|POLLWRNORM|POLLRDBAND|POLLWRBAND));
+
+		if (fds[i].revents)
+			++ready;
 	}
 
-	if (n > 1)
-		return -ENOSYS;
-
-	timeout = timeout_ >= 0 ? timeout_ * 1000 : timeout_;
-
-	if (!n) {
-		if (timeout > 0)
-			usleep(timeout);
-		return 0;
-	}
-
-	if (fileGet(fd->fd, 4, NULL, NULL, &mode) < 0) {
-		fd->revents = POLLNVAL;
-		return 1;
-	}
-
-	if (!S_ISSOCK(mode))
-		return -ENOSYS;
-
-	fd->revents = __sock_poll(fd->fd, fd->events, timeout);
-
-	return fd->revents ? 1 : 0;
+	return ready;
 }
 
 
-int poll(struct pollfd *fds, nfds_t nfds, int timeout)
+int poll(struct pollfd *fds, nfds_t nfds, int timeout_ms)
 {
-	int ret = do_poll(fds, nfds, timeout);
+	size_t i, n, ready;
+	time_t timeout, now;
 
-	if (ret < 0) {
-		errno = -ret;
-		return -1;
+	for (i = n = 0; i < nfds; ++i) {
+		fds[i].revents = 0;
+		if (fds[i].fd >= 0)
+			++n;
 	}
 
-	return ret;
+	if (!n) {
+		if (timeout_ms > 0)
+			usleep((time_t)timeout_ms * 1000);
+		return 0;
+	}
+
+	if (timeout_ms >= 0) {
+		gettime(&timeout);
+		timeout += timeout_ms * 1000 + !timeout_ms;
+	} else
+		timeout = 0;
+
+	while (!(ready = do_poll_iteration(fds, nfds))) {
+		if (timeout) {
+			gettime(&now);
+			now = now < timeout ? timeout - now : 1;
+			if (now > POLL_INTERVAL)
+				now = POLL_INTERVAL;
+		} else
+			now = POLL_INTERVAL;
+
+		usleep(now);
+	}
+
+	return ready;
 }
