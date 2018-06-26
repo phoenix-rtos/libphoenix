@@ -13,10 +13,10 @@
  * %LICENSE%
  */
 
-#include <sys/poll.h>
 #include <sys/select.h>
 #include <errno.h>
 #include <limits.h>
+#include <poll.h>
 #include <stdlib.h>
 #include <unistd.h>
 

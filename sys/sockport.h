@@ -23,7 +23,7 @@
 
 
 enum {
-	sockmSocket = 0x50c30000, sockmShutdown, sockmPoll,
+	sockmSocket = 0x50c30000, sockmShutdown,
 	sockmConnect, sockmBind, sockmListen, sockmAccept,
 	sockmSend, sockmRecv, sockmGetSockName, sockmGetPeerName,
 	sockmGetFl, sockmSetFl, sockmGetOpt, sockmSetOpt,
@@ -53,10 +53,6 @@ typedef union sockport_msg_ {
 		size_t addrlen;
 		char addr[MAX_SOCKNAME_LEN];
 	} send;
-	struct {
-		int events;
-		time_t timeout;
-	} poll;
 } sockport_msg_t;
 
 
