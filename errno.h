@@ -25,6 +25,7 @@ extern int errno;
 
 /* Linux/x86-compatible numbers for easier debugging */
 
+#define ENOTEMPTY       39
 #define EUNATCH         49
 #define ENODATA         61
 #define EPROTO          71
