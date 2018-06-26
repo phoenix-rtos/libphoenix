@@ -30,4 +30,10 @@ extern int gettimeofday(struct timeval *tp, void *tzp);
 
 extern int utimes(const char *filename, const struct timeval times[2]);
 
+
+extern int futimes(int fd, const struct timeval tv[2]);
+
+
+extern int lutimes(const char *filename, const struct timeval tv[2]);
+
 #endif

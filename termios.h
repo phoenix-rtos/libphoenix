@@ -75,6 +75,7 @@ enum {
 	TAB1 = 1 << 0,
 	TAB2 = 1 << 0,
 	TAB3 = 1 << 0,
+	XTABS = TAB3,
 	BSDLY = 1 << 0,
 	BS0 = 1 << 0,
 	BS1 = 1 << 0,

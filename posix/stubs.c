@@ -17,6 +17,10 @@
 #include <sys/socket.h>
 #include <time.h>
 #include <sys/resource.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <stdarg.h>
 
 
 char *mkdtemp(char *template)
@@ -110,6 +114,103 @@ int getrlimit(int resource, struct rlimit *rlp)
 
 
 int setrlimit(int resource, const struct rlimit *rlp)
+{
+	return 0;
+}
+
+
+pid_t tcgetpgrp(int fd)
+{
+	return -1;
+}
+
+
+int tcsetpgrp(int fd, pid_t pgrp)
+{
+	return -1;
+}
+
+
+int inet_aton(const char *cp, struct in_addr *addr)
+{
+	return -1;
+}
+
+
+int inet_ntoa(const char *cp, struct in_addr *addr)
+{
+	return -1;
+}
+
+
+uint32_t htonl(uint32_t hostlong)
+{
+	return -1;
+}
+
+
+uint16_t htons(uint16_t hostshort)
+{
+	return -1;
+}
+
+
+uint32_t ntohl(uint32_t netlong)
+{
+	return -1;
+}
+
+
+uint16_t ntohs(uint16_t netshort)
+{
+	return -1;
+}
+
+
+char *ctime(const time_t *clock)
+{
+	return NULL;
+}
+
+
+void openlog(const char *ident, int option, int facility)
+{
+}
+
+
+void syslog(int priority, const char *format, ...)
+{
+}
+
+
+void closelog(void)
+{
+}
+
+
+void vsyslog(int priority, const char *format, va_list ap)
+{
+}
+
+
+struct tm *localtime_r(const time_t *timep, struct tm *result)
+{
+	return NULL;
+}
+
+
+void setbuf(FILE *stream, char *buf)
+{
+}
+
+
+struct group *getgrgid(gid_t gid)
+{
+	return NULL;
+}
+
+
+dev_t makedev(unsigned int maj, unsigned int min)
 {
 	return 0;
 }

@@ -27,7 +27,7 @@ struct winsize
 };
 
 
-enum { TIOCGWINSZ };
+enum { TIOCGWINSZ, TIOCSWINSZ };
 
 
 int ioctl(int fd, int cmd, ... );
