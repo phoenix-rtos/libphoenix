@@ -264,8 +264,14 @@ static int pipe_write(request_t *r)
 
 		/* write to buffer */
 		if (!(bytes += _pipe_write(p, buf + bytes, sz - bytes))) {
-			TRACE("write blocked");
-			LIST_ADD(&p->queue, r);
+			if (r->msg.i.io.mode & O_NONBLOCK) {
+				TRACE("write would block");
+				bytes = -EWOULDBLOCK;
+			}
+			else {
+				TRACE("write blocked");
+				LIST_ADD(&p->queue, r);
+			}
 		}
 	}
 	else {
@@ -321,6 +327,10 @@ static int pipe_read(request_t *r)
 		p->mark = 0;
 		bytes = -EPIPE;
 	}
+	else if (!bytes && r->msg.i.io.mode & O_NONBLOCK) {
+		TRACE("read would block");
+		bytes = -EWOULDBLOCK;
+	}
 	else if (!bytes) {
 		TRACE("read blocked");
 		LIST_ADD(&p->queue, r);
@@ -332,6 +342,8 @@ static int pipe_read(request_t *r)
 }
 
 
+/* TODO: open should block if there is nobody on the other end, unless
+ * O_NONBLOCK is set in which case an error should be returned */
 static int pipe_open(int id, unsigned flags)
 {
 	pipe_t *p;
