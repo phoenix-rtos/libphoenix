@@ -65,6 +65,10 @@
 #define SCM_RIGHTS 1
 
 
+typedef size_t socklen_t;
+typedef uint16_t sa_family_t;	// match lwIP size: u8 len + u8 family
+
+
 struct sockaddr {
 	sa_family_t sa_family;
 	char        sa_data[];
