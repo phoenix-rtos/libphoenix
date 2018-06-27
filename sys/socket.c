@@ -598,9 +598,3 @@ void freeaddrinfo(struct addrinfo *res)
 {
 	free(res);
 }
-
-
-const char *gai_strerror(int errcode)
-{
-	return NULL;
-}

@@ -16,26 +16,36 @@ all: check $(ARCH)
 
 $(ARCH): $(OBJS)
 
-strerror.o: errstr.inc errtab.inc
+strerror.o: errno.str.inc errno.tab.inc gaierr.str.inc gaierr.tab.inc
+
+
+ERR_EXTRACT := sed -En -e '/^\s*\#\s*define\s+E\w+\s+[[:digit:]]+/{s/^[^d]*define\s+(\w+)\s+([[:digit:]]+).*/\2\t\1/;p;d}' \
+		-e '/^\s*E\w+\s*=\s*-?[[:digit:]]+/{s/^\s*(\w+)\s*=\s*-?([[:digit:]]+).*/\2\t\1/;p;d}'
+
 
 errno.list: $(HEADERS_INSTALL_DIR)/phoenix/errno.h $(SRCDIR)/errno.h
 	@(printf " GEN %-24s  \n" "$@")
-	$(SIL)sed -En -e '/^\s*#\s*define\s+E\w+\s+[[:digit:]]+/{s/^[^d]*define\s+(\w+)\s+([[:digit:]]+).*/\2\t\1/;p;d}' \
-		-e '/^\s*E\w+\s*=\s*[[:digit:]]+/{s/^\s*(\w+)\s*=\s*([[:digit:]]+).*/\2\t\1/;p;d}' \
-		$^ | sort -n > $@
+	$(SIL)$(ERR_EXTRACT) $^ | sort -n > $@
 
-errstr.inc: errno.list Makefile
+gaierr.list: $(SRCDIR)/netdb.h
+	@(printf " GEN %-24s  \n" "$@")
+	$(SIL)$(ERR_EXTRACT) $^ | sort -n > $@
+
+%.str.inc: %.list Makefile
 	@(printf " GEN %-24s  \n" "$@")
 	$(SIL)sed -e 's/^.*\t\(.*\)$$/"\1\\0"/' $< > $@
 
-errtab.inc: errno.list Makefile
+%.tab.inc: %.list Makefile
 	@(printf " GEN %-24s  \n" "$@")
 	$(SIL)bash -c 'o=0; while read num name; do echo "{ $$num, $$o },"; o=$$((o+$${#name}+1)); done' < $< > $@
 
-clean-errstr:
-	$(SIL)rm -f errno.list errstr.inc errtab.inc
+clean-errno:
+	$(SIL)rm -f errno.list errno.str.inc errno.tab.inc
 
-clean: clean-errstr
+clean-gaierr:
+	$(SIL)rm -f gaierr.list gaierr.str.inc gaierr.tab.inc
+
+clean: clean-errno clean-gaierr
 
 # include after all dependencies are set
 include $(SRCDIR)/Makefile.rules
