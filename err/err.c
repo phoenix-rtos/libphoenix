@@ -14,31 +14,56 @@
  */
 
 #include "err.h"
+#include "errno.h"
+#include "stdio.h"
 #include "stdlib.h"
+#include "string.h"
+
+
+extern const char *argv_progname;
+
+
+static void vmsg(int perr, const char *fmt, va_list va)
+{
+	const char *errfmt = ": %s (%d)\n";
+	int err = errno;
+
+	printf("%s: ", argv_progname);
+
+	if (fmt)
+		vprintf(fmt, va);
+	else
+		errfmt += 2;
+
+	if (!perr)
+		errfmt = "\n";
+
+	printf(errfmt, strerror(err), err);
+}
 
 
 void vwarn(const char *fmt, va_list va)
 {
-	// FIXME
+	vmsg(1, fmt, va);
 }
 
 
 void vwarnx(const char *fmt, va_list va)
 {
-	// FIXME
+	vmsg(0, fmt, va);
 }
 
 
 void verr(int status, const char *fmt, va_list va)
 {
-	vwarn(fmt, va);
+	vmsg(1, fmt, va);
 	exit(status);
 }
 
 
 void verrx(int status, const char *fmt, va_list va)
 {
-	vwarnx(fmt, va);
+	vmsg(0, fmt, va);
 	exit(status);
 }
 

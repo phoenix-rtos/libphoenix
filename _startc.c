@@ -23,11 +23,14 @@ extern int _env_init(void);
 extern int main(int argc, char **argv);
 
 char **environ;
+const char *argv_progname;
+
 
 
 void _startc(int argc, char **argv, char **env)
 {
 	environ = env;
+	argv_progname = *argv;
 
 	_malloc_init();
 	_env_init();
