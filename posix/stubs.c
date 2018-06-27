@@ -143,30 +143,6 @@ int inet_ntoa(const char *cp, struct in_addr *addr)
 }
 
 
-uint32_t htonl(uint32_t hostlong)
-{
-	return -1;
-}
-
-
-uint16_t htons(uint16_t hostshort)
-{
-	return -1;
-}
-
-
-uint32_t ntohl(uint32_t netlong)
-{
-	return -1;
-}
-
-
-uint16_t ntohs(uint16_t netshort)
-{
-	return -1;
-}
-
-
 char *ctime(const time_t *clock)
 {
 	return NULL;
