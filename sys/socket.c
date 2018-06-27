@@ -108,7 +108,7 @@ static ssize_t socknamecall(int socket, msg_t *msg, struct sockaddr *address, so
 	memcpy(address, smo->sockname.addr, smo->sockname.addrlen);
 	*address_len = smo->sockname.addrlen;
 
-	return 0;
+	return err;
 }
 
 
