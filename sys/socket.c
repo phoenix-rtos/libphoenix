@@ -82,10 +82,10 @@ static ssize_t sockcall(int socket, msg_t *msg)
 	oid_t oid;
 	int err;
 
-	if (fileGet(socket, 1, &oid, NULL, &mode) != EOK)
-		return -EBADF;
+	if (fileGet(socket, 1|4, &oid, NULL, &mode) != EOK)
+		return set_errno(-EBADF);
 	if (!S_ISSOCK(mode))
-		return -ENOTSOCK;
+		return set_errno(-ENOTSOCK);
 
 	if ((err = msgSend(oid.port, msg)) < 0)
 		return set_errno(err);
@@ -478,7 +478,7 @@ int getnameinfo(const struct sockaddr *addr, socklen_t addrlen,
 	}
 
 	if (smo->ret == EAI_SYSTEM)
-		(void)set_errno(smo->sys.errno);
+		(void)set_errno(-smo->sys.errno);
 
 	free(buf);
 	return smo->ret;
@@ -549,7 +549,7 @@ int getaddrinfo(const char *node, const char *service,
 	if (smo->ret || bufsz > msg.o.size) {
 		free(msg.o.data);
 		if (smo->ret == EAI_SYSTEM)
-			(void)set_errno(smo->sys.errno);
+			(void)set_errno(-smo->sys.errno);
 		return smo->ret;
 	}
 
