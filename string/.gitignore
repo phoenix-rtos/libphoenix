@@ -1,3 +1,4 @@
 errno.list
-errstr.inc
-errtab.inc
+gaierr.list
+*str.inc
+*tab.inc
