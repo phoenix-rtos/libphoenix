@@ -16,10 +16,11 @@
 #ifndef _LIBPHOENIX_NETDB_H_
 #define _LIBPHOENIX_NETDB_H_
 
-#include <sys/types.h>
+#include <stdint.h>
 
 
 struct sockaddr;
+typedef size_t socklen_t;
 
 
 struct hostent {
