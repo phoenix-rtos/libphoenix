@@ -130,7 +130,7 @@ int connect(int socket, const struct sockaddr *address, socklen_t address_len)
 {
 	msg_t msg = { 0 };
 
-	msg.type = sockmSend;
+	msg.type = sockmConnect;
 
 	return sockdestcall(socket, &msg, address, address_len);
 }
