@@ -90,9 +90,12 @@ int select(int nfds, fd_set *rd, fd_set *wr, fd_set *ex, struct timeval *to)
 		return err;
 	}
 
-	FD_ZERO(rd);
-	FD_ZERO(wr);
-	FD_ZERO(ex);
+	if (rd)
+		FD_ZERO(rd);
+	if (wr)
+		FD_ZERO(wr);
+	if (ex)
+		FD_ZERO(ex);
 
 	for (i = nfds = 0; i < n; ++i) {
 		if (rd && (pfd[i].revents & POLLIN))
