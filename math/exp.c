@@ -67,13 +67,11 @@ double ldexp(double x, int exp)
 }
 
 
-/* Uses ln(x) = log2(x) / log2(e) and
- * log2(x) = log2(M * 2^E) = log2(M) + E identities */
 double log(double x)
 {
-	conv_t *conv = (conv_t *)&x;
-	int exp = 0;
-	u32 tmp;
+	double tmp, pow, res;
+	conv_t *conv = (conv_t *)&tmp;
+	int exp = 0, i;
 
 	if (x < 0) {
 		/* TODO errno EDOM */
@@ -83,33 +81,29 @@ double log(double x)
 		/* TODO errno ERANGE */
 		return -HUGE_VAL;
 	}
-	else if (x == 1) {
+	else if (x == 1.0) {
 		return 0.0;
 	}
 
-	exp = conv->i.exponent - 1023;
+	tmp = x;
+
+	exp = conv->i.exponent - 1022;
 
 	if (conv->i.exponent == 0)
-		normalizeSub(&x, &exp);
+		return -HUGE_VAL;
 
-	tmp = conv->i.mantisa >> 21;
-	if (conv->i.mantisa & 0x1fffff)
-		++tmp;
-	tmp |= (1 << 31);
-	tmp = log2(tmp);
-	conv->i.mantisa = (u64)tmp << 21;
+	conv->i.exponent = 1022;
 
-	normalizeSub(&x, &exp);
+	tmp -= 1.0;
 
-	if (1023 + exp <= 0) {
-		createSub(&x, exp + conv->i.exponent);
-		conv->i.exponent = 0;
-	}
-	else {
-		conv->i.exponent = 1023;
+	for (i = 1, res = 0, pow = tmp; i < 16; ++i, pow *= tmp) {
+		if (i & 1)
+			res += pow / i;
+		else
+			res -= pow / i;
 	}
 
-	return (x + exp - 1) / M_LOG2E;
+	return res + (exp / M_LOG2E);
 }
 
 

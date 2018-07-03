@@ -44,9 +44,6 @@ extern void createSub(double *x, int exp);
 extern double quickPow(double x, int e);
 
 
-extern u32 log2(u32 x);
-
-
 extern int isInteger(double x);
 
 

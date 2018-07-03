@@ -131,25 +131,6 @@ double quickPow(double x, int e)
 }
 
 
-u32 log2(u32 x)
-{
-	u32 y = 0, b = 1 << 30;
-	u64 z = x;
-	int i;
-
-	for (i = 0; i < 31; ++i) {
-		z = (z * z) >> 31;
-		if (z & (2LL << 31)) {
-			z >>= 1;
-			y |= b;
-		}
-		b >>= 1;
-	}
-
-	return y;
-}
-
-
 int isInteger(double x)
 {
 	conv_t *conv = (conv_t *)&x;
