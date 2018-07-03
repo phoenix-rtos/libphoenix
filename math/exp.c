@@ -90,7 +90,7 @@ double log(double x)
 	exp = conv->i.exponent - 1022;
 
 	if (conv->i.exponent == 0)
-		return -HUGE_VAL;
+		normalizeSub(&tmp, &exp);
 
 	conv->i.exponent = 1022;
 
