@@ -57,8 +57,8 @@ vfork_child:
 .size vfork, .-vfork
 
 
-#define SYSCALLS_LIBC(n, kernel, libc) \
-	SYSCALLDEF(libc, n);
+#define SYSCALLS_LIBC(name) \
+	SYSCALLDEF(name, __COUNTER__);
 
 
 SYSCALLS(SYSCALLS_LIBC)
