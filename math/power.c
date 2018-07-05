@@ -22,7 +22,7 @@
 double pow(double base, double exponent)
 {
 	double res = 1.0;
-	int e;
+	int s = 1;
 
 	if (base == 0.0) {
 		if (exponent == 0.0) {
@@ -36,28 +36,17 @@ double pow(double base, double exponent)
 	else if (exponent == 0.0)
 		return 1.0;
 
-	if (base < 0) {
-		if (!isInteger(exponent)) {
-			/* TODO: errno EDOM */
-			return NAN;
-		}
+	if (base < 0.0) {
+		if (!isInteger(exponent))
+			return NAN; /* TODO: errno EDOM */
+		else
+			s = (fmod(exponent, 2) > 0.0) ? -1 : 1;
 
-		while (exponent != 0.0) {
-			if (exponent > INT_MAX)
-				e = INT_MAX;
-			else if (exponent < INT_MIN)
-				e = INT_MIN;
-			else
-				e = (int)exponent;
+		base = -base;
+	}
 
-			res *= quickPow(base, e);
-			exponent -= e;
-		}
-	}
-	else {
-		exponent *= log(base);
-		res = exp(exponent);
-	}
+	exponent *= log(base);
+	res = s * exp(exponent);
 
 	return res;
 }
