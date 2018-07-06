@@ -86,6 +86,9 @@ extern ssize_t write(int fildes, const void *buf, size_t nbyte);
 extern int dup(int fildes);
 
 
+extern int isatty(int fildes);
+
+
 extern int dup2(int fildes, int fildes2);
 
 
@@ -100,7 +103,9 @@ extern int link(const char *path1, const char *path2);
 
 extern int unlink(const char *pathname);
 
+
 extern int access(const char *pathname, int mode);
+
 
 extern char *getcwd(char *buf, size_t size);
 
