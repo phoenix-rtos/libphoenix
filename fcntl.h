@@ -16,6 +16,8 @@
 #ifndef _LIBPHOENIX_FCNTL_H_
 #define _LIBPHOENIX_FCNTL_H_
 
+#include <sys/types.h>
+
 #define O_RDONLY 0x0001
 #define O_WRONLY 0x0002
 #define O_RDWR 0x0004
@@ -47,6 +49,18 @@ enum {
 	LOCK_EX = 2,
 	LOCK_NB = 4,
 	LOCK_UN = 8,
+};
+
+
+enum { F_RDLCK, F_UNLCK, F_WRLCK };
+
+
+struct flock {
+	short l_type;
+	short l_whence;
+	off_t l_start;
+	off_t l_len;
+	pid_t l_pid;
 };
 
 
