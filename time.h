@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * stdlib.h
+ * time.h
  *
  * Copyright 2017 Phoenix Systems
  * Author: Pawel Pisarczyk
