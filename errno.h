@@ -48,5 +48,7 @@ extern int errno;
 #define EALREADY        114
 #define EINPROGRESS     115
 
+#define ENOLCK          116
+
 
 #endif
