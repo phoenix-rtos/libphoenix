@@ -248,4 +248,9 @@ extern int ungetc(int c, FILE *stream);
 extern void perror(const char *str);
 
 
+extern FILE *popen(const char *command, const char *type);
+
+
+extern int pclose(FILE *stream);
+
 #endif

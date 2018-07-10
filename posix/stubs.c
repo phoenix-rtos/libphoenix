@@ -180,6 +180,12 @@ void setbuf(FILE *stream, char *buf)
 }
 
 
+int setvbuf(FILE *stream, char *buffer, int mode, size_t size)
+{
+	return 0;
+}
+
+
 struct group *getgrgid(gid_t gid)
 {
 	return NULL;
@@ -187,6 +193,24 @@ struct group *getgrgid(gid_t gid)
 
 
 dev_t makedev(unsigned int maj, unsigned int min)
+{
+	return 0;
+}
+
+
+int getrusage(int who, struct rusage *usage)
+{
+	return 0;
+}
+
+
+FILE *popen(const char *command, const char *type)
+{
+	return NULL;
+}
+
+
+int pclose(FILE *stream)
 {
 	return 0;
 }
