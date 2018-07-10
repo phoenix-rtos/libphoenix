@@ -50,3 +50,39 @@ int tolower(int c)
 {
 	return isupper(c) ? c - 'A' + 'a' : c;
 }
+
+
+int isalnum(int c)
+{
+	return isalpha(c) || isdigit(c);
+}
+
+
+int iscntrl(int c)
+{
+	return (c >= 0x00 && c <= 0x1f) || c == 0x7f;
+}
+
+
+int isprint(int c)
+{
+	return c > 0x1f && c < 0x7f;
+}
+
+
+int isgraph(int c)
+{
+	return c != ' ' && isprint(c);
+}
+
+
+int ispunct(int c)
+{
+	return isgraph(c) && !isalnum(c);
+}
+
+
+int isxdigit(int c)
+{
+	return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+}
