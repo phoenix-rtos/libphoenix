@@ -226,8 +226,10 @@ int putc_unlocked(int c)
 
 int putchar_unlocked(int c)
 {
+	char cc = c;
 	/* Temporary: stdout */
-	write(1, &c, 1); /* FIXME: won't work on big endian */
+	if (write(1, &cc, 1) < 0)
+		return EOF;
 	return 0;
 }
 

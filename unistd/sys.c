@@ -160,19 +160,6 @@ int execle(const char *path, const char *arg, ...)
 }
 
 
-/* TODO :move */
-unsigned int major(int dev)
-{
-	return 0;
-}
-
-
-unsigned int minor(int dev)
-{
-	return 0;
-}
-
-
 unsigned sleep(unsigned seconds)
 {
 	return usleep(seconds * 1000 * 1000);

@@ -128,16 +128,18 @@ enum {
 
 /* c_lflag */
 enum {
-	ECHO   = 1 << 0,
-	ECHOE  = 1 << 1,
-	ECHOK  = 1 << 2,
-	ECHONL = 1 << 3,
-	ICANON = 1 << 4,
-	IEXTEN = 1 << 5,
-	ISIG   = 1 << 6,
-	NOFLSH = 1 << 7,
-	TOSTOP = 1 << 8,
-	XCASE  = 1 << 9,
+	ECHO    = 1 << 0,
+	ECHOE   = 1 << 1,
+	ECHOK   = 1 << 2,
+	ECHONL  = 1 << 3,
+	ICANON  = 1 << 4,
+	IEXTEN  = 1 << 5,
+	ISIG    = 1 << 6,
+	NOFLSH  = 1 << 7,
+	TOSTOP  = 1 << 8,
+	XCASE   = 1 << 9,
+	ECHOCTL = 1 << 10,
+	ECHOKE  = 1 << 11,
 };
 
 

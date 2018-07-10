@@ -214,3 +214,44 @@ int pclose(FILE *stream)
 {
 	return 0;
 }
+
+
+int reboot(int cmd)
+{
+	return 0;
+}
+
+
+int kill(pid_t pid, int sig)
+{
+	return 0;
+}
+
+
+char *strsep (char **string_ptr, const char *delimiter)
+{
+	return NULL;
+}
+
+
+void sync(void)
+{
+}
+
+
+ssize_t getline(char **lineptr, size_t *n, FILE *stream)
+{
+	return 0;
+}
+
+
+unsigned int major(int dev)
+{
+	return 0;
+}
+
+
+unsigned int minor(int dev)
+{
+	return 0;
+}

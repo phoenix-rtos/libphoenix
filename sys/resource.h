@@ -19,6 +19,7 @@
 #include <sys/time.h>
 #include <time.h>
 
+#define RLIMIT_CORE 0
 
 typedef int rlim_t;
 

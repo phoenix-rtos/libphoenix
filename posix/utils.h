@@ -16,6 +16,8 @@
 #ifndef _LIBPHOENIX_POSIX_UTILS_H_
 #define _LIBPHOENIX_POSIX_UTILS_H_
 
+extern int create_dev(oid_t *oid, const char *path);
+
 
 extern void splitname(char *path, char **base, char **dir);
 

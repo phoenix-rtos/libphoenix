@@ -9,11 +9,14 @@ $(error Only main Makefile can be used for compilation)
 endif
 
 PROGS := posixsrv
-SRCS  := $(PROGS:=.c)
+SRCS  := pipe.c posixsrv.c pty.c
+OBJS  := $(SRCS:.c=.o)
+
+posixsrv_unstripped: $(OBJS)
 
 -include .depend
 
-all: check $(PROGS)
+all: check $(PROGS) $(OBJS)
 
 # include after all dependencies are set
 include $(SRCDIR)/Makefile.rules

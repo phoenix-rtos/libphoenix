@@ -16,7 +16,7 @@ TARGET ?= ia32-qemu
 VERSION = 0.2
 SRCDIR := $(CURDIR)
 
-SUBSYSTEMS := math stdio stdlib string sys ctype time fcntl unistd errno signal termios posix err locale
+SUBSYSTEMS := math stdio stdlib string sys ctype time unistd errno signal termios posix err locale
 EXTRA_HEADER_DIRS := net netinet arpa
 
 LIB := libphoenix.a

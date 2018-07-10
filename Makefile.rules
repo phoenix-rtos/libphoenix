@@ -39,7 +39,7 @@
 
 %_unstripped: %.o
 	@(printf " LD  %-24s  \n" "$@")
-	$(SIL)$(LD) $(LDFLAGS) -o "$@" "$<" ../$(LIB) $(GCCLIB)
+	$(SIL)$(LD) $(LDFLAGS) -o "$@" $^ ../$(LIB) $(GCCLIB)
 
 $(PROGS): %: %_unstripped
 	@(printf " STR %-24s  \n" "$<")
