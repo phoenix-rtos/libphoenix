@@ -236,7 +236,7 @@ int pipe_write(pipe_t *p, unsigned mode, request_t *r)
 	while (mutexLock(p->lock) < 0);
 	if (p->rrefs || p->link) {
 		/* write to pending readers */
-		while (p->queue != NULL && !p->full && bytes < sz) {
+		while (p->queue != NULL && /*!p->full &&*/ bytes < sz) {
 			memcpy(rq_buf(p->queue), buf + bytes, c = min(sz - bytes, rq_sz(p->queue)));
 			PIPE_TRACE("writing %d to pending reader", c);
 			_pipe_wakeup(p, p->queue, c);

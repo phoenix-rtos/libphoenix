@@ -30,6 +30,7 @@
 
 
 extern int open_absolute(const char *filename, int oflag, ...);
+extern int mkfifo_absolute(const char *filename, mode_t mode);
 
 
 int open(const char *filename, int oflag, ...)
@@ -46,6 +47,18 @@ int open(const char *filename, int oflag, ...)
 
 	canonical = canonicalize_file_name(filename);
 	err = open_absolute(canonical, oflag, mode);
+	free(canonical);
+	return err;
+}
+
+
+int mkfifo(const char *filename, mode_t mode)
+{
+	int err;
+	char *canonical;
+
+	canonical = canonicalize_file_name(filename);
+	err = mkfifo_absolute(canonical, mode);
 	free(canonical);
 	return err;
 }
