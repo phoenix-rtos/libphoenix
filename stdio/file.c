@@ -5,8 +5,8 @@
  *
  * fs.c
  *
- * Copyright 2017 Phoenix Systems
- * Author: Aleksander Kaminski, Jan Sikorski
+ * Copyright 2017, 2018 Phoenix Systems
+ * Author: Aleksander Kaminski, Jan Sikorski, Aleksander Kaminski
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -197,10 +197,17 @@ int getc_unlocked(FILE *stream)
 }
 
 
+int putc(int c, FILE *stream)
+{
+	fwrite(&c, 1, 1, stream); /* FIXME: won't work on big endian */
+	return 0;
+}
+
+
 int putc_unlocked(int c)
 {
 	/* Temporary: stdout */
-	write(1, &c, 1);
+	write(1, &c, 1); /* FIXME: won't work on big endian */
 	return 0;
 }
 
@@ -208,7 +215,7 @@ int putc_unlocked(int c)
 int putchar_unlocked(int c)
 {
 	/* Temporary: stdout */
-	write(1, &c, 1);
+	write(1, &c, 1); /* FIXME: won't work on big endian */
 	return 0;
 }
 
