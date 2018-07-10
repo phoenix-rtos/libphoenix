@@ -6,7 +6,7 @@
  * string/strerror (errno names)
  *
  * Copyright 2018 Phoenix Systems
- * Author: Michał Mirosław
+ * Author: Michal Miroslaw, Aleksander Kaminski
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -66,9 +66,9 @@ static inline const char *strerror_(const errinfo_t *tab, size_t tabsz, const ch
 }
 
 
-const char *strerror(int errnum)
+char *strerror(int errnum)
 {
-	return strerror_(errtab, sizeof(errtab), errnames, errnum);
+	return (char *)strerror_(errtab, sizeof(errtab), errnames, errnum);
 }
 
 

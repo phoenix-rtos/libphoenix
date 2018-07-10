@@ -6,7 +6,7 @@
  * termios.h
  *
  * Copyright 2018 Phoenix Systems
- * Author: Jan Sikorski
+ * Author: Jan Sikorski, Aleksander Kaminski
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -43,8 +43,16 @@ struct rlimit {
 #define PRIO_PGRP	1
 #define PRIO_USER	2
 
+
+extern int getrusage(int who, struct rusage *usage);
+
+
 extern int getrlimit(int resource, struct rlimit *rlp);
+
+
 extern int setrlimit(int resource, const struct rlimit *rlp);
+
+
 extern int setpriority(int which, id_t who, int prio);
 
 #endif

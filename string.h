@@ -5,8 +5,8 @@
  *
  * string.h
  *
- * Copyright 2017 Phoenix Systems
- * Author: Pawel Pisarczyk
+ * Copyright 2017, 2018 Phoenix Systems
+ * Author: Pawel Pisarczyk, Aleksander Kaminski
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -94,7 +94,7 @@ extern size_t strcspn(const char *str1, const char *str2);
 
 
 /* Searches an internal array for the error number errnum and returns a pointer to an error message string. */
-extern const char *strerror(int errnum);
+extern char *strerror(int errnum);
 
 
 /* Computes the length of the string str up to but not including the terminating null character. */

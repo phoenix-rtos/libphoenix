@@ -6,7 +6,7 @@
  * stdio.h
  *
  * Copyright 2017-2018 Phoenix Systems
- * Author: Pawel Pisarczyk, Kamil Amanowicz, Michał Mirosław
+ * Author: Pawel Pisarczyk, Kamil Amanowicz, Michal Miroslaw, Aleksander Kaminski
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -23,6 +23,11 @@
 
 #define EOF (-1)
 #define BUFSIZ 8192
+#define FILENAME_MAX 128
+
+#define _IOFBF 0x2000
+#define _IOLBF 0x4000
+#define _IONBF 0x8000
 
 typedef offs_t fpos_t;
 

@@ -6,7 +6,7 @@
  * stat.h
  *
  * Copyright 2018 Phoenix Systems
- * Author: Jan Sikorski, Kamil Amanowicz
+ * Author: Jan Sikorski, Kamil Amanowicz, Aleksander Kaminski
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -110,8 +110,13 @@ extern mode_t umask(mode_t cmask);
 
 extern int mkdir(const char *pathname, mode_t mode);
 
+
 extern int mkfifo(const char *pathname, mode_t mode);
 
+
 extern int mknod(const char *pathname, mode_t mode, dev_t dev);
+
+
+extern int fchmod(int fd, mode_t mode);
 
 #endif

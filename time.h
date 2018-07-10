@@ -5,8 +5,8 @@
  *
  * time.h
  *
- * Copyright 2017 Phoenix Systems
- * Author: Pawel Pisarczyk
+ * Copyright 2017, 2018 Phoenix Systems
+ * Author: Pawel Pisarczyk, Aleksander Kaminski
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -42,6 +42,9 @@ struct timespec {
 	time_t tv_sec;
 	long tv_nsec;
 };
+
+
+extern struct tm *localtime(const time_t *timep);
 
 
 extern int gettime(time_t *tp);
