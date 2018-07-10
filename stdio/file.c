@@ -6,7 +6,7 @@
  * fs.c
  *
  * Copyright 2017, 2018 Phoenix Systems
- * Author: Aleksander Kaminski, Jan Sikorski, Aleksander Kaminski
+ * Author: Aleksander Kaminski, Jan Sikorski
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -19,6 +19,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <sys/msg.h>
+#include <sys/file.h>
 #include <unistd.h>
 
 
@@ -175,6 +176,17 @@ char *fgets(char *str, int n, FILE *stream)
 }
 
 
+long int ftell(FILE *stream)
+{
+	offs_t offs;
+
+	if (fileGet(stream->fd, 2, NULL, &offs, NULL) < 0)
+		return -1;
+
+	return (long)offs;
+}
+
+
 char *fgets_unlocked(char *str, int n, FILE *stream)
 {
 	return fgets(str, n, stream);
@@ -288,6 +300,12 @@ int getchar_unlocked(void)
 int fseek(FILE *stream, long offset, int whence)
 {
 	return lseek(stream->fd, offset, whence);
+}
+
+
+void rewind(FILE *file)
+{
+	fseek(file, 0, 0);
 }
 
 
