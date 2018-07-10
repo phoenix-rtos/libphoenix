@@ -309,6 +309,13 @@ void rewind(FILE *file)
 }
 
 
+int setvbuf(FILE *stream, char *buffer, int mode, size_t size)
+{
+	/* TODO */
+	return 0;
+}
+
+
 int fseeko(FILE *stream, off_t offset, int whence)
 {
 	return fseek(stream, offset, whence);
