@@ -9,7 +9,7 @@ $(error Only main Makefile can be used for compilation)
 endif
 
 SRCS = rb.c stat.c time.c times.c list.c semaphore.c socket.c select.c ioctl.c
-OBJS = $(SRCS:.c=.o)
+OBJS := $(patsubst $(TOPDIR)/%,$(BUILD_DIR)/%,$(abspath $(SRCS:.c=.o)))
 
 all: $(ARCH)
 

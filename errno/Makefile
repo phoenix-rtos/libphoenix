@@ -9,7 +9,7 @@ $(error Only main Makefile can be used for compilation)
 endif
 
 SRCS = errno.c
-OBJS = $(SRCS:.c=.o)
+OBJS := $(patsubst $(TOPDIR)/%,$(BUILD_DIR)/%,$(abspath $(SRCS:.c=.o)))
 
 all: $(ARCH)
 

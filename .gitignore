@@ -1,5 +1,2 @@
-*.o
-*.depend
-*.a
+build/*
 .DS_store
-*_unstripped

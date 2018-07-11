@@ -10,7 +10,7 @@ endif
 
 SRCS = printf.c sprintf.c asprintf.c fprintf.c format.c scanf.c file.c stdfile.c popen.c
 #fs.c
-OBJS = $(SRCS:.c=.o)
+OBJS := $(patsubst $(TOPDIR)/%,$(BUILD_DIR)/%,$(abspath $(SRCS:.c=.o)))
 
 all: $(ARCH)
 

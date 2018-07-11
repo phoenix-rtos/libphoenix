@@ -9,7 +9,7 @@ $(error Only main Makefile can be used for compilation)
 endif
 
 SRCS = trig.c power.c exp.c common.c #hyper.c
-OBJS = $(SRCS:.c=.o)
+OBJS := $(patsubst $(TOPDIR)/%,$(BUILD_DIR)/%,$(abspath $(SRCS:.c=.o)))
 
 all: $(ARCH)
 

@@ -8,8 +8,8 @@ ifeq (,$(TOPDIR))
 $(error Only main Makefile can be used for compilation)
 endif
 
-SRCS = strtoul.c strtoull.c malloc_dl.c rand.c bsearch.c exit.c qsort.c env.c pty.c
-OBJS = $(SRCS:.c=.o)
+SRCS := strtoul.c strtoull.c malloc_dl.c rand.c bsearch.c exit.c qsort.c env.c pty.c
+OBJS := $(patsubst $(TOPDIR)/%,$(BUILD_DIR)/%,$(abspath $(SRCS:.c=.o)))
 
 all: $(ARCH)
 
