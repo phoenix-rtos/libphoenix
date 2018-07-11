@@ -9,7 +9,7 @@ $(error Only main Makefile can be used for compilation)
 endif
 
 PROGS := posixsrv
-SRCS  := pipe.c posixsrv.c pty.c
+SRCS  := pipe.c posixsrv.c pty.c special.c
 OBJS  := $(SRCS:.c=.o)
 
 posixsrv_unstripped: $(OBJS)

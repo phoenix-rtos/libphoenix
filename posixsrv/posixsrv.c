@@ -237,6 +237,9 @@ int main(int argc, char **argv)
 	mkdir("/dev", 0);
 	mkdir("/dev/posix", 0);
 
+	if (special_init() < 0)
+		fail("special init");
+
 	if (pipe_init() < 0)
 		fail("pipe init");
 

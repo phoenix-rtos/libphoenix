@@ -293,8 +293,8 @@ int pipe_read(pipe_t *p, unsigned mode, request_t *r)
 	if (was_full) {
 		/* read from pending writers */
 		while (p->queue != NULL && bytes < sz) {
-			memcpy(buf + bytes, rq_buf(p->queue), c = min(sz - bytes, rq_sz(p->queue)));
 			PIPE_TRACE("reading %d from pending writer\n", c);
+			memcpy(buf + bytes, rq_buf(p->queue), c = min(sz - bytes, rq_sz(p->queue)));
 			_pipe_wakeup(p, p->queue, c);
 			bytes += c;
 		}

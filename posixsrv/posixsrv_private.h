@@ -106,4 +106,7 @@ extern int pipe_init(void);
 extern int pty_init(void);
 
 
+extern int special_init(void);
+
+
 #endif
