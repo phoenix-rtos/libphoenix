@@ -27,8 +27,11 @@ LDFLAGS += --gc-sections
 
 ARCH = code.a
 ARCHS := $(shell for i in $(SUBDIRS); do echo "$$i/$(ARCH)"; done)
-OBJS := _startc.o
 HEADERS := $(shell find . $(EXTRA_HEADER_DIRS) $(SUBDIRS) -maxdepth 1  -name \*.h)
+
+# compiling files from CWD
+SRCS := _startc.c
+OBJS := $(patsubst $(TOPDIR)/%,$(BUILD_DIR)/%,$(abspath $(SRCS:.c=.o)))
 
 SYSROOT 		:= $(shell $(CC) $(CFLAGS) -print-sysroot)
 MULTILIB_DIR 	:= $(shell $(CC) $(CFLAGS) -print-multi-directory)
@@ -44,21 +47,6 @@ export SRCDIR SIL TARGET LIB CC CFLAGS MKDEP MKDEPFLAGS AR ARFLAGS LD LDFLAGS GC
 
 all: subsystems $(OBJS) $(LIB) tests posixsrv
 
-
-.c.o:
-	@(printf "CC  %-24s  " "$<"; $(CC) -c $(CFLAGS) $<)
-
-	@(file="$@"; \
-	datasz=0;\
-	textsz=0;\
-	for i in `$(OBJDUMP) -t $$file | grep -e " O " | grep -v "\.rodata" | awk '{ print $$4 }'`; do \
-		datasz=`echo $$(($$datasz + 0x$$i))`;\
-	done; \
-	for i in `$(OBJDUMP) -t $$file | grep -e "F" | awk '{ print $$5 }'`; do \
-		textsz=`echo $$(($$textsz + 0x$$i))`;\
-	done;\
-	printf "data=%-10s\ttext=%s\n" $$datasz $$textsz)
-
 $(OBJS): $(filter clean,$(MAKECMDGOALS))
 
 subsystems: $(ARCHS)
@@ -71,7 +59,6 @@ subsystems: $(ARCHS)
 
 .FORCE:
 
-
 $(LIB): $(ARCHS) $(OBJS)
 	@echo "\033[1;34mLD $@\033[0m"
 
@@ -82,44 +69,19 @@ $(LIB): $(ARCHS) $(OBJS)
 	echo "")
 
 
-tests: $(LIB)
-	@d=`pwd`;\
-	echo "\033[1;32mCOMPILE test\033[0m";\
-	if ! cd test; then\
-		exit 1;\
-	fi;\
-	if ! $(MAKE); then\
-		exit 1;\
-	fi;\
-	cd $$d;\
+tests: test
+
+test: $(LIB) .FORCE
+	@echo "\033[1;32mCOMPILE $@\033[0m";\
+	$(MAKE) -C "$@"
 
 
 posixsrv: $(LIB)
-	@d=`pwd`;\
-	echo "\033[1;32mCOMPILE posixsrv\033[0m";\
-	if ! cd posixsrv; then\
-		exit 1;\
-	fi;\
-	if ! $(MAKE); then\
-		exit 1;\
-	fi;\
-	cd $$d;\
+	@echo "\033[1;32mCOMPILE $@\033[0m";\
+	$(MAKE) -C "$@"
 
 
-depend:
-	@for i in $(SUBDIRS) test; do\
-		d=`pwd`;\
-		echo "DEPEND $$i";\
-		if ! cd $$i; then\
-			exit 1;\
-		fi;\
-		if ! $(MAKE) -s depend; then\
-			exit 1;\
-		fi;\
-		cd $$d;\
-	done;
-
-install: $(LIB)
+install: $(LIB) $(HEADERS)
 	@echo "Installing into: $(LIBC_INSTALL_DIR)"; \
 	mkdir -p "$(LIBC_INSTALL_DIR)" "$(HEADERS_INSTALL_DIR)"; \
 	cp -a "$<" "$(LIBC_INSTALL_DIR)"; \
@@ -153,6 +115,9 @@ clean:
 		cd $$d;\
 	done;
 
+
+# include after all dependencies are set
+include $(TOPDIR)/Makefile.rules
 
 .PHONY: clean install uninstall
 # DO NOT DELETE
