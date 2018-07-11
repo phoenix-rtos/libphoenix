@@ -83,7 +83,7 @@ test: $(LIB) .FORCE
 	$(MAKE) -C "$@"
 
 
-posixsrv: $(LIB)
+posixsrv: $(LIB) .FORCE
 	@echo "\033[1;32mCOMPILE $@\033[0m";\
 	$(MAKE) -C "$@"
 
