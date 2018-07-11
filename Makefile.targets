@@ -1,0 +1,76 @@
+#
+# Makefile for libphoenix - target specifications
+#
+# Copyright 2012-2018 Phoenix Systems
+
+############ GENERIC #########
+
+CC = $(CROSS)gcc
+AR = $(CROSS)ar
+ARFLAGS = -r
+LD = $(CROSS)ld
+OBJCOPY = $(CROSS)objcopy
+OBJDUMP = $(CROSS)objdump
+
+STRIP = $(CROSS)strip
+
+############ IA32 ############
+
+ifneq (, $(findstring ia32, $(TARGET)))
+	CROSS ?= i386-pc-phoenix-
+	SUBDIRS = arch/ia32  $(SUBSYSTEMS)
+
+
+	CFLAGS += -O2 -g -Wall -Wstrict-prototypes -nostartfiles -nostdlib\
+		-m32 -mtune=generic -mno-mmx -mno-sse -fno-pic -fno-pie\
+		-fomit-frame-pointer -fno-strength-reduce -ffreestanding
+
+
+	LDFLAGS = -m elf_i386
+	GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
+
+endif
+
+############ ARMv7 (Cortex-M3/M4) ############
+
+ifneq (, $(findstring armv7, $(TARGET)))
+	CROSS ?= arm-phoenix-
+	SUBDIRS = arch/armv7 $(SUBSYSTEMS)
+
+	CFLAGS += -O2 -Wall -Wstrict-prototypes -g -nostartfiles -nostdlib\
+		-mcpu=cortex-m3 -mthumb \
+		-fomit-frame-pointer -ffreestanding\
+		-fpic -fpie -msingle-pic-base -mno-pic-data-is-text-relative\
+		-DNOMMU
+
+	LDFLAGS = -nostdlib -e _start --section-start .text=0 -Tbss=20000000 -z max-page-size=0x10
+	GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
+endif
+
+############ ARM (Cortex-A5/A7/A9) ############
+
+ifneq (, $(findstring arm-imx, $(TARGET)))
+	CROSS ?= arm-phoenix-
+	SUBDIRS = arch/arm-imx $(SUBSYSTEMS)
+
+	CFLAGS += -Os -Wall -Wstrict-prototypes -g -nostartfiles -nostdlib\
+		-mcpu=cortex-a7 -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard -mthumb\
+		-fomit-frame-pointer -ffreestanding -mno-unaligned-access
+
+	LDFLAGS = -nostdlib -z max-page-size=0x1000
+	GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
+endif
+
+############ RISCV64 ############
+
+ifneq (, $(findstring riscv64, $(TARGET)))
+	CROSS ?= riscv64-unknown-elf-
+	SUBDIRS = arch/riscv64 $(SUBSYSTEMS)
+
+	CFLAGS += -Wall -Wstrict-prototypes -nostartfiles -nostdlib\
+		-fomit-frame-pointer -ffreestanding \
+		-DVERSION=\"$(VERSION)\" -DHAL=\"hal//riscv64//hal.h\" -mcmodel=medany -I/usr/local/include
+
+	LDFLAGS = -nostdlib
+	GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
+endif
