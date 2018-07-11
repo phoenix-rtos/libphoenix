@@ -12,6 +12,9 @@ PREFIX_O := $(BUILD_DIR)/$(CURR_SUFFIX)
 PREFIX_A := $(BUILD_DIR)/$(CURR_SUFFIX)
 PREFIX_PROG := $(BUILD_DIR)/$(CURR_SUFFIX)
 
+# add include path for auto-generated files
+CFLAGS += -I"$(BUILD_DIR)/$(CURR_SUFFIX)"
+
 $(PREFIX_O)%.o: %.c
 	@mkdir -p $(@D)
 	$(SIL)(printf " CC  %-24s  " "$<")
