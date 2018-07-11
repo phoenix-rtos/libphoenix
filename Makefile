@@ -93,10 +93,12 @@ install: $(LIB) $(HEADERS)
 	mkdir -p "$(LIBC_INSTALL_DIR)" "$(HEADERS_INSTALL_DIR)"; \
 	cp -a "$<" "$(LIBC_INSTALL_DIR)"; \
 	for lib in $(LIBC_INSTALL_NAMES); do \
-		ln -sf "$(LIBC_INSTALL_DIR)/$<" "$(LIBC_INSTALL_DIR)/$$lib"; \
+		if [ ! -e "$(LIBC_INSTALL_DIR)/$$lib" ]; then \
+			ln -sf "$(LIBC_INSTALL_DIR)/$(LIBNAME)" "$(LIBC_INSTALL_DIR)/$$lib"; \
+		fi \
 	done; \
 	for file in $(HEADERS); do\
-		install -m 644 -D $${file} $(HEADERS_INSTALL_DIR)/$${file};\
+		install -p -m 644 -D $${file} $(HEADERS_INSTALL_DIR)/$${file};\
 	done
 
 uninstall:
