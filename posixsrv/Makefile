@@ -4,7 +4,7 @@
 # Copyright 2017 Phoenix Systems
 # Author: Pawel Pisarczyk
 #
-ifeq (,$(SRCDIR))
+ifeq (,$(TOPDIR))
 $(error Only main Makefile can be used for compilation)
 endif
 
@@ -14,9 +14,7 @@ OBJS  := $(SRCS:.c=.o)
 
 posixsrv_unstripped: $(OBJS)
 
--include .depend
-
 all: check $(PROGS) $(OBJS)
 
 # include after all dependencies are set
-include $(SRCDIR)/Makefile.rules
+include $(TOPDIR)/Makefile.rules

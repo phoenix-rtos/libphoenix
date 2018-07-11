@@ -15,12 +15,17 @@ MAKEFLAGS += --no-print-directory --output-sync
 TARGET ?= riscv64
 
 VERSION = 0.2
-SRCDIR := $(CURDIR)
+TOPDIR := $(CURDIR)
+BUILD_DIR ?= build/$(TARGET)
+BUILD_DIR := $(abspath $(BUILD_DIR))
 
 SUBSYSTEMS := math stdio stdlib string sys ctype time unistd errno signal termios posix err locale regex net syslog
 EXTRA_HEADER_DIRS := net netinet arpa
 
 
+include Makefile.targets
+
+CFLAGS += -I"$(TOPDIR)"
 CFLAGS += -DVERSION=\"$(VERSION)\"
 CFLAGS += -fdata-sections -ffunction-sections
 LDFLAGS += --gc-sections
@@ -42,7 +47,7 @@ ifeq (/,$(SYSROOT))
 $(error Sysroot is not supported by Your toolchain. Use cross-toolchain to compile)
 endif
 
-export SRCDIR SIL TARGET LIB CC CFLAGS MKDEP MKDEPFLAGS AR ARFLAGS LD LDFLAGS GCCLIB ARCH OBJDUMP STRIP HEADERS_INSTALL_DIR
+export TOPDIR BUILD_DIR SIL TARGET LIB CC CFLAGS MKDEP MKDEPFLAGS AR ARFLAGS LD LDFLAGS GCCLIB ARCH OBJDUMP STRIP HEADERS_INSTALL_DIR
 
 
 all: subsystems $(OBJS) $(LIB) tests posixsrv
