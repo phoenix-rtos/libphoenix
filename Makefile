@@ -62,7 +62,8 @@ subsystems: $(ARCHS)
 $(LIB): $(ARCHS) $(OBJS)
 	@echo "\033[1;34mLD $@\033[0m"
 
-	$(AR) $(ARFLAGS) -o $(LIB) $(OBJS) $(shell for i in $(SUBDIRS); do k=`echo $$i | sed 's/\//\\\\\//g'`; $(AR) -t $$i/$(ARCH) | sed "s/^/$$k\//"; done;)
+	@rm -rf "$@"
+	$(SIL)$(AR) cqT -o $@ $(abspath $^) && echo "create $@\naddlib $@\nsave\nend" | $(AR) -M
 
 	@(echo "";\
 	echo "=> libphoenix for [$(TARGET)] has been created";\
