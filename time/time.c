@@ -20,7 +20,7 @@
 time_t time(time_t *tp) {
 	time_t now;
 
-	gettime(&now);
+	gettime(&now, NULL);
 
 	/* microseconds to seconds */
 	now += 500 * 1000;
@@ -42,7 +42,7 @@ int clock_gettime(clockid_t clk_id, struct timespec *tp)
 	if (tp == NULL)
 		return -EINVAL;
 
-	gettime(&now);
+	gettime(&now, NULL);
 
 	tp->tv_sec = now / (1000 * 1000);
 	now -= tp->tv_sec * 1000 * 1000;

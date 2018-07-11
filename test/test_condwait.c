@@ -32,9 +32,9 @@ int test_condwait(void)
 	if (condCreate(&c) != EOK)
 		return -1;
 
-	gettime(&then);
+	gettime(&then, NULL);
 	err = condWait(c, m, 1);
-	gettime(&now);
+	gettime(&now, NULL);
 
 	printf("test_condwait: ret %d (%s) elapsed %llu [us]\n", err, strerror(err), now - then);
 	return now - then >= 1 && err == -ETIME ? 0 : -1;

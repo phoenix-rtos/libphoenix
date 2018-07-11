@@ -80,14 +80,14 @@ int poll(struct pollfd *fds, nfds_t nfds, int timeout_ms)
 	}
 
 	if (timeout_ms >= 0) {
-		gettime(&timeout);
+		gettime(&timeout, NULL);
 		timeout += timeout_ms * 1000 + !timeout_ms;
 	} else
 		timeout = 0;
 
 	while (!(ready = do_poll_iteration(fds, nfds))) {
 		if (timeout) {
-			gettime(&now);
+			gettime(&now, NULL);
 			now = now < timeout ? timeout - now : 1;
 			if (now > POLL_INTERVAL)
 				now = POLL_INTERVAL;

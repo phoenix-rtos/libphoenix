@@ -47,7 +47,10 @@ struct timespec {
 extern struct tm *localtime(const time_t *timep);
 
 
-extern int gettime(time_t *tp);
+extern int gettime(time_t *raw, time_t *offs);
+
+
+extern int settime(time_t offs);
 
 
 extern int clock_gettime(clockid_t clk_id, struct timespec *tp);

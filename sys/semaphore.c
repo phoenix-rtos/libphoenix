@@ -45,7 +45,7 @@ int semaphoreDown(semaphore_t *s, time_t timeout)
 		return -EINVAL;
 
 	if (timeout) {
-		gettime(&now);
+		gettime(&now, NULL);
 		when = now + timeout;
 	}
 
@@ -60,7 +60,7 @@ int semaphoreDown(semaphore_t *s, time_t timeout)
 			break;
 
 		if (timeout) {
-			gettime(&now);
+			gettime(&now, NULL);
 
 			if (now >= when)
 				timeout = 1;
