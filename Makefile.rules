@@ -61,7 +61,7 @@ $(PREFIX_A)%.a:
 
 $(PREFIX_PROG)%_unstripped: $(PREFIX_O)%.o $(LIB)
 	@(printf " LD  %-24s  \n" "$(@F)")
-	$(SIL)$(LD) $(LDFLAGS) -o "$@" $^ $(GCCLIB)
+	$(SIL)$(LD) $(LDFLAGS) -o "$@" $^ $(LIB) $(GCCLIB)
 
 $(PROGS_OUT): %: %_unstripped
 	@(printf " STR %-24s  \n" "$(@F)")
