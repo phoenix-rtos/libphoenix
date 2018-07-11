@@ -17,6 +17,7 @@
 #include <sys/ioctl.h>
 #include <termios.h>
 #include <posix/utils.h>
+#include "posix/idtree.h"
 
 #define PIPE_BUFSZ 0x1000
 
