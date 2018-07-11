@@ -2,10 +2,20 @@
 # Makefile for libphoenix - pattern rules for compiling and linking
 #
 # Copyright 2012-2018 Phoenix Systems
+#
+ifeq (,$(TOPDIR))
+$(error Only main Makefile can be used for compilation)
+endif
 
+CURR_SUFFIX := $(patsubst $(TOPDIR)/%,%,$(abspath $(CURDIR))/)
+PREFIX_O := $(BUILD_DIR)/$(CURR_SUFFIX)
+PREFIX_A := $(BUILD_DIR)/$(CURR_SUFFIX)
+PREFIX_PROG := $(BUILD_DIR)/$(CURR_SUFFIX)
 
-.c.o:
-	$(SIL)(printf " CC  %-24s  " "$<"; $(CC) -c $(CFLAGS) "$<" -o "$@")
+$(PREFIX_O)%.o: %.c
+	@mkdir -p $(@D)
+	$(SIL)(printf " CC  %-24s  " "$<")
+	$(SIL)$(CC) -c $(CFLAGS) "$<" -o "$@"
 
 	@(file="$@"; \
 	datasz=0;\
@@ -18,8 +28,10 @@
 	done;\
 	printf "data=%-10s\ttext=%s\n" $$datasz $$textsz)
 
-.S.o:
-	$(SIL)(printf " ASM %-24s  " "$<"; $(CC) -c $(CFLAGS) $< -o "$@")
+$(PREFIX_O)%.o: %.S
+	@mkdir -p $(@D)
+	$(SIL)(printf " ASM %-24s  " "$<")
+	$(SIL)$(CC) -c $(CFLAGS) "$<" -o "$@"
 
 	@(file="$@"; \
 	datasz=0;\
@@ -32,30 +44,26 @@
 	done;\
 	printf "data=%-10s\ttext=%s\n" $$datasz $$textsz)
 
-%.a:
-	@(printf " AR  %-24s  \n" "$@")
+$(PREFIX_A)%.a:
+	@mkdir -p $(@D)
+	@(printf " AR  %-24s  \n" "$*")
 	$(SIL)$(AR) $(ARFLAGS) $@ $^ 2>/dev/null
 
-%_unstripped: %.o
-	@(printf " LD  %-24s  \n" "$@")
-	$(SIL)$(LD) $(LDFLAGS) -o "$@" $^ ../$(LIB) $(GCCLIB)
 
-$(PROGS): %: %_unstripped
-	@(printf " STR %-24s  \n" "$<")
+$(PREFIX_PROG)%_unstripped: $(PREFIX_O)%.o $(LIB)
+	@(printf " LD  %-24s  \n" "$(@F)")
+	$(SIL)$(LD) $(LDFLAGS) -o "$@" $^ $(GCCLIB)
+
+$(PROGS_OUT): %: %_unstripped
+	@(printf " STR %-24s  \n" "$(@F)")
 	$(SIL)$(STRIP) -s -o "$@" "$<"
 
-check:
-	@(if test -z "$(ARCH)"; then\
-		echo "Error: Only main Makefile can be used for compilation!";\
-		exit 1;\
-	fi;)
+# suppress 'nothing to be done'
+all:
+	@echo >/dev/null;
 
 depend: check
 	$(SIL)$(MKDEP) $(MKDEPFLAGS) $(SRCS) >.depend
 
 
-clean: check
-	$(SIL)rm -f .depend core *.o $(ARCH) $(PROGS) $(PROGS:=_unstripped)
-
-
-.PHONY: clean
+.PHONY: all clean

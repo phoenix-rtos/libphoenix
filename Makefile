@@ -22,6 +22,8 @@ BUILD_DIR := $(abspath $(BUILD_DIR))
 SUBSYSTEMS := math stdio stdlib string sys ctype time unistd errno signal termios posix err locale regex net syslog
 EXTRA_HEADER_DIRS := net netinet arpa
 
+LIBNAME := libphoenix.a
+LIB := $(BUILD_DIR)/$(LIBNAME)
 
 include Makefile.targets
 
@@ -31,7 +33,7 @@ CFLAGS += -fdata-sections -ffunction-sections
 LDFLAGS += --gc-sections
 
 ARCH = code.a
-ARCHS := $(shell for i in $(SUBDIRS); do echo "$$i/$(ARCH)"; done)
+ARCHS := $(patsubst %,$(BUILD_DIR)/%/$(ARCH),$(SUBDIRS))
 HEADERS := $(shell find . $(EXTRA_HEADER_DIRS) $(SUBDIRS) -maxdepth 1  -name \*.h)
 
 # compiling files from CWD
@@ -56,11 +58,10 @@ $(OBJS): $(filter clean,$(MAKECMDGOALS))
 
 subsystems: $(ARCHS)
 
-%/$(ARCH): .FORCE $(filter clean,$(MAKECMDGOALS))
-	@+echo "\033[1;32mCOMPILE $(@D)\033[0m";\
-	if ! $(MAKE) -C "$(@D)"; then\
-		exit 1;\
-	fi;\
+$(ARCHS): %.a: .FORCE $(filter clean,$(MAKECMDGOALS))
+	@+echo "\033[1;32mCOMPILE $(subst $(BUILD_DIR)/,,$(@D))\033[0m";\
+	mkdir -p $(@D); \
+	$(MAKE) -C "$(subst $(BUILD_DIR)/,,$(@D))" ARCH="$@"
 
 .FORCE:
 
@@ -99,7 +100,7 @@ install: $(LIB) $(HEADERS)
 	done
 
 uninstall:
-	rm -rf "$(LIBC_INSTALL_DIR)/$(LIB)"
+	rm -rf "$(LIBC_INSTALL_DIR)/$(LIBNAME)"
 	@for lib in $(LIBC_INSTALL_NAMES); do \
 		rm -rf "$(LIBC_INSTALL_DIR)/$$lib"; \
 	done
@@ -108,18 +109,7 @@ uninstall:
 	done
 
 clean:
-	@rm -f core *.o $(LIB)
-	@for i in $(SUBDIRS) test posixsrv; do\
-		d=`pwd`;\
-		echo "CLEAN $$i";\
-		if ! cd $$i; then\
-			exit 1;\
-		fi;\
-		if ! $(MAKE) clean; then\
-			exit 1;\
-		fi;\
-		cd $$d;\
-	done;
+	@rm -rf $(BUILD_DIR)
 
 
 # include after all dependencies are set

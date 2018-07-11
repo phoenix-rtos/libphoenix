@@ -10,11 +10,13 @@ endif
 
 PROGS := posixsrv
 SRCS  := pipe.c posixsrv.c pty.c special.c
-OBJS  := $(SRCS:.c=.o)
+OBJS := $(patsubst $(TOPDIR)/%,$(BUILD_DIR)/%,$(abspath $(SRCS:.c=.o)))
+PROGS_OUT := $(patsubst $(TOPDIR)/%,$(BUILD_DIR)/%,$(abspath $(PROGS)))
 
-posixsrv_unstripped: $(OBJS)
+$(PREFIX_PROG)posixsrv_unstripped: $(OBJS)
+	@echo >/dev/null
 
-all: check $(PROGS) $(OBJS)
+all: $(PROGS_OUT)
 
 # include after all dependencies are set
 include $(TOPDIR)/Makefile.rules

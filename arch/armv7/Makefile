@@ -10,7 +10,7 @@ endif
 
 ASMS := _start.S syscalls.S
 SRCS := string.c
-OBJS := $(ASMS:.S=.o) $(SRCS:.c=.o)
+OBJS := $(patsubst $(TOPDIR)/%,$(BUILD_DIR)/%,$(abspath $(SRCS:.c=.o))) $(patsubst $(TOPDIR)/%,$(BUILD_DIR)/%,$(abspath $(ASMS:.S=.o)))
 
 all: $(ARCH)
 
