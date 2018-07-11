@@ -4,7 +4,7 @@
 # Copyright 2017 Phoenix Systems
 # Author: Pawel Pisarczyk
 #
-ifeq (,$(SRCDIR))
+ifeq (,$(TOPDIR))
 $(error Only main Makefile can be used for compilation)
 endif
 
@@ -12,7 +12,7 @@ SRCS = string.c strdup.c strerror.c fnmatch.c glob.c
 OBJS = $(SRCS:.c=.o)
 
 
-all: check $(ARCH)
+all: $(ARCH)
 
 $(ARCH): $(OBJS)
 
@@ -48,4 +48,4 @@ clean-gaierr:
 clean: clean-errno clean-gaierr
 
 # include after all dependencies are set
-include $(SRCDIR)/Makefile.rules
+include $(TOPDIR)/Makefile.rules

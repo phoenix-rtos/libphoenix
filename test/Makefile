@@ -4,7 +4,7 @@
 # Copyright 2017 Phoenix Systems
 # Author: Pawel Pisarczyk
 #
-ifeq (,$(SRCDIR))
+ifeq (,$(TOPDIR))
 $(error Only main Makefile can be used for compilation)
 endif
 
@@ -16,4 +16,4 @@ SRCS  := $(PROGS:=.c)
 all: check $(PROGS)
 
 # include after all dependencies are set
-include $(SRCDIR)/Makefile.rules
+include $(TOPDIR)/Makefile.rules
