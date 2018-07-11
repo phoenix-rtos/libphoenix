@@ -143,6 +143,9 @@ static void pipe_destroy(object_t *o)
 	pipe_t *p = (pipe_t *)o;
 	PIPE_TRACE("destroy");
 
+	while (p->queue != NULL)
+		_pipe_wakeup(p, p->queue, -EPIPE);
+
 	if (p->buf != NULL)
 		munmap(p->buf, PIPE_BUFSZ);
 
@@ -476,7 +479,7 @@ int pipe_unlink(pipe_t *p, const char *path)
 
 	p->link--;
 
-	if (!p->wrefs && !p->rrefs && !p->link) {
+	if (!(p->wrefs && p->rrefs) && !p->link) {
 		object_destroy(&p->object);
 		mutexUnlock(p->lock);
 		return EOK;

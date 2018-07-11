@@ -31,6 +31,32 @@
 
 extern int open_absolute(const char *filename, int oflag, ...);
 extern int mkfifo_absolute(const char *filename, mode_t mode);
+extern int link_absolute(const char *path1, const char *path2);
+extern int unlink_absolute(const char *path);
+
+
+int link(const char *path1, const char *path2)
+{
+	char *canonical1, *canonical2;
+	int err;
+	canonical1 = canonicalize_file_name(path1);
+	canonical2 = canonicalize_file_name(path2);
+	err = link_absolute(canonical1, canonical2);
+	free(canonical1);
+	free(canonical2);
+	return err;
+}
+
+
+int unlink(const char *path)
+{
+	char *canonical;
+	int err;
+	canonical = canonicalize_file_name(path);
+	err = unlink_absolute(canonical);
+	free(canonical);
+	return err;
+}
 
 
 int open(const char *filename, int oflag, ...)
