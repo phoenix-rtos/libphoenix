@@ -15,10 +15,6 @@ PREFIX_PROG := $(BUILD_DIR)/$(CURR_SUFFIX)
 # add include path for auto-generated files
 CFLAGS += -I"$(BUILD_DIR)/$(CURR_SUFFIX)"
 
-# include file dependencies
-ALL_D := $(wildcard $(PREFIX_O)*.d)
-include $(ALL_D)
-
 $(PREFIX_O)%.o: %.c
 	@mkdir -p $(@D)
 	$(SIL)(printf " CC  %-24s  " "$<")
@@ -70,5 +66,9 @@ $(PROGS_OUT): %: %_unstripped
 # suppress 'nothing to be done'
 all:
 	@echo >/dev/null;
+
+# include file dependencies
+ALL_D := $(wildcard $(PREFIX_O)*.d)
+-include $(ALL_D)
 
 .PHONY: all clean
