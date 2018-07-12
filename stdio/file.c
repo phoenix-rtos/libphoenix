@@ -243,6 +243,7 @@ int puts(const char *s)
 			return -1;
 		l += err;
 	}
+	putchar_unlocked('\n');
 
 	return l;
 }

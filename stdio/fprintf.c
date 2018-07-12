@@ -114,17 +114,11 @@ union float_u32
 
 int fputs(const char *str, FILE *f)
 {
-/*	f->buff[f->pos++ % f->buffsz] = c;
-	f->buff[f->pos++ % f->buffsz] = '\0';
-
-	if  (f->pos == f->buffsz - 1) {
-		if (!f->port)
-			debug(f->buff);
-		else
-			proc_send(f->port, msg);
-	}*/
 	int len = strlen(s);
-	write(0, s, len);
+	char nl = '\n';
+
+	write(f->fd, s, len);
+	write(f->fd, &nl, 1);
 	return EOK;
 }
 

@@ -123,8 +123,7 @@ static void psh_ls(char *args)
 		stream = opendir(path);
 
 		if (stream == NULL) {
-			puts(path);
-			puts(": no such directory\n");
+			printf("%s: no such directory\n", path);
 			break;
 		}
 
@@ -140,7 +139,7 @@ static void psh_ls(char *args)
 			}
 		}
 
-		puts("\n");
+		putchar('\n');
 
 		closedir(stream);
 		path += len + 1;
@@ -156,8 +155,7 @@ static void psh_mkdir(char *args)
 
 	while ((path = psh_nextString(path, &len)) && len) {
 		if (mkdir(path, 0) < 0) {
-			puts(path);
-			puts(": failed to create directory\n");
+			printf("%s: failed to create directory\n", path);
 		}
 
 		path += len + 1;
@@ -173,8 +171,7 @@ static void psh_touch(char *args)
 
 	while ((path = psh_nextString(path, &len)) && len) {
 		if ((f = fopen(path, "w")) == NULL) {
-			puts(path);
-			puts(": fopen failed\n");
+			printf(path, ": fopen failed\n");
 		}
 		else
 			fclose(f);
@@ -554,7 +551,7 @@ int psh_cat(char *args)
 		else {
 			while ((rsz = fread(buf, 1, 1023, file))) {
 				buf[rsz] = 0;
-				puts(buf);
+				printf(buf);
 			}
 		}
 
