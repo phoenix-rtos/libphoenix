@@ -29,7 +29,6 @@ extern int errno;
 #define EUNATCH         49
 #define ENODATA         61
 #define EPROTO          71
-#define ENOTSOCK        88
 #define EMSGSIZE        90
 #define ENOPROTOOPT     92
 #define EOPNOTSUPP      95
