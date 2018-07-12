@@ -8,15 +8,12 @@ ifeq (,$(TOPDIR))
 $(error Only main Makefile can be used for compilation)
 endif
 
-SRCS = string.c strdup.c strerror.c fnmatch.c glob.c
-OBJS := $(patsubst $(TOPDIR)/%,$(BUILD_DIR)/%,$(abspath $(SRCS:.c=.o)))
+ARCH_SRCS = string.c strdup.c strerror.c fnmatch.c glob.c
 
-
+# first non-pattern target is the default
 all: $(ARCH)
 
-$(ARCH): $(OBJS)
-
-INCS:= errno.str.inc errno.tab.inc gaierr.str.inc gaierr.tab.inc
+INCS := errno.str.inc errno.tab.inc gaierr.str.inc gaierr.tab.inc
 $(patsubst $(TOPDIR)/%,$(BUILD_DIR)/%,$(abspath strerror.o)): $(patsubst $(TOPDIR)/%,$(BUILD_DIR)/%,$(abspath $(INCS)))
 
 

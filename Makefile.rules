@@ -12,6 +12,17 @@ PREFIX_O := $(BUILD_DIR)/$(CURR_SUFFIX)
 PREFIX_A := $(BUILD_DIR)/$(CURR_SUFFIX)
 PREFIX_PROG := $(BUILD_DIR)/$(CURR_SUFFIX)
 
+ARCH_OBJS := $(patsubst $(TOPDIR)/%,$(BUILD_DIR)/%,$(abspath $(ARCH_SRCS:.c=.o))) $(patsubst $(TOPDIR)/%,$(BUILD_DIR)/%,$(abspath $(ARCH_ASMS:.S=.o)))
+
+ifneq ($(PROGS),)
+PROGS_OUT := $(patsubst $(TOPDIR)/%,$(BUILD_DIR)/%,$(abspath $(PROGS)))
+PROGS_OBJS := $(patsubst $(TOPDIR)/%,$(BUILD_DIR)/%,$(abspath $(PROGS:=.o)))
+endif
+
+# suppress 'nothing to be done'
+all: $(ARCH) $(PROGS_OUT) $(PROGS_OBJS)
+	@echo >/dev/null;
+
 # add include path for auto-generated files
 CFLAGS += -I"$(BUILD_DIR)/$(CURR_SUFFIX)"
 
@@ -63,9 +74,7 @@ $(PROGS_OUT): %: %_unstripped
 	@(printf " STR %-24s  \n" "$(@F)")
 	$(SIL)$(STRIP) -s -o "$@" "$<"
 
-# suppress 'nothing to be done'
-all:
-	@echo >/dev/null;
+$(ARCH): $(ARCH_OBJS)
 
 # include file dependencies
 ALL_D := $(wildcard $(PREFIX_O)*.d)
