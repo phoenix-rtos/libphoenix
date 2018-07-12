@@ -335,6 +335,22 @@ char *strstr(const char *s1, const char *s2)
 }
 
 
+char *strcasestr(const char *s1, const char *s2)
+{
+	const char *p1, *p2;
+
+	for (; *s1; ++s1) {
+		for (p1 = s1, p2 = s2; *p2 && *p1 && tolower(*p1) == tolower(*p2); ++p1, ++p2);
+
+		if (!*p2)
+			return (char *)s1;
+	}
+
+	return NULL;
+
+}
+
+
 size_t strspn(const char *s1, const char *s2)
 {
 	int count;

@@ -85,6 +85,9 @@ extern void *malloc(size_t size);
 extern void *realloc(void *ptr, size_t size);
 
 
+#define reallocf realloc /* TODO: free on fail */
+
+
 /* Causes an abnormal program termination. */
 extern void abort(void);
 

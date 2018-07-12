@@ -18,6 +18,7 @@
 
 #include <stdint.h>
 
+
 /*
  * Searches for the first occurrence of the character c (an unsigned char) in the first n bytes of the string
  * pointed to, by the argument str.
@@ -78,7 +79,8 @@ extern int strncasecmp(const char *s1, const char *s2, int n);
 
 
 /* Compares string str1 to str2. The result is dependent on the LC_COLLATE setting of the location. */
-extern int strcoll(const char *str1, const char *str2);
+//extern int strcoll(const char *str1, const char *str2);
+#define strcoll strcmp
 
 
 /* Copies the string pointed to, by src to dest. */
@@ -122,6 +124,10 @@ extern size_t strspn(const char *str1, const char *str2);
  * which appears in the string haystack.
  */
 extern char *strstr(const char *haystack, const char *needle);
+
+
+/* Like strstr, but ignores case of arguments */
+extern char *strcasestr(const char *haystack, const char *needle);
 
 
 /* Breaks string str into a series of tokens separated by delim. */

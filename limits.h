@@ -130,6 +130,8 @@
 
 
 #define PTHREAD_STACK_MIN   256
-
+#define PATH_MAX 1024
+#define ARG_MAX 128
+#define _POSIX2_RE_DUP_MAX              255
 
 #endif

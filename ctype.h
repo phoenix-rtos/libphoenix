@@ -61,6 +61,10 @@ extern int isupper(int c);
 extern int isxdigit(int c);
 
 
+/* This function checks whether the passed character is a blank character. */
+extern int isblank(int c);
+
+
 /* This function converts uppercase letters to lowercase. */
 extern int tolower(int c);
 

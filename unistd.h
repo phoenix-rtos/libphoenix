@@ -147,6 +147,15 @@ extern long sysconf(int name);
 extern unsigned int alarm(unsigned int seconds);
 
 
+extern int issetugid(void);
+
+
+extern char *getlogin(void);
+
+
+extern int getlogin_r(char *name, size_t namesize);
+
+
 extern char *optarg;
 
 

@@ -52,6 +52,12 @@ int tolower(int c)
 }
 
 
+int toupper(int c)
+{
+	return islower(c) ? c - 'a' + 'A' : c;
+}
+
+
 int isalnum(int c)
 {
 	return isalpha(c) || isdigit(c);
@@ -85,4 +91,10 @@ int ispunct(int c)
 int isxdigit(int c)
 {
 	return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+}
+
+
+int isblank(int c)
+{
+	return c == ' ' || c == '\t';
 }
