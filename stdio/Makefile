@@ -4,17 +4,9 @@
 # Copyright 2012-2015 Phoenix Systems
 # Copyright 2001, 2005-2006 Pawel Pisarczyk
 #
-ifeq (,$(TOPDIR))
-$(error Only main Makefile can be used for compilation)
-endif
 
-SRCS = printf.c sprintf.c asprintf.c fprintf.c format.c scanf.c file.c stdfile.c popen.c
+ARCH_SRCS := printf.c sprintf.c asprintf.c fprintf.c format.c scanf.c file.c stdfile.c popen.c
 #fs.c
-OBJS := $(patsubst $(TOPDIR)/%,$(BUILD_DIR)/%,$(abspath $(SRCS:.c=.o)))
-
-all: $(ARCH)
-
-$(ARCH): $(OBJS)
 
 # include after all dependencies are set
 include $(TOPDIR)/Makefile.rules
