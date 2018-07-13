@@ -204,18 +204,6 @@ int getrusage(int who, struct rusage *usage)
 }
 
 
-FILE *popen(const char *command, const char *type)
-{
-	return NULL;
-}
-
-
-int pclose(FILE *stream)
-{
-	return 0;
-}
-
-
 int reboot(int cmd)
 {
 	return 0;
