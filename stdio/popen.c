@@ -37,7 +37,11 @@ FILE *popen(const char *command, const char *mode)
 	if (pipe(fd) < 0)
 		return NULL;
 
+	if ((pf = malloc(sizeof(popen_FILE))) == NULL)
+		return NULL;
+
 	if ((pid = vfork()) < 0) {
+		free(pf);
 		close(fd[0]);
 		close(fd[1]);
 		return NULL;
@@ -54,8 +58,6 @@ FILE *popen(const char *command, const char *mode)
 		execl("/bin/sh", "sh", "-c", command, NULL);
 		exit(EXIT_FAILURE);
 	}
-
-	pf = malloc(sizeof(popen_FILE));
 
 	pf->file.buff = NULL;
 	pf->file.buffsz = 0;
