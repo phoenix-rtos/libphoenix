@@ -197,7 +197,7 @@ struct tm *gmtime_r(const time_t *timep, struct tm *res)
 	}
 
 	if ((t = hou % 24) != hou) {
-		day = 1 + hou / 24;
+		day = hou / 24;
 		hou = t;
 	}
 
