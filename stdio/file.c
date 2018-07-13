@@ -286,12 +286,6 @@ int fputs(const char *str, FILE *f)
 }
 
 
-int ioctl(int fildes, int request, ... /* arg */)
-{
-	return EOK;
-}
-
-
 int getchar_unlocked(void)
 {
 	int c;
