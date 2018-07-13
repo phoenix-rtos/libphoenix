@@ -77,12 +77,6 @@ int ttyname_r(int fildes, char *name, size_t namesize)
 }
 
 
-time_t mktime(struct tm *timeptr)
-{
-	return 0;
-}
-
-
 size_t strftime(char *restrict s, size_t maxsize, const char *restrict format, const struct tm *restrict timeptr)
 {
 	return 0;
@@ -128,11 +122,6 @@ pid_t tcgetpgrp(int fd)
 int tcsetpgrp(int fd, pid_t pgrp)
 {
 	return -1;
-}
-
-char *ctime(const time_t *clock)
-{
-	return NULL;
 }
 
 
