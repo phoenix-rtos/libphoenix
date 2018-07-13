@@ -18,6 +18,7 @@
 #include "stdlib.h"
 #include "string.h"
 #include "ctype.h"
+#include "stdio.h"
 
 
 #define ABS(x) (x < 0 ? -x : x)
@@ -30,6 +31,13 @@ long timezone;
 
 
 int daylight;
+
+
+static const char * const wdayasc[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "???" };
+
+
+static const char * const monasc[] = { "Jan", "Feb", "Mar", "Apr", "May",
+	"Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "???" };
 
 
 static int daysofmonth(int month, int leap)
@@ -59,26 +67,6 @@ static inline int leapcount(int year)
 	return ((year - 1968) / 4) - ((year - 2000) / 100) + ((year - 2000) / 400);
 }
 
-/*
-static time_t tm2time(struct tm *tp)
-{
-	int year = tp->tm_year + 1900 - 70;
-	time_t res, days;
-
-	days = year * 365;
-	days += tp->tm_mon * 12;
-	days += tp->tm_mday;
-	days += leapcount(year);
-
-	if (isleap(year) && tp->tm_mon > 1)
-		++days;
-
-	res = days * 24 * 60 * 60;
-	res += (tp->tm_hour * 60 + tp->tm_min) * 60;
-
-	return res + tp->tm_sec;
-}
-*/
 
 void tzset(void)
 {
@@ -147,14 +135,21 @@ int clock_gettime(clockid_t clk_id, struct timespec *tp)
 
 char *asctime_r(const struct tm *tp, char *buf)
 {
-	/* TODO */
+	int wday, mon;
+
+	wday = tp->tm_wday < 0 || tp->tm_wday > 6 ? 7 : tp->tm_wday;
+	mon = tp->tm_mon < 0 || tp->tm_mon > 11 ? 12 : tp->tm_mon;
+
+	sprintf(buf, "%s %s %d %02d:%02d:%02d %d\n", wdayasc[wday], monasc[mon],
+		tp->tm_mday, tp->tm_hour, tp->tm_min, tp->tm_sec, tp->tm_year + 1900);
+
 	return buf;
 }
 
 
 char *asctime(const struct tm *tp)
 {
-	static char buff[26];
+	static char buff[32];
 
 	return asctime_r(tp, buff);
 }
@@ -169,7 +164,7 @@ char *ctime_r(const time_t *timep, char *buf)
 
 char *ctime(const time_t *timep)
 {
-	static char buff[26];
+	static char buff[32];
 
 	return ctime_r(timep, buff);
 }
@@ -250,6 +245,10 @@ struct tm *gmtime(const time_t *timep)
 
 struct tm *localtime_r(const time_t *timep, struct tm *res)
 {
+	tzset();
+
+
+
 	/* TODO */
 	return NULL;
 }
@@ -263,7 +262,7 @@ struct tm *localtime(const time_t *timep)
 }
 
 
-time_t mktime(struct tm *tm)
+time_t mktime(struct tm *tp)
 {
 	int year = tp->tm_year - 70, leap, i;
 	time_t res, days;
@@ -283,7 +282,7 @@ time_t mktime(struct tm *tm)
 	res += (tp->tm_hour * 60 + tp->tm_min) * 60;
 	res += tp->tm_sec + timezone - (tp->tm_isdst > 0 ? 3600 : 0);
 
-	localtime_r(&res, tm);
+	localtime_r(&res, tp);
 
 	return res;
 }
