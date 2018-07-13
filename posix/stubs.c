@@ -156,12 +156,6 @@ void vsyslog(int priority, const char *format, va_list ap)
 }
 
 
-struct tm *localtime_r(const time_t *timep, struct tm *result)
-{
-	return NULL;
-}
-
-
 void setbuf(FILE *stream, char *buf)
 {
 }
