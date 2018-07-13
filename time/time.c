@@ -155,21 +155,6 @@ char *asctime(const struct tm *tp)
 }
 
 
-char *ctime_r(const time_t *timep, char *buf)
-{
-	/* TODO */
-	return buf;
-}
-
-
-char *ctime(const time_t *timep)
-{
-	static char buff[32];
-
-	return ctime_r(timep, buff);
-}
-
-
 double difftime(time_t t1, time_t t2)
 {
 	return (double)t2 - (double)t1;
@@ -259,6 +244,24 @@ struct tm *localtime(const time_t *timep)
 	static struct tm tmp;
 
 	return localtime_r(timep, &tmp);
+}
+
+
+char *ctime_r(const time_t *timep, char *buf)
+{
+	struct tm t;
+
+	localtime_r(timep, &t);
+
+	return asctime_r(&t, buf);
+}
+
+
+char *ctime(const time_t *timep)
+{
+	static char buff[32];
+
+	return ctime_r(timep, buff);
 }
 
 
