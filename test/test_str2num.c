@@ -15,6 +15,7 @@
 
 #include "stdlib.h"
 #include "stdio.h"
+#include "arpa/inet.h"
 
 int test_str2num(void)
 {
@@ -24,6 +25,8 @@ int test_str2num(void)
 	const unsigned int u = 40000U;
 	const unsigned long int lu = 4000000000U;
 	const unsigned long long int llu = 18000000000000000000U;
+	struct in_addr addr;
+
 
 	if (strtol("-100", NULL, 10) != i1)
 		return -1;
@@ -43,6 +46,28 @@ int test_str2num(void)
 	if (strtoull("4000000000", NULL, 10) != lu)
 		return -1;
 	if (strtoull("18000000000000000000", NULL, 10) != llu)
+		return -1;
+
+
+	// test changing internet addresses to numericals
+	if (inet_addr("127.0.0.1") != 0x100007f)
+		return -1;
+	if (inet_addr("127.1") != 0x100007f)
+		return -1;
+	if (inet_addr("192.168.0.1") != 0x100a8c0)
+		return -1;
+	if (inet_addr("192.168.0x1") != 0x100a8c0)
+		return -1;
+	if (inet_addr("0xc0a80001") != 0x100a8c0)
+		return -1;
+
+
+	addr.s_addr = 0x100a8c0;
+	if (inet_addr(inet_ntoa(addr)) != 0x100a8c0)
+		return -1;
+
+	addr.s_addr = 0x100007f;
+	if (inet_addr(inet_ntoa(addr)) != 0x100007f)
 		return -1;
 
 	return 0;

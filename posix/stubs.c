@@ -130,19 +130,6 @@ int tcsetpgrp(int fd, pid_t pgrp)
 	return -1;
 }
 
-
-int inet_aton(const char *cp, struct in_addr *addr)
-{
-	return -1;
-}
-
-
-int inet_ntoa(const char *cp, struct in_addr *addr)
-{
-	return -1;
-}
-
-
 char *ctime(const time_t *clock)
 {
 	return NULL;

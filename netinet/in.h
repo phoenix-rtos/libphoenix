@@ -72,7 +72,9 @@ enum {
 
 enum {
 	INADDR_ANY = 0,
+	INADDR_LOOPBACK = (uint32_t) 0x7f000001,
 	INADDR_BROADCAST = ~(uint32_t)0,
+	INADDR_NONE = 0xffffffff,
 };
 
 
