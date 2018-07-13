@@ -265,8 +265,25 @@ struct tm *localtime(const time_t *timep)
 
 time_t mktime(struct tm *tm)
 {
+	int year = tp->tm_year - 70, leap, i;
+	time_t res, days;
+
 	tzset();
 
-	/* TODO */
-	return 0;
+	year += tp->tm_mon / 12;
+	tp->tm_mon %= 12;
+
+	days = year * 365 + tp->tm_mday + leapcount(tp->tm_year + 1900);
+	leap = isleap(tp->tm_year + 1900);
+
+	for (i = 0; i < tp->tm_mon; ++i)
+		days += daysofmonth(i, leap);
+
+	res = (days - 1) * 24 * 60 * 60;
+	res += (tp->tm_hour * 60 + tp->tm_min) * 60;
+	res += tp->tm_sec + timezone - (tp->tm_isdst > 0 ? 3600 : 0);
+
+	localtime_r(&res, tm);
+
+	return res;
 }
