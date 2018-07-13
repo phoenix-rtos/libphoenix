@@ -21,9 +21,6 @@
 #include "stdio.h"
 
 
-#define ABS(x) (x < 0 ? -x : x)
-
-
 char *tzname[2];
 
 
@@ -70,26 +67,16 @@ static inline int leapcount(int year)
 
 void tzset(void)
 {
-	static char tznamestore[2][8];
-//	char *t_tzname[2], *env;
-//	long t_timezone;
-//	int t_daylight, i, len;
+	static char tznamestore[2][4];
 
-//	if ((env = getenv("TZ")) == NULL) {
-		/* Enviroment variable not set - set UTC time zone */
-		strcpy(tznamestore[0], "UTC");
-		tznamestore[1][0] = '\0';
-		tzname[0] = tznamestore[0];
-		tzname[1] = tznamestore[1];
-		timezone = 0;
-		daylight = 0;
+	/* TODO - env parsing */
 
-		return;
-//	}
-
-//	len = strlen(env);
-
-
+	strcpy(tznamestore[0], "UTC");
+	tznamestore[1][0] = '\0';
+	tzname[0] = tznamestore[0];
+	tzname[1] = tznamestore[1];
+	timezone = 0;
+	daylight = 0;
 }
 
 
@@ -230,12 +217,8 @@ struct tm *gmtime(const time_t *timep)
 
 struct tm *localtime_r(const time_t *timep, struct tm *res)
 {
-	tzset();
-
-
-
-	/* TODO */
-	return NULL;
+	/* TODO - use timezone information */
+	return gmtime_r(timep, res);
 }
 
 
@@ -283,7 +266,7 @@ time_t mktime(struct tm *tp)
 
 	res = (days - 1) * 24 * 60 * 60;
 	res += (tp->tm_hour * 60 + tp->tm_min) * 60;
-	res += tp->tm_sec + timezone - (tp->tm_isdst > 0 ? 3600 : 0);
+	res += tp->tm_sec + timezone - (daylight && tp->tm_isdst > 0 ? 3600 : 0);
 
 	localtime_r(&res, tp);
 
