@@ -30,10 +30,10 @@ long timezone;
 int daylight;
 
 
-static const char * const wdayasc[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "???" };
+static const char wdayasc[8][4] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "???" };
 
 
-static const char * const monasc[] = { "Jan", "Feb", "Mar", "Apr", "May",
+static const char monasc[13][4] = { "Jan", "Feb", "Mar", "Apr", "May",
 	"Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "???" };
 
 
