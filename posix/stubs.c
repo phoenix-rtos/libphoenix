@@ -23,6 +23,24 @@
 #include <stdarg.h>
 
 
+int fsync(int fd)
+{
+	return 0;
+}
+
+
+int fchmod(int fd, mode_t mode)
+{
+	return 0;
+}
+
+
+int fchown(int fd, uid_t owner, gid_t group)
+{
+	return 0;
+}
+
+
 char *mkdtemp(char *template)
 {
 	return NULL;
