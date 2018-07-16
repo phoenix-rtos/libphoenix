@@ -150,7 +150,7 @@ SYSROOT 		:= $(shell $(CC) $(CFLAGS) -print-sysroot)
 MULTILIB_DIR 	:= $(shell $(CC) $(CFLAGS) -print-multi-directory)
 LIBC_INSTALL_DIR := $(SYSROOT)/lib/$(MULTILIB_DIR)
 LIBC_INSTALL_NAMES := libc.a libm.a crt0.o libg.a
-HEADERS_INSTALL_DIR := $(SYSROOT)/usr/local/include/
+HEADERS_INSTALL_DIR := $(SYSROOT)/usr/include/
 ifeq (/,$(SYSROOT))
 $(error Sysroot is not supported by Your toolchain. Use cross-toolchain to compile)
 endif
