@@ -141,9 +141,9 @@ static inline int malloc_chunkIsFirst(chunk_t *chunk)
 }
 
 
-static inline int malloc_chunkIsLast(chunk_t *chunk)
+static long int malloc_chunkIsLast(chunk_t *chunk)
 {
-	return ((u32) chunk + malloc_chunkSize(chunk) + CHUNK_MIN_SIZE > (u32) chunk->heap + chunk->heap->size);
+	return ((uintptr_t) chunk + malloc_chunkSize(chunk) + CHUNK_MIN_SIZE > (uintptr_t) chunk->heap + chunk->heap->size);
 }
 
 
@@ -153,7 +153,7 @@ static inline chunk_t *malloc_chunkPrev(chunk_t *chunk)
 	if (prevSize == 0)
 		return NULL;
 
-	return (chunk_t *) ((u32) chunk - prevSize);
+	return (chunk_t *) ((uintptr_t) chunk - prevSize);
 }
 
 
@@ -162,14 +162,14 @@ static inline chunk_t *malloc_chunkNext(chunk_t *chunk)
 	if (malloc_chunkIsLast(chunk))
 		return NULL;
 
-	return (chunk_t *) ((u32) chunk + malloc_chunkSize(chunk));
+	return (chunk_t *) ((uintptr_t) chunk + malloc_chunkSize(chunk));
 }
 
 
 static inline void malloc_chunkSetFooter(chunk_t *chunk)
 {
 	size_t size = malloc_chunkSize(chunk);
-	*((size_t*)((u32) chunk + size) - 1) = size;
+	*((size_t*)((uintptr_t) chunk + size) - 1) = size;
 }
 
 
@@ -255,7 +255,7 @@ static void _malloc_chunkSplit(chunk_t *chunk, size_t size)
 
 	_malloc_chunkRemove(chunk);
 
-	sibling = (chunk_t *) ((u32) chunk + size);
+	sibling = (chunk_t *) ((uintptr_t) chunk + size);
 	malloc_chunkInit(sibling, chunk->heap, malloc_chunkSize(chunk) - size);
 
 	chunk->size = size | CHUNK_PUSED;
@@ -334,7 +334,7 @@ static inline void *_malloc_allocFrom(chunk_t *chunk, size_t size)
 	if ((chunkNext = malloc_chunkNext(chunk)) != NULL)
 		chunkNext->size |= CHUNK_PUSED;
 
-	return (void *) ((u32) chunk + CHUNK_OVERHEAD);
+	return (void *) ((uintptr_t) chunk + CHUNK_OVERHEAD);
 }
 
 
@@ -453,7 +453,7 @@ void free(void *ptr)
 
 	mutexLock(malloc_common.mutex);
 
-	chunk = (chunk_t *) ((u32) ptr - CHUNK_OVERHEAD);
+	chunk = (chunk_t *) ((uintptr_t) ptr - CHUNK_OVERHEAD);
 	heap = chunk->heap;
 
 	chunk->size &= ~CHUNK_CUSED;
@@ -494,13 +494,13 @@ void *realloc(void *ptr, size_t size)
 
 	mutexLock(malloc_common.mutex);
 
-	chunk = (chunk_t *) ((u32) ptr - CHUNK_OVERHEAD);
+	chunk = (chunk_t *) ((uintptr_t) ptr - CHUNK_OVERHEAD);
 	heap = chunk->heap;
 	chunksz = malloc_chunkSize(chunk);
 
 
 	if (size < chunksz && malloc_chunkCanSplit(chunk, size)) {
-		sibling = (chunk_t *) ((u32) chunk + size);
+		sibling = (chunk_t *) ((uintptr_t) chunk + size);
 		malloc_chunkInit(sibling, heap, chunksz - size);
 		sibling->size |= CHUNK_PUSED;
 		_malloc_chunkAdd(sibling);

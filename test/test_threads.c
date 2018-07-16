@@ -42,7 +42,7 @@ static void test_threads_busythr(void *arg)
 
 static void test_threads_rotthr1(void *arg)
 {
-	unsigned int i = (unsigned int)arg;
+	unsigned int i = (unsigned int)(long)arg;
 
 	for (;;) {
 		test_threads_common.rotations[i]++;
@@ -95,7 +95,7 @@ static void test_threads_timethr(void *arg)
 
 static void test_threads_rotthr2(void *arg)
 {
-	unsigned int i = (unsigned int)arg;
+	unsigned int i = (unsigned int)(long)arg;
 	time_t otm = test_threads_common.tm;
 
 	for (;;) {

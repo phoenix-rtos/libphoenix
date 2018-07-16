@@ -20,7 +20,7 @@ strerror.o: errno.str.inc errno.tab.inc gaierr.str.inc gaierr.tab.inc
 
 
 ERR_EXTRACT := sed -En -e '/^\s*\#\s*define\s+E\w+\s+[[:digit:]]+/{s/^[^d]*define\s+(\w+)\s+([[:digit:]]+).*/\2\t\1/;p;d}' \
-		-e '/^\s*E\w+\s*=\s*-?[[:digit:]]+/{s/^\s*(\w+)\s*=\s*-?([[:digit:]]+).*/\2\t\1/;p;d}'
+ -e '/^\s*E\w+\s*=\s*-?[[:digit:]]+/{s/^\s*(\w+)\s*=\s*-?([[:digit:]]+).*/\2\t\1/;p;d}'
 
 
 errno.list: $(HEADERS_INSTALL_DIR)/phoenix/errno.h $(SRCDIR)/errno.h

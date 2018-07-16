@@ -47,7 +47,7 @@ static const char assert_gainames_size[-(sizeof(gainames) > 0xFFFF)] __attribute
 static int err_cmp(const void *key, const void *elem)
 {
 	const errinfo_t *p = elem;
-	int err = (int)key;
+	long err = (long)key;
 
 	return err - p->errno;
 }
@@ -60,7 +60,7 @@ static inline const char *strerror_(const errinfo_t *tab, size_t tabsz, const ch
 	if (errnum < 0)
 		errnum = -errnum;
 
-	e = bsearch((void *)errnum, tab, tabsz / sizeof(*tab), sizeof(*tab), err_cmp);
+	e = bsearch((void *)(long)errnum, tab, tabsz / sizeof(*tab), sizeof(*tab), err_cmp);
 
 	return e != NULL ? names + e->offset : NULL;
 }

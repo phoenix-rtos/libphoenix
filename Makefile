@@ -11,7 +11,8 @@ MAKEFLAGS += --no-print-directory --output-sync
 
 #TARGET ?= arm-imx
 #TARGET ?= armv7-stm32-tiramisu
-TARGET ?= ia32-qemu
+#TARGET ?= ia32-qemu
+TARGET = riscv64
 
 VERSION = 0.2
 SRCDIR := $(CURDIR)
@@ -34,7 +35,9 @@ ifneq (, $(findstring ia32, $(TARGET)))
 
 	CFLAGS += -O2 -g -Wall -Wstrict-prototypes -I$(SRCDIR) -nostartfiles -nostdlib\
 		-m32 -mtune=generic -mno-mmx -mno-sse -fno-pic -fno-pie\
-		-fomit-frame-pointer -fno-strength-reduce -ffreestanding
+		-fomit-frame-pointer -fno-strength-reduce -ffreestanding\
+		-I/usr/local/include
+#		-DVERSION=\"$(VERSION)\" -DARCH=\"arch/ia32/arch.h\" 
 
 	AR = $(CROSS)ar
 	ARFLAGS = -r
@@ -92,13 +95,40 @@ ifneq (, $(findstring arm-imx, $(TARGET)))
 
 	CFLAGS += -Os -Wall -Wstrict-prototypes -g -I$(SRCDIR) -nostartfiles -nostdlib\
 		-mcpu=cortex-a7 -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard -mthumb\
-		-fomit-frame-pointer -ffreestanding -mno-unaligned-access
+		-fomit-frame-pointer -ffreestanding -mno-unaligned-access -I/usr/local/include
 
 	AR = $(CROSS)ar
 	ARFLAGS = -r
 
 	LD = $(CROSS)ld
 	LDFLAGS = -nostdlib -z max-page-size=0x1000
+	GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
+
+	OBJCOPY = $(CROSS)objcopy
+	OBJDUMP = $(CROSS)objdump
+	STRIP = $(CROSS)strip
+endif
+
+############ RISCV64 ############
+
+ifneq (, $(findstring riscv64, $(TARGET)))
+	CROSS ?= riscv64-unknown-elf-
+	SUBDIRS = arch/riscv64 $(SUBSYSTEMS)
+
+	MKDEP = $(CROSS)gcc -MM
+	MKDEPFLAGS = $(CFLAGS)
+
+	CC = $(CROSS)gcc
+
+	CFLAGS += -Wall -Wstrict-prototypes -I$(SRCDIR) -nostartfiles -nostdlib\
+		-fomit-frame-pointer -ffreestanding \
+		-DVERSION=\"$(VERSION)\" -DHAL=\"hal//riscv64//hal.h\" -mcmodel=medany -I/usr/local/include
+
+	AR = $(CROSS)ar
+	ARFLAGS = -r
+
+	LD = $(CROSS)ld
+	LDFLAGS = -nostdlib
 	GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 
 	OBJCOPY = $(CROSS)objcopy
@@ -120,7 +150,7 @@ SYSROOT 		:= $(shell $(CC) $(CFLAGS) -print-sysroot)
 MULTILIB_DIR 	:= $(shell $(CC) $(CFLAGS) -print-multi-directory)
 LIBC_INSTALL_DIR := $(SYSROOT)/lib/$(MULTILIB_DIR)
 LIBC_INSTALL_NAMES := libc.a libm.a crt0.o libg.a
-HEADERS_INSTALL_DIR := $(SYSROOT)/usr/include/
+HEADERS_INSTALL_DIR := $(SYSROOT)/usr/local/include/
 ifeq (/,$(SYSROOT))
 $(error Sysroot is not supported by Your toolchain. Use cross-toolchain to compile)
 endif
@@ -143,7 +173,7 @@ all: subsystems $(OBJS) $(LIB) tests posixsrv
 	for i in `$(OBJDUMP) -t $$file | grep -e "F" | awk '{ print $$5 }'`; do \
 		textsz=`echo $$(($$textsz + 0x$$i))`;\
 	done;\
-	echo "data=$$datasz\t text=$$textsz")
+	printf "data=%-10s\ttext=%s\n" $$datasz $$textsz)
 
 $(OBJS): $(filter clean,$(MAKECMDGOALS))
 

@@ -486,7 +486,7 @@ static int scanf_parse(char *ccltab, const char *inp, char const *fmt0, va_list 
 						res = strtoull(buf, (char **)NULL, base);
 					if (flags & POINTER)
 						*va_arg(ap, void **) =
-							(void *)(unsigned)res;
+							(void *)(unsigned long)res;
 					else if (flags & SHORTSHORT)
 						*va_arg(ap, char *) = res;
 					else if (flags & SHORT)

@@ -26,14 +26,14 @@ extern void lib_listRemove(void **list, void *t, size_t next_off, size_t prev_of
 
 
 #define LIST_ADD_EX(list, t, next, prev) \
-	lib_listAdd((void **)(list), (void *)(t), (u32)&(((typeof(t))0)->next), (u32)&(((typeof(t))0)->prev))
+	lib_listAdd((void **)(list), (void *)(t), (uintptr_t)&(((typeof(t))0)->next), (uintptr_t)&(((typeof(t))0)->prev))
 
 
 #define LIST_ADD(list, t) LIST_ADD_EX(list, t, next, prev)
 
 
 #define LIST_REMOVE_EX(list, t, next, prev) \
-	lib_listRemove((void **)(list), (void *)(t), (u32)&(((typeof(t))0)->next), (u32)&(((typeof(t))0)->prev))
+	lib_listRemove((void **)(list), (void *)(t), (uintptr_t)&(((typeof(t))0)->next), (uintptr_t)&(((typeof(t))0)->prev))
 
 
 #define LIST_REMOVE(list, t) LIST_REMOVE_EX(list, t, next, prev)

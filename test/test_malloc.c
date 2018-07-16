@@ -178,7 +178,7 @@ void test_malloc(unsigned threadId)
 
 static void test_malloc_thread(void *id)
 {
-	test_malloc((unsigned) id);
+	test_malloc((unsigned)(long)id);
 }
 
 
@@ -210,7 +210,7 @@ int main(void)
 		test_malloc_common.threads[i].seed = i;
 		test_malloc_common.threads[i].noallocs = 10000;
 		test_printf("test: launching thread %d, stack: %p\n", i, test_malloc_common.threads[i].stack);
-		beginthread(test_malloc_thread, 6, test_malloc_common.threads[i].stack, sizeof(test_malloc_common.threads[0].stack), (void*) i);
+		beginthread(test_malloc_thread, 6, test_malloc_common.threads[i].stack, sizeof(test_malloc_common.threads[0].stack), (void *)(long)i);
 	}
 
 	for (;;) usleep(1000000);

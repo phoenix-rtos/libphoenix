@@ -41,9 +41,9 @@ void test_mmap(void *threadId)
 
 	int i = 0, j;
 
-	unsigned seed = (unsigned) threadId, sz, cnt, nofailed = 0;
+	unsigned seed = (unsigned)(long)threadId, sz, cnt, nofailed = 0;
 
-	test_printf("thread %d launching\n", (int) threadId);
+	test_printf("thread %d launching\n", (int)((long) threadId));
 
 	for (i = 0; i < bufsz; ++i) {
 		buf[i] = (char*) -1;
@@ -54,7 +54,7 @@ void test_mmap(void *threadId)
 	for (cnt = 0; ; ++cnt) {
 
 		if (cnt && (cnt % 1000 == 0)) {
-			test_printf("test (thread %d): integrity ok, %u/%u (%.2f%%) allocs failed\n", (int) threadId, nofailed, cnt, 100 * (float) nofailed / cnt);
+			test_printf("test (thread %d): integrity ok, %u/%u (%.2f%%) allocs failed\n", (int)(long)threadId, nofailed, cnt, 100 * (float) nofailed / cnt);
 		}
 
 		i = rand_r(&seed) % bufsz;
@@ -62,7 +62,7 @@ void test_mmap(void *threadId)
 		if (buf[i] != (char*) -1) {
 			for (j = 0; j < sizes[i]; ++j) {
 				if (buf[i][j] != (char) i) {
-					test_printf("test (thread %d): user memory corrupt, buffer %d at %d is %d\n", (int) threadId, i, j, buf[i][j]);
+					test_printf("test (thread %d): user memory corrupt, buffer %d at %d is %d\n", (int)(long)threadId, i, j, buf[i][j]);
 					for (;;)
 						usleep(1000000);
 				}
@@ -95,7 +95,7 @@ int main(void)
 	mutexCreate(&test_mmap_common.mutex);
 
 	for(i = 0; i < 3; ++i)
-		beginthread(test_mmap, 1, malloc(1024), 1024, (void*) i);
+		beginthread(test_mmap, 1, malloc(1024), 1024, (void *)(uintptr_t)i);
 
 	for (;;)
 		usleep(1000000);
