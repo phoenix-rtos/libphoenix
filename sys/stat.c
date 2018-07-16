@@ -25,56 +25,6 @@
 #include "posix/utils.h"
 #include "posixsrv/posixsrv.h"
 
-int fstat(int fildes, struct stat *buf)
-{
-	oid_t oid;
-	msg_t msg = { 0 };
-
-	if (fileGet(fildes, 1, &oid, NULL, NULL) != EOK)
-	   return -EBADF;
-
-	buf->st_ino = oid.id;
-
-	msg.type = mtGetAttr;
-	msg.i.attr.oid = oid;
-	msg.i.attr.val = 0;
-
-	msg.i.attr.type = 1; /* Uid */
-	msgSend(oid.port, &msg);
-	buf->st_uid = msg.o.attr.val;
-
-	msg.i.attr.type = 2; /* Gid */
-	msgSend(oid.port, &msg);
-	buf->st_gid = msg.o.attr.val;
-
-	msg.i.attr.type = 3; /* Size */
-	msgSend(oid.port, &msg);
-	buf->st_size = msg.o.attr.val;
-
-	msg.i.attr.type = 4; /* Type */
-	msgSend(oid.port, &msg);
-
-	switch (msg.o.attr.val) {
-	case 0:
-		buf->st_mode = S_IFDIR;
-		break;
-
-	case 1:
-		buf->st_mode = S_IFREG;
-		break;
-
-	case 2:
-		buf->st_mode = S_IFCHR;
-		break;
-	}
-
-	msg.i.attr.type = 5; /* Port */
-	msgSend(oid.port, &msg);
-	buf->st_dev = msg.o.attr.val;
-
-	return EOK;
-}
-
 
 int stat(const char *path, struct stat *buf)
 {
