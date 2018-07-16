@@ -17,7 +17,7 @@ TARGET = riscv64
 VERSION = 0.2
 SRCDIR := $(CURDIR)
 
-SUBSYSTEMS := math stdio stdlib string sys ctype time unistd errno signal termios posix err locale regex
+SUBSYSTEMS := math stdio stdlib string sys ctype time unistd errno signal termios posix err locale regex net
 EXTRA_HEADER_DIRS := net netinet arpa
 
 LIB := libphoenix.a

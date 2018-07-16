@@ -40,6 +40,8 @@ struct sockaddr_in {
 	sa_family_t     sin_family;
 	in_port_t       sin_port;
 	struct in_addr  sin_addr;
+#define SIN_ZERO_LEN 8
+	u8		sin_zero[SIN_ZERO_LEN];
 };
 
 struct sockaddr_in6 {
@@ -72,7 +74,9 @@ enum {
 
 enum {
 	INADDR_ANY = 0,
+	INADDR_LOOPBACK = (uint32_t) 0x7f000001,
 	INADDR_BROADCAST = ~(uint32_t)0,
+	INADDR_NONE = 0xffffffff,
 };
 
 

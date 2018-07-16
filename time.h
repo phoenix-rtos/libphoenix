@@ -44,13 +44,52 @@ struct timespec {
 };
 
 
-extern struct tm *localtime(const time_t *timep);
+extern char *tzname[2];
+
+
+extern long timezone;
+
+
+extern int daylight;
+
+
+extern void tzset(void);
 
 
 extern int gettime(time_t *raw, time_t *offs);
 
 
 extern int settime(time_t offs);
+
+
+extern char *asctime(const struct tm *tp);
+
+
+extern char *asctime_r(const struct tm *tp, char *buf);
+
+
+extern char *ctime(const time_t *timep);
+
+
+extern char *ctime_r(const time_t *timep, char *buf);
+
+
+extern double difftime(time_t t1, time_t t2);
+
+
+extern struct tm *gmtime(const time_t *timep);
+
+
+extern struct tm *gmtime_r(const time_t *timep, struct tm *res);
+
+
+extern struct tm *localtime(const time_t *timep);
+
+
+extern struct tm *localtime_r(const time_t *timep, struct tm *res);
+
+
+extern time_t mktime(struct tm *tp);
 
 
 extern int clock_gettime(clockid_t clk_id, struct timespec *tp);

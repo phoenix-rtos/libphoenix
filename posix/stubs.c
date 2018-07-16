@@ -77,12 +77,6 @@ int ttyname_r(int fildes, char *name, size_t namesize)
 }
 
 
-time_t mktime(struct tm *timeptr)
-{
-	return 0;
-}
-
-
 size_t strftime(char *restrict s, size_t maxsize, const char *restrict format, const struct tm *restrict timeptr)
 {
 	return 0;
@@ -131,24 +125,6 @@ int tcsetpgrp(int fd, pid_t pgrp)
 }
 
 
-int inet_aton(const char *cp, struct in_addr *addr)
-{
-	return -1;
-}
-
-
-int inet_ntoa(const char *cp, struct in_addr *addr)
-{
-	return -1;
-}
-
-
-char *ctime(const time_t *clock)
-{
-	return NULL;
-}
-
-
 void openlog(const char *ident, int option, int facility)
 {
 }
@@ -166,12 +142,6 @@ void closelog(void)
 
 void vsyslog(int priority, const char *format, va_list ap)
 {
-}
-
-
-struct tm *localtime_r(const time_t *timep, struct tm *result)
-{
-	return NULL;
 }
 
 
@@ -199,18 +169,6 @@ dev_t makedev(unsigned int maj, unsigned int min)
 
 
 int getrusage(int who, struct rusage *usage)
-{
-	return 0;
-}
-
-
-FILE *popen(const char *command, const char *type)
-{
-	return NULL;
-}
-
-
-int pclose(FILE *stream)
 {
 	return 0;
 }

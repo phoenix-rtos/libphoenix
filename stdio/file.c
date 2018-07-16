@@ -85,6 +85,30 @@ FILE *fopen(const char *filename, const char *mode)
 }
 
 
+FILE *fdopen(int fd, const char *mode)
+{
+//	unsigned int m;
+	FILE *f;
+
+	if (mode == NULL)
+		return NULL;
+
+#if 0 /* TODO: check if mode is compatible with fd's mode */
+	if ((m = string2mode(mode)) < 0)
+		return NULL;
+#endif
+
+	if ((f = malloc(sizeof(FILE))) == NULL)
+		return NULL;
+
+	f->fd = fd;
+	f->buff = NULL;
+	f->buffsz = 0;
+
+	return f;
+}
+
+
 FILE *freopen(const char *pathname, const char *mode, FILE *stream)
 {
 	int m;
@@ -283,12 +307,6 @@ int fputs(const char *str, FILE *f)
 {
 	int len = strlen(str);
 	return fwrite(str, 1, len, f);
-}
-
-
-int ioctl(int fildes, int request, ... /* arg */)
-{
-	return EOK;
 }
 
 

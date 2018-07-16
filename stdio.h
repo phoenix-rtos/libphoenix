@@ -86,6 +86,10 @@ extern int fgetpos(FILE *stream, fpos_t *pos);
 extern FILE *fopen(const char *filename, const char *mode);
 
 
+/* Associates a stream with existing file descriptor fd. */
+extern FILE *fdopen(int fd, const char *mode);
+
+
 /* Reads data from the given stream into the array pointed to by ptr. */
 extern size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
 

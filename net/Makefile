@@ -1,15 +1,14 @@
 #
-# Makefile for Phoenix-RTOS kernel (test)
+# Makefile for libphoenix (net)
 #
-# Copyright 2012-2015 Phoenix Systems
-# Copyright 2001, 2005-2006 Pawel Pisarczyk
+# Copyright 2017 Phoenix Systems
+# Author: Marek Białowąs
 #
 ifeq (,$(SRCDIR))
 $(error Only main Makefile can be used for compilation)
 endif
 
-SRCS = printf.c sprintf.c asprintf.c fprintf.c format.c scanf.c file.c stdfile.c popen.c
-#fs.c
+SRCS = $(wildcard *.c)
 OBJS = $(SRCS:.c=.o)
 
 

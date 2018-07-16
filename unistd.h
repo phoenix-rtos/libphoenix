@@ -54,6 +54,9 @@ extern int vfork(void);
 extern pid_t fork(void);
 
 
+extern int execl(const char *path, const char *arg, ...);
+
+
 extern int execle(const char *path, const char *arg, ...);
 
 
@@ -136,6 +139,9 @@ extern int close(int fildes);
 
 
 extern off_t lseek(int fildes, off_t offset, int whence);
+
+
+extern int pipe(int fildes[2]);
 
 
 extern int ftruncate(int fildes, off_t length);
