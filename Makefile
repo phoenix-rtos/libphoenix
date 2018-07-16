@@ -12,7 +12,7 @@ MAKEFLAGS += --no-print-directory --output-sync
 #TARGET ?= arm-imx
 #TARGET ?= armv7-stm32-tiramisu
 #TARGET ?= ia32-qemu
-TARGET = riscv64
+TARGET ?= riscv64
 
 VERSION = 0.2
 SRCDIR := $(CURDIR)
