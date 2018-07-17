@@ -23,6 +23,12 @@
 #include <stdarg.h>
 
 
+char* setlocale(int category, const char* locale)
+{
+	return NULL;
+}
+
+
 int fsync(int fd)
 {
 	return 0;
