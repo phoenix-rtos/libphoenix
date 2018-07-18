@@ -13,12 +13,13 @@
  * %LICENSE%
  */
 
-#include "sys/threads.h"
-#include "errno.h"
-#include "stdlib.h"
-#include "stdio.h"
-#include "string.h"
-#include "time.h"
+#include <sys/threads.h>
+#include <sys/time.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
 
 int test_condwait(void)
 {

@@ -15,6 +15,7 @@
 
 #include <sys/file.h>
 #include <sys/msg.h>
+#include <sys/time.h>
 #include <errno.h>
 #include <poll.h>
 #include <time.h>

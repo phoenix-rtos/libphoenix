@@ -13,12 +13,13 @@
  * %LICENSE%
  */
 
-#include "time.h"
-#include "errno.h"
-#include "stdlib.h"
-#include "string.h"
-#include "ctype.h"
-#include "stdio.h"
+#include <sys/time.h>
+#include <time.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdio.h>
 
 
 char *tzname[2];

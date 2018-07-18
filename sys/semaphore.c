@@ -12,11 +12,11 @@
  * %LICENSE%
  */
 
-
-#include "../errno.h"
-#include "threads.h"
-#include "../time.h"
-#include "../sys/resource.h"
+#include <sys/time.h>
+#include <errno.h>
+#include <sys/threads.h>
+#include <time.h>
+#include <sys/resource.h>
 
 
 int semaphoreCreate(semaphore_t *s, unsigned int v)

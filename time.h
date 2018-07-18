@@ -20,7 +20,6 @@
 #define MSECS_TO_USECS_T(msecs) (1000ULL * (msecs))
 
 #include <sys/types.h>
-#include <sys/time.h>
 
 
 typedef enum { CLOCK_MONOTONIC = 0, CLOCK_REALTIME } clockid_t;
