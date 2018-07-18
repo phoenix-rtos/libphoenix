@@ -18,9 +18,9 @@
 
 
 #ifndef NDEBUG
-#define assert(expr) do { if(!(expr)) {									\
+#define assert(expr) do { if(!(expr)) { \
 		printf("Assertion failed in file %s:%d, function %s.\n", __FILE__, __LINE__, __func__); \
-		exit(1); } 														\
+		exit(1); } \
 	} while (0)
 
 #else
@@ -30,7 +30,6 @@
 
 
 #endif
-
 
 
 #endif

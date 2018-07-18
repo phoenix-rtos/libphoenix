@@ -20,6 +20,7 @@
 #define MSECS_TO_USECS_T(msecs) (1000ULL * (msecs))
 
 #include <sys/types.h>
+#include <sys/time.h>
 
 
 typedef enum { CLOCK_MONOTONIC = 0, CLOCK_REALTIME } clockid_t;
@@ -54,12 +55,6 @@ extern int daylight;
 
 
 extern void tzset(void);
-
-
-extern int gettime(time_t *raw, time_t *offs);
-
-
-extern int settime(time_t offs);
 
 
 extern char *asctime(const struct tm *tp);

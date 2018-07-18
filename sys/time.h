@@ -25,6 +25,12 @@ struct timeval {
 };
 
 
+extern int gettime(time_t *raw, time_t *offs);
+
+
+extern int settime(time_t offs);
+
+
 extern int gettimeofday(struct timeval *tp, void *tzp);
 
 
