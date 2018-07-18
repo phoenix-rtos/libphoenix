@@ -34,6 +34,10 @@ extern int settime(time_t offs);
 extern int gettimeofday(struct timeval *tp, void *tzp);
 
 
+/* For compability with Linux software */
+extern int settimeofday(const struct timeval *tv, void *tz);
+
+
 extern int utimes(const char *filename, const struct timeval times[2]);
 
 
