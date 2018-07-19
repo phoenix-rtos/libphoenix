@@ -124,6 +124,11 @@
 #endif
 
 
+#ifndef ULLONG_MAX
+#define ULLONG_MAX ULONG_LONG_MAX
+#endif
+
+
 #ifndef SSIZE_MAX
 #define SSIZE_MAX ((ssize_t)((1ULL << (sizeof(ssize_t) * 8 - 1)) - 1))
 #endif
