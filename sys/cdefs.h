@@ -17,7 +17,6 @@
 #define _LIBPHOENIX_SYS_CDEFS_H
 
 #define __GLIBC_PREREQ(x,y) 0
-#define __GNUC_PREREQ(x,y) 0
 
 #define __LEAF , __leaf__
 #define __LEAF_ATTR __attribute__ ((__leaf__))
