@@ -44,12 +44,6 @@ int settimeofday(const struct timeval *tv, void *tz)
 }
 
 
-int utimes(const char *filename, const struct timeval times[2])
-{
-	return 0;
-}
-
-
 int futimes(int fd, const struct timeval tv[2])
 {
 	return 0;
