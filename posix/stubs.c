@@ -221,12 +221,6 @@ void sync(void)
 }
 
 
-ssize_t getline(char **lineptr, size_t *n, FILE *stream)
-{
-	return 0;
-}
-
-
 unsigned int major(int dev)
 {
 	return 0;

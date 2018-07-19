@@ -13,19 +13,21 @@
  * %LICENSE%
  */
 
-#include "errno.h"
-#include "stdio.h"
-#include "stdlib.h"
-#include "string.h"
-#include "unistd.h"
-#include "dirent.h"
-#include "sys/threads.h"
-#include "sys/mman.h"
-#include "sys/msg.h"
-#include "sys/file.h"
-#include "sys/stat.h"
-#include "sys/wait.h"
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdarg.h>
+#include <unistd.h>
+#include <dirent.h>
+#include <sys/threads.h>
+#include <sys/mman.h>
+#include <sys/msg.h>
+#include <sys/file.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
 
+#define PSH_SCRIPT_MAGIC ":{}:"
 
 static int psh_isNewline(char c)
 {
@@ -642,8 +644,95 @@ void psh_run(void)
 }
 
 
-int main(void)
+int psh_runscript(char *path)
 {
+	FILE *stream;
+	char *line = NULL;
+	size_t n = 0;
+	char *arg;
+	int argc = 0;
+	char **argv = NULL;;
+	char *bin;
+	int err;
+
+	stream = fopen(path, "r");
+
+	if (stream == NULL)
+		return -EINVAL;
+	if (getline(&line, &n, stream) == 5) {
+		if (strncmp(PSH_SCRIPT_MAGIC, line, strlen(PSH_SCRIPT_MAGIC))) {
+			free(line);
+			fclose(stream);
+			printf("psh: %s is not a psh script\n", path);
+			return -1;
+		}
+	}
+
+	free(line);
+	line = NULL;
+	n = 0;
+
+	while (getline(&line, &n, stream) > 0) {
+
+		if (line[0] == 'X') {
+			strtok(line, " ");
+
+			bin = strtok(NULL, " ");
+			if (bin == NULL) {
+				free(line);
+				fclose(stream);
+				line = NULL;
+				n = 0;
+				return -1;
+			}
+
+			if (bin[strlen(bin) - 1] == '\n')
+				bin[strlen(bin) - 1] = 0;
+
+			argv = malloc(sizeof(char *));
+			argv[argc++] = bin;
+
+			while ((arg = strtok(NULL, " ")) != NULL) {
+				if (arg[strlen(arg) - 1] == '\n')
+					arg[strlen(arg) - 1] = 0;
+
+				argv = realloc(argv, argc + 2);
+
+				if (argv == NULL) {
+					printf("psh: Out of memory\n");
+					free(line);
+					fclose(stream);
+					return -1;
+				}
+
+				argv[argc] = arg;
+				argc++;
+			}
+
+			argv[argc] = NULL;
+
+			if (vfork() == 0) {
+				if ((err = execve(bin, argv, NULL)) != EOK)
+					printf("psh: execve failed %d\n", err);
+				endthread();
+			}
+		}
+
+		free(argv);
+		free(line);
+		argv = NULL;
+		argc = 0;
+		line = NULL;
+		n = 0;
+	}
+	fclose(stream);
+	return EOK;
+}
+
+
+int main(int argc, char **argv)
+{
+	int c;
 	oid_t oid;
 
 	/* Wait for filesystem */
@@ -653,6 +742,12 @@ int main(void)
 	/* Wait for console */
 	while (write(1, "", 0) < 0)
 		usleep(50000);
+
+	if ((c = getopt(argc, argv, "i:")) != -1) {
+		if (psh_runscript(optarg) == EOK) {
+			return 0;
+		}
+	}
 
 	psh_run();
 	return 0;

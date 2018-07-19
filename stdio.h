@@ -257,4 +257,7 @@ extern FILE *popen(const char *command, const char *type);
 
 extern int pclose(FILE *stream);
 
+
+extern ssize_t getline(char **lineptr, size_t *n, FILE *stream);
+
 #endif

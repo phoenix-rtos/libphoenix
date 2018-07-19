@@ -202,12 +202,7 @@ char *fgets(char *str, int n, FILE *stream)
 
 long int ftell(FILE *stream)
 {
-	offs_t offs;
-
-	if (fileGet(stream->fd, 2, NULL, &offs, NULL) < 0)
-		return -1;
-
-	return (long)offs;
+	return (long)lseek(stream->fd, 0, SEEK_CUR);
 }
 
 
@@ -338,4 +333,46 @@ int fseeko(FILE *stream, off_t offset, int whence)
 
 void __fpurge(FILE *stream)
 {
+}
+
+
+ssize_t getline(char **lineptr, size_t *n, FILE *stream)
+{
+	char buff[128] = { 0 };
+	size_t linesz = 0;
+	offs_t offs;
+	int readsz, i, nl = 0;
+
+	offs = (offs_t)ftell(stream);
+
+	while ((readsz = fread(buff, sizeof(buff), 1, stream)) > 0) {
+		for (i = 0; i < readsz; i++) {
+			if (buff[i] == '\n') {
+				linesz += i + 2;
+				nl = 1;
+				break;
+			}
+		}
+		if (nl)
+			break;
+		linesz += readsz;
+	}
+
+	if (!nl)
+	   linesz++;
+
+	if (*lineptr == NULL && linesz > 0)
+		*lineptr = malloc(linesz);
+	else if (*n < linesz)
+		*lineptr = realloc(*lineptr, linesz);
+
+	*n = linesz - 1;
+
+	fseek(stream, offs, SEEK_SET);
+
+	fread(*lineptr, linesz - 1, 1, stream);
+	if (linesz > 0)
+		(*lineptr)[linesz - 1] = 0;
+
+	return linesz - 1;
 }
