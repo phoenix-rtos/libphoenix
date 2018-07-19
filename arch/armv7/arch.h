@@ -82,6 +82,6 @@ typedef u32 handle_t;
 
 #include <limits.h>
 
-#define SIZE_PAGE 0x100
+#define SIZE_PAGE 0x200
 
 #endif
