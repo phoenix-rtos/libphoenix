@@ -45,6 +45,8 @@ void closelog(void)
 {
 	if (syslog_common.open)
 		close(syslog_common.logfd);
+
+	syslog_common.open = 0;
 }
 
 
