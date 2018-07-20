@@ -120,11 +120,6 @@ int create_dev(oid_t *oid, const char *path)
 	if ((canonical_path = canonicalize_file_name(path)) == NULL)
 		return -1;
 
-	if (lookup(canonical_path, &odir) == EOK) {
-		free(canonical_path);
-		return -1; /* EEXIST */
-	}
-
 	splitname(canonical_path, &name, &dir);
 
 	if (lookup(dir, &odir) < 0) {
