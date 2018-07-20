@@ -130,6 +130,9 @@ extern char *strstr(const char *haystack, const char *needle);
 extern char *strcasestr(const char *haystack, const char *needle);
 
 
+extern char *strsep(char **string_ptr, const char *delimiter);
+
+
 /* Breaks string str into a series of tokens separated by delim. */
 extern char *strtok(char *str, const char *delim);
 
@@ -145,6 +148,7 @@ extern char *strchr(const char *str, int z);
 
 
 extern char *strdup(const char *s1);
+
 
 extern int strverscmp(const char *s1, const char *s2);
 

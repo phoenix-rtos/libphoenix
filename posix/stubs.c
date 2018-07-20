@@ -190,12 +190,6 @@ int kill(pid_t pid, int sig)
 }
 
 
-char *strsep (char **string_ptr, const char *delimiter)
-{
-	return NULL;
-}
-
-
 void sync(void)
 {
 }
