@@ -689,14 +689,14 @@ int psh_runscript(char *path)
 			if (bin[strlen(bin) - 1] == '\n')
 				bin[strlen(bin) - 1] = 0;
 
-			argv = malloc(sizeof(char *));
+			argv = malloc(2 * sizeof(char *));
 			argv[argc++] = bin;
 
 			while ((arg = strtok(NULL, " ")) != NULL) {
 				if (arg[strlen(arg) - 1] == '\n')
 					arg[strlen(arg) - 1] = 0;
 
-				argv = realloc(argv, argc + 2);
+				argv = realloc(argv, (argc + 2) * sizeof(char *));
 
 				if (argv == NULL) {
 					printf("psh: Out of memory\n");
