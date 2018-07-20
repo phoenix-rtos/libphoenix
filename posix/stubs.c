@@ -149,26 +149,6 @@ int tcsetpgrp(int fd, pid_t pgrp)
 }
 
 
-void openlog(const char *ident, int option, int facility)
-{
-}
-
-
-void syslog(int priority, const char *format, ...)
-{
-}
-
-
-void closelog(void)
-{
-}
-
-
-void vsyslog(int priority, const char *format, va_list ap)
-{
-}
-
-
 void setbuf(FILE *stream, char *buf)
 {
 }

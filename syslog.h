@@ -146,6 +146,6 @@ void syslog(int priority, const char *format, ...);
 void vsyslog(int priority, const char *format, va_list ap);
 
 
-void closelog();
+void closelog(void);
 
 #endif
