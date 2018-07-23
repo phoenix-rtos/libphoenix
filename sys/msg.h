@@ -29,7 +29,7 @@ extern void portDestroy(u32 port);
 
 extern int portRegister(u32 port, const char *name, oid_t *oid);
 
-extern int lookup(const char *name, oid_t *oid);
+extern int lookup(const char *name, oid_t *file, oid_t *dev);
 
 
 /* Message passing */

@@ -736,7 +736,7 @@ int main(int argc, char **argv)
 	oid_t oid;
 
 	/* Wait for filesystem */
-	while (lookup("/", &oid) < 0)
+	while (lookup("/", NULL, &oid) < 0)
 		usleep(10000);
 
 	/* Wait for console */

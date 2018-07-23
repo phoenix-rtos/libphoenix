@@ -122,7 +122,7 @@ int create_dev(oid_t *oid, const char *path)
 
 	splitname(canonical_path, &name, &dir);
 
-	if (lookup(dir, &odir) < 0) {
+	if (lookup(dir, NULL, &odir) < 0) {
 		free(canonical_path);
 		return -1;
 	}

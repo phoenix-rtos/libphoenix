@@ -32,7 +32,7 @@ int stat(const char *path, struct stat *buf)
 	msg_t msg = {0};
 	char *canonical_name = canonicalize_file_name(path);
 
-	if (lookup(canonical_name, &oid) < 0) {
+	if (lookup(canonical_name, &oid, NULL) < 0) {
 		free(canonical_name);
 		errno = ENOENT;
 		return -1;
@@ -128,7 +128,7 @@ int mkdir(const char *path, mode_t mode)
 		parent = canonical_name;
 	}
 
-	if (lookup(parent, &dir) < EOK) {
+	if (lookup(parent, NULL, &dir) < EOK) {
 		free(canonical_name);
 		return -ENOENT;
 	}

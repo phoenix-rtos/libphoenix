@@ -43,7 +43,7 @@ static int socksrvcall(msg_t *msg)
 	oid_t oid;
 	int err;
 
-	if ((err = lookup(PATH_SOCKSRV, &oid)) < 0)
+	if ((err = lookup(PATH_SOCKSRV, NULL, &oid)) < 0)
 		return set_errno(err);
 	if ((err = msgSend(oid.port, msg)) < 0)
 		return set_errno(err);

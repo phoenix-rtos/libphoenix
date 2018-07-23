@@ -228,7 +228,7 @@ int main(int argc, char **argv)
 	idtree_init(&posixsrv_common.objects);
 	mutexCreate(&posixsrv_common.lock);
 
-	while (lookup("/", &fs) < 0)
+	while (lookup("/", NULL, &fs) < 0)
 		usleep(5000);
 
 	if (portCreate(&posixsrv_common.port) < 0)

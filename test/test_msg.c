@@ -162,10 +162,10 @@ int main(int argc, char **argv)
 		usleep(10000);
 
 	/* Wait for filesystem */
-	while (lookup("/", &oid) < 0)
+	while (lookup("/", NULL, &oid) < 0)
 		usleep(10000);
 
-	if (lookup(portname, &oid) < 0) {
+	if (lookup(portname, NULL, &oid) < 0) {
 		portCreate(&oid.port);
 
 		if (portRegister(oid.port, portname, &oid) < 0) {

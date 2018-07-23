@@ -165,7 +165,7 @@ DIR *opendir(const char *dirname)
 	char *canonical_name = canonicalize_file_name(dirname);
 	DIR *s = calloc(1, sizeof(DIR));
 
-	if (!dirname[0] || (lookup((char *)canonical_name, &s->oid) < 0)) {
+	if (!dirname[0] || (lookup((char *)canonical_name, NULL, &s->oid) < 0)) {
 		free(s);
 		return NULL; /* ENOENT */
 	}
@@ -247,7 +247,7 @@ int rmdir(const char *path)
 
 	splitname(canonical_name, &name, &dirname);
 
-	if (lookup(dirname, &dir)) {
+	if (lookup(dirname, NULL, &dir)) {
 		free(canonical_name);
 		return -1;
 	}
