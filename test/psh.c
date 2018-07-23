@@ -743,7 +743,7 @@ int main(int argc, char **argv)
 	while (write(1, "", 0) < 0)
 		usleep(50000);
 
-	if ((c = getopt(argc, argv, "i:")) != -1) {
+	if (argc > 0 && (c = getopt(argc, argv, "i:")) != -1) {
 		if (psh_runscript(optarg) == EOK) {
 			return 0;
 		}
