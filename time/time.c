@@ -273,3 +273,70 @@ time_t mktime(struct tm *tp)
 
 	return res;
 }
+
+
+size_t strftime(char *restrict s, size_t maxsize, const char *restrict format, const struct tm *restrict timeptr)
+{
+	int res;
+	unsigned num = 0;
+	size_t size = 0;
+	const char *c = format, *tmp, *fmt;
+
+	while (size < maxsize) {
+		if (*c == '%') {
+			c++;
+			switch (*c) {
+			case 'a':
+			case 'b':
+				if (*c == 'a') {
+					tmp = wdayasc[timeptr->tm_wday < 7 ? timeptr->tm_wday : 7];
+				} else {
+					tmp = monasc[timeptr->tm_mon < 12 ? timeptr->tm_mon : 12];
+				}
+				if (maxsize - size < strlen(tmp) + 1)
+					return 0;
+				size += sprintf(s + size, "%s", tmp);
+				break;
+
+			case 'e':
+			case 'H':
+			case 'M':
+			case 'S':
+			case 'Y':
+				fmt = "%02u";
+				if (*c == 'e') num = timeptr->tm_mday;
+				if (*c == 'H') num = timeptr->tm_hour;
+				if (*c == 'M') num = timeptr->tm_min;
+				if (*c == 'S') num = timeptr->tm_sec;
+				if (*c == 'Y') {
+					fmt = "%u";
+					num = 1900 + timeptr->tm_year;
+				}
+				res = snprintf(s + size, maxsize - size, fmt, num);
+				if (res >= maxsize - size)
+					return 0;
+				size += res;
+				break;
+
+			case 'Z':
+				break;
+
+			default: /* Unsupported conversion specifier */
+				if (maxsize - size < 3)
+					return 0;
+				s[size++] = '%';
+				s[size++] = *c;
+				break;
+			}
+		} else if (*c == 0) {
+			s[size] = 0;
+			return size;
+		} else {
+			s[size++] = *c;
+		}
+		c++;
+	}
+
+	/* Length of the result string would exceed max size */
+	return 0;
+}

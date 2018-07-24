@@ -101,12 +101,6 @@ int ttyname_r(int fildes, char *name, size_t namesize)
 }
 
 
-size_t strftime(char *restrict s, size_t maxsize, const char *restrict format, const struct tm *restrict timeptr)
-{
-	return 0;
-}
-
-
 int chroot(const char *path)
 {
 	return 0;

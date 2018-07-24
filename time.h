@@ -92,4 +92,7 @@ extern int clock_gettime(clockid_t clk_id, struct timespec *tp);
 extern time_t time(time_t *tp);
 
 
+extern size_t strftime(char *restrict s, size_t maxsize, const char *restrict format, const struct tm *restrict timeptr);
+
+
 #endif
