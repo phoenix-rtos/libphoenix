@@ -302,12 +302,17 @@ size_t strftime(char *restrict s, size_t maxsize, const char *restrict format, c
 			case 'H':
 			case 'M':
 			case 'S':
+			case 's':
 			case 'Y':
 				fmt = "%02u";
 				if (*c == 'e') num = timeptr->tm_mday;
 				if (*c == 'H') num = timeptr->tm_hour;
 				if (*c == 'M') num = timeptr->tm_min;
 				if (*c == 'S') num = timeptr->tm_sec;
+				if (*c == 's') {
+					fmt = "%u";
+					num = mktime(timeptr);
+				}
 				if (*c == 'Y') {
 					fmt = "%u";
 					num = 1900 + timeptr->tm_year;
