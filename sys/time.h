@@ -34,6 +34,9 @@ extern int settime(time_t offs);
 extern int gettimeofday(struct timeval *tp, void *tzp);
 
 
+extern int stime(const time_t *t);
+
+
 /* For compability with Linux software */
 extern int settimeofday(const struct timeval *tv, void *tz);
 

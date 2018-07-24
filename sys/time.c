@@ -30,6 +30,17 @@ int gettimeofday(struct timeval *tp, void *tzp)
 }
 
 
+int stime(const time_t *t)
+{
+	struct timeval tv;
+
+	tv.tv_sec = *t;
+	tv.tv_usec = 0;
+
+	return settimeofday(&tv, NULL);
+}
+
+
 int settimeofday(const struct timeval *tv, void *tz)
 {
 	time_t t;
