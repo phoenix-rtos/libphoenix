@@ -8,7 +8,7 @@ ifeq (,$(SRCDIR))
 $(error Only main Makefile can be used for compilation)
 endif
 
-SRCS = rb.c stat.c time.c times.c list.c semaphore.c socket.c select.c
+SRCS = rb.c stat.c time.c times.c list.c semaphore.c socket.c select.c ioctl.c
 #mount.c
 OBJS = $(SRCS:.c=.o)
 
