@@ -25,6 +25,12 @@ struct timeval {
 };
 
 
+struct timezone {
+	int tz_minuteswest;
+	int tz_dsttime;
+};
+
+
 extern int gettime(time_t *raw, time_t *offs);
 
 
