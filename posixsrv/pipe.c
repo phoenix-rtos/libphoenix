@@ -44,7 +44,7 @@ static handler_t pipe_create_op, pipe_write_op, pipe_read_op, pipe_open_op, pipe
 static void pipe_destroy(object_t *o);
 
 
-typedef struct {
+typedef struct _pipe_t {
 	object_t object;
 	handle_t lock;
 
@@ -73,6 +73,23 @@ static operations_t pipe_ops = {
 	.unlink = pipe_unlink_op,
 	.release = pipe_destroy,
 };
+
+
+int pipe_free(object_t *o)
+{
+	pipe_t *p = (pipe_t *)o;
+
+	if (p->w == p->r)
+		return p->full ? 0 : PIPE_BUFSZ;
+
+	return (p->r - p->w + PIPE_BUFSZ) & (PIPE_BUFSZ - 1);
+}
+
+
+int pipe_avail(object_t *o)
+{
+	return PIPE_BUFSZ - pipe_free(o);
+}
 
 
 int pipe_create(int type, int *id, unsigned open)
@@ -259,6 +276,7 @@ int pipe_write(pipe_t *p, unsigned mode, request_t *r)
 		}
 	}
 	else {
+		PIPE_TRACE("write broken pipe");
 		bytes = -EPIPE;
 	}
 
@@ -390,7 +408,7 @@ int pipe_open(pipe_t *p, unsigned flags, request_t *r)
 
 static request_t *pipe_open_op(object_t *o, request_t *r)
 {
-	if ((r->msg.o.io.err = pipe_open((pipe_t *)o, r->msg.i.openclose.flags | O_NONBLOCK, r)) == 1)
+	if ((r->msg.o.io.err = pipe_open((pipe_t *)o, r->msg.i.openclose.flags/* | O_NONBLOCK*/, r)) == 1)
 		return NULL;
 
 	return r;

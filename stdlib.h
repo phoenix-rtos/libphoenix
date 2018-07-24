@@ -196,6 +196,14 @@ extern size_t wcstombs(char *str, const wchar_t *pwcs, size_t n);
 extern int wctomb(char *str, wchar_t wchar);
 
 
+/* Returns name of the slave pseudoterminal device corresponding to the master referred to by fd. */
+char *ptsname(int fd);
+
+
+/* Reentrant version of ptsname. */
+int ptsname_r(int fd, char *buf, size_t buflen);
+
+
 /* Return canonicalized absolute path, to be deallocated with free() */
 char *canonicalize_file_name(const char *path);
 
