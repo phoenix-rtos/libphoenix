@@ -730,13 +730,19 @@ int psh_runscript(char *path)
 }
 
 
+extern void splitname(char *, char **, char**);
+
+
 int main(int argc, char **argv)
 {
 	int c;
 	oid_t oid;
 	char *args;
+	char *base, *dir;
 
-	if (!strcmp(argv[0], "psh")) {
+	splitname(argv[0], &base, &dir);
+
+	if (!strcmp(base, "psh")) {
 		/* Wait for filesystem */
 		while (lookup("/", NULL, &oid) < 0)
 			usleep(10000);
@@ -764,9 +770,9 @@ int main(int argc, char **argv)
 			strcat(args, " ");
 		}
 
-		if (!strcmp(argv[0], "mem"))
+		if (!strcmp(base, "mem"))
 			psh_mem(args);
-		else if (!strcmp(argv[0], "ps"))
+		else if (!strcmp(base, "ps"))
 			psh_ps(args);
 		else
 			printf("psh: %s: unknown command\n", argv[0]);
