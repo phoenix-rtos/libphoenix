@@ -51,7 +51,7 @@ typedef struct _pipe_t {
 	void *buf;
 	unsigned r, w;
 	int rrefs, wrefs;
-	char full, mark, link;
+	char full, link;
 
 	request_t *queue;
 } pipe_t;
@@ -124,7 +124,6 @@ int pipe_create(int type, int *id, unsigned open)
 	p->rrefs = !!(open & O_RDONLY);
 	p->wrefs = !!(open & O_WRONLY);
 	p->link = 0;
-	p->mark = 0;
 	p->r = p->w = 0;
 	p->queue = NULL;
 
@@ -149,7 +148,6 @@ static request_t *pipe_create_op(object_t *srv, request_t *r)
 static void _pipe_wakeup(pipe_t *p, request_t *r, int retval)
 {
 	PIPE_TRACE("wakeup");
-	p->mark = 1;
 	LIST_REMOVE(&p->queue, r);
 	rq_wakeup(r, retval);
 }
@@ -254,7 +252,7 @@ int pipe_write(pipe_t *p, unsigned mode, request_t *r)
 		return 0;
 
 	while (mutexLock(p->lock) < 0);
-	if (p->rrefs || p->link) {
+	if (p->rrefs) {
 		/* write to pending readers */
 		while (p->queue != NULL && /*!p->full &&*/ bytes < sz) {
 			memcpy(rq_buf(p->queue), buf + bytes, c = min(sz - bytes, rq_sz(p->queue)));
@@ -322,15 +320,8 @@ int pipe_read(pipe_t *p, unsigned mode, request_t *r)
 			_pipe_wakeup(p, p->queue, c);
 	}
 
-	if (!bytes && !p->link && !p->wrefs) {
-		/* EOF for anonymous pipe */
-		PIPE_TRACE("EOF anon");
-		bytes = -EPIPE;
-	}
-	if (!bytes && p->link && !p->wrefs && p->mark) {
-		/* EOF for named pipe */
-		PIPE_TRACE("EOF named");
-		p->mark = 0;
+	if (!bytes && !p->wrefs) {
+		PIPE_TRACE("EOF while reading");
 		bytes = -EPIPE;
 	}
 	else if (!bytes && mode & O_NONBLOCK) {
@@ -367,7 +358,9 @@ int pipe_open(pipe_t *p, unsigned flags, request_t *r)
 	if (flags & O_WRONLY) {
 		if (!p->rrefs) {
 			if (p->queue != NULL) {
+				/* wakeup pending read open request */
 				_pipe_wakeup(p, p->queue, 0);
+				p->rrefs++;
 			}
 			else if (flags & O_NONBLOCK) {
 				mutexUnlock(p->lock);
@@ -386,7 +379,9 @@ int pipe_open(pipe_t *p, unsigned flags, request_t *r)
 	else {
 		if (!p->wrefs) {
 			if (p->queue != NULL) {
+				/* wakeup pending write open request */
 				_pipe_wakeup(p, p->queue, 0);
+				p->wrefs++;
 			} else if (flags & O_NONBLOCK) {
 				/* successful non-blocking open, pass */
 			}

@@ -197,11 +197,19 @@ extern int wctomb(char *str, wchar_t wchar);
 
 
 /* Returns name of the slave pseudoterminal device corresponding to the master referred to by fd. */
-char *ptsname(int fd);
+extern char *ptsname(int fd);
 
 
 /* Reentrant version of ptsname. */
-int ptsname_r(int fd, char *buf, size_t buflen);
+extern int ptsname_r(int fd, char *buf, size_t buflen);
+
+
+/* Changes the mode and owner of the slave pseudoterminal device correspongin to the master referred to by fd. */
+extern int grantpt(int fd);
+
+
+/* Unlocks the slave pseudoterminal device corresponding to the master pseudoterminal referred to by fd. */
+extern int unlockpt(int fd);
 
 
 /* Return canonicalized absolute path, to be deallocated with free() */
