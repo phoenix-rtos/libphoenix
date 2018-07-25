@@ -585,7 +585,7 @@ static int psh_kill(char *arg)
 		return -EINVAL;
 	}
 
-	return signalPost(pid, signal_kill);
+	return signalPost(pid, -1, signal_kill);
 }
 
 

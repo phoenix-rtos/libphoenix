@@ -91,7 +91,7 @@ extern int resourceDestroy(handle_t h);
 extern int signalHandle(void (*handler)(int), unsigned mask, unsigned mmask);
 
 
-extern int signalPost(int pid, int signal);
+extern int signalPost(int pid, int tid, int signal);
 
 
 extern int signalReturn(int signal);
