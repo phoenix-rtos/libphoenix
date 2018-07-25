@@ -21,6 +21,7 @@
 #include <string.h>
 #include <sys/msg.h>
 #include <sys/stat.h>
+#include <sys/file.h>
 #include <posix/utils.h>
 
 
@@ -176,7 +177,7 @@ DIR *opendir(const char *dirname)
 #if 1
 	memset(&msg, 0, sizeof(msg));
 	msg.type = mtGetAttr;
-	msg.i.attr.type = /*atType*/ 4;
+	msg.i.attr.type = atType;
 	memcpy(&msg.i.attr.oid, &s->oid, sizeof(oid_t));
 
 	if (msgSend(s->oid.port, &msg) < 0) {
@@ -184,7 +185,7 @@ DIR *opendir(const char *dirname)
 		return NULL; /* EIO */
 	}
 
-	if (msg.o.attr.val != /* Dir */ 0)
+	if (msg.o.attr.val != otDir)
 		return NULL; /* ENOTDIR */
 #endif
 

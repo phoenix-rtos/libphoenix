@@ -132,7 +132,7 @@ int mkdir(const char *path, mode_t mode)
 
 	msg.type = mtCreate;
 	msg.i.create.type = otDir;
-	msg.i.create.mode = 0;
+	msg.i.create.mode = mode | S_IFDIR;
 	msg.i.create.dir = dir;
 	msg.i.data = name;
 	msg.i.size = strlen(name) + 1;
