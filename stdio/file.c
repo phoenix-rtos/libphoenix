@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <sys/msg.h>
 #include <sys/file.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 
@@ -71,7 +72,7 @@ FILE *fopen(const char *filename, const char *mode)
 	if ((m = string2mode(mode)) < 0)
 		return NULL;
 
-	if ((fd = open(filename, m)) < 0)
+	if ((fd = open(filename, m, DEFFILEMODE)) < 0)
 		return NULL;
 
 	if ((f = malloc(sizeof(FILE))) == NULL)

@@ -40,17 +40,20 @@ int stat(const char *path, struct stat *buf)
 
 	free(canonical_name);
 
+	memset(buf, 0, sizeof(struct stat));
+
 	buf->st_ino = oid.id;
 
 	msg.type = mtGetAttr;
 	msg.i.attr.oid = oid;
 	msg.i.attr.val = 0;
 
-#if 0
+	/* TODO: find out actual number of links */
+	buf->st_nlink = 1;
+
 	msg.i.attr.type = 0; /* Mode */
 	msgSend(oid.port, &msg);
 	buf->st_mode = msg.o.attr.val;
-#endif
 
 	msg.i.attr.type = 1; /* Uid */
 	msgSend(oid.port, &msg);
@@ -63,23 +66,6 @@ int stat(const char *path, struct stat *buf)
 	msg.i.attr.type = 3; /* Size */
 	msgSend(oid.port, &msg);
 	buf->st_size = msg.o.attr.val;
-
-	msg.i.attr.type = 4; /* Type */
-	msgSend(oid.port, &msg);
-
-	switch (msg.o.attr.val) {
-	case 0:
-		buf->st_mode = S_IFDIR;
-		break;
-
-	case 1:
-		buf->st_mode = S_IFREG;
-		break;
-
-	case 2:
-		buf->st_mode = S_IFCHR;
-		break;
-	}
 
 	msg.i.attr.type = 5; /* Port */
 	msgSend(oid.port, &msg);
