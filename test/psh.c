@@ -734,6 +734,7 @@ int main(int argc, char **argv)
 {
 	int c;
 	oid_t oid;
+	char *args;
 
 	/* Wait for filesystem */
 	while (lookup("/", NULL, &oid) < 0)
@@ -743,12 +744,33 @@ int main(int argc, char **argv)
 	while (write(1, "", 0) < 0)
 		usleep(50000);
 
-	if (argc > 0 && (c = getopt(argc, argv, "i:")) != -1) {
-		if (psh_runscript(optarg) == EOK) {
-			return 0;
+	if (!strcmp(argv[0], "psh")) {
+		if (argc > 0 && (c = getopt(argc, argv, "i:")) != -1) {
+			if (psh_runscript(optarg) == EOK) {
+				return 0;
+			}
 		}
+
+		psh_run();
+	}
+	else {
+		if ((args = calloc(3000, 1)) == NULL) {
+			printf("psh: out of memory\n");
+			return EXIT_FAILURE;
+		}
+
+		for (c = 1; c < argc; ++c) {
+			strcat(args, argv[c]);
+			strcat(args, " ");
+		}
+
+		if (!strcmp(argv[0], "mem"))
+			psh_mem(args);
+		else if (!strcmp(argv[0], "ps"))
+			psh_ps(args);
+		else
+			printf("psh: %s: unknown command\n", argv[0]);
 	}
 
-	psh_run();
 	return 0;
 }
