@@ -1,3 +1,18 @@
+/*
+ * Phoenix-RTOS
+ *
+ * libphoenix
+ *
+ * signal.h
+ *
+ * Copyright 2018 Phoenix Systems
+ * Author: Jan Sikorski, Aleksander Kaminski
+ *
+ * This file is part of Phoenix-RTOS.
+ *
+ * %LICENSE%
+ */
+
 #ifndef _LIBPHOENIX_SIGNAL_H_
 #define _LIBPHOENIX_SIGNAL_H_
 
@@ -10,36 +25,25 @@
 #define SIGINT     2
 #define SIGQUIT    3
 #define SIGILL     4
-#ifndef _POSIX_SOURCE
 #define SIGTRAP    5
-#endif
 #define SIGABRT    6
-#ifndef _POSIX_SOURCE
 #define SIGIOT     SIGABRT
 #define SIGEMT     7
-#endif
 #define SIGFPE     8
 #define SIGKILL    9
-#ifndef _POSIX_SOURCE
 #define SIGBUS    10
-#endif
 #define SIGSEGV   11
-#ifndef _POSIX_SOURCE
 #define SIGSYS    12
-#endif
 #define SIGPIPE   13
 #define SIGALRM   14
 #define SIGTERM   15
-#ifndef _POSIX_SOURCE
 #define SIGURG    16
-#endif
 #define SIGSTOP   17
 #define SIGTSTP   18
 #define SIGCONT   19
 #define SIGCHLD   20
 #define SIGTTIN   21
 #define SIGTTOU   22
-#ifndef _POSIX_SOURCE
 #define SIGIO     23
 #define SIGXCPU   24
 #define SIGXFSZ   25
@@ -47,7 +51,6 @@
 #define SIGPROF   27
 #define SIGWINCH  28
 #define SIGINFO   29
-#endif
 #define SIGUSR1   30
 #define SIGUSR2   31
 
