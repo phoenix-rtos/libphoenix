@@ -736,15 +736,15 @@ int main(int argc, char **argv)
 	oid_t oid;
 	char *args;
 
-	/* Wait for filesystem */
-	while (lookup("/", NULL, &oid) < 0)
-		usleep(10000);
-
-	/* Wait for console */
-	while (write(1, "", 0) < 0)
-		usleep(50000);
-
 	if (!strcmp(argv[0], "psh")) {
+		/* Wait for filesystem */
+		while (lookup("/", NULL, &oid) < 0)
+			usleep(10000);
+
+		/* Wait for console */
+		while (write(1, "", 0) < 0)
+			usleep(50000);
+
 		if (argc > 0 && (c = getopt(argc, argv, "i:")) != -1) {
 			if (psh_runscript(optarg) == EOK) {
 				return 0;
