@@ -278,61 +278,56 @@ time_t mktime(struct tm *tp)
 size_t strftime(char *restrict s, size_t maxsize, const char *restrict format, const struct tm *restrict timeptr)
 {
 	int res;
-	unsigned num = 0;
 	size_t size = 0;
-	const char *c = format, *tmp, *fmt;
+	const char *c = format, *tmp;
+	struct tm time;
 
 	while (size < maxsize) {
 		if (*c == '%') {
 			c++;
 			switch (*c) {
 			case 'a':
+				tmp = wdayasc[timeptr->tm_wday < 7 ? timeptr->tm_wday : 7];
+				res = snprintf(s + size, maxsize - size, "%s", tmp);
+				break;
 			case 'b':
-				if (*c == 'a') {
-					tmp = wdayasc[timeptr->tm_wday < 7 ? timeptr->tm_wday : 7];
-				} else {
-					tmp = monasc[timeptr->tm_mon < 12 ? timeptr->tm_mon : 12];
-				}
-				if (maxsize - size < strlen(tmp) + 1)
-					return 0;
-				size += sprintf(s + size, "%s", tmp);
+				tmp = monasc[timeptr->tm_mon < 12 ? timeptr->tm_mon : 12];
+				res = snprintf(s + size, maxsize - size, "%s", tmp);
 				break;
-
 			case 'e':
+				res = snprintf(s + size, maxsize - size, "%02u", timeptr->tm_mday);
+				break;
 			case 'H':
+				res = snprintf(s + size, maxsize - size, "%02u", timeptr->tm_hour);
+				break;
 			case 'M':
+				res = snprintf(s + size, maxsize - size, "%02u", timeptr->tm_min);
+				break;
 			case 'S':
+				res = snprintf(s + size, maxsize - size, "%02u", timeptr->tm_sec);
+				break;
 			case 's':
+				memcpy(&time, timeptr, sizeof(struct tm));
+				res = snprintf(s + size, maxsize - size, "%u", &time);
+				break;
 			case 'Y':
-				fmt = "%02u";
-				if (*c == 'e') num = timeptr->tm_mday;
-				if (*c == 'H') num = timeptr->tm_hour;
-				if (*c == 'M') num = timeptr->tm_min;
-				if (*c == 'S') num = timeptr->tm_sec;
-				if (*c == 's') {
-					fmt = "%u";
-					num = mktime(timeptr);
-				}
-				if (*c == 'Y') {
-					fmt = "%u";
-					num = 1900 + timeptr->tm_year;
-				}
-				res = snprintf(s + size, maxsize - size, fmt, num);
-				if (res >= maxsize - size)
-					return 0;
-				size += res;
+				res = snprintf(s + size, maxsize - size, "%u", 1900 + timeptr->tm_year);
 				break;
-
 			case 'Z':
-				break;
-
+				c++;
+				continue;
 			default: /* Unsupported conversion specifier */
 				if (maxsize - size < 3)
 					return 0;
 				s[size++] = '%';
-				s[size++] = *c;
-				break;
+				s[size++] = *(c++);
+				continue;
 			}
+
+			if (res >= maxsize - size)
+				return 0;
+			size += res;
+
 		} else if (*c == 0) {
 			s[size] = 0;
 			return size;
