@@ -28,11 +28,11 @@
 
 int stat(const char *path, struct stat *buf)
 {
-	oid_t oid;
+	oid_t oid, dev;
 	msg_t msg = {0};
 	char *canonical_name = canonicalize_file_name(path);
 
-	if (lookup(canonical_name, &oid, NULL) < 0) {
+	if (lookup(canonical_name, &oid, &dev) < 0) {
 		free(canonical_name);
 		errno = ENOENT;
 		return -1;
@@ -42,34 +42,45 @@ int stat(const char *path, struct stat *buf)
 
 	memset(buf, 0, sizeof(struct stat));
 
+	buf->st_dev = oid.port;
 	buf->st_ino = oid.id;
+	buf->st_rdev = dev.port;
 
 	msg.type = mtGetAttr;
 	msg.i.attr.oid = oid;
 	msg.i.attr.val = 0;
 
-	/* TODO: find out actual number of links */
-	buf->st_nlink = 1;
+	msg.i.attr.type = atMTime;
+	if (!msgSend(oid.port, &msg))
+		buf->st_mtime = msg.o.attr.val;
 
-	msg.i.attr.type = 0; /* Mode */
-	msgSend(oid.port, &msg);
-	buf->st_mode = msg.o.attr.val;
+	msg.i.attr.type = atATime;
+	if (!msgSend(oid.port, &msg))
+		buf->st_atime = msg.o.attr.val;
 
-	msg.i.attr.type = 1; /* Uid */
-	msgSend(oid.port, &msg);
-	buf->st_uid = msg.o.attr.val;
+	msg.i.attr.type = atCTime;
+	if (!msgSend(oid.port, &msg))
+		buf->st_ctime = msg.o.attr.val;
 
-	msg.i.attr.type = 2; /* Gid */
-	msgSend(oid.port, &msg);
-	buf->st_gid = msg.o.attr.val;
+	msg.i.attr.type = atLinks;
+	if (!msgSend(oid.port, &msg))
+		buf->st_nlink = msg.o.attr.val;
 
-	msg.i.attr.type = 3; /* Size */
-	msgSend(oid.port, &msg);
-	buf->st_size = msg.o.attr.val;
+	msg.i.attr.type = atMode;
+	if (!msgSend(oid.port, &msg))
+		buf->st_mode = msg.o.attr.val;
 
-	msg.i.attr.type = 5; /* Port */
-	msgSend(oid.port, &msg);
-	buf->st_dev = msg.o.attr.val;
+	msg.i.attr.type = atUid;
+	if (!msgSend(oid.port, &msg))
+		buf->st_uid = msg.o.attr.val;
+
+	msg.i.attr.type = atGid;
+	if (!msgSend(oid.port, &msg))
+		buf->st_gid = msg.o.attr.val;
+
+	msg.i.attr.type = atSize;
+	if (!msgSend(oid.port, &msg))
+		buf->st_size = msg.o.attr.val;
 
 	return EOK;
 }

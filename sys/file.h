@@ -22,7 +22,7 @@
 enum { otDir = 0, otFile, otDev, otUnknown };
 
 
-enum { atMode = 0, atUid, atGid, atSize, atType, atPort, atPollStatus };
+enum { atMode = 0, atUid, atGid, atSize, atType, atPort, atPollStatus, atCTime, atMTime, atATime, atLinks };
 
 
 extern int fileAdd(unsigned int *h, oid_t *oid, unsigned mode);
