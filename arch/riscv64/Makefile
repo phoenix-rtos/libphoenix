@@ -4,20 +4,9 @@
 # Copyright 2017, 2018 Phoenix Systems
 # Author: Pawel Pisarczyk
 #
-ifeq (,$(SRCDIR))
-$(error Only main Makefile can be used for compilation)
-endif
 
-ASMS := _start.S syscalls.S string.S
-#jmp.S
-SRCS :=
-OBJS := $(SRCS:.c=.o) $(ASMS:.S=.o)
-
--include .depend
-
-all: check $(ARCH)
-
-$(ARCH): $(OBJS)
+ARCH_ASMS := _start.S syscalls.S string.S
+ARCH_SRCS :=
 
 # include after all dependencies are set
-include $(SRCDIR)/Makefile.rules
+include $(TOPDIR)/Makefile.rules
