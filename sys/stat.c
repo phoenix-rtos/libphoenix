@@ -161,7 +161,10 @@ int lchown(const char *path, uid_t owner, gid_t group)
 
 int mknod(const char *path, mode_t mode, dev_t dev)
 {
-	return 0;
+	if (S_ISFIFO(mode))
+		return mkfifo(path, mode);
+	else
+		return -EINVAL;
 }
 
 
