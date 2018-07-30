@@ -147,9 +147,17 @@ int mkdir(const char *path, mode_t mode)
 }
 
 
+extern int chmod_absolute(const char *path, mode_t mode);
+
+
 int chmod(const char *path, mode_t mode)
 {
-	return 0;
+	char *canonical;
+	int err;
+	canonical = canonicalize_file_name(path);
+	err = chmod_absolute(canonical, mode);
+	free(canonical);
+	return err;
 }
 
 
