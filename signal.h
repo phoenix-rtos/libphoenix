@@ -56,6 +56,10 @@
 
 #define NSIG 32
 
+#define SIG_ERR (-1)
+#define SIG_DFL (-2)
+#define SIG_IGN (-3)
+
 
 enum { SIG_BLOCK, SIG_SETMASK, SIG_UNBLOCK };
 
@@ -70,10 +74,6 @@ enum {
 	SA_RESTORER = 1 << 6,
 	SA_SIGINFO = 1 << 7,
 };
-
-
-extern void (*SIG_DFL)(int);
-extern void (*SIG_IGN)(int);
 
 
 typedef void (*sighandler_t)(int);

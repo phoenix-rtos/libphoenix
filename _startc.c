@@ -20,6 +20,7 @@
 
 extern void _malloc_init(void);
 extern int _env_init(void);
+extern void _signals_init(void);
 extern int main(int argc, char **argv);
 
 char **environ;
@@ -34,6 +35,7 @@ void _startc(int argc, char **argv, char **env)
 
 	_malloc_init();
 	_env_init();
+	_signals_init();
 
 	exit(main(argc, argv));
 }

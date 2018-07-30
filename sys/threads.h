@@ -99,4 +99,7 @@ extern int signalReturn(int signal);
 
 extern int signalMask(unsigned mask, unsigned mmask);
 
+
+extern int tkill(int pid, int tid, int signal);
+
 #endif

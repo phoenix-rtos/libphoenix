@@ -178,12 +178,6 @@ int reboot(int cmd)
 }
 
 
-int kill(pid_t pid, int sig)
-{
-	return 0;
-}
-
-
 void sync(void)
 {
 }
