@@ -121,8 +121,6 @@ static void _signal_handler(int phxsig)
 {
 	int sig;
 
-	printf("HANDLE\n");
-
 	if (phxsig < 0 || phxsig >= NSIG) {
 		/* Don't know what to do, terminate just in case */
 		_signal_terminate(phxsig);
@@ -148,8 +146,6 @@ int raise(int sig)
 
 int kill(pid_t pid, int sig)
 {
-	printf("KILL %d %d\n", pid, sig);
-
 	return set_errno(tkill(pid, 0, _signals_posix2phx[sig]));
 }
 
@@ -157,8 +153,6 @@ int kill(pid_t pid, int sig)
 void (*signal(int signum, void (*handler)(int)))(int)
 {
 	sighandler_t t;
-
-	printf("SIGNAL %d, %p\n", signum, handler);
 
 	if (signum <= 0 || signum > NSIG) {
 		(void)set_errno(EINVAL);
