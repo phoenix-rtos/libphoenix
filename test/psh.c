@@ -711,10 +711,10 @@ int psh_runscript(char *path)
 
 			argv[argc] = NULL;
 
-			if (vfork() == 0) {
-				if ((err = execve(bin, argv, NULL)) != EOK)
-					printf("psh: execve failed %d\n", err);
-				endthread();
+			if (!vfork()) {
+				err = execve(bin, argv, NULL);
+				printf("psh: execve failed %d\n", err);
+				exit(err);
 			}
 		}
 
@@ -753,7 +753,8 @@ int main(int argc, char **argv)
 
 		if (argc > 0 && (c = getopt(argc, argv, "i:")) != -1) {
 			if (psh_runscript(optarg) == EOK) {
-				return 0;
+				for (;;) /* TODO: exec last program */
+					usleep(10000000);
 			}
 		}
 

@@ -97,7 +97,7 @@ extern int signalPost(int pid, int tid, int signal);
 extern int signalReturn(int signal);
 
 
-extern int signalMask(unsigned mask, unsigned mmask);
+extern unsigned int signalMask(unsigned mask, unsigned mmask);
 
 
 extern int tkill(int pid, int tid, int signal);

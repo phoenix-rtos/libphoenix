@@ -394,9 +394,9 @@ void *calloc(size_t nmemb, size_t size)
 
 	mutexLock(malloc_common.mutex);
 	result = _allocate(size);
+	mutexUnlock(malloc_common.mutex);
 	if (result != NULL)
 		memset(result, 0, size);
-	mutexUnlock(malloc_common.mutex);
 	return result;
 }
 

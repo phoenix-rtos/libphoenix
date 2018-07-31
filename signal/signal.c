@@ -29,6 +29,9 @@
 static sighandler_t _sightab[NSIG];
 
 
+static sigset_t _sigset[NSIG];
+
+
 static const int _signals_phx2posix[] = { 0, SIGKILL, SIGSEGV, SIGILL, SIGFPE, SIGHUP, SIGINT, SIGQUIT, SIGTRAP,
 	SIGABRT, SIGIOT, SIGEMT, SIGBUS, SIGSYS, SIGPIPE, SIGALRM, SIGTERM, SIGURG, SIGSTOP, SIGTSTP, SIGCONT, SIGCHLD,
 	SIGTTIN, SIGTTOU, SIGIO, SIGXCPU, SIGXFSZ, SIGVTALRM, SIGPROF, SIGWINCH, SIGINFO, SIGUSR1, SIGUSR2 };
@@ -120,18 +123,23 @@ static int _signal_ismutable(int sig)
 static void _signal_handler(int phxsig)
 {
 	int sig;
+	unsigned int oldmask;
 
 	if (phxsig < 0 || phxsig >= NSIG) {
-		/* Don't know what to do, terminate just in case */
-		_signal_terminate(phxsig);
+		/* Don't know what to do, ignore it */
+		signalReturn(phxsig);
 		/* Never reached */
 	}
 
 	/* Received Phoenix signal, need to convert it to POSIX signal */
 	sig = _signals_phx2posix[phxsig];
 
+	oldmask = signalMask(_sigset[sig], 0xffffffffUL);
+
 	/* Invoke handler */
 	(_sightab[sig])(sig);
+
+	signalMask(oldmask, 0xffffffffUL);
 
 	signalReturn(phxsig);
 	/* Never reached */
@@ -153,16 +161,20 @@ int kill(pid_t pid, int sig)
 void (*signal(int signum, void (*handler)(int)))(int)
 {
 	sighandler_t t;
+	unsigned int oldmask;
 
 	if (signum <= 0 || signum > NSIG) {
 		(void)set_errno(EINVAL);
-		return (sighandler_t)SIG_ERR;
+		return SIG_ERR;
 	}
 
 	if (!_signal_ismutable(signum)) {
 		(void)set_errno(EINVAL);
-		return (sighandler_t)SIG_ERR;
+		return SIG_ERR;
 	}
+
+	/* Mask signal before change */
+	oldmask = signalMask(1UL << _signals_posix2phx[signum], 0xffffffffUL);
 
 	t = _sightab[signum];
 
@@ -173,6 +185,8 @@ void (*signal(int signum, void (*handler)(int)))(int)
 	else
 		_sightab[signum] = handler;
 
+	signalMask(oldmask, 0xffffffffUL);
+
 	if (t == _signal_ignore)
 		return SIG_IGN;
 	else if (t == _signal_getdefault(signum))
@@ -182,9 +196,58 @@ void (*signal(int signum, void (*handler)(int)))(int)
 }
 
 
-int sigaction(int sig, const struct sigaction * act, struct sigaction * oact)
+/* TODO: Handle flags */
+int sigaction(int sig, const struct sigaction *act, struct sigaction *oact)
 {
-	return -ENOSYS;
+	unsigned int oldmask;
+	int i;
+
+	if (sig <= 0 || sig > NSIG)
+		return set_errno(EINVAL);
+
+	if (oact != NULL) {
+		if (_sightab[sig] == _signal_ignore)
+			oact->sa_handler = (sighandler_t)SIG_IGN;
+		else if (_sightab[sig] == _signal_getdefault(sig))
+			oact->sa_handler = (sighandler_t)SIG_DFL;
+		else
+			oact->sa_handler = _sightab[sig];
+
+		oact->sa_mask = _sigset[sig];
+		oact->sa_flags = 0; /* TODO: flags */
+	}
+
+	if (act != NULL) {
+		if (!_signal_ismutable(sig))
+			return set_errno(EINVAL);
+
+		/* Mask signal before change */
+		oldmask = signalMask(1UL << _signals_posix2phx[sig], 0xffffffffUL);
+
+		if (act->sa_handler == (sighandler_t)SIG_IGN)
+			_sightab[sig] = _signal_ignore;
+		else if (act->sa_handler == (sighandler_t)SIG_DFL)
+			_sightab[sig] = _signal_getdefault(sig);
+		else
+			_sightab[sig] = act->sa_handler;
+
+		for (i = 0, _sigset[sig] = 0; i < NSIG; ++i) {
+			if (act->sa_mask & (1UL << i))
+				_sigset[sig] |= 1UL << _signals_posix2phx[i];
+		}
+
+		if (!(act->sa_flags & SA_NODEFER))
+			_sigset[sig] |= 1UL << _signals_posix2phx[sig];
+
+		_sigset[sig] = act->sa_mask;
+
+		signalMask(oldmask, 0xffffffffUL);
+	}
+
+	if (oact == NULL && act == NULL)
+		return set_errno(EINVAL);
+
+	return EOK;
 }
 
 
@@ -241,9 +304,11 @@ void _signals_init(void)
 	int i;
 
 	/* Set default actions */
-	for (i = 0; i < NSIG; ++i)
+	for (i = 0; i < NSIG; ++i) {
 		_sightab[i] = _signal_getdefault(i);
+		_sigset[i] = 1UL << _signals_posix2phx[i];
+	}
 
 	/* Register userspace handler */
-	signalHandle(_signal_handler, 0xffffffffUL, 0xffffffffUL);
+	signalHandle(_signal_handler, 0, 0xffffffffUL);
 }
