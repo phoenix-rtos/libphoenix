@@ -54,6 +54,7 @@ int execve(const char *path, char *const argv[], char *const envp[])
 {
 	int fd, noargs = 0, err;
 	char *interp = exec_buffer, *end, **sb_args = NULL;
+	char *canonical_path;
 
 	if ((fd = shebang(path)) >= 0) {
 		if (read(fd, exec_buffer, sizeof(exec_buffer)) < 0) {
@@ -85,7 +86,12 @@ int execve(const char *path, char *const argv[], char *const envp[])
 		argv = sb_args;
 	}
 
-	err = exec(path, argv, envp);
+	if ((canonical_path = canonicalize_file_name(path)) == NULL) {
+		errno = -ENOMEM;
+		return -1;
+	}
+	err = exec(canonical_path, argv, envp);
+	free(canonical_path);
 	free(sb_args);
 	return err;
 }

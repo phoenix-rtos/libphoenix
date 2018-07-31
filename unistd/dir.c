@@ -34,15 +34,24 @@ int chdir(const char *path)
 {
 	struct stat s;
 	int len;
+	char *canonical;
 
-	if (stat(path, &s) < 0 || !S_ISDIR(s.st_mode))
+	if ((canonical = canonicalize_file_name(path)) == NULL)
+		return -ENOMEM;
+
+	if (stat(canonical, &s) < 0 || !S_ISDIR(s.st_mode)) {
+		free(canonical);
 		return -1;
+	}
 
-	len = strlen(path) + 1;
-	if (realloc(dir_common.cwd, len) == NULL)
+	len = strlen(canonical) + 1;
+	if (realloc(dir_common.cwd, len) == NULL) {
+		free(canonical);
 		return -1; /* ENOMEM */
+	}
 
-	memcpy(dir_common.cwd, path, len);
+	memcpy(dir_common.cwd, canonical, len);
+	free(canonical);
 
 	return EOK;
 }
