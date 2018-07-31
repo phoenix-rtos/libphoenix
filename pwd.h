@@ -25,6 +25,8 @@ struct passwd {
 	gid_t  pw_gid;
 	char  *pw_dir;
 	char  *pw_shell;
+	char  *pw_passwd;
+	char  *pw_gecos;
 };
 
 

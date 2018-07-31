@@ -162,6 +162,9 @@ extern char *getlogin(void);
 extern int getlogin_r(char *name, size_t namesize);
 
 
+extern char *crypt(const char *key, const char *salt);
+
+
 extern char *optarg;
 
 

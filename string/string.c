@@ -149,7 +149,8 @@ void *memchr(const void *s, int c, size_t n)
 #define __STRCHRNUL
 char *strchrnul(const char *str, int z)
 {
-	while (*str && *(str++) != z);
+	while (*str && *str != z)
+		str++;
 	return (char *)str;
 }
 #endif
