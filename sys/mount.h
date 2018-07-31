@@ -16,7 +16,7 @@
 #ifndef _LIBPHOENIX_SYS_MOUNT_H_
 #define _LIBPHOENIX_SYS_MOUNT_H_
 
-extern int mount(const char *path, unsigned int port);
+extern int mount(const char *path, oid_t *oid);
 
 
 extern int umount(const char *path);
