@@ -166,17 +166,17 @@ void (*signal(int signum, void (*handler)(int)))(int)
 
 	t = _sightab[signum];
 
-	if ((int)handler == SIG_DFL)
+	if (handler == SIG_DFL)
 		_sightab[signum] = _signal_getdefault(signum);
-	else if ((int)handler == SIG_IGN)
+	else if (handler == SIG_IGN)
 		_sightab[signum] = _signal_ignore;
 	else
 		_sightab[signum] = handler;
 
 	if (t == _signal_ignore)
-		return (sighandler_t)SIG_IGN;
+		return SIG_IGN;
 	else if (t == _signal_getdefault(signum))
-		return (sighandler_t)SIG_DFL;
+		return SIG_DFL;
 	else
 		return t;
 }
