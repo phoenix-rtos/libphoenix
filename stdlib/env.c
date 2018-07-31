@@ -38,7 +38,7 @@ void _env_init(void)
 		char **c;
 		for (c = environ; *c; c++)
 			_cnt++;
-		_size = _cnt;
+		_size = _cnt + 1;
 	}
 }
 
