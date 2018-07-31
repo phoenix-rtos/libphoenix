@@ -111,9 +111,3 @@ pid_t tcgetpgrp(int fd)
 
         return p;
 }
-
-
-int tcflush(int fildes, int queue_selector)
-{
-	return 0;
-}
