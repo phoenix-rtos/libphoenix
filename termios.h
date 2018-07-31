@@ -6,7 +6,7 @@
  * termios.h
  *
  * Copyright 2018 Phoenix Systems
- * Author: Jan Sikorski
+ * Author: Jan Sikorski, Marek Białowąs
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -16,14 +16,35 @@
 #ifndef _LIBPHOENIX_TERMIOS_H_
 #define _LIBPHOENIX_TERMIOS_H_
 
+#include <sys/ioctl.h>
+#include <sys/types.h>
+
+typedef char cc_t;
 typedef int speed_t;
 typedef int tcflag_t;
-typedef int cc_t;
 
 
-enum {
-	VEOF = 0, VEOL, VERASE, VINTR, VKILL, VMIN, VQUIT, VSTART, VSTOP, VSUSP, VTIME, NCCS
-};
+/* c_cc characters */
+/* these need to be define's as various programs test them in preprocessor macros */
+#define VINTR 		0
+#define VQUIT 		1
+#define VERASE 		2
+#define VKILL 		3
+#define VEOF 		4
+#define VTIME 		5
+#define VMIN 		6
+#define VSWTC 		7
+#define VSTART 		8
+#define VSTOP 		9
+#define VSUSP 		10
+#define VEOL 		11
+#define VREPRINT 	12
+#define VDISCARD 	13
+#define VWERASE 	14
+#define VLNEXT 		15
+#define VEOL2 		16
+
+#define NCCS 		17
 
 
 struct termios {
@@ -32,84 +53,87 @@ struct termios {
 	tcflag_t  c_cflag;
 	tcflag_t  c_lflag;
 	cc_t      c_cc[NCCS];
+	speed_t   c_ispeed;
+	speed_t   c_ospeed;
+
+	int marker;
 };
 
 
 /* c_iflag */
 enum {
 	BRKINT = 1 << 0,
-	ICRNL = 1 << 0,
-	IGNBRK = 1 << 0,
-	IGNCR = 1 << 0,
-	IGNPAR = 1 << 0,
-	INLCR = 1 << 0,
-	INPCK = 1 << 0,
-	ISTRIP = 1 << 0,
-	IUCLC = 1 << 0,
-	IXANY = 1 << 0,
-	IXOFF = 1 << 0,
-	IXON = 1 << 0,
-	IMAXBEL = 1 << 0,
-	PARMRK = 1 << 0,
+	ICRNL = 1 << 1,
+	IGNBRK = 1 << 2,
+	IGNCR = 1 << 3,
+	IGNPAR = 1 << 4,
+	INLCR = 1 << 5,
+	INPCK = 1 << 6,
+	ISTRIP = 1 << 7,
+	IUCLC = 1 << 8,
+	IXANY = 1 << 9,
+	IXOFF = 1 << 10,
+	IXON = 1 << 11,
+	IMAXBEL = 1 << 12,
+	PARMRK = 1 << 13,
 };
 
 /* c_oflag */
 enum {
 	OPOST = 1 << 0,
-	OLCUC = 1 << 0,
-	ONLCR = 1 << 0,
-	OCRNL = 1 << 0,
-	ONOCR = 1 << 0,
-	ONLRET = 1 << 0,
-	OFILL = 1 << 0,
-	NLDLY = 1 << 0,
-	NL0 = 1 << 0,
-	NL1 = 1 << 0,
-	CRDLY = 1 << 0,
-	CR0 = 1 << 0,
-	CR1 = 1 << 0,
-	CR2 = 1 << 0,
-	CR3 = 1 << 0,
-	TABDLY = 1 << 0,
-	TAB0 = 1 << 0,
-	TAB1 = 1 << 0,
-	TAB2 = 1 << 0,
-	TAB3 = 1 << 0,
+	OLCUC = 1 << 1,
+	ONLCR = 1 << 2,
+	OCRNL = 1 << 3,
+	ONOCR = 1 << 4,
+	ONLRET = 1 << 5,
+	OFILL = 1 << 6,
+	NLDLY = 1 << 7,
+	NL0 = 1 << 8,
+	NL1 = 1 << 9,
+	CRDLY = 1 << 10,
+	CR0 = 1 << 11,
+	CR1 = 1 << 12,
+	CR2 = 1 << 13,
+	CR3 = 1 << 14,
+	TABDLY = 1 << 15,
+	TAB0 = 1 << 16,
+	TAB1 = 1 << 17,
+	TAB2 = 1 << 18,
+	TAB3 = 1 << 19,
 	XTABS = TAB3,
-	BSDLY = 1 << 0,
-	BS0 = 1 << 0,
-	BS1 = 1 << 0,
-	VTDLY = 1 << 0,
-	VT0 = 1 << 0,
-	VT1 = 1 << 0,
-	FFDLY = 1 << 0,
-	FF0 = 1 << 0,
-	FF1 = 1 << 0,
+	BSDLY = 1 << 20,
+	BS0 = 1 << 21,
+	BS1 = 1 << 22,
+	VTDLY = 1 << 23,
+	VT0 = 1 << 24,
+	VT1 = 1 << 25,
+	FFDLY = 1 << 26,
+	FF0 = 1 << 27,
+	FF1 = 1 << 28,
 };
 
 /* baud rate */
-enum {
-	B0 = 0,
-	B50,
-	B75,
-	B110,
-	B134,
-	B150,
-	B200,
-	B300,
-	B600,
-	B1200,
-	B1800,
-	B2400,
-	B4800,
-	B9600,
-	B19200,
-	B38400,
-	B57600,
-	B115200,
-	B230400,
-	B460800,
-};
+/* these need to be define's as various programs test them in preprocessor macros */
+#define	B0 		0
+#define	B50		1
+#define	B75		2
+#define	B110		3
+#define	B134		4
+#define	B150		5
+#define	B200		6
+#define	B300		7
+#define	B600		8
+#define	B1200		9
+#define	B1800		10
+#define	B2400		11
+#define	B4800		12
+#define	B9600		13
+#define	B19200		14
+#define	B38400		15
+#define	B57600		16
+#define	B115200		17
+#define	B230400		18
+#define	B460800		19
 
 
 /* c_cflag */
@@ -142,11 +166,38 @@ enum {
 	ECHOKE  = 1 << 11,
 };
 
+struct winsize
+{
+	unsigned short ws_row;
+	unsigned short ws_col;
+	unsigned short ws_xpixel;
+	unsigned short ws_ypixel;
+};
 
+/* ioctls */
+enum {
+	TCGETS     = _IOR('t', 0x1, struct termios),
+	TCSETS     = _IOW('t', 0x2, struct termios),
+	TCSETSW    = _IOW('t', 0x3, struct termios),
+	TCSETSF    = _IOW('t', 0x4, struct termios),
+	TCFLSH     = _IOW('t', 0x5, int),
+	TCDRAIN    = _IO('t', 0x6),
+	TCSBRK     = _IOW('t', 0x9, int),
+	TIOCSCTTY  = _IOW('t', 0xE, int),
+	TIOCGPGRP  = _IOR('t', 0xF, pid_t),
+	TIOCSPGRP  = _IOW('t', 0x10, pid_t),
+	TIOCGWINSZ = _IOR('t', 0x13, struct winsize),
+	TIOCSWINSZ = _IOW('t', 0x14, struct winsize),
+	TIOCNOTTY  = _IO('t', 0x22),
+};
+
+/* tcflush */
 enum { TCIFLUSH, TCOFLUSH, TCIOFLUSH };
 
+/* tcsetattr */
 enum { TCSANOW, TCSADRAIN, TCSAFLUSH };
 
+/* tcflow */
 enum { TCIOFF, TCION, TCOOFF, TCOON };
 
 
@@ -155,5 +206,37 @@ int tcgetattr(int fildes, struct termios *termios_p);
 
 int tcsetattr(int fildes, int optional_actions, const struct termios *termios_p);
 
+int tcsendbreak(int fd, int duration);
+int tcflush(int fd, int queue_selector);
+int tcdrain(int fd);
+
+int tcsetpgrp(int fd, pid_t pgrp);
+pid_t tcgetpgrp(int fd);
+
+
+static inline speed_t cfgetispeed(const struct termios *termios_p)
+{
+	return termios_p->c_ispeed;
+}
+
+static inline speed_t cfgetospeed(const struct termios *termios_p)
+{
+	return termios_p->c_ospeed;
+}
+
+static inline int cfsetispeed(struct termios *termios_p, speed_t speed)
+{
+	if (speed == 0) /* needed by POSIX */
+		speed = termios_p->c_ospeed;
+
+	termios_p->c_ispeed = speed;
+	return 0;
+}
+
+static inline int cfsetospeed(struct termios *termios_p, speed_t speed)
+{
+	termios_p->c_ospeed = speed;
+	return 0;
+}
 
 #endif

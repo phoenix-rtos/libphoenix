@@ -40,18 +40,6 @@
 #define _IOWR(g,n,t)		_IOC(IOC_INOUT, (g), (n), sizeof(t))
 
 
-struct winsize
-{
-	unsigned short ws_row;
-	unsigned short ws_col;
-	unsigned short ws_xpixel;
-	unsigned short ws_ypixel;
-};
-
-
-enum { TIOCGWINSZ, TIOCSWINSZ, TIOCSCTTY };
-
-
 int ioctl(int fd, int cmd, ... );
 
 

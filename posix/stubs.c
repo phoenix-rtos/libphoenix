@@ -130,19 +130,6 @@ int setrlimit(int resource, const struct rlimit *rlp)
 	return 0;
 }
 
-
-pid_t tcgetpgrp(int fd)
-{
-	return -1;
-}
-
-
-int tcsetpgrp(int fd, pid_t pgrp)
-{
-	return -1;
-}
-
-
 void setbuf(FILE *stream, char *buf)
 {
 }
