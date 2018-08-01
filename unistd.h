@@ -165,6 +165,21 @@ extern int getlogin_r(char *name, size_t namesize);
 extern char *crypt(const char *key, const char *salt);
 
 
+extern int setpgid(pid_t pid, pid_t pgid);
+
+
+extern pid_t getpgid(pid_t pid);
+
+
+extern int setpgrp(void);
+
+
+extern pid_t getpgrp(void);
+
+
+extern pid_t setsid(void);
+
+
 extern char *optarg;
 
 

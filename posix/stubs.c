@@ -107,15 +107,9 @@ int chroot(const char *path)
 }
 
 
-pid_t setsid(void)
-{
-	return 0;
-}
-
-
 int setpriority(int which, id_t who, int prio)
 {
-    return 0;
+	return 0;
 }
 
 
