@@ -33,18 +33,19 @@ typedef int tcflag_t;
 #define VEOF 		4
 #define VTIME 		5
 #define VMIN 		6
-#define VSWTC 		7
-#define VSTART 		8
-#define VSTOP 		9
-#define VSUSP 		10
-#define VEOL 		11
-#define VREPRINT 	12
-#define VDISCARD 	13
-#define VWERASE 	14
-#define VLNEXT 		15
-#define VEOL2 		16
+#define VSTART 		7
+#define VSTOP 		8
+#define VSUSP 		9
+#define VEOL 		10
+#define VREPRINT 	11
+#define VDISCARD 	12
+#define VWERASE 	13
+#define VLNEXT 		14
+#define VEOL2 		15
 
-#define NCCS 		17
+#define NCCS 		16
+
+#define _POSIX_VDISABLE '\0'
 
 
 struct termios {
@@ -55,8 +56,6 @@ struct termios {
 	cc_t      c_cc[NCCS];
 	speed_t   c_ispeed;
 	speed_t   c_ospeed;
-
-	int marker;
 };
 
 
