@@ -113,6 +113,11 @@ static void ptm_destroy(object_t *o)
 	int len;
 	pty_t *pty = pty_master(o);
 
+	/* FIXME: cleanup, ugly */
+	object_get(object_id(&pty->slave));
+	object_destroy(&pty->slave);
+	object_put(&pty->slave);
+
 	object_destroy(pty->ptm_read);
 	object_put(pty->ptm_read);
 
@@ -216,12 +221,7 @@ static request_t *ptm_close_op(object_t *o, request_t *r)
 	PTY_TRACE("ptm_close(%d)", object_id(o));
 
 	pty_t *pty = pty_master(o);
-	char path[] = "/dev/pts/XXXXXXXXXX";
-
-	sprintf(path + sizeof("/dev/pts"), "%d", object_id(o));
 	pty->state &= ~MASTER_OPEN;
-	unlink(path);
-
 	object_destroy(o);
 	return r;
 }
