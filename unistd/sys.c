@@ -24,6 +24,15 @@
 #include <stdarg.h>
 
 
+WRAP_ERRNO_DEF(int, setpgid, (pid_t pid, pid_t pgid), (pid, pgid))
+WRAP_ERRNO_DEF(int, setpgrp, (void), ())
+
+WRAP_ERRNO_DEF(pid_t, getpgid, (pid_t pid), (pid))
+WRAP_ERRNO_DEF(pid_t, getpgrp, (void), ())
+
+WRAP_ERRNO_DEF(int, setsid, (void), ())
+
+
 char exec_buffer[64];
 
 
