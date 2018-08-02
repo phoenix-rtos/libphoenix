@@ -113,8 +113,6 @@ static void ptm_destroy(object_t *o)
 	int len;
 	pty_t *pty = pty_master(o);
 
-	/* FIXME: cleanup, ugly */
-	object_get(object_id(&pty->slave));
 	object_destroy(&pty->slave);
 	object_put(&pty->slave);
 
@@ -337,7 +335,6 @@ static int ptm_create(int *id)
 	oid.id = object_id(&pty->slave);
 	snprintf(path + sizeof("/dev/pts"), sizeof(PTS_NAME_PADDING), "%d", (int)oid.id);
 
-	object_put(&pty->slave);
 	object_put(&pty->master);
 
 	create_dev(&oid, path);
