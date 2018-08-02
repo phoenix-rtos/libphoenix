@@ -108,6 +108,9 @@ static inline pty_t *pty_slave(object_t *slave)
 static void ptm_destroy(object_t *o)
 {
 	PTY_TRACE("destroying master %d", object_id(o));
+	char buf[128];
+	msg_t msg;
+	int len;
 	pty_t *pty = pty_master(o);
 
 	object_destroy(pty->ptm_read);
@@ -116,6 +119,19 @@ static void ptm_destroy(object_t *o)
 	object_destroy(pty->ptm_write);
 	object_put(pty->ptm_write);
 
+	len = snprintf(buf, sizeof(buf), "%d", object_id(&pty->slave));
+
+	memset(&msg, 0, sizeof(msg));
+
+	if (lookup("/dev/pts", NULL, &msg.i.ln.dir) < 0)
+		printf("no /dev/pts?\n");
+
+	msg.type = mtUnlink;
+
+	msg.i.data = buf;
+	msg.i.size = len + 1;
+
+	msgSend(msg.i.ln.dir.port, &msg);
 	free(o);
 }
 
