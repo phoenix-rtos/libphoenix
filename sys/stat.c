@@ -147,7 +147,7 @@ int mkdir(const char *path, mode_t mode)
 }
 
 
-extern int chmod_absolute(const char *path, mode_t mode);
+extern int sys_chmod(const char *path, mode_t mode);
 
 
 int chmod(const char *path, mode_t mode)
@@ -155,7 +155,7 @@ int chmod(const char *path, mode_t mode)
 	char *canonical;
 	int err;
 	canonical = canonicalize_file_name(path);
-	err = chmod_absolute(canonical, mode);
+	err = sys_chmod(canonical, mode);
 	free(canonical);
 	return err;
 }

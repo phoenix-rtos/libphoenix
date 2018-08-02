@@ -23,7 +23,7 @@
 #include <stdio.h>
 
 
-#define set_errno(x) (x)
+WRAP_ERRNO_DEF(int, tkill, (pid_t pid, int tid, int sig), (pid, tid, sig))
 
 
 static sighandler_t _sightab[NSIG];
@@ -154,7 +154,7 @@ int raise(int sig)
 
 int kill(pid_t pid, int sig)
 {
-	return set_errno(tkill(pid, 0, _signals_posix2phx[sig]));
+	return SET_ERRNO(tkill(pid, 0, _signals_posix2phx[sig]));
 }
 
 
@@ -175,12 +175,12 @@ void (*signal(int signum, void (*handler)(int)))(int)
 	unsigned int oldmask;
 
 	if (signum <= 0 || signum > NSIG) {
-		(void)set_errno(EINVAL);
+		(void)SET_ERRNO(EINVAL);
 		return SIG_ERR;
 	}
 
 	if (!_signal_ismutable(signum)) {
-		(void)set_errno(EINVAL);
+		(void)SET_ERRNO(EINVAL);
 		return SIG_ERR;
 	}
 
@@ -214,7 +214,7 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *oact)
 	int i;
 
 	if (sig <= 0 || sig > NSIG)
-		return set_errno(EINVAL);
+		return SET_ERRNO(EINVAL);
 
 	if (oact != NULL) {
 		if (_sightab[sig] == _signal_ignore)
@@ -230,7 +230,7 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *oact)
 
 	if (act != NULL) {
 		if (!_signal_ismutable(sig))
-			return set_errno(EINVAL);
+			return SET_ERRNO(EINVAL);
 
 		/* Mask signal before change */
 		oldmask = signalMask(1UL << _signals_posix2phx[sig], 0xffffffffUL);
@@ -256,7 +256,7 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *oact)
 	}
 
 	if (oact == NULL && act == NULL)
-		return set_errno(EINVAL);
+		return SET_ERRNO(EINVAL);
 
 	return EOK;
 }

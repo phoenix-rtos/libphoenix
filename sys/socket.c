@@ -24,18 +24,18 @@
 #include <string.h>
 
 
-#ifdef ERRNO_IN_RETURN
-#define set_errno(x) (x)
-#else
-static ssize_t set_errno(ssize_t ret)
-{
-	if (ret < 0) {
-		errno = -ret;
-		return -1;
-	} else
-		return ret;
-}
-#endif
+WRAP_ERRNO_DEF(int, accept, (int socket, struct sockaddr *address, socklen_t *address_len), (socket, address, address_len))
+WRAP_ERRNO_DEF(int, bind, (int socket, const struct sockaddr *address, socklen_t address_len), (socket, address, address_len))
+WRAP_ERRNO_DEF(int, connect, (int socket, const struct sockaddr *address, socklen_t address_len), (socket, address, address_len))
+WRAP_ERRNO_DEF(int, getpeername, (int socket, struct sockaddr *address, socklen_t *address_len), (socket, address, address_len))
+WRAP_ERRNO_DEF(int, getsockname, (int socket, struct sockaddr *address, socklen_t *address_len), (socket, address, address_len))
+WRAP_ERRNO_DEF(int, getsockopt, (int socket, int level, int optname, void *optval, socklen_t *optlen), (socket, level, optname, optval, optlen))
+WRAP_ERRNO_DEF(int, listen, (int socket, int backlog), (socket, backlog))
+WRAP_ERRNO_DEF(ssize_t, recvfrom, (int socket, void *message, size_t length, int flags, struct sockaddr *src_addr, socklen_t *src_len), (socket, message, length, flags, src_addr, src_len))
+WRAP_ERRNO_DEF(ssize_t, sendto, (int socket, const void *message, size_t length, int flags, const struct sockaddr *dest_addr, socklen_t dest_len), (socket, message, length, flags, dest_addr, dest_len))
+WRAP_ERRNO_DEF(int, socket, (int domain, int type, int protocol), (domain, type, protocol))
+WRAP_ERRNO_DEF(int, shutdown, (int socket, int how), (socket, how))
+WRAP_ERRNO_DEF(int, setsockopt, (int socket, int level, int optname, const void *optval, socklen_t optlen), (socket, level, optname, optval, optlen))
 
 
 static int socksrvcall(msg_t *msg)
@@ -44,9 +44,9 @@ static int socksrvcall(msg_t *msg)
 	int err;
 
 	if ((err = lookup(PATH_SOCKSRV, NULL, &oid)) < 0)
-		return set_errno(err);
+		return SET_ERRNO(err);
 	if ((err = msgSend(oid.port, msg)) < 0)
-		return set_errno(err);
+		return SET_ERRNO(err);
 	return 0;
 }
 
@@ -76,7 +76,7 @@ ssize_t sendmsg(int socket, const struct msghdr *msg, int flags)
 	void *buf = NULL;
 
 	if (msg->msg_controllen)
-		return set_errno(-ENOSYS);	// FIXME: pass ancillary data
+		return SET_ERRNO(-ENOSYS);	// FIXME: pass ancillary data
 
 	sz = iov_total_len(msg->msg_iov, msg->msg_iovlen);
 	if (msg->msg_iovlen <= 1 || !sz) {
@@ -89,7 +89,7 @@ ssize_t sendmsg(int socket, const struct msghdr *msg, int flags)
 
 	buf = malloc(sz);
 	if (!buf)
-		return set_errno(-ENOMEM);
+		return SET_ERRNO(-ENOMEM);
 
 	for (sz = 0, i = 0; i < msg->msg_iovlen; ++i) {
 		memcpy(buf + sz, msg->msg_iov[i].iov_base, msg->msg_iov[i].iov_len);
@@ -131,7 +131,7 @@ ssize_t recvmsg(int socket, struct msghdr *msg, int flags)
 
 	buf = malloc(sz);
 	if (!buf)
-		return set_errno(-ENOMEM);
+		return SET_ERRNO(-ENOMEM);
 
 	ret = recvfrom(socket, buf, sz, flags, msg->msg_name, &msg->msg_namelen);
 
@@ -206,7 +206,7 @@ int getnameinfo(const struct sockaddr *addr, socklen_t addrlen,
 	}
 
 	if (smo->ret == EAI_SYSTEM)
-		(void)set_errno(-smo->sys.errno);
+		(void)SET_ERRNO(-smo->sys.errno);
 
 	free(buf);
 	return smo->ret;
@@ -277,7 +277,7 @@ int getaddrinfo(const char *node, const char *service,
 	if (smo->ret || bufsz > msg.o.size) {
 		free(msg.o.data);
 		if (smo->ret == EAI_SYSTEM)
-			(void)set_errno(-smo->sys.errno);
+			(void)SET_ERRNO(-smo->sys.errno);
 		return smo->ret;
 	}
 
@@ -317,7 +317,7 @@ int getaddrinfo(const char *node, const char *service,
 
 out_overflow:
 	free(msg.o.data);
-	(void)set_errno(EPROTO);
+	(void)SET_ERRNO(EPROTO);
 	return EAI_SYSTEM;
 }
 

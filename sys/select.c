@@ -24,6 +24,9 @@
 #define SFD_ISSET(i, s) ((s) && FD_ISSET(i, s))
 
 
+WRAP_ERRNO_DEF(int, poll, (struct pollfd *fds, nfds_t nfds, int timeout_ms), (fds, nfds, timeout_ms))
+
+
 static int poll_timeout(struct timeval *to)
 {
 	time_t timeout;

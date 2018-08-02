@@ -36,8 +36,8 @@
 #include "posixsrv_private.h"
 #include "posixsrv.h"
 
-#define PTY_TRACE(str, ...) printf("posixsrv pty: " str "\n", ##__VA_ARGS__)
-//#define PTY_TRACE(str, ...)
+//#define PTY_TRACE(str, ...) printf("posixsrv pty: " str "\n", ##__VA_ARGS__)
+#define PTY_TRACE(str, ...)
 
 #define MASTER_OPEN   (1 << 0)
 #define SLAVE_LOCKED  (1 << 1)

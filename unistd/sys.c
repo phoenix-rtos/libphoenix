@@ -59,7 +59,7 @@ int execve(const char *path, char *const argv[], char *const envp[])
 	if ((fd = shebang(path)) >= 0) {
 		if (read(fd, exec_buffer, sizeof(exec_buffer)) < 0) {
 			close(fd);
-			return -EIO;
+			return SET_ERRNO(-EIO);
 		}
 
 		exec_buffer[sizeof(exec_buffer) - 1] = 0;
@@ -86,14 +86,14 @@ int execve(const char *path, char *const argv[], char *const envp[])
 		argv = sb_args;
 	}
 
-	if ((canonical_path = canonicalize_file_name(path)) == NULL) {
-		errno = -ENOMEM;
-		return -1;
-	}
+	if ((canonical_path = canonicalize_file_name(path)) == NULL)
+		return SET_ERRNO(-ENOMEM);
+
 	err = exec(canonical_path, argv, envp);
 	free(canonical_path);
 	free(sb_args);
-	return err;
+
+	return SET_ERRNO(err);
 }
 
 

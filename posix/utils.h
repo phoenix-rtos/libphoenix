@@ -21,4 +21,7 @@ extern int create_dev(oid_t *oid, const char *path);
 
 extern void splitname(char *path, char **base, char **dir);
 
+
+extern char *canonicalize_file_name(const char *path);
+
 #endif
