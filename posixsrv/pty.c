@@ -123,15 +123,15 @@ static void ptm_destroy(object_t *o)
 
 	memset(&msg, 0, sizeof(msg));
 
-	if (lookup("/dev/pts", NULL, &msg.i.ln.dir) < 0)
-		printf("no /dev/pts?\n");
+	if (lookup("/dev/pts", NULL, &msg.i.ln.dir) == EOK) {
+		msg.type = mtUnlink;
 
-	msg.type = mtUnlink;
+		msg.i.data = buf;
+		msg.i.size = len + 1;
 
-	msg.i.data = buf;
-	msg.i.size = len + 1;
+		msgSend(msg.i.ln.dir.port, &msg);
+	}
 
-	msgSend(msg.i.ln.dir.port, &msg);
 	free(o);
 }
 
