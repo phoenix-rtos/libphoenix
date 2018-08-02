@@ -32,7 +32,7 @@ static int poll_timeout(struct timeval *to)
 	time_t timeout;
 
 	if (to && to->tv_sec < INT_MAX / 1000) {
-		timeout = (to->tv_usec + 999 / 1000) + to->tv_sec * 1000;
+		timeout = ((to->tv_usec + 999) / 1000) + to->tv_sec * 1000;
 		if (timeout >= 0 && timeout <= INT_MAX)
 			return timeout;
 	}
@@ -77,7 +77,7 @@ int select(int nfds, fd_set *rd, fd_set *wr, fd_set *ex, struct timeval *to)
 
 	if (to) {
 		if (to->tv_sec < INT_MAX / 1000) {
-			timeout = (to->tv_usec + 999 / 1000) + to->tv_sec * 1000;
+			timeout = ((to->tv_usec + 999) / 1000) + to->tv_sec * 1000;
 			if (timeout > INT_MAX)
 				timeout = -1;
 		} else
