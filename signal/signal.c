@@ -158,6 +158,17 @@ int kill(pid_t pid, int sig)
 }
 
 
+int killpg(pid_t pgrp, int sig)
+{
+	if (!pgrp)
+		pgrp = getpgrp();
+	else
+		pgrp = -pgrp;
+
+	return set_errno(tkill(pgrp, 0, _signals_posix2phx[sig]));
+}
+
+
 void (*signal(int signum, void (*handler)(int)))(int)
 {
 	sighandler_t t;
