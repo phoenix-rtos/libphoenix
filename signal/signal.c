@@ -165,7 +165,7 @@ int killpg(pid_t pgrp, int sig)
 	else
 		pgrp = -pgrp;
 
-	return set_errno(tkill(pgrp, 0, _signals_posix2phx[sig]));
+	return SET_ERRNO(tkill(pgrp, 0, _signals_posix2phx[sig]));
 }
 
 
