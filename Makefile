@@ -54,6 +54,8 @@ export TOPDIR BUILD_DIR SIL TARGET LIB CC CFLAGS MKDEP MKDEPFLAGS AR ARFLAGS LD 
 
 all: subsystems $(OBJS) $(LIB) tests posixsrv
 
+lib: $(LIB)
+
 $(OBJS): $(filter clean,$(MAKECMDGOALS))
 
 subsystems: $(ARCHS)
