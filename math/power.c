@@ -13,8 +13,9 @@
  * %LICENSE%
  */
 
-#include "../math.h"
-#include "../limits.h"
+#include <math.h>
+#include <limits.h>
+#include <errno.h>
 #include "common.h"
 
 
@@ -26,22 +27,23 @@ double pow(double base, double exponent)
 
 	if (base == 0.0) {
 		if (exponent == 0.0) {
-			/* TODO: errno EDOM */
+			errno = EDOM;
 			return NAN;
 		}
-		else {
-			return 0.0;
-		}
+
+		return 0.0;
 	}
-	else if (exponent == 0.0)
+	else if (exponent == 0.0) {
 		return 1.0;
+	}
 
 	if (base < 0.0) {
-		if (!isInteger(exponent))
-			return NAN; /* TODO: errno EDOM */
-		else
-			s = (fmod(exponent, 2) > 0.0) ? -1 : 1;
+		if (!isInteger(exponent)) {
+			errno = EDOM;
+			return NAN;
+		}
 
+		s = (fmod(exponent, 2) > 0.0) ? -1 : 1;
 		base = -base;
 	}
 
@@ -56,12 +58,12 @@ double pow(double base, double exponent)
 double sqrt(double x)
 {
 	if (x < 0.0) {
-		/* TODO: errno EDOM */
+		errno = EDOM;
 		return -NAN;
 	}
-	else if (x == 0.0) {
+
+	if (x == 0.0)
 		return 0.0;
-	}
 
 	return pow(x, 0.5);
 }

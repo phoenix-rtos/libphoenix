@@ -13,6 +13,7 @@
  * %LICENSE%
  */
 
+#include <errno.h>
 #include "consts.h"
 #include "common.h"
 
@@ -50,7 +51,7 @@ double ldexp(double x, int exp)
 	exponent += conv->i.exponent + exp;
 
 	if (exponent > 2046) {
-		/* TODO: errno ERANGE */
+		errno = ERANGE;
 		return conv->i.sign ? -HUGE_VAL : HUGE_VAL;
 	}
 
@@ -74,11 +75,11 @@ double log(double x)
 	int exp = 0, i;
 
 	if (x < 0) {
-		/* TODO errno EDOM */
+		errno = EDOM;
 		return NAN;
 	}
 	else if (x == 0) {
-		/* TODO errno ERANGE */
+		errno = ERANGE;
 		return -HUGE_VAL;
 	}
 	else if (x == 1.0) {

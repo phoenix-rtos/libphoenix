@@ -13,7 +13,8 @@
  * %LICENSE%
  */
 
-#include "../math.h"
+#include <math.h>
+#include <errno.h>
 
 
 /* Calculates value of cosine using Maclaurin series. */
@@ -101,7 +102,7 @@ double tan(double x)
 	if (c > 0.0 || c < 0.0)
 		return sin(x) / c;
 
-	/* TODO errno EDOM */
+	errno = EDOM;
 	return NAN;
 }
 
@@ -113,7 +114,7 @@ double acos(double x)
 	int i;
 
 	if (x > 1.0 || x < -1.0) {
-		/* TODO: errno EDOM */
+		errno = EDOM;
 		return NAN;
 	}
 
@@ -181,5 +182,6 @@ double atan2(double y, double x)
 	else if (y < 0)
 		return -M_PI_2;
 
-	return NAN; /* TODO errno */
+	errno = EDOM;
+	return NAN;
 }
