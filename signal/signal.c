@@ -176,12 +176,12 @@ void (*signal(int signum, void (*handler)(int)))(int)
 	unsigned int oldmask;
 
 	if (signum <= 0 || signum > NSIG) {
-		(void)SET_ERRNO(EINVAL);
+		(void)SET_ERRNO(-EINVAL);
 		return SIG_ERR;
 	}
 
 	if (!_signal_ismutable(signum)) {
-		(void)SET_ERRNO(EINVAL);
+		(void)SET_ERRNO(-EINVAL);
 		return SIG_ERR;
 	}
 
@@ -217,7 +217,7 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *oact)
 	int i;
 
 	if (sig <= 0 || sig > NSIG)
-		return SET_ERRNO(EINVAL);
+		return SET_ERRNO(-EINVAL);
 
 	if (oact != NULL) {
 		mutexLock(signal_common.lock);
@@ -235,7 +235,7 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *oact)
 
 	if (act != NULL) {
 		if (!_signal_ismutable(sig))
-			return SET_ERRNO(EINVAL);
+			return SET_ERRNO(-EINVAL);
 
 		/* Mask signal before change */
 		mutexLock(signal_common.lock);
@@ -263,7 +263,7 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *oact)
 	}
 
 	if (oact == NULL && act == NULL)
-		return SET_ERRNO(EINVAL);
+		return SET_ERRNO(-EINVAL);
 
 	return EOK;
 }
@@ -271,7 +271,44 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *oact)
 
 int sigprocmask(int how, const sigset_t *set, sigset_t *oldset)
 {
-	return -ENOSYS;
+	int i;
+	unsigned int v = 0, phxv, mask = 0, old;
+
+	if (set != NULL) {
+		if (*set & (1UL << SIGKILL))
+			return SET_ERRNO(-EINVAL);
+
+		if (how == SIG_BLOCK) {
+			v = *set;
+			mask = *set;
+		}
+		else if (how == SIG_UNBLOCK) {
+			v = ~(*set);
+			mask = *set;
+		}
+		else if (how == SIG_SETMASK) {
+			v = *set;
+			mask = 0xffffffffUL;
+		}
+		else {
+			return SET_ERRNO(-EINVAL);
+		}
+	}
+
+	for (i = 0, phxv = 0; i < NSIG; ++i) {
+		if (v & (1UL << i))
+			phxv |= 1UL << _signals_posix2phx[i];
+	}
+
+	old = signalMask(v, mask);
+
+	if (oldset != NULL)
+		(*oldset) = old;
+
+	if (set == NULL && oldset == NULL)
+		return SET_ERRNO(-EINVAL);
+
+	return EOK;
 }
 
 
