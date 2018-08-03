@@ -51,15 +51,13 @@ extern int errno;
 #define ENOLCK          116
 
 
-#define SET_ERRNO(x) (x < 0 ? errno = -(int)x, -1 : x)
+#define SET_ERRNO(x) ((x) < 0 ? errno = -(int)(x), -1 : (x))
 
-#define WRAP_ERRNO_DEF(rettype, function, arguments, argnames)	\
-	extern rettype sys_##function arguments;					\
-	rettype function arguments {								\
-		rettype err_ = sys_##function argnames;					\
-		if (err_ >= 0) return err_;								\
-		errno = err_;											\
-		return -1;												\
+#define WRAP_ERRNO_DEF(rettype, function, arguments, argnames) \
+	extern rettype sys_##function arguments; \
+	rettype function arguments \
+	{ \
+		return SET_ERRNO(sys_##function argnames); \
 	}
 
 #endif
