@@ -41,9 +41,10 @@ typedef int tcflag_t;
 #define VDISCARD 	12
 #define VWERASE 	13
 #define VLNEXT 		14
-#define VEOL2 		15
+#define VERASE2 	15
+#define VEOL2 		16
 
-#define NCCS 		16
+#define NCCS 		17
 
 #define _POSIX_VDISABLE '\0'
 
