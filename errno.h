@@ -57,7 +57,8 @@ extern int errno;
 	extern rettype sys_##function arguments; \
 	rettype function arguments \
 	{ \
-		return SET_ERRNO(sys_##function argnames); \
+		rettype err_ = sys_##function argnames; \
+		return SET_ERRNO(err_); \
 	}
 
 #endif
