@@ -165,7 +165,7 @@ void rq_wakeup(request_t *r, int retval)
 int rq_id(request_t *r)
 {
 	int id;
-	posixsrv_devctl_t *devctl;
+	id_t full_id;
 
 	switch (r->msg.type) {
 	case mtOpen:
@@ -206,8 +206,8 @@ int rq_id(request_t *r)
 		break;
 
 	case mtDevCtl:
-		devctl = (posixsrv_devctl_t *)r->msg.i.raw;
-		id = devctl->id;
+		ioctl_unpack(&r->msg, NULL, &full_id);
+		id = (int)full_id;
 		break;
 
 	default:
@@ -219,11 +219,38 @@ int rq_id(request_t *r)
 }
 
 
+void posixsrvthr(void *arg)
+{
+	object_t *o;
+	request_t *r = NULL;
+
+	for (;;) {
+		if (r == NULL)
+			r = malloc(sizeof(*r));
+
+		if (msgRecv(posixsrv_common.port, &r->msg, &r->rid) < 0)
+			continue;
+
+		if ((o = object_get(rq_id(r))) == NULL || o->operations->handlers[r->msg.type] == NULL) {
+			if (o != NULL)
+				object_put(o);
+			r->msg.o.io.err = -EINVAL;
+			msgRespond(posixsrv_common.port, &r->msg, r->rid);
+			continue;
+		}
+
+		if ((r = o->operations->handlers[r->msg.type](o, r)) != NULL)
+			msgRespond(posixsrv_common.port, &r->msg, r->rid);
+
+		object_put(o);
+	}
+}
+
+
 int main(int argc, char **argv)
 {
 	oid_t fs;
-	request_t *r = NULL;
-	object_t *o;
+	int i;
 
 	idtree_init(&posixsrv_common.objects);
 	mutexCreate(&posixsrv_common.lock);
@@ -246,24 +273,10 @@ int main(int argc, char **argv)
 	if (pty_init() < 0)
 		fail("pty init");
 
-	for (;;) {
-		if (r == NULL)
-			r = malloc(sizeof(*r));
-
-		if (msgRecv(posixsrv_common.port, &r->msg, &r->rid) < 0)
-			continue;
-
-		if ((o = object_get(rq_id(r))) == NULL || o->operations->handlers[r->msg.type] == NULL) {
-			if (o != NULL)
-				object_put(o);
-			r->msg.o.io.err = -EINVAL;
-			msgRespond(posixsrv_common.port, &r->msg, r->rid);
-			continue;
-		}
-
-		if ((r = o->operations->handlers[r->msg.type](o, r)) != NULL)
-			msgRespond(posixsrv_common.port, &r->msg, r->rid);
-
-		object_put(o);
+	for (i = 0; i < 8; ++i) {
+		beginthread(posixsrvthr, 4, malloc(1000), 1000, NULL);
 	}
+
+	posixsrvthr(NULL);
+	return 0;
 }

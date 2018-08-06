@@ -40,10 +40,14 @@
 #define _IOWR(g,n,t)		_IOC(IOC_INOUT, (g), (n), sizeof(t))
 
 
-int ioctl(int fd, int cmd, ... );
+#define TIOCGPTN	_IOR('T', 0x30, unsigned int)
+#define TIOCSPTLCK	_IOW('T', 0x31, int)
 
 
-const void * ioctl_unpack(const msg_t *msg, unsigned long *request);
+int ioctl(int fd, unsigned long cmd, ... );
+
+
+const void * ioctl_unpack(const msg_t *msg, unsigned long *request, id_t *id);
 
 
 void ioctl_setResponse(msg_t *msg, unsigned long request, int err, const void *data);

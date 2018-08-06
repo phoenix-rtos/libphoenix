@@ -31,8 +31,9 @@
 #include <errno.h>
 #include <poll.h>
 
-#include "posix/idtree.h"
+#include <libtty.h>
 
+#include "posix/idtree.h"
 #include "posixsrv_private.h"
 #include "posixsrv.h"
 
@@ -74,22 +75,19 @@ static operations_t ptm_ops = {
 	.close = ptm_close_op,
 	.read = ptm_read_op,
 	.write = ptm_write_op,
-	.devctl = ptm_devctl_op,
 	.getattr = ptm_getattr_op,
+	.devctl = ptm_devctl_op,
 	.release = ptm_destroy,
 };
 
 
 typedef struct {
 	object_t master, slave;
+	libtty_common_t tty;
+	libtty_callbacks_t ops;
+	unsigned state;
 
-	char mode;
-	char state;
-
-	object_t *ptm_read, *ptm_write;
-
-	struct winsize size;
-	struct termios tios;
+	handle_t mutex, cond;
 } pty_t;
 
 
@@ -116,12 +114,6 @@ static void ptm_destroy(object_t *o)
 	object_destroy(&pty->slave);
 	object_put(&pty->slave);
 
-	object_destroy(pty->ptm_read);
-	object_put(pty->ptm_read);
-
-	object_destroy(pty->ptm_write);
-	object_put(pty->ptm_write);
-
 	len = snprintf(buf, sizeof(buf), "%d", object_id(&pty->slave));
 
 	memset(&msg, 0, sizeof(msg));
@@ -143,7 +135,8 @@ static request_t *pts_write_op(object_t *o, request_t *r)
 {
 	PTY_TRACE("pts_write(%d)", object_id(o));
 	pty_t *pty = pty_slave(o);
-	return pty->ptm_read->operations->write(pty->ptm_read, r);
+	r->msg.o.io.err = libtty_write(&pty->tty, r->msg.i.data, r->msg.i.size, r->msg.i.io.mode);
+	return r;
 }
 
 
@@ -151,7 +144,8 @@ static request_t *pts_read_op(object_t *o, request_t *r)
 {
 	PTY_TRACE("pts_read(%d)", object_id(o));
 	pty_t *pty = pty_slave(o);
-	return pty->ptm_write->operations->read(pty->ptm_write, r);
+	r->msg.o.io.err = libtty_read(&pty->tty, r->msg.o.data, r->msg.o.size, r->msg.i.io.mode);
+	return r;
 }
 
 
@@ -166,8 +160,6 @@ static request_t *pts_open_op(object_t *o, request_t *r)
 	else {
 		pty->state |= SLAVE_OPEN;
 		/* TODO: Cleanup */
-		pipe_open((struct _pipe_t *)pty->ptm_write, O_RDONLY | O_NONBLOCK, r);
-		pipe_open((struct _pipe_t *)pty->ptm_read, O_WRONLY | O_NONBLOCK, r);
 		r->msg.o.io.err = EOK;
 	}
 
@@ -194,6 +186,15 @@ static request_t *pts_close_op(object_t *o, request_t *r)
 
 static request_t *pts_devctl_op(object_t *o, request_t *r)
 {
+	const void *in, *out;
+	long unsigned request;
+	pty_t *pty = pty_slave(o);
+	int err;
+
+	in = ioctl_unpack(&r->msg, &request, NULL);
+	err = libtty_ioctl(&pty->tty, request, in, &out);
+	ioctl_setResponse(&r->msg, request, err, out);
+
 	return r;
 }
 
@@ -202,7 +203,15 @@ static request_t *ptm_write_op(object_t *o, request_t *r)
 {
 	PTY_TRACE("ptm_write(%d, %d)", object_id(o), r->msg.i.size);
 	pty_t *pty = pty_master(o);
-	return pty->ptm_write->operations->write(pty->ptm_write, r);
+	size_t i;
+
+	mutexLock(pty->mutex);
+	for (i = 0; i < r->msg.i.size; ++i)
+		libtty_putchar(&pty->tty, ((unsigned char *)r->msg.i.data)[i]);
+	mutexUnlock(pty->mutex);
+
+	r->msg.o.io.err = i;
+	return r;
 }
 
 
@@ -210,7 +219,18 @@ static request_t *ptm_read_op(object_t *o, request_t *r)
 {
 	PTY_TRACE("ptm_read(%d)", object_id(o));
 	pty_t *pty = pty_master(o);
-	return pty->ptm_read->operations->read(pty->ptm_read, r);
+	size_t i;
+
+	mutexLock(pty->mutex);
+	while (!libtty_txready(&pty->tty))
+		condWait(pty->cond, pty->mutex, 0);
+
+	for (i = 0; i < r->msg.o.size && libtty_txready(&pty->tty); ++i)
+		((unsigned char *)r->msg.o.data)[i] = libtty_getchar(&pty->tty);
+	mutexUnlock(pty->mutex);
+
+	r->msg.o.io.err = i;
+	return r;
 }
 
 
@@ -225,33 +245,24 @@ static request_t *ptm_close_op(object_t *o, request_t *r)
 }
 
 
-static request_t *ptm_getattr_op(object_t *o, request_t *r)
+static request_t *pts_getattr_op(object_t *o, request_t *r)
 {
-	pty_t *pty = pty_master(o);
-	unsigned ev, rev = 0;
+	pty_t *pty = pty_slave(o);
 
 	if (r->msg.i.attr.type != atPollStatus) {
 		r->msg.o.attr.val = -EINVAL;
 		return r;
 	}
 
-	ev = r->msg.i.attr.val;
-
-	if (ev & POLLIN && pipe_avail(pty->ptm_read))
-		rev |= POLLIN;
-
-	if (ev & POLLOUT && pipe_free(pty->ptm_write))
-		rev |= POLLOUT;
-
-	r->msg.o.attr.val = rev;
+	r->msg.o.attr.val = libtty_poll_status(&pty->tty) & r->msg.i.attr.val;
 	return r;
 }
 
 
-static request_t *pts_getattr_op(object_t *o, request_t *r)
+static request_t *ptm_getattr_op(object_t *o, request_t *r)
 {
-	pty_t *pty = pty_slave(o);
-	unsigned ev, rev = 0;
+	pty_t *pty = pty_master(o);
+	unsigned ev , rev = 0;
 
 	if (r->msg.i.attr.type != atPollStatus) {
 		r->msg.o.attr.val = -EINVAL;
@@ -260,10 +271,10 @@ static request_t *pts_getattr_op(object_t *o, request_t *r)
 
 	ev = r->msg.i.attr.val;
 
-	if (ev & POLLIN && pipe_avail(pty->ptm_write))
+	if (ev & POLLIN && libtty_txready(&pty->tty))
 		rev |= POLLIN;
 
-	if (ev & POLLOUT && pipe_free(pty->ptm_read))
+	if (ev & POLLOUT)
 		rev |= POLLOUT;
 
 	r->msg.o.attr.val = rev;
@@ -274,32 +285,46 @@ static request_t *pts_getattr_op(object_t *o, request_t *r)
 static request_t *ptm_devctl_op(object_t *o, request_t *r)
 {
 	PTY_TRACE("ptm_devctl(%d)", object_id(o));
-
-	posixsrv_devctl_t *devctl = (void *)r->msg.i.raw;
 	pty_t *pty = pty_master(o);
 	int err = -EINVAL;
+	unsigned long request;
+	unsigned ptyid;
+	const void *in_data, *out_data;
 
-	switch (devctl->type) {
-	case pxUnlockpt:
-		if (pty->state & SLAVE_LOCKED) {
+	in_data = ioctl_unpack(&r->msg, &request, NULL);
+
+	PTY_TRACE("ptm_devctl request: %x", request);
+
+	switch (request) {
+	case TIOCGPTN: /* get pty number */
+		ptyid = object_id(&pty->slave);
+		out_data = &ptyid;
+		err = EOK;
+		break;
+
+	case TIOCSPTLCK: /* (un)lock slave */
+		if (!*((int *)in_data) && pty->state & SLAVE_LOCKED) {
 			pty->state &= ~SLAVE_LOCKED;
 			err = EOK;
 		}
-		break;
-	case pxGrantpt:
-		err = EOK;
-		break;
-	case pxPtsname:
-		if (snprintf(r->msg.o.data, r->msg.o.size, "/dev/pts/%d", object_id(&pty->slave)) > r->msg.o.size)
-			err = -ERANGE;
-		else
+		else if (*((int *)in_data) && !(pty->state & SLAVE_LOCKED)) {
+			pty->state |= SLAVE_LOCKED;
 			err = EOK;
+		}
 		break;
 	}
 
-	r->msg.o.io.err = err;
-
+	ioctl_setResponse(&r->msg, request, err, out_data);
 	return r;
+}
+
+
+void ptm_signalReady(void *arg)
+{
+	pty_t *pty = arg;
+	mutexLock(pty->mutex);
+	condSignal(pty->cond);
+	mutexUnlock(pty->mutex);
 }
 
 
@@ -309,22 +334,24 @@ static int ptm_create(int *id)
 {
 	PTY_TRACE("create master/slave pair");
 
-	int p[2];
 	pty_t *pty;
 	oid_t oid;
 	char path[] = "/dev/pts/" PTS_NAME_PADDING;
 
-	if (pipe_create(pxBufferedPipe, p, O_RDONLY) < 0)
-		return -ENOMEM;
-
-	if (pipe_create(pxBufferedPipe, p + 1, O_WRONLY) < 0)
-		return -ENOMEM;
-
 	if ((pty = malloc(sizeof(*pty))) == NULL)
 		return -ENOMEM;
 
-	pty->ptm_read = object_get(p[0]);
-	pty->ptm_write = object_get(p[1]);
+	pty->ops.arg = pty;
+
+	pty->ops.set_baudrate = NULL;
+	pty->ops.set_cflag = NULL;
+	pty->ops.signal_txready = ptm_signalReady;
+
+	if (libtty_init(&pty->tty, &pty->ops, SIZE_PAGE) < 0) {
+		free(pty);
+		return -ENOMEM;
+	}
+
 	pty->state = MASTER_OPEN | SLAVE_LOCKED;
 
 	object_create(&pty->master, &ptm_ops);
@@ -336,7 +363,6 @@ static int ptm_create(int *id)
 	snprintf(path + sizeof("/dev/pts"), sizeof(PTS_NAME_PADDING), "%d", (int)oid.id);
 
 	object_put(&pty->master);
-
 	create_dev(&oid, path);
 
 	return EOK;

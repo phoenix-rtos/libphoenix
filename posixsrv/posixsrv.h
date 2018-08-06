@@ -18,23 +18,4 @@
 enum { pxBufferedPipe, pxPipe };
 
 
-enum { pxUnlockpt, pxGrantpt, pxPtsname };
-
-
-typedef struct {
-	int id;
-	int type;
-
-	union {
-		struct {
-		} unlockpt;
-		struct {
-		} grantpt;
-		struct {
-			char *buf;
-			size_t len;
-		} ptsname;
-	};
-} posixsrv_devctl_t;
-
 #endif

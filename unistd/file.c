@@ -24,6 +24,7 @@
 #include <sys/file.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/ioctl.h>
 
 #include "posix/utils.h"
 #include "posixsrv/posixsrv.h"
@@ -43,11 +44,6 @@ WRAP_ERRNO_DEF(int, dup, (int fildes), (fildes))
 WRAP_ERRNO_DEF(int, dup2, (int fildes, int fildes2), (fildes, fildes2))
 WRAP_ERRNO_DEF(int, pipe, (int fildes[2]), (fildes))
 WRAP_ERRNO_DEF(int, fstat, (int fd, struct stat *buf), (fd, buf))
-
-WRAP_ERRNO_DEF(int, grantpt, (int fd), (fd))
-WRAP_ERRNO_DEF(int, unlockpt, (int fd), (fd))
-WRAP_ERRNO_DEF(int, ptsname_r, (int fd, char *buf, size_t buflen), (fd, buf, buflen))
-
 
 int link(const char *path1, const char *path2)
 {
@@ -197,4 +193,33 @@ int ioctl(int fildes, unsigned long request, ...)
 	va_end(ap);
 
 	return SET_ERRNO(sys_ioctl(fildes, request, val));
+}
+
+
+int grantpt(int fd)
+{
+	return EOK;
+}
+
+
+int unlockpt(int fd)
+{
+	int lock = 0;
+	return ioctl(fd, TIOCSPTLCK, &lock);
+}
+
+
+int ptsname_r(int fd, char *buf, size_t buflen)
+{
+	int id, len;
+
+	if (ioctl(fd, TIOCGPTN, &id) < 0)
+		return -1;
+
+	len = snprintf(buf, buflen, "/dev/pts/%d", id);
+
+	if (len >= buflen)
+		return SET_ERRNO(-ERANGE);
+
+	return 0;
 }
