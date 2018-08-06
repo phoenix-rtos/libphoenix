@@ -9,8 +9,8 @@ PROGS := posixsrv
 # additional sources to be linked into program
 PROGS_SRCS := pipe.c posixsrv.c pty.c special.c
 
-CFLAGS += -I../../phoenix-rtos-devices/build/arm-imx/include
-LIB += ../../phoenix-rtos-devices/build/arm-imx/lib/libtty.a
+CFLAGS += -I../../phoenix-rtos-devices/build/${TARGET}/include
+LIB += ../../phoenix-rtos-devices/build/${TARGET}/lib/libtty.a
 
 # include after all dependencies are set
 include $(TOPDIR)/Makefile.rules
