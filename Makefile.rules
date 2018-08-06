@@ -30,6 +30,10 @@ all: $(ARCH) $(PROGS_UNSTRIPPED) $(PROGS_STRIPPED) $(PROGS_BASE_OBJS) $(PROGS_OB
 # add include path for auto-generated files
 CFLAGS += -I"$(BUILD_DIR)/$(CURR_SUFFIX)"
 
+# try to find LDLIBS in toolchain/provided search paths to add dependencies
+PSMK_LDPATH := $(patsubst -L%,%,$(filter -L%,$(LDFLAGS))) $(shell $(CC) $(CFLAGS) -print-search-dirs |grep "libraries: " |tr : " ")
+PSMK_RESOLVED_LDLIBS := $(foreach lib,$(patsubst -l%,lib%.a,$(LDLIBS)),$(foreach ldpath,$(PSMK_LDPATH),$(wildcard $(ldpath)/$(lib))))
+
 $(PREFIX_O)%.o: %.c
 	@mkdir -p $(@D)
 	$(SIL)(printf " CC  %-24s  " "$<")
@@ -70,10 +74,10 @@ $(PREFIX_A)%.a:
 	$(SIL)$(AR) $(ARFLAGS) $@ $^ 2>/dev/null
 
 
-$(PREFIX_PROG)%: $(PREFIX_O)%.o $(PROGS_OBJS) $(LIB)
+$(PREFIX_PROG)%: $(PREFIX_O)%.o $(PROGS_OBJS) $(PSMK_RESOLVED_LDLIBS) $(LIB)
 	@mkdir -p $(@D)
 	@(printf " LD  %-24s  \n" "$(@F)")
-	$(SIL)$(LD) $(LDFLAGS) -o "$@" $^ $(GCCLIB)
+	$(SIL)$(LD) $(LDFLAGS) -o "$@" $^ $(LDLIBS) $(GCCLIB)
 
 $(PREFIX_PROG_STRIPPED)%: $(PREFIX_PROG)%
 	@mkdir -p $(@D)

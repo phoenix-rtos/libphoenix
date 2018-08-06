@@ -26,7 +26,7 @@ ifneq (, $(findstring ia32, $(TARGET)))
 		-fomit-frame-pointer -fno-strength-reduce -ffreestanding
 
 
-	LDFLAGS = -m elf_i386
+	LDFLAGS += -m elf_i386
 	GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 
 endif
@@ -43,7 +43,7 @@ ifneq (, $(findstring armv7, $(TARGET)))
 		-fpic -fpie -msingle-pic-base -mno-pic-data-is-text-relative\
 		-DNOMMU
 
-	LDFLAGS = -nostdlib -e _start --section-start .text=0 -Tbss=20000000 -z max-page-size=0x10
+	LDFLAGS += -nostdlib -e _start --section-start .text=0 -Tbss=20000000 -z max-page-size=0x10
 	GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 endif
 
@@ -57,7 +57,7 @@ ifneq (, $(findstring arm-imx, $(TARGET)))
 		-mcpu=cortex-a7 -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard -mthumb\
 		-fomit-frame-pointer -ffreestanding -mno-unaligned-access
 
-	LDFLAGS = -nostdlib -z max-page-size=0x1000
+	LDFLAGS += -nostdlib -z max-page-size=0x1000
 	GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 endif
 
@@ -71,6 +71,6 @@ ifneq (, $(findstring riscv64, $(TARGET)))
 		-fomit-frame-pointer -ffreestanding \
 		-DVERSION=\"$(VERSION)\" -DHAL=\"hal//riscv64//hal.h\" -mcmodel=medany -I/usr/local/include
 
-	LDFLAGS = -nostdlib
+	LDFLAGS += -nostdlib
 	GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 endif
