@@ -330,6 +330,14 @@ void format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 		if (fmt == 0)
 			break;
 
+		if (fmt == '*') {
+			flags |= FLAG_STAR;
+			fmt = *format++;
+
+			if (fmt == 0)
+				break;
+		}
+
 		if (fmt == 'l') {
 			fmt = *format++;
 
@@ -360,8 +368,16 @@ void format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 				if (s == NULL)
 					s = "(null)";
 
-				int i;
-				int l = strlen(s);
+				int i, l;
+				if (min_number_len > 0) {
+					char *p = memchr(s, 0, min_number_len);
+					if (p != NULL)
+						l = p - s;
+					else
+						l = min_number_len;
+				} else {
+					l = strlen(s);
+				}
 
 				if (l < min_number_len && !(flags & FLAG_MINUS)) {
 					for(i = 0; i < (min_number_len - l); i++)
