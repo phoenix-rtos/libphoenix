@@ -43,6 +43,7 @@
 #define MASTER_OPEN   (1 << 0)
 #define SLAVE_LOCKED  (1 << 1)
 #define SLAVE_OPEN    (1 << 2)
+#define PTY_CLOSING   (1 << 3)
 
 
 static handler_t pts_write_op, pts_read_op, pts_open_op, pts_close_op, pts_devctl_op, pts_getattr_op;
@@ -51,6 +52,7 @@ static handler_t ptmx_open_op;
 
 
 static void ptm_destroy(object_t *o);
+static void pts_destroy(object_t *o);
 
 
 static operations_t pts_ops = {
@@ -61,6 +63,7 @@ static operations_t pts_ops = {
 	.write = pts_write_op,
 	.getattr = pts_getattr_op,
 	.devctl = pts_devctl_op,
+	.release = pts_destroy,
 };
 
 
@@ -87,6 +90,7 @@ typedef struct {
 	libtty_callbacks_t ops;
 	unsigned state;
 
+	unsigned open_count;
 	handle_t mutex, cond;
 } pty_t;
 
@@ -103,16 +107,25 @@ static inline pty_t *pty_slave(object_t *slave)
 }
 
 
+static void pts_destroy(object_t *o)
+{
+	PTY_TRACE("destroying slave (%d)", object_id(o));
+	pty_t *pty = pty_slave(o);
+
+	mutexLock(pty->mutex);
+	pty->open_count--;
+	condSignal(pty->cond);
+	mutexUnlock(pty->mutex);
+}
+
+
 static void ptm_destroy(object_t *o)
 {
 	PTY_TRACE("destroying master %d", object_id(o));
-	char buf[128];
+	char buf[32];
 	msg_t msg;
 	int len;
 	pty_t *pty = pty_master(o);
-
-	object_destroy(&pty->slave);
-	object_put(&pty->slave);
 
 	len = snprintf(buf, sizeof(buf), "%d", object_id(&pty->slave));
 
@@ -125,8 +138,24 @@ static void ptm_destroy(object_t *o)
 		msg.i.size = len + 1;
 
 		msgSend(msg.i.ln.dir.port, &msg);
+
 	}
 
+	object_destroy(&pty->slave);
+	object_put(&pty->slave);
+	libtty_close(&pty->tty);
+
+	mutexLock(pty->mutex);
+	pty->state |= PTY_CLOSING;
+
+	while (pty->open_count)
+		condWait(pty->cond, pty->mutex, 0);
+	mutexUnlock(pty->mutex);
+
+	libtty_destroy(&pty->tty);
+
+	resourceDestroy(pty->mutex);
+	resourceDestroy(pty->cond);
 	free(o);
 }
 
@@ -154,10 +183,17 @@ static request_t *pts_open_op(object_t *o, request_t *r)
 	PTY_TRACE("pts_open(%d)", object_id(o));
 	pty_t *pty = pty_slave(o);
 
-	if (0 && pty->state & (SLAVE_LOCKED | SLAVE_OPEN)) {
+	if (pty->state & PTY_CLOSING) {
+		r->msg.o.io.err = -EPIPE;
+	}
+	else if (0 && pty->state & (SLAVE_LOCKED | SLAVE_OPEN)) {
 		r->msg.o.io.err = -EACCES;
 	}
 	else {
+		mutexLock(pty->mutex);
+		pty->open_count++;
+		mutexUnlock(pty->mutex);
+
 		pty->state |= SLAVE_OPEN;
 		/* TODO: Cleanup */
 		r->msg.o.io.err = EOK;
@@ -175,6 +211,11 @@ static request_t *pts_close_op(object_t *o, request_t *r)
 	if (pty->state & SLAVE_OPEN) {
 		r->msg.o.io.err = EOK;
 		pty->state &= ~SLAVE_OPEN;
+
+		mutexLock(pty->mutex);
+		pty->open_count--;
+		condSignal(pty->cond);
+		mutexUnlock(pty->mutex);
 	}
 	else {
 		r->msg.o.io.err = -EACCES;
@@ -222,11 +263,16 @@ static request_t *ptm_read_op(object_t *o, request_t *r)
 	size_t i;
 
 	mutexLock(pty->mutex);
-	while (!libtty_txready(&pty->tty))
+	while (!(pty->state & PTY_CLOSING) && !libtty_txready(&pty->tty))
 		condWait(pty->cond, pty->mutex, 0);
 
-	for (i = 0; i < r->msg.o.size && libtty_txready(&pty->tty); ++i)
-		((unsigned char *)r->msg.o.data)[i] = libtty_getchar(&pty->tty);
+	if (!(pty->state & PTY_CLOSING)) {
+		for (i = 0; i < r->msg.o.size && libtty_txready(&pty->tty); ++i)
+			((unsigned char *)r->msg.o.data)[i] = libtty_getchar(&pty->tty);
+	}
+	else {
+		i = -EINVAL;
+	}
 	mutexUnlock(pty->mutex);
 
 	r->msg.o.io.err = i;
@@ -323,7 +369,7 @@ void ptm_signalReady(void *arg)
 {
 	pty_t *pty = arg;
 	mutexLock(pty->mutex);
-	condSignal(pty->cond);
+	condBroadcast(pty->cond);
 	mutexUnlock(pty->mutex);
 }
 
@@ -347,12 +393,16 @@ static int ptm_create(int *id)
 	pty->ops.set_cflag = NULL;
 	pty->ops.signal_txready = ptm_signalReady;
 
+	mutexCreate(&pty->mutex);
+	condCreate(&pty->cond);
+
 	if (libtty_init(&pty->tty, &pty->ops, SIZE_PAGE) < 0) {
 		free(pty);
 		return -ENOMEM;
 	}
 
 	pty->state = MASTER_OPEN | SLAVE_LOCKED;
+	pty->open_count = 0;
 
 	object_create(&pty->master, &ptm_ops);
 	object_create(&pty->slave, &pts_ops);
@@ -363,9 +413,7 @@ static int ptm_create(int *id)
 	snprintf(path + sizeof("/dev/pts"), sizeof(PTS_NAME_PADDING), "%d", (int)oid.id);
 
 	object_put(&pty->master);
-	create_dev(&oid, path);
-
-	return EOK;
+	return create_dev(&oid, path);
 }
 
 #undef PTS_NAME_PADDING
