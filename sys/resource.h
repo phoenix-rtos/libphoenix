@@ -17,7 +17,9 @@
 #define _SYS_RESOURCE_H_
 
 #include <sys/time.h>
+#include <sys/threads.h>
 #include <time.h>
+#include <errno.h>
 
 #define RLIMIT_CORE 0
 
@@ -54,6 +56,15 @@ extern int getrlimit(int resource, struct rlimit *rlp);
 extern int setrlimit(int resource, const struct rlimit *rlp);
 
 
-extern int setpriority(int which, id_t who, int prio);
+static inline int setpriority(int which, id_t who, int prio)
+{
+	return SET_ERRNO(priority(min(max(prio + 4, 0), 7)));
+}
+
+
+static inline int getpriority(int which, id_t who)
+{
+	return priority(-1) - 4;
+}
 
 #endif

@@ -107,12 +107,6 @@ int chroot(const char *path)
 }
 
 
-int setpriority(int which, id_t who, int prio)
-{
-	return 0;
-}
-
-
 int getrlimit(int resource, struct rlimit *rlp)
 {
 	return 0;
