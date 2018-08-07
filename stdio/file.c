@@ -206,16 +206,24 @@ long int ftell(FILE *stream)
 	return (long)lseek(stream->fd, 0, SEEK_CUR);
 }
 
+off_t ftello(FILE *stream)
+{
+	return (off_t)lseek(stream->fd, 0, SEEK_CUR);
+}
 
 char *fgets_unlocked(char *str, int n, FILE *stream)
 {
 	return fgets(str, n, stream);
 }
 
+int fileno(FILE *stream)
+{
+	return stream->fd;
+}
 
 int fileno_unlocked(FILE *stream)
 {
-	return -ENOSYS;
+	return stream->fd;
 }
 
 
@@ -232,17 +240,15 @@ int getc_unlocked(FILE *stream)
 int putc(int c, FILE *stream)
 {
 	fwrite(&c, 1, 1, stream); /* FIXME: won't work on big endian */
-	return 0;
+	return c;
 }
 
 
-int putc_unlocked(int c)
+int putc_unlocked(int c, FILE *stream)
 {
-	/* Temporary: stdout */
-	write(1, &c, 1); /* FIXME: won't work on big endian */
-	return 0;
+	fwrite(&c, 1, 1, stream); /* FIXME: won't work on big endian */
+	return c;
 }
-
 
 int putchar_unlocked(int c)
 {
@@ -250,9 +256,8 @@ int putchar_unlocked(int c)
 	/* Temporary: stdout */
 	if (write(1, &cc, 1) < 0)
 		return EOF;
-	return 0;
+	return c;
 }
-
 
 int puts(const char *s)
 {

@@ -109,6 +109,11 @@ extern int mkfifo(const char *pathname, mode_t mode);
 extern int mknod(const char *pathname, mode_t mode, dev_t dev);
 
 
+extern int chmod(const char *path, mode_t mode);
 extern int fchmod(int fd, mode_t mode);
+
+
+extern int chown(const char *path, uid_t owner, gid_t group);
+extern int lchown(const char *path, uid_t owner, gid_t group);
 
 #endif

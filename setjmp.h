@@ -18,14 +18,24 @@
 
 
 typedef unsigned int jmp_buf[6];
-
-
-typedef int sigjmp_buf;
+typedef jmp_buf sigjmp_buf;
 
 
 extern int setjmp(jmp_buf var);
 
 
 extern void longjmp(jmp_buf var, int m);
+
+
+static inline int sigsetjmp(sigjmp_buf env, int savesigs)
+{
+	return setjmp(env);
+}
+
+static inline void siglongjmp(sigjmp_buf env, int val)
+{
+	longjmp(env, val);
+}
+
 
 #endif

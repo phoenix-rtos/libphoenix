@@ -191,11 +191,15 @@ DIR *opendir(const char *dirname)
 
 	if (msgSend(s->oid.port, &msg) < 0) {
 		free(s);
+		errno = EIO;
 		return NULL; /* EIO */
 	}
 
-	if (msg.o.attr.val != otDir)
+	if (msg.o.attr.val != otDir) {
+		free(s);
+		errno = ENOTDIR;
 		return NULL; /* ENOTDIR */
+	}
 #endif
 
 	memset(&msg, 0, sizeof(msg));
@@ -205,11 +209,13 @@ DIR *opendir(const char *dirname)
 
 	if (msgSend(s->oid.port, &msg) < 0) {
 		free(s);
+		errno = EIO;
 		return NULL; /* EIO */
 	}
 
 	if (msg.o.io.err < 0) {
 		free(s);
+		errno = EIO;
 		return NULL;
 	}
 
@@ -294,4 +300,23 @@ char *dirname(char *path)
 	}
 
 	return "/";
+}
+
+
+char* basename(char* path)
+{
+	char *slash;
+
+	/* remove trailing '/' */
+	char* lastchar = path + strlen(path) - 1;
+	while ((lastchar > path) && (*lastchar == '/'))
+		*lastchar-- = '\0';
+
+	if ((slash = strrchr(path, '/')) == NULL)
+		return path;
+
+	if (*(slash + 1) == '\0')
+		return slash;
+
+	return slash + 1;
 }

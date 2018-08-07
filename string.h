@@ -25,6 +25,9 @@
  */
 extern void *memchr(const void *str, int c, size_t n);
 
+/* Searches backward from the end of the n bytes pointed to by s instead of forward from the beginning. */
+extern void *memrchr(const void *s, int c, size_t n);
+
 
 /* Compares the first n bytes of str1 and str2. */
 extern int memcmp(const void *str1, const void *str2, size_t n);
@@ -83,9 +86,12 @@ extern int strncasecmp(const char *s1, const char *s2, int n);
 #define strcoll strcmp
 
 
-/* Copies the string pointed to, by src to dest. */
+/* Copies the string pointed to by src to dest. Returns a pointer to the destination string dest */
 extern char *strcpy(char *dest, const char *src);
 
+
+/* Copies the string pointed to by src to dest. Returns a pointer to the end of the string dest */
+extern char *stpcpy(char *dest, const char *src);
 
 /* Copies up to n characters from the string pointed to, by src to dest. */
 extern char *strncpy(char *dest, const char *src, size_t n);

@@ -81,11 +81,15 @@ int dprintf(int fd, const char *format, ...)
 	char *buf = malloc(1024);
 	int retVal;
 
+	if (!buf)
+		return -1;
+
 	va_start(ap, format);
 	retVal = vsprintf(buf, format, ap);
 	va_end(ap);
 
 	write(fd, buf, retVal);
+	free(buf);
 
 	return retVal;
 }

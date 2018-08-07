@@ -19,6 +19,7 @@
 
 #include <arch.h>
 #include <stdarg.h>
+#include <sys/types.h>
 
 
 #define EOF (-1)
@@ -72,6 +73,7 @@ extern int feof(FILE *stream);
 
 /* Tests the error indicator for the given stream. */
 extern int ferror(FILE *stream);
+extern int ferror_unlocked(FILE *stream);
 
 
 /* Flushes the output buffer of a stream. */
@@ -97,12 +99,16 @@ extern size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
 /* Associates a new filename with the given open stream and same time closing the old file in stream. */
 extern FILE *freopen(const char *filename, const char *mode, FILE *stream);
 
+/* examines the argument stream and returns its integer file descriptor */
+extern int fileno(FILE *stream);
+extern int fileno_unlocked(FILE *stream);
 
 /*
  * Sets the file position of the stream to the given offset. The argument offset signifies the number of bytes
  * to seek from the given whence position.
  */
 extern int fseek(FILE *stream, long int offset, int whence);
+extern int fseeko(FILE *stream, off_t offset, int whence);
 
 
 /*
@@ -114,6 +120,7 @@ extern int fsetpos(FILE *stream, const fpos_t *pos);
 
 /* Returns the current file position of the given stream. */
 extern long int ftell(FILE *stream);
+extern off_t ftello(FILE *stream);
 
 
 /* Writes data from the array pointed to by ptr to the given stream. */
@@ -152,6 +159,10 @@ extern char *tmpnam(char *str);
 extern int fprintf(FILE *stream, const char *format, ...);
 
 
+/* Sends formatted outout to a file descriptor. */
+extern int dprintf(int fd, const char *format, ...);
+
+
 /* Sends formatted output to stdout. */
 extern int printf(const char *format, ...);
 
@@ -180,6 +191,14 @@ extern int vsprintf(char *str, const char *format, va_list arg);
 extern int vsnprintf(char *str, size_t n, const char *format, va_list arg);
 
 
+/* Print formatted output to allocated string.  */
+extern int asprintf(char **strp, const char *fmt, ...);
+
+
+/* Print formatted output to allocated string using an argument list. */
+extern int vasprintf(char **strp, const char *fmt, va_list ap);
+
+
 /* Reads formatted input from a stream. */
 extern int fscanf(FILE *stream, const char *format, ...);
 
@@ -201,6 +220,7 @@ extern int fgetc(FILE *stream);
  * the newline character is read, or the end-of-file is reached, whichever comes first.
  */
 extern char *fgets(char *str, int n, FILE *stream);
+extern char *fgets_unlocked(char *s, int n, FILE *stream);
 
 
 /*
@@ -212,14 +232,17 @@ extern int fputc(int c, FILE *stream);
 
 /* Writes a string to the specified stream up to but not including the null character. */
 extern int fputs(const char *str, FILE *stream);
+extern int fputs_unlocked(const char *s, FILE *stream);
 
 
 /* Gets the next character (an unsigned char) from the specified stream and advances the position indicator for the stream. */
 extern int getc(FILE *stream);
+extern int getc_unlocked(FILE *stream);
 
 
 /* Gets a character (an unsigned char) from stdin. */
 extern int getchar(void);
+extern int getchar_unlocked(void);
 
 
 /*
@@ -234,10 +257,12 @@ extern char *gets(char *str);
  * for the stream.
  */
 extern int putc(int c, FILE *stream);
+extern int putc_unlocked(int c, FILE *stream);
 
 
 /* Writes a character (an unsigned char) specified by the argument char to stdout. */
 extern int putchar(int c);
+extern int putchar_unlocked(int c);
 
 
 /* Writes a string to stdout up to but not including the null character. A newline character is appended to the output. */
