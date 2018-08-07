@@ -308,7 +308,7 @@ size_t strftime(char *restrict s, size_t maxsize, const char *restrict format, c
 				break;
 			case 's':
 				memcpy(&time, timeptr, sizeof(struct tm));
-				res = snprintf(s + size, maxsize - size, "%u", &time);
+				res = snprintf(s + size, maxsize - size, "%llu", mktime(&time));
 				break;
 			case 'Y':
 				res = snprintf(s + size, maxsize - size, "%u", 1900 + timeptr->tm_year);
