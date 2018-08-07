@@ -58,6 +58,9 @@ extern int mutexCreate(handle_t *h);
 extern int mutexLock(handle_t h);
 
 
+extern int mutexLock2(handle_t h1, handle_t h2);
+
+
 extern int mutexTry(handle_t h);
 
 
@@ -83,6 +86,9 @@ extern int condWait(handle_t h, handle_t m, time_t timeout);
 
 
 extern int condSignal(handle_t h);
+
+
+extern int condBroadcast(handle_t h);
 
 
 extern int resourceDestroy(handle_t h);
