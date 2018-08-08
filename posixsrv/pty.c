@@ -114,8 +114,8 @@ static void pts_destroy(object_t *o)
 
 	mutexLock(pty->mutex);
 	pty->open_count--;
-	condSignal(pty->cond);
 	mutexUnlock(pty->mutex);
+	condSignal(pty->cond);
 }
 
 
@@ -214,8 +214,8 @@ static request_t *pts_close_op(object_t *o, request_t *r)
 
 		mutexLock(pty->mutex);
 		pty->open_count--;
-		condSignal(pty->cond);
 		mutexUnlock(pty->mutex);
+		condSignal(pty->cond);
 	}
 	else {
 		r->msg.o.io.err = -EACCES;
