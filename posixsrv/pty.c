@@ -248,7 +248,7 @@ static request_t *ptm_write_op(object_t *o, request_t *r)
 
 	mutexLock(pty->mutex);
 	for (i = 0; i < r->msg.i.size; ++i)
-		libtty_putchar(&pty->tty, ((unsigned char *)r->msg.i.data)[i]);
+		libtty_putchar(&pty->tty, ((unsigned char *)r->msg.i.data)[i], NULL);
 	mutexUnlock(pty->mutex);
 
 	r->msg.o.io.err = i;
@@ -268,7 +268,7 @@ static request_t *ptm_read_op(object_t *o, request_t *r)
 
 	if (!(pty->state & PTY_CLOSING)) {
 		for (i = 0; i < r->msg.o.size && libtty_txready(&pty->tty); ++i)
-			((unsigned char *)r->msg.o.data)[i] = libtty_getchar(&pty->tty);
+			((unsigned char *)r->msg.o.data)[i] = libtty_getchar(&pty->tty, NULL);
 	}
 	else {
 		i = -EINVAL;
