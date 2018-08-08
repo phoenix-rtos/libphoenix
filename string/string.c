@@ -427,10 +427,13 @@ char *strcat(char *s1, const char *s2)
 
 void *memrchr(const void *s, int c, size_t n)
 {
-	int i;
-	for (i = 0; i < n; ++i) {
-		if (((char *)s)[-i] == c)
-			return (char *)s - i;
+	unsigned char *src = (unsigned char *)s + n - 1;
+	while (n > 0) {
+		if (*src == (unsigned char) c)
+			return src;
+
+		src -= 1;
+		n -= 1;
 	}
 
 	return NULL;
