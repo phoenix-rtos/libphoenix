@@ -49,6 +49,7 @@ extern int errno;
 #define EINPROGRESS     115
 
 #define ENOLCK          116
+#define ENOTRECOVERABLE 131
 
 
 static inline int set_errno(int x)
