@@ -31,8 +31,8 @@ all: $(ARCH) $(PROGS_UNSTRIPPED) $(PROGS_STRIPPED) $(PROGS_BASE_OBJS) $(PROGS_OB
 CFLAGS += -I"$(BUILD_DIR)/$(CURR_SUFFIX)"
 
 # try to find LDLIBS in toolchain/provided search paths to add dependencies
-PSMK_LDPATH := $(patsubst -L%,%,$(filter -L%,$(LDFLAGS))) $(shell $(CC) $(CFLAGS) -print-search-dirs |grep "libraries: " |tr : " ")
-PSMK_RESOLVED_LDLIBS := $(foreach lib,$(patsubst -l%,lib%.a,$(LDLIBS)),$(foreach ldpath,$(PSMK_LDPATH),$(wildcard $(ldpath)/$(lib))))
+PSMK_LDPATH := $(subst ",,$(patsubst -L%,%,$(filter -L%,$(LDFLAGS)))) $(shell $(CC) $(CFLAGS) -print-search-dirs |grep "libraries: " |tr : " ")
+PSMK_RESOLVED_LDLIBS := $(filter-out -l%,$(LDLIBS)) $(foreach lib,$(patsubst -l%,lib%.a,$(LDLIBS)),$(foreach ldpath,$(PSMK_LDPATH),$(wildcard $(ldpath)/$(lib))))
 
 $(PREFIX_O)%.o: %.c
 	@mkdir -p $(@D)
@@ -77,7 +77,7 @@ $(PREFIX_A)%.a:
 $(PREFIX_PROG)%: $(PREFIX_O)%.o $(PROGS_OBJS) $(PSMK_RESOLVED_LDLIBS) $(LIB)
 	@mkdir -p $(@D)
 	@(printf " LD  %-24s  \n" "$(@F)")
-	$(SIL)$(LD) $(LDFLAGS) -o "$@" $^ $(LDLIBS) $(GCCLIB)
+	$(SIL)$(LD) $(LDFLAGS) -o "$@" $(filter %.o,$^) $(LDLIBS) $(LIB) $(GCCLIB)
 
 $(PREFIX_PROG_STRIPPED)%: $(PREFIX_PROG)%
 	@mkdir -p $(@D)
