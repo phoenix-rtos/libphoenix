@@ -30,13 +30,14 @@
 #endif
 
 static struct {
+	const char* ident;
+
 	int open;
 	int logfd;
 	int logmask;
 	int logopt;
 	int facility;
 
-	int offset;
 	char buf[MAX_LOG_SIZE];
 } syslog_common;
 
@@ -49,12 +50,14 @@ void closelog(void)
 	syslog_common.open = 0;
 }
 
+extern const char *argv_progname;
 
 void openlog(const char *ident, int logopt, int facility)
 {
 	if (ident != NULL) {
-		strncpy(syslog_common.buf, ident, MAX_LOG_SIZE);
-		syslog_common.offset = strlen(ident);
+		syslog_common.ident = ident;
+	} else {
+		syslog_common.ident = argv_progname;
 	}
 
 	if (logopt & LOG_NDELAY) {
@@ -64,6 +67,7 @@ void openlog(const char *ident, int logopt, int facility)
 		}
 	}
 
+	syslog_common.logmask = 0;
 	syslog_common.logopt = logopt;
 	syslog_common.facility = facility;
 }
@@ -82,10 +86,13 @@ int setlogmask(int maskpri)
 
 void vsyslog(int priority, const char *format, va_list ap)
 {
-	int cnt;
+	int cnt, prefix_size;
 
-	if ((1 << priority) & syslog_common.logmask)
+	if ((1 << LOG_PRI(priority)) & syslog_common.logmask)
 		return;
+
+	if (!syslog_common.ident)
+		openlog(NULL, LOG_NDELAY, LOG_USER);
 
 	if (!syslog_common.open) {
 		if ((syslog_common.logfd = open(PATH_LOG, O_RDONLY | O_NONBLOCK)) == -1)
@@ -94,8 +101,23 @@ void vsyslog(int priority, const char *format, va_list ap)
 		syslog_common.open = 1;
 	}
 
-	if ((cnt = vsnprintf(syslog_common.buf + syslog_common.offset, MAX_LOG_SIZE - syslog_common.offset, format, ap)) > 0)
-		write(syslog_common.logfd, syslog_common.buf, syslog_common.offset + cnt);
+	if (LOG_FAC(priority) == 0)
+		priority |= syslog_common.facility;
+
+	if (syslog_common.logopt & LOG_PID)
+		prefix_size = snprintf(syslog_common.buf, MAX_LOG_SIZE, "<%d> %s[%d]: ", priority, syslog_common.ident, getpid());
+	else
+		prefix_size = snprintf(syslog_common.buf, MAX_LOG_SIZE, "<%d> %s: ", priority, syslog_common.ident);
+
+	if ((cnt = vsnprintf(syslog_common.buf + prefix_size, MAX_LOG_SIZE - prefix_size, format, ap)) < 0)
+		return;
+
+	write(syslog_common.logfd, syslog_common.buf, prefix_size + cnt);
+
+	if (syslog_common.logopt & LOG_PERROR) {
+		syslog_common.buf[prefix_size + cnt] = '\n';
+		write(STDERR_FILENO, syslog_common.buf, prefix_size + cnt);
+	}
 }
 
 
