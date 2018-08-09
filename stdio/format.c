@@ -288,7 +288,7 @@ void format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 		}
 
 		/* precission, padding (set default to 6 digits) */
-		u32 flags = 0, min_number_len = 0, float_frac_len = 6;
+		u32 flags = 0, min_number_len = 0, float_frac_len = -1;
 
 		for (;;) {
 			if (fmt == ' ')
@@ -321,9 +321,10 @@ void format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 
 		/* fractional number digits-cnt (only a single digit is acceptable in this impl.) */
 		if (fmt == '.') {
+			float_frac_len = 0;
 			fmt = *format++;
-			if (fmt >= '0' && fmt <= '9') {
-				float_frac_len  = fmt - '0';
+			while (fmt >= '0' && fmt <= '9') {
+				float_frac_len  = float_frac_len * 10 + fmt - '0';
 				fmt = *format++;
 			}
 		}
@@ -379,6 +380,9 @@ void format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 					l = strlen(s);
 				}
 
+				if (float_frac_len >= 0)
+					l = min(l, float_frac_len);
+
 				if (l < min_number_len && !(flags & FLAG_MINUS)) {
 					for(i = 0; i < (min_number_len - l); i++)
 						feed(ctx, ' ');
@@ -425,6 +429,7 @@ void format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 				break;
 			case 'f':
 				flags |= FLAG_FLOAT;
+				float_frac_len = (float_frac_len >= 0) ? 6 : float_frac_len;
 				number = format_u32FromFloat((float)va_arg(args, double));
 				format_sprintf_num(ctx, feed, number, flags, min_number_len, float_frac_len);
 				break;
