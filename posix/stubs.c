@@ -168,3 +168,8 @@ unsigned int minor(int dev)
 {
 	return 0;
 }
+
+int atexit(void (*function)(void))
+{
+	return -1;
+}
