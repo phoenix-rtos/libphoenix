@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#include <libgen.h>
 #include <sys/msg.h>
 #include <sys/stat.h>
 #include <sys/file.h>
@@ -243,9 +244,72 @@ int closedir(DIR *dirp)
 }
 
 
-ssize_t readlink(const char *pathname, char *buf, size_t bufsiz)
+ssize_t readlink(const char *path, char *buf, size_t bufsiz)
 {
-	return 0;
+	int ret;
+	char *canonical1, *canonical2;
+	char *name, *dir_name;
+	msg_t msg;
+	oid_t oid, dir;
+
+	if (path == NULL)
+		return -EINVAL;
+
+	canonical1 = canonicalize_file_name(path);
+
+	if ((ret = lookup(canonical1, NULL, &oid)) < 0) {
+		free(canonical1);
+		return ret;
+	}
+
+	memset(&msg, 0, sizeof(msg_t));
+	msg.type = mtGetAttr;
+	memcpy(&msg.i.attr.oid, &oid, sizeof(oid_t));
+
+	msg.i.attr.type = atMode;
+	msg.o.data = NULL;
+
+	if ((ret = msgSend(oid.port, &msg)) != EOK) {
+		free(canonical1);
+		return ret;
+	}
+
+	if (!S_ISLNK(msg.o.attr.val)) {
+		free(canonical1);
+		return -EINVAL;
+	}
+
+	canonical2 = strdup(canonical1);
+
+	name = basename(canonical1);
+	dir_name = dirname(canonical2);
+
+	if ((ret = lookup(dir_name, NULL, &dir)) < 0) {
+		free(canonical1);
+		free(canonical2);
+		return ret;
+	}
+
+	free(canonical2);
+
+	memset(&msg, 0, sizeof(msg_t));
+	msg.type = mtLookup;
+	memcpy(&msg.i.lookup.dir, &dir, sizeof(oid_t));
+
+	msg.i.data = name;
+	msg.i.size = strlen(name);
+
+	msg.o.size = bufsiz;
+	msg.o.data = buf;
+
+	if ((ret = msgSend(dir.port, &msg)) != EOK) {
+		free(canonical1);
+		return ret;
+	}
+
+	free(canonical1);
+
+	return msg.o.lookup.err;
 }
 
 
