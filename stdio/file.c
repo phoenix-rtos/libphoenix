@@ -81,6 +81,7 @@ FILE *fopen(const char *filename, const char *mode)
 	f->fd = fd;
 	f->buff = NULL;
 	f->buffsz = 0;
+	f->ubufsz = 0;
 
 	return f;
 }
@@ -105,6 +106,7 @@ FILE *fdopen(int fd, const char *mode)
 	f->fd = fd;
 	f->buff = NULL;
 	f->buffsz = 0;
+	f->ubufsz = 0;
 
 	return f;
 }
@@ -166,7 +168,11 @@ size_t fwrite_unlocked(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 
 int fgetc(FILE *stream)
 {
-	char c;
+	unsigned char c;
+
+	if (stream->ubufsz > 0)
+		return stream->ubuf[--stream->ubufsz];
+
 	if (fread(&c, 1, 1, stream) != 1)
 		return EOF;
 
@@ -226,14 +232,14 @@ int fileno_unlocked(FILE *stream)
 	return stream->fd;
 }
 
+int getc(FILE *stream)
+{
+	return fgetc(stream);
+}
 
 int getc_unlocked(FILE *stream)
 {
-	char c;
-	if (fread(&c, 1, 1, stream) != 1)
-		return EOF;
-
-	return c;
+	return fgetc(stream);
 }
 
 
@@ -256,6 +262,22 @@ int putchar_unlocked(int c)
 	/* Temporary: stdout */
 	if (write(1, &cc, 1) < 0)
 		return EOF;
+	return c;
+}
+
+
+extern int ungetc(int c, FILE *stream)
+{
+	/* TODO: The file-position indicator is decremented by each successful call to ungetc(); */
+	/* TODO: A successful call to ungetc() shall clear the end-of-file indicator for the stream. */
+	if (c == EOF)
+		return EOF;
+
+	/* NOTE: POSIX requires for only ungetc to succeed, our implementation supports _UBUFSIZ */
+	if (stream->ubufsz == _UBUFSIZ)
+		return EOF;
+
+	stream->ubuf[stream->ubufsz++] = (unsigned char) c;
 	return c;
 }
 
@@ -313,26 +335,27 @@ int fputs(const char *str, FILE *f)
 
 int getchar_unlocked(void)
 {
-	int c;
-	read(0, &c, 1);
-	return c;
+	return getc_unlocked(stdin);
 }
 
 
 int fseek(FILE *stream, long offset, int whence)
 {
+	stream->ubufsz = 0;
 	return lseek(stream->fd, offset, whence);
 }
 
 
 void rewind(FILE *file)
 {
+	file->ubufsz = 0;
 	fseek(file, 0, 0);
 }
 
 
 int fseeko(FILE *stream, off_t offset, int whence)
 {
+	stream->ubufsz = 0;
 	return fseek(stream, offset, whence);
 }
 

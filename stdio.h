@@ -32,11 +32,15 @@
 
 typedef offs_t fpos_t;
 
+#define _UBUFSIZ 4
 
 typedef struct _FILE {
 	int fd;
 	char *buff;
 	size_t buffsz;
+
+	unsigned char ubuf[_UBUFSIZ];
+	size_t ubufsz;
 } FILE;
 
 
@@ -244,6 +248,8 @@ extern int getc_unlocked(FILE *stream);
 extern int getchar(void);
 extern int getchar_unlocked(void);
 
+/*  Pushes c back to stream, cast to unsigned char, where it is available for subsequent read operations */
+extern int ungetc(int c, FILE *stream);
 
 /*
  * Reads a line from stdin and stores it into the string pointed to by, str. It stops when either the newline character is read
