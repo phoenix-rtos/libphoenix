@@ -368,9 +368,7 @@ static request_t *ptm_devctl_op(object_t *o, request_t *r)
 void ptm_signalReady(void *arg)
 {
 	pty_t *pty = arg;
-	mutexLock(pty->mutex);
 	condBroadcast(pty->cond);
-	mutexUnlock(pty->mutex);
 }
 
 
