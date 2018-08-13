@@ -19,7 +19,7 @@
 #include <arch.h>
 
 
-enum { otDir = 0, otFile, otDev, otUnknown };
+enum { otDir = 0, otFile, otDev, otSymlink, otUnknown };
 
 
 enum { atMode = 0, atUid, atGid, atSize, atType, atPort, atPollStatus, atCTime, atMTime, atATime, atLinks, atDev };
