@@ -267,6 +267,9 @@ int main(int argc, char **argv)
 	if (special_init() < 0)
 		fail("special init");
 
+	if (event_init() < 0)
+		fail("event init");
+
 	if (pipe_init() < 0)
 		fail("pipe init");
 

@@ -122,4 +122,7 @@ extern int pty_init(void);
 extern int special_init(void);
 
 
+extern int event_init(void);
+
+
 #endif

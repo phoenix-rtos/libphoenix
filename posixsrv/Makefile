@@ -7,7 +7,7 @@
 
 PROGS := posixsrv
 # additional sources to be linked into program
-PROGS_SRCS := pipe.c posixsrv.c pty.c special.c
+PROGS_SRCS := pipe.c posixsrv.c pty.c special.c event.c
 
 LDLIBS := -ltty
 
