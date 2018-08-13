@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <libgen.h>
 #include <sys/msg.h>
 #include <sys/file.h>
 #include <sys/types.h>
@@ -103,7 +104,57 @@ int mkfifo(const char *filename, mode_t mode)
 
 int symlink(const char *path1, const char *path2)
 {
-	return -1;
+	oid_t dir;
+	char *canonical1, *canonical2;
+	char *dir_name, *name;
+	msg_t msg;
+	int len1, len2;
+	int ret;
+
+	if (path1 == NULL || path2 == NULL)
+		return -EINVAL;
+
+	canonical1 = canonicalize_file_name(path2);
+	canonical2 = strdup(canonical1);
+
+	dir_name = dirname(canonical1);
+
+	if ((ret = lookup(dir_name, NULL, &dir)) < 0) {
+		free(canonical1);
+		free(canonical2);
+		return ret;
+	}
+
+	free(canonical1);
+	name = basename(canonical2);
+
+	memset(&msg, 0, sizeof(msg_t));
+	msg.type = mtCreate;
+
+	memcpy(&msg.i.create.dir, &dir, sizeof(oid_t));
+	msg.i.create.type = otSymlink;
+	msg.i.create.mode = S_IFLNK | DEFFILEMODE;
+
+	len1  = strlen(name);
+	len2  = strlen(path1);
+
+	msg.i.size = len1 + len2 + 2;
+	msg.i.data = malloc(msg.i.size);
+	memset(msg.i.data, 0, msg.i.size);
+
+	memcpy(msg.i.data, name, len1);
+	memcpy(msg.i.data + len1 + 1, path1, len2);
+
+	if ((ret = msgSend(dir.port, &msg)) != EOK) {
+		free(canonical2);
+		free(msg.i.data);
+		return ret;
+	}
+
+	free(canonical2);
+	free(msg.i.data);
+
+	return msg.o.create.err;
 }
 
 
