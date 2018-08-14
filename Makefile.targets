@@ -23,7 +23,7 @@ ifneq (, $(findstring ia32, $(TARGET)))
 
 	CFLAGS += -O2 -g -Wall -Wstrict-prototypes -nostartfiles -nostdlib\
 		-m32 -mtune=generic -mno-mmx -mno-sse -fno-pic -fno-pie\
-		-fomit-frame-pointer -fno-strength-reduce -ffreestanding
+		-fomit-frame-pointer -fno-strength-reduce
 
 
 	LDFLAGS += -m elf_i386
@@ -55,7 +55,7 @@ ifneq (, $(findstring arm-imx, $(TARGET)))
 
 	CFLAGS += -Os -Wall -Wstrict-prototypes -g -nostartfiles -nostdlib\
 		-mcpu=cortex-a7 -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard -mthumb\
-		-fomit-frame-pointer -ffreestanding -mno-unaligned-access
+		-fomit-frame-pointer -mno-unaligned-access
 
 	LDFLAGS += -nostdlib -z max-page-size=0x1000
 	GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)

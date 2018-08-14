@@ -202,7 +202,7 @@ int main(void)
 	printf("test: freeing NULL\n");
 	free(NULL);
 
-	if ((ptr = malloc((size_t) -1)) != NULL) {
+	if ((ptr = malloc((size_t) 0x7fffffff)) != NULL) {
 		printf("test: malloc(-1) succeded with %p\n", ptr);
 	}
 

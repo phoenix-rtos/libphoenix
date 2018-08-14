@@ -592,7 +592,7 @@ static void malloc_test_lbin(int lidx, chunk_t *chunk)
 
 	sz = malloc_chunkSize(chunk);
 	ASSERT(!(chunk->size & CHUNK_CUSED), "malloc_dl: free chunk marked as used\n");
-	ASSERT(malloc_getlidx(sz) == lidx, "malloc_dl: wrong chunk size (%u) at lbin %d", sz, lidx);
+	ASSERT(malloc_getlidx(sz) == lidx, "malloc_dl: wrong chunk size (%zu) at lbin %d", sz, lidx);
 
 	c = chunk;
 	do  {

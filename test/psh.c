@@ -327,10 +327,10 @@ static int psh_mem(char *args)
 				printf("  %s", "mem");
 
 			else
-				printf("  %d.%d", e->oid.port, e->oid.id);
+				printf("  %d.%llu", e->oid.port, e->oid.id);
 
 			if (e->object != OBJECT_ANONYMOUS && e->anonsz != ~0)
-				printf("/(%dKB)\n", e->anonsz / 1024);
+				printf("/(%zuKB)\n", e->anonsz / 1024);
 
 			else
 				printf("\n");

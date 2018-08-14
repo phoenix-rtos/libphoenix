@@ -81,7 +81,7 @@ static int test_env_random(void)
 		if (rand()%CLEARENV_APPROX_EVERY == 0) {
 			clearenv_cnt++;
 			if ((res = clearenv()) != 0) {
-				printf("\n\rclearenv() failed (%d)", i, res);
+				printf("\n\rclearenv() failed (%d)", res);
 				return -1;
 			}
 

@@ -160,9 +160,9 @@ extern int strverscmp(const char *s1, const char *s2);
 
 
 __attribute__((always_inline))
-static inline void *bzero(void *p, size_t sz)
+static inline void bzero(void *p, size_t sz)
 {
-	return memset(p, 0, sz);
+	memset(p, 0, sz);
 }
 
 

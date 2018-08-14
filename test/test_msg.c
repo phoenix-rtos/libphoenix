@@ -138,7 +138,7 @@ int test_pong(unsigned port)
 		}
 
 		if (msg.i.size != msg.o.size) {
-			printf("test_msg/pong: i/o buffers are of different sizes: 0x%x and 0x%x\n", msg.i.size, msg.o.size);
+			printf("test_msg/pong: i/o buffers are of different sizes: 0x%zx and 0x%zx\n", msg.i.size, msg.o.size);
 			msg.o.io.err = 1;
 		}
 		else

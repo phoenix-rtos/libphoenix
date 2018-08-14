@@ -152,9 +152,6 @@ size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
 	int err;
 
-	if (ptr == NULL || stream == NULL)
-		return 0;
-
 	err = write(stream->fd, ptr, size * nmemb);
 	return err < 0 ? 0 : err;
 }
