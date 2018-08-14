@@ -25,9 +25,10 @@
 #define FLAG_ZERO          0x20
 #define FLAG_PLUS          0x40
 #define FLAG_HEX           0x80
-#define FLAG_LARGE_DIGITS  0x100
-#define FLAG_ALTERNATE     0x200
-#define FLAG_NULLMARK      0x400
+#define FLAG_OCT           0x100
+#define FLAG_LARGE_DIGITS  0x200
+#define FLAG_ALTERNATE     0x400
+#define FLAG_NULLMARK      0x800
 #define FLAG_MINUS         0x1000
 #define FLAG_STAR          0x2000
 
@@ -229,6 +230,34 @@ static void format_sprintf_num(void *ctx, feedfunc feed, u64 num64, u32 flags, i
 			tmp += 2;
 		}
 	}
+	else if (flags & FLAG_OCT) {
+		if (flags & FLAG_64BIT) {
+			int i;
+			// 30 bits
+			for (i = 0; i < 10; ++i) {
+				*tmp++ = digits[num32 & 0x07];
+				num32 >>= 3;
+			}
+			// 31, 32 bit from num32, bit 0 from num_high
+			num32 |= (num_high & 0x1) << 2;
+			*tmp++ = digits[num32 & 0x07];
+			num_high >>= 1;
+
+			while (num_high != 0) {
+				*tmp++ = digits[num_high & 0x07];
+				num_high >>= 3;
+			}
+		}
+		else {
+			while (num32 != 0) {
+				*tmp++ = digits[num32 & 0x07];
+				num32 >>= 3;
+			}
+		}
+		if (flags & FLAG_ALTERNATE) {
+			*tmp++  = '0';
+		}
+	}
 	else {
 		if (flags & FLAG_64BIT) { // TODO: optimize
 			while (num64 != 0) {
@@ -352,7 +381,7 @@ void format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 
 		if (fmt == 'z') {
 			fmt = *format++;
-			if (sizeof(void *) == sizeof(u64)) // FIXME "size_t" is undefined?
+			if (sizeof(size_t) == sizeof(u64)) // FIXME "size_t" is undefined?
 				flags |= FLAG_64BIT;
 		}
 		if (fmt == 0)
@@ -410,6 +439,11 @@ void format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 				if (sizeof(void *) == sizeof(u64))
 					flags |= FLAG_64BIT;
 				min_number_len = sizeof(void *) * 2;
+				GET_UNSIGNED(number, flags, args);
+				format_sprintf_num(ctx, feed, number, flags, min_number_len, float_frac_len);
+				break;
+			case 'o':
+				flags |= FLAG_OCT;
 				GET_UNSIGNED(number, flags, args);
 				format_sprintf_num(ctx, feed, number, flags, min_number_len, float_frac_len);
 				break;
