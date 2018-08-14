@@ -30,7 +30,7 @@
 #define FLAG_ALTERNATE     0x400
 #define FLAG_NULLMARK      0x800
 #define FLAG_MINUS         0x1000
-#define FLAG_STAR          0x2000
+#define FLAG_FIELD_WIDTH_STAR 	0x2000
 
 
 #define GET_UNSIGNED(number, flags, args) do {		\
@@ -331,7 +331,7 @@ void format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 			else if (fmt == '#')
 				flags |= FLAG_ALTERNATE;
 			else if (fmt == '*')
-				flags |= FLAG_STAR;
+				flags |= FLAG_FIELD_WIDTH_STAR;
 			else
 				break;
 
@@ -345,6 +345,10 @@ void format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 			min_number_len = min_number_len * 10 + fmt - '0';
 			fmt = *format++;
 		}
+
+		if (flags & FLAG_FIELD_WIDTH_STAR)
+			min_number_len = va_arg(args, int);
+
 		if (fmt == 0)
 			break;
 
@@ -361,7 +365,7 @@ void format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 			break;
 
 		if (fmt == '*') {
-			flags |= FLAG_STAR;
+			float_frac_len = va_arg(args, int);
 			fmt = *format++;
 
 			if (fmt == 0)
@@ -391,9 +395,6 @@ void format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 		switch (fmt) {
 			case 's':
 			{
-				if (flags & FLAG_STAR)
-					min_number_len = va_arg(args, int);
-
 				const char *s = va_arg(args, char *);
 				if (s == NULL)
 					s = "(null)";
