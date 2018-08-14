@@ -26,7 +26,7 @@
 #endif
 
 #ifndef MAX_LOG_SIZE
-#define MAX_LOG_SIZE 512
+#define MAX_LOG_SIZE 256
 #endif
 
 static struct {
