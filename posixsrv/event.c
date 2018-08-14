@@ -52,8 +52,7 @@ typedef struct _evnote_t {
 	unsigned short pend;
 	unsigned short enabled;
 	unsigned short oneshot;
-
-	unsigned flags;
+	unsigned short dispatch;
 
 	struct {
 		unsigned flags;
@@ -76,6 +75,7 @@ typedef struct _eventry_t {
 
 static handler_t sink_create_op, sink_write_op, sink_open_op, sink_close_op;
 static handler_t queue_read_op, queue_write_op, queue_open_op, queue_close_op;
+static handler_t qmx_open_op;
 
 
 static operations_t sink_ops = {
@@ -96,11 +96,24 @@ static operations_t queue_ops = {
 };
 
 
+static operations_t qmx_ops = {
+	.handlers = { NULL },
+	.open = qmx_open_op,
+};
+
+
 static struct {
 	object_t sink;
+	object_t qmx;
 	handle_t lock;
 	rbtree_t notes;
 } event_common;
+
+
+static inline evqueue_t *evqueue(object_t *o)
+{
+	return (evqueue_t *)((char *)o - offsetof(evqueue_t, object));
+}
 
 
 static int event_cmp(rbnode_t *n1, rbnode_t *n2)
@@ -288,26 +301,32 @@ static void _note_remove(evqueue_t *queue, evnote_t *note)
 
 static void _note_merge(evnote_t *note, evsub_t *sub)
 {
-	if (note->flags & evAdd) {
-		note->mask |= sub->types;
+	if (sub->flags & evAdd) {
+		note->mask    |= sub->types;
 		note->enabled |= sub->types;
 	}
 
-	if (note->flags & evDelete) {
-		note->mask &= ~sub->types;
-		note->enabled &= ~sub->types;
+	if (sub->flags & evDelete) {
+		note->pend     &= ~sub->types;
+		note->mask     &= ~sub->types;
+		note->enabled  &= ~sub->types;
+		note->oneshot  &= ~sub->types;
+		note->dispatch &= ~sub->types;
 	}
 
-	if (note->flags & evEnable)
+	if (sub->flags & evEnable)
 		note->enabled |= sub->types;
 
-	if (note->flags & evDisable)
+	if (sub->flags & evDisable)
 		note->enabled &= ~sub->types;
 
-	if (note->flags & evOneshot)
+	if (sub->flags & evOneshot)
 		note->oneshot |= sub->types;
 
-	if (note->flags & evClear)
+	if (sub->flags & evDispatch)
+		note->dispatch |= sub->types;
+
+	if (sub->flags & evClear)
 		note->pend &= ~sub->types;
 }
 
@@ -375,7 +394,7 @@ void event_register(event_t *events, int count)
 {
 	event_t *event;
 	eventry_t *entry;
-	evqueue_t *wakeq;
+	evqueue_t *wakeq = NULL;
 	int i = 0;
 
 	for (i = 0; i < count; ++i) {
@@ -418,32 +437,36 @@ static int _event_read(evqueue_t *queue, event_t *event, int eventcnt)
 	unsigned short typebit;
 	evnote_t *note;
 
-	while (i < eventcnt) {
-		note = queue->notes;
+	note = queue->notes;
 
-		do {
-			mutexLock(note->entry->lock);
-			for (type = 0; type < sizeof(note->pending) / sizeof(*note->pending) && i < eventcnt; ++type) {
-				typebit = 1 << type;
+	do {
+		mutexLock(note->entry->lock);
+		for (type = 0; type < sizeof(note->pending) / sizeof(*note->pending) && i < eventcnt; ++type) {
+			typebit = 1 << type;
 
-				if (note->pend & note->mask & typebit) {
-					memcpy(&event->oid, &note->entry->oid, sizeof(oid_t));
-					event->type = type;
-					event->flags = note->pending[type].flags;
-					event->data = note->pending[type].data;
+			if (note->pend & note->mask & note->enabled & typebit) {
+				memcpy(&event->oid, &note->entry->oid, sizeof(oid_t));
+				event->type = type;
+				event->flags = note->pending[type].flags;
+				event->data = note->pending[type].data;
+
+				if (note->oneshot & typebit) {
+					note->mask &= ~typebit;
+					_entry_recalculate(note->entry);
 				}
 
-				note->pend &= ~typebit;
-				memset(note->pending + type, 0, sizeof(note->pending[type]));
+				if (note->dispatch & typebit)
+					note->enabled &= ~typebit;
 
 				++i;
 				++event;
+				note->pend &= ~typebit;
 			}
-			mutexUnlock(note->entry->lock);
+		}
+		mutexUnlock(note->entry->lock);
 
-			note = note->queue_next;
-		} while (note != queue->notes && i < eventcnt);
-	}
+		note = note->queue_next;
+	} while (note != queue->notes && i < eventcnt);
 
 	return i;
 }
@@ -537,7 +560,7 @@ static request_t *_queue_readwrite(evqueue_t *queue, request_t *r)
 
 static request_t *queue_write_op(object_t *o, request_t *r)
 {
-	evqueue_t *queue = (evqueue_t *)o;
+	evqueue_t *queue = evqueue(o);
 	mutexLock(queue->lock);
 	r = _queue_readwrite(queue, r);
 	mutexUnlock(queue->lock);
@@ -547,7 +570,7 @@ static request_t *queue_write_op(object_t *o, request_t *r)
 
 static request_t *queue_read_op(object_t *o, request_t *r)
 {
-	evqueue_t *queue = (evqueue_t *)o;
+	evqueue_t *queue = evqueue(o);
 	mutexLock(queue->lock);
 	r = _queue_readwrite(queue, r);
 	mutexUnlock(queue->lock);
@@ -616,6 +639,20 @@ static request_t *sink_write_op(object_t *o, request_t *r)
 }
 
 
+static request_t *qmx_open_op(object_t *o, request_t *r)
+{
+	evqueue_t *queue;
+
+	if ((queue = queue_create()) == NULL)
+		r->msg.o.io.err = -ENOMEM;
+
+	else
+		r->msg.o.io.err = object_id(&queue->object);
+
+	return r;
+}
+
+
 int event_init(void)
 {
 	if (mutexCreate(&event_common.lock) < 0)
@@ -623,5 +660,10 @@ int event_init(void)
 
 	lib_rbInit(&event_common.notes, event_cmp, NULL);
 	object_create(&event_common.sink, &sink_ops);
-	return object_link(&event_common.sink, "/dev/events");
+	object_create(&event_common.qmx, &qmx_ops);
+
+	object_link(&event_common.sink, "/dev/events");
+	object_link(&event_common.qmx, "/dev/evqmx");
+
+	return EOK;
 }

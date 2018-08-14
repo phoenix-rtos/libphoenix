@@ -49,6 +49,8 @@ struct {
 		int id;
 		object_t *o;
 	} cache;
+
+	char stacks[8][0x1000] __attribute__ ((aligned(8)));
 } posixsrv_common;
 
 
@@ -276,9 +278,8 @@ int main(int argc, char **argv)
 	if (pty_init() < 0)
 		fail("pty init");
 
-	for (i = 0; i < 8; ++i) {
-		beginthread(posixsrvthr, 4, malloc(1000), 1000, NULL);
-	}
+	for (i = 0; i < sizeof(posixsrv_common.stacks) / sizeof(posixsrv_common.stacks[0]); ++i)
+		beginthread(posixsrvthr, 4, posixsrv_common.stacks[i], sizeof(posixsrv_common.stacks[i]), NULL);
 
 	posixsrvthr(NULL);
 	return 0;
