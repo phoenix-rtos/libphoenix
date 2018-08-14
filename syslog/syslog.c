@@ -112,11 +112,14 @@ void vsyslog(int priority, const char *format, va_list ap)
 	if ((cnt = vsnprintf(syslog_common.buf + prefix_size, MAX_LOG_SIZE - prefix_size, format, ap)) < 0)
 		return;
 
-	write(syslog_common.logfd, syslog_common.buf, prefix_size + cnt);
+	size_t len = min(prefix_size + cnt, MAX_LOG_SIZE - 1);
+	syslog_common.buf[len] = '\0';
+
+	write(syslog_common.logfd, syslog_common.buf, len);
 
 	if (syslog_common.logopt & LOG_PERROR) {
-		syslog_common.buf[prefix_size + cnt] = '\n';
-		write(STDERR_FILENO, syslog_common.buf, prefix_size + cnt);
+		syslog_common.buf[len] = '\n';
+		write(STDERR_FILENO, syslog_common.buf, len);
 	}
 }
 
