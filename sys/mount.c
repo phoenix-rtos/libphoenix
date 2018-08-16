@@ -24,7 +24,7 @@ int mount(const char *path, oid_t *oid)
 {
 	struct stat buf;
 	oid_t toid;
-	msg_t msg;
+	msg_t msg = {0};
 	int err;
 
 	if (lookup(path, NULL, &toid) < EOK)
