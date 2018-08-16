@@ -189,6 +189,7 @@ enum {
 	TIOCGWINSZ = _IOR('t', 0x13, struct winsize),
 	TIOCSWINSZ = _IOW('t', 0x14, struct winsize),
 	TIOCNOTTY  = _IO('t', 0x22),
+	TIOCGSID   = _IOR('t', 0x29, pid_t),
 };
 
 /* tcflush */
@@ -213,6 +214,7 @@ int tcdrain(int fd);
 int tcsetpgrp(int fd, pid_t pgrp);
 pid_t tcgetpgrp(int fd);
 
+pid_t tcgetsid(int fd);
 
 static inline speed_t cfgetispeed(const struct termios *termios_p)
 {
@@ -236,6 +238,13 @@ static inline int cfsetispeed(struct termios *termios_p, speed_t speed)
 static inline int cfsetospeed(struct termios *termios_p, speed_t speed)
 {
 	termios_p->c_ospeed = speed;
+	return 0;
+}
+
+static inline int cfsetspeed(struct termios *termios_p, speed_t speed)
+{
+	termios_p->c_ospeed = speed;
+	termios_p->c_ispeed = speed;
 	return 0;
 }
 

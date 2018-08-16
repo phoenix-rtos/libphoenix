@@ -111,3 +111,15 @@ pid_t tcgetpgrp(int fd)
 
 	return p;
 }
+
+pid_t tcgetsid(int fd)
+{
+	pid_t p;
+	int ret = ioctl(fd, TIOCGSID, &p);
+	if (ret < 0) {
+		errno = -ret;
+		return (pid_t)-1;
+	}
+
+	return p;
+}
