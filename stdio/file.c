@@ -384,6 +384,9 @@ ssize_t getline(char **lineptr, size_t *n, FILE *stream)
 		linesz += readsz;
 	}
 
+	if (linesz == 0)
+		return -1; // EOF
+
 	if (!nl)
 	   linesz++;
 
