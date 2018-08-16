@@ -58,7 +58,7 @@ int tcsetattr(int fildes, int optional_actions, const struct termios *termios_p)
 
 int tcsendbreak(int fd, int duration)
 {
-	int ret = ioctl(fd, TCSBRK, &duration);
+	int ret = ioctl(fd, TCSBRK, duration);
 	if (ret < 0) {
 		errno = -ret;
 		return -1;
@@ -69,7 +69,7 @@ int tcsendbreak(int fd, int duration)
 
 int tcflush(int fd, int queue_selector)
 {
-	int ret = ioctl(fd, TCFLSH, &queue_selector);
+	int ret = ioctl(fd, TCFLSH, queue_selector);
 	if (ret < 0) {
 		errno = -ret;
 		return -1;

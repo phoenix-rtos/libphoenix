@@ -39,11 +39,20 @@ const void * ioctl_unpack(const msg_t *msg, unsigned long *request, id_t *id)
 			data = ioctl->data;
 		else
 			data = msg->i.data;
+	} else if (!(ioctl->request & IOC_INOUT) && size > 0) {
+		/* the data is passed by value instead of pointer */
+		size = min(size, sizeof(void*));
+		memcpy(&data, ioctl->data, size);
 	}
 
 	return data;
 }
 
+pid_t ioctl_getSenderPid(const msg_t *msg)
+{
+	ioctl_in_t *ioctl = (ioctl_in_t *)msg->i.raw;
+	return (pid_t) ioctl->pid;
+}
 
 void ioctl_setResponse(msg_t *msg, unsigned long request, int err, const void *data)
 {

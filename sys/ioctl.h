@@ -18,6 +18,7 @@
 #define _LIBPHOENIX_IOCTL_H_
 
 #include <sys/msg.h>
+#include <sys/types.h>
 
 
 #define IOCPARM_MASK		0x1fff
@@ -35,6 +36,7 @@
 
 #define _IOC(inout,group,num,len)	((unsigned long) (inout | ((len & IOCPARM_MASK) << 16) | ((group) << 8) | (num)))
 #define _IO(g,n)			_IOC(IOC_VOID, (g), (n), 0)
+#define _IOV(g,n,t)			_IOC(IOC_VOID, (g), (n), sizeof(t))     /* IOW with passing by value */
 #define _IOR(g,n,t)			_IOC(IOC_OUT, (g), (n), sizeof(t))
 #define _IOW(g,n,t)			_IOC(IOC_IN, (g), (n), sizeof(t))
 #define _IOWR(g,n,t)		_IOC(IOC_INOUT, (g), (n), sizeof(t))
@@ -48,6 +50,8 @@ int ioctl(int fd, unsigned long cmd, ... );
 
 
 const void * ioctl_unpack(const msg_t *msg, unsigned long *request, id_t *id);
+
+pid_t ioctl_getSenderPid(const msg_t *msg);
 
 
 void ioctl_setResponse(msg_t *msg, unsigned long request, int err, const void *data);
