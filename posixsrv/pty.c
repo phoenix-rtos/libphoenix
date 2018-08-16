@@ -230,10 +230,11 @@ static request_t *pts_devctl_op(object_t *o, request_t *r)
 	const void *in, *out;
 	long unsigned request;
 	pty_t *pty = pty_slave(o);
+	pid_t pid = ioctl_getSenderPid(&r->msg);
 	int err;
 
 	in = ioctl_unpack(&r->msg, &request, NULL);
-	err = libtty_ioctl(&pty->tty, request, in, &out);
+	err = libtty_ioctl(&pty->tty, pid, request, in, &out);
 	ioctl_setResponse(&r->msg, request, err, out);
 
 	return r;
