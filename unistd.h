@@ -61,10 +61,16 @@ extern int execl(const char *path, const char *arg, ...);
 extern int execle(const char *path, const char *arg, ...);
 
 
+extern int execlp(const char *path, const char *arg, ...);
+
+
 extern int execve(const char *path, char *const argv[], char *const envp[]);
 
 
 extern int execvp(const char *file, char *const argv[]);
+
+
+extern int execvpe(const char *file, char *const argv[], char *const envp[]);
 
 
 extern int execv(const char *path, char *const argv[]);

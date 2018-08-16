@@ -113,7 +113,13 @@ int execve(const char *path, char *const argv[], char *const envp[])
 
 int execvp(const char *file, char *const argv[])
 {
-	return execve(file, argv, NULL);
+	return execvpe(file, argv, NULL);
+}
+
+int execvpe(const char *file, char *const argv[], char *const envp[])
+{
+	/* FIXME: search for file in env PATH */
+	return execve(file, argv, envp);
 }
 
 
@@ -155,6 +161,26 @@ int execl(const char *path, const char *arg, ...)
 		return -ENOMEM;
 
 	err = execve(path, argv, NULL);
+	free(argv);
+	return err;
+}
+
+int execlp(const char *file, const char *arg, ...)
+{
+	va_list args;
+	char **argv;
+	int err;
+
+	/* FIXME: search for file in env PATH */
+
+	va_start(args, arg);
+	argv = argv_gather(arg, args);
+	va_end(args);
+
+	if (argv == NULL)
+		return -ENOMEM;
+
+	err = execve(file, argv, NULL);
 	free(argv);
 	return err;
 }
