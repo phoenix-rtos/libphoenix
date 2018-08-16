@@ -32,6 +32,11 @@ WRAP_ERRNO_DEF(pid_t, getpgrp, (void), ())
 
 WRAP_ERRNO_DEF(int, setsid, (void), ())
 
+pid_t getsid(pid_t pid)
+{
+	return getpgid(pid);
+}
+
 
 char exec_buffer[64];
 

@@ -190,6 +190,9 @@ extern pid_t getpgrp(void);
 extern pid_t setsid(void);
 
 
+extern pid_t getsid(pid_t pid);
+
+
 extern char *optarg;
 
 
