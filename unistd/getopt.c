@@ -34,6 +34,9 @@ int getopt(int argc, char * const argv[], const char *optstring)
 	char *optspec;
 	int leading_colon;
 
+	if (argc == 0 || argv == NULL || optind >= argc)
+		return -1;
+
 	if (argv[optind] == NULL || *argv[optind] != '-' || !strcmp(argv[optind], "-"))
 		return -1;
 
