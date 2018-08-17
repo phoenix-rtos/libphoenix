@@ -18,6 +18,7 @@
 #include <sys/threads.h>
 #include <sys/rb.h>
 #include <sys/list.h>
+#include <sys/stat.h>
 
 #include <stdlib.h>
 #include <errno.h>
@@ -74,7 +75,7 @@ typedef struct _eventry_t {
 
 
 static handler_t sink_create_op, sink_write_op, sink_open_op, sink_close_op;
-static handler_t queue_read_op, queue_write_op, queue_open_op, queue_close_op;
+static handler_t queue_read_op, queue_write_op, queue_close_op /*, queue_devctl_op*/;
 static handler_t qmx_open_op;
 
 
@@ -87,12 +88,17 @@ static operations_t sink_ops = {
 };
 
 
+static void queue_timeout_op(request_t *r);
+static void queue_destroy(object_t *o);
+
 static operations_t queue_ops = {
 	.handlers = { NULL },
-	.open = queue_open_op,
 	.close = queue_close_op,
 	.write = queue_write_op,
 	.read = queue_read_op,
+	/* .devctl = queue_devctl_op, */
+	.timeout = queue_timeout_op,
+	.release = queue_destroy,
 };
 
 
@@ -150,6 +156,14 @@ static eventry_t *_entry_find(oid_t *oid)
 }
 
 
+static void entry_ref(eventry_t *entry)
+{
+	mutexLock(event_common.lock);
+	++entry->refs;
+	mutexUnlock(event_common.lock);
+}
+
+
 static eventry_t *entry_find(oid_t *oid)
 {
 	eventry_t *entry;
@@ -178,7 +192,7 @@ static eventry_t *_entry_new(oid_t *oid)
 
 	memcpy(&entry->oid, oid, sizeof(oid_t));
 	mutexCreate(&entry->lock);
-	entry->refs = 2;
+	entry->refs = 1;
 	lib_rbInsert(&event_common.notes, &entry->node);
 	return entry;
 }
@@ -254,21 +268,42 @@ static void _entry_notify(eventry_t *entry)
 }
 
 
+static void _note_poll(evnote_t *note)
+{
+	/* TODO: only poll events known to be level triggered? */
+	msg_t msg;
+
+	msg.type = mtGetAttr;
+	memcpy(&msg.i.attr.oid, &note->entry->oid, sizeof(oid_t));
+	msg.i.attr.type = atPollStatus;
+
+	msg.i.data = msg.o.data = NULL;
+	msg.i.size = msg.o.size = 0;
+
+	/* TODO: have a way to update event data */
+
+	if (msgSend(note->entry->oid.port, &msg) == EOK && msg.o.attr.val > 0)
+		note->pend |= msg.o.attr.val & note->mask;
+}
+
+
 static void _entry_recalculate(eventry_t *entry)
 {
 	evnote_t *note;
-	unsigned short mask = 0;
+	unsigned short mask = 0, oldmask;
 
-	note = entry->notes;
-	do {
-		mask |= note->mask;
-		note = note->next;
-	} while (note != entry->notes);
+	if ((note = entry->notes) != NULL) {
+		do {
+			mask |= note->mask;
+			note = note->next;
+		} while (note != entry->notes);
+	}
 
-	if (mask != entry->mask)
-		_entry_notify(entry);
-
+	oldmask = entry->mask;
 	entry->mask = mask;
+
+	if (mask != oldmask)
+		_entry_notify(entry);
 }
 
 
@@ -353,6 +388,8 @@ static int _event_subscribe(evqueue_t *queue, evsub_t *sub, int count)
 		if ((entry = entry_get(&sub->oid)) == NULL)
 			return -ENOMEM;
 
+		/* we keep one more reference in case the note gets removed */
+		entry_ref(entry);
 		mutexLock(entry->lock);
 
 		if ((note = _note_new(queue, entry)) == NULL) {
@@ -380,6 +417,7 @@ static int _event_subscribe(evqueue_t *queue, evsub_t *sub, int count)
 			_note_remove(queue, note);
 
 		mutexUnlock(entry->lock);
+		entry_put(entry);
 		sub++;
 	}
 
@@ -427,7 +465,20 @@ static evqueue_t *queue_create(void)
 	}
 
 	object_create(&queue->object, &queue_ops);
+	object_put(&queue->object);
 	return queue;
+}
+
+
+static void queue_destroy(object_t *o)
+{
+	evqueue_t *queue = evqueue(o);
+
+	if (queue->notes != NULL || queue->requests != NULL)
+		printf("posixsrv/event.c error: destroying busy queue\n");
+
+	resourceDestroy(queue->lock);
+	free(queue);
 }
 
 
@@ -437,7 +488,8 @@ static int _event_read(evqueue_t *queue, event_t *event, int eventcnt)
 	unsigned short typebit;
 	evnote_t *note;
 
-	note = queue->notes;
+	if ((note = queue->notes) == NULL)
+		return 0;
 
 	do {
 		mutexLock(note->entry->lock);
@@ -448,6 +500,7 @@ static int _event_read(evqueue_t *queue, event_t *event, int eventcnt)
 				memcpy(&event->oid, &note->entry->oid, sizeof(oid_t));
 				event->type = type;
 				event->flags = note->pending[type].flags;
+				event->count = note->pending[type].count;
 				event->data = note->pending[type].data;
 
 				if (note->oneshot & typebit) {
@@ -472,10 +525,70 @@ static int _event_read(evqueue_t *queue, event_t *event, int eventcnt)
 }
 
 
+static void _queue_poll(evqueue_t *queue)
+{
+	evnote_t *note;
+
+	if ((note = queue->notes) == NULL)
+		return;
+
+	do {
+		mutexLock(note->entry->lock); /* TODO: is this lock necessary? */
+		_note_poll(note);
+		mutexUnlock(note->entry->lock);
+
+		note = note->queue_next;
+	} while (note != queue->notes);
+}
+
+
+static int queue_unpack(msg_t *msg, evsub_t **subs, int *subcnt, event_t **events, int *evcnt, int *timeout)
+{
+	if (msg->type == mtRead || msg->type == mtWrite) {
+		if (subs != NULL) {
+			*subs = msg->i.data;
+			*subcnt = msg->i.size / sizeof(evsub_t);
+		}
+
+		if (events != NULL) {
+			*events = msg->o.data;
+			*evcnt = msg->o.size / sizeof(event_t);
+		}
+
+		if (timeout != NULL)
+			*timeout = (int)msg->i.io.len; /* FIXME: hack! */
+	}
+#if 0
+	else if (msg->type == mtDevCtl) {
+		unsigned request;
+		event_ioctl_t *ioctl;
+
+		ioctl = (event_ioctl_t *)ioctl_unpack2(msg, &request, NULL, events);
+		/* TODO: check request */
+
+		if (subs != NULL) {
+			*subs = ioctl->subs;
+			*subcnt = ioctl->subcnt;
+		}
+
+		if (events != NULL)
+			*evcnt = ioctl->eventcnt;
+
+		if (timeout != NULL)
+			*timeout = ioctl->timeout;
+	}
+#endif
+	else return -EINVAL;
+
+	return EOK;
+}
+
+
 static void queue_wakeup(evqueue_t *queue)
 {
 	request_t *r, *filled = NULL, *empty;
-	int count;
+	int count = 0;
+	event_t *events;
 
 	while (queue != NULL) {
 		empty = NULL;
@@ -485,7 +598,10 @@ static void queue_wakeup(evqueue_t *queue)
 			r = queue->requests;
 			LIST_REMOVE(&queue->requests, r);
 
-			if ((count = _event_read(queue, (event_t *)r->msg.o.data, r->msg.o.size / sizeof(event_t)))) {
+			if (queue_unpack(&r->msg, NULL, NULL, &events, &count, NULL) < 0)
+				continue;
+
+			if ((count = _event_read(queue, events, count))) {
 				LIST_ADD(&filled, r);
 				r->msg.o.io.err = count;
 			}
@@ -508,61 +624,72 @@ static void queue_wakeup(evqueue_t *queue)
 }
 
 
-static request_t *queue_open_op(object_t *o, request_t *r)
-{
-	/* TODO */
-	return r;
-}
-
-
 static request_t *queue_close_op(object_t *o, request_t *r)
 {
-	/* TODO */
+	evqueue_t *queue = evqueue(o);
+	request_t *p;
+	eventry_t *entry;
+
+	mutexLock(queue->lock);
+	while ((p = queue->requests) != NULL) {
+		LIST_REMOVE(&queue->requests, p);
+		rq_wakeup(p, -EBADF);
+	}
+
+	while (queue->notes != NULL) {
+		entry_ref(entry = queue->notes->entry);
+		mutexLock(entry->lock);
+		_note_remove(queue, queue->notes);
+		_entry_recalculate(entry);
+		mutexUnlock(entry->lock);
+		entry_put(entry);
+	}
+	mutexUnlock(queue->lock);
+
+	object_destroy(o);
 	return r;
 }
 
 
-static request_t *_queue_readwrite(evqueue_t *queue, request_t *r)
+static int _queue_readwrite(evqueue_t *queue, evsub_t *subs, int subcnt, event_t *events, int evcnt)
 {
-	int count;
-	evsub_t *subs;
+	if (subcnt)
+		_event_subscribe(queue, subs, subcnt);
 
-	if (r->msg.i.size) {
-		if (r->msg.i.size % sizeof(evsub_t)) {
-			r->msg.o.io.err = -EINVAL;
-			return r;
-		}
-
-		subs = (evsub_t *)r->msg.i.data;
-		count = r->msg.i.size / sizeof(evsub_t);
-		_event_subscribe(queue, subs, count);
+	if (evcnt) {
+		_queue_poll(queue);
+		evcnt = _event_read(queue, events, evcnt);
 	}
 
-	if (r->msg.o.size) {
-		if (r->msg.o.size % sizeof(event_t)) {
-			r->msg.o.io.err = -EINVAL;
-			return r;
-		}
-
-		count = _event_read(queue, (event_t *)r->msg.o.data, r->msg.o.size / sizeof(event_t));
-		if (!count) {
-			LIST_ADD(&queue->requests, r);
-			r = NULL;
-		}
-		else {
-			r->msg.o.io.err = count;
-		}
-	}
-
-	return r;
+	return evcnt;
 }
 
 
 static request_t *queue_write_op(object_t *o, request_t *r)
 {
 	evqueue_t *queue = evqueue(o);
+	int count = 0;
+
+	event_t *events;
+	evsub_t *subs;
+	int evcnt, subcnt, timeout;
+
+	if (queue_unpack(&r->msg, &subs, &subcnt, &events, &evcnt, &timeout) < 0) {
+		r->msg.o.io.err = -EINVAL;
+		return r;
+	}
+
 	mutexLock(queue->lock);
-	r = _queue_readwrite(queue, r);
+	if (!(count = _queue_readwrite(queue, subs, subcnt, events, evcnt)) && evcnt && timeout) {
+		if (timeout > 0)
+			rq_timeout(r, timeout);
+
+		LIST_ADD(&queue->requests, r);
+		r = NULL;
+	}
+	else {
+		r->msg.o.io.err = count;
+	}
 	mutexUnlock(queue->lock);
 	return r;
 }
@@ -570,11 +697,44 @@ static request_t *queue_write_op(object_t *o, request_t *r)
 
 static request_t *queue_read_op(object_t *o, request_t *r)
 {
+	return queue_write_op(o, r);
+}
+
+
+#if 0
+static request_t *queue_devctl_op(object_t *o, request_t *r)
+{
 	evqueue_t *queue = evqueue(o);
+
+	event_t *events = NULL;
+	evsub_t *subs = NULL;
+	int count, evcnt = 0, subcnt = 0, timeout = 0;
+
+	queue_unpack(&r->msg, &subs, &subcnt, &events, &evcnt, &timeout);
+
 	mutexLock(queue->lock);
-	r = _queue_readwrite(queue, r);
+	if (!(count = _queue_readwrite(queue, subs, subcnt, events, evcnt))) {
+		LIST_ADD(&queue->requests, r);
+		rq_timeout(r, timeout);
+		r = NULL;
+	}
+	else {
+		rq_setResponse(r, count);
+	}
 	mutexUnlock(queue->lock);
+
 	return r;
+}
+#endif
+
+
+static void queue_timeout_op(request_t *r)
+{
+	evqueue_t *queue = evqueue(r->object);
+
+	mutexLock(queue->lock);
+	LIST_REMOVE(&queue->requests, r);
+	mutexUnlock(queue->lock);
 }
 
 
@@ -645,7 +805,6 @@ static request_t *qmx_open_op(object_t *o, request_t *r)
 
 	if ((queue = queue_create()) == NULL)
 		r->msg.o.io.err = -ENOMEM;
-
 	else
 		r->msg.o.io.err = object_id(&queue->object);
 
@@ -662,8 +821,10 @@ int event_init(void)
 	object_create(&event_common.sink, &sink_ops);
 	object_create(&event_common.qmx, &qmx_ops);
 
-	object_link(&event_common.sink, "/dev/events");
-	object_link(&event_common.qmx, "/dev/evqmx");
+	mkdir("/dev/event", 0555);
+
+	object_link(&event_common.sink, "/dev/event/sink");
+	object_link(&event_common.qmx, "/dev/event/queue");
 
 	return EOK;
 }

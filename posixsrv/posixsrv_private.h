@@ -24,7 +24,10 @@
 
 typedef struct request_t {
 	struct request_t *next, *prev;
+	rbnode_t linkage;
 
+	struct _object_t *object;
+	time_t wakeup;
 	unsigned int rid;
 	msg_t msg;
 } request_t;
@@ -46,8 +49,9 @@ typedef struct {
 				*create, *destroy, *setattr, *getattr,
 				*lookup, *link, *unlink, *readdir;
 			void (*release)(struct _object_t *);
+			void (*timeout)(request_t *);
 		};
-		handler_t *handlers[mtCount + 1];
+		handler_t *handlers[mtCount + 2];
 	};
 } operations_t;
 
@@ -72,6 +76,12 @@ static inline void *rq_buf(request_t *r)
 
 
 extern void rq_wakeup(request_t *r, int retval);
+
+
+extern void rq_setResponse(request_t *r, int retval);
+
+
+extern void rq_timeout(request_t *r, int timeout);
 
 
 extern int rq_id(request_t *r);

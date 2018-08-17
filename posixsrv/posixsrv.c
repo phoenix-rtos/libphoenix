@@ -43,7 +43,9 @@ struct {
 	unsigned port;
 
 	handle_t lock;
+	handle_t cond;
 	idtree_t objects;
+	rbtree_t timeout;
 
 	struct {
 		int id;
@@ -156,11 +158,81 @@ unsigned srv_port(void)
 }
 
 
+static int rq_cmp(rbnode_t *n1, rbnode_t *n2)
+{
+	request_t *r1, *r2;
+	r1 = lib_treeof(request_t, linkage, n1);
+	r2 = lib_treeof(request_t, linkage, n2);
+
+	if (r2->wakeup > r1->wakeup)
+		return 1;
+	else if (r2->wakeup < r1->wakeup)
+		return -1;
+	return 0;
+}
+
+
+void rq_timeout(request_t *r, int ms)
+{
+	gettime(&r->wakeup, NULL);
+	r->wakeup += 1000 * ms;
+
+	mutexLock(posixsrv_common.lock);
+	lib_rbInsert(&posixsrv_common.timeout, &r->linkage);
+	mutexUnlock(posixsrv_common.lock);
+	condSignal(posixsrv_common.cond);
+}
+
+
+void rq_setResponse(request_t *r, int response)
+{
+	switch (r->msg.type) {
+	case mtDevCtl:
+		ioctl_setResponse(&r->msg, 0, response, NULL);
+		break;
+	default:
+		/* TODO: other cases */
+		r->msg.o.io.err = response;
+		break;
+	}
+}
+
+
 void rq_wakeup(request_t *r, int retval)
 {
-	r->msg.o.io.err = retval;
+	rq_setResponse(r, retval);
 	msgRespond(posixsrv_common.port, &r->msg, r->rid);
 	free(r);
+}
+
+
+static void rq_timeoutthr(void *arg)
+{
+	request_t *r;
+	time_t now, timeout;
+
+	mutexLock(posixsrv_common.lock);
+
+	for (;;) {
+		if ((r = lib_treeof(request_t, linkage, lib_rbMinimum(posixsrv_common.timeout.root))) != NULL) {
+			gettime(&now, NULL);
+
+			if (r->wakeup <= now) {
+				lib_rbRemove(&posixsrv_common.timeout, &r->linkage);
+				if (r->object->operations->timeout != NULL)
+					r->object->operations->timeout(r);
+				rq_wakeup(r, -ETIME);
+				continue;
+			}
+
+			timeout = r->wakeup - now;
+		}
+		else {
+			timeout = 0;
+		}
+
+		condWait(posixsrv_common.cond, posixsrv_common.lock, timeout);
+	}
 }
 
 
@@ -241,6 +313,8 @@ void posixsrvthr(void *arg)
 			continue;
 		}
 
+		r->object = o;
+
 		if ((r = o->operations->handlers[r->msg.type](o, r)) != NULL)
 			msgRespond(posixsrv_common.port, &r->msg, r->rid);
 
@@ -255,7 +329,9 @@ int main(int argc, char **argv)
 	int i;
 
 	idtree_init(&posixsrv_common.objects);
+	lib_rbInit(&posixsrv_common.timeout, rq_cmp, NULL);
 	mutexCreate(&posixsrv_common.lock);
+	condCreate(&posixsrv_common.cond);
 
 	while (lookup("/", NULL, &fs) < 0)
 		usleep(5000);
@@ -281,6 +357,7 @@ int main(int argc, char **argv)
 	for (i = 0; i < sizeof(posixsrv_common.stacks) / sizeof(posixsrv_common.stacks[0]); ++i)
 		beginthread(posixsrvthr, 4, posixsrv_common.stacks[i], sizeof(posixsrv_common.stacks[i]), NULL);
 
-	posixsrvthr(NULL);
+
+	rq_timeoutthr(NULL);
 	return 0;
 }

@@ -38,4 +38,12 @@ typedef struct _event_t {
 } event_t;
 
 
+typedef struct _event_ioctl_t {
+	int eventcnt;
+	int subcnt;
+	int timeout;
+	evsub_t subs[];
+} event_ioctl_t;
+
+
 #endif
