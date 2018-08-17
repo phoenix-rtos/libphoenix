@@ -119,7 +119,7 @@ void vsyslog(int priority, const char *format, va_list ap)
 
 	if (syslog_common.logopt & LOG_PERROR) {
 		syslog_common.buf[len] = '\n';
-		write(STDERR_FILENO, syslog_common.buf, len);
+		write(STDERR_FILENO, syslog_common.buf + prefix_size, len - prefix_size);
 	}
 }
 
