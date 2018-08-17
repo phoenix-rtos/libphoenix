@@ -444,7 +444,7 @@ static int psh_ps(char *arg)
 	printf("%9s %5s %4s  %5s %5s %6s  %s\n", "PID", "TTY", "PRI", "STATE", "%CPU", "TIME", "CMD");
 
 	for (i = 0; i < tcnt; ++i) {
-		printf("%9x %5s %4d  %5s %3d.%d % 3u:%02u  %-32s\n", info[i].pid, "-", info[i].priority, info[i].state ? "sleep" : "ready",
+		printf("%9x %5s %4d  %5s %3d.%d %3u:%02u  %-32s\n", info[i].pid, "-", info[i].priority, info[i].state ? "sleep" : "ready",
 			info[i].load / 10, info[i].load % 10,
 			info[i].cpu_time / 60, info[i].cpu_time % 60,
 			info[i].name);
