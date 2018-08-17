@@ -105,6 +105,9 @@ extern void object_destroy(object_t *o);
 extern object_t *object_get(int id);
 
 
+extern void object_ref(object_t *o);
+
+
 extern void object_put(object_t *o);
 
 

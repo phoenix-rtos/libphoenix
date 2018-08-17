@@ -140,8 +140,10 @@ static int event_cmp(rbnode_t *n1, rbnode_t *n2)
 static void queue_add(evqueue_t *queue, evqueue_t **wakeq)
 {
 	mutexLock(event_common.lock);
-	if (queue->next == NULL)
+	if (queue->next == NULL) {
+		object_ref(&queue->object);
 		LIST_ADD(wakeq, queue);
+	}
 	mutexUnlock(event_common.lock);
 }
 
@@ -315,6 +317,8 @@ static evnote_t *_note_new(evqueue_t *queue, eventry_t *entry)
 		return NULL;
 
 	note->entry = entry;
+
+	object_ref(&queue->object);
 	note->queue = queue;
 
 	LIST_ADD(&entry->notes, note);
@@ -324,12 +328,13 @@ static evnote_t *_note_new(evqueue_t *queue, eventry_t *entry)
 }
 
 
-static void _note_remove(evqueue_t *queue, evnote_t *note)
+static void _note_remove(evnote_t *note)
 {
 	LIST_REMOVE(&note->entry->notes, note);
 	entry_put(note->entry);
+	object_put(&note->queue->object);
 
-	LIST_REMOVE_EX(&queue->notes, note, queue_next, queue_prev);
+	LIST_REMOVE_EX(&note->queue->notes, note, queue_next, queue_prev);
 	free(note);
 }
 
@@ -414,7 +419,7 @@ static int _event_subscribe(evqueue_t *queue, evsub_t *sub, int count)
 		}
 
 		if (!note->mask)
-			_note_remove(queue, note);
+			_note_remove(note);
 
 		mutexUnlock(entry->lock);
 		entry_put(entry);
@@ -589,8 +594,9 @@ static void queue_wakeup(evqueue_t *queue)
 	request_t *r, *filled = NULL, *empty;
 	int count = 0;
 	event_t *events;
+	evqueue_t *q;
 
-	while (queue != NULL) {
+	while ((q = queue) != NULL) {
 		empty = NULL;
 
 		mutexLock(queue->lock);
@@ -615,6 +621,8 @@ static void queue_wakeup(evqueue_t *queue)
 		mutexLock(event_common.lock);
 		LIST_REMOVE(&queue, queue);
 		mutexUnlock(event_common.lock);
+
+		object_put(&q->object);
 	}
 
 	while ((r = filled) != NULL) {
@@ -639,7 +647,7 @@ static request_t *queue_close_op(object_t *o, request_t *r)
 	while (queue->notes != NULL) {
 		entry_ref(entry = queue->notes->entry);
 		mutexLock(entry->lock);
-		_note_remove(queue, queue->notes);
+		_note_remove(queue->notes);
 		_entry_recalculate(entry);
 		mutexUnlock(entry->lock);
 		entry_put(entry);

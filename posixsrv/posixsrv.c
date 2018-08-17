@@ -97,6 +97,14 @@ object_t *object_get(int id)
 }
 
 
+void object_ref(object_t *o)
+{
+	while (mutexLock(posixsrv_common.lock) < 0);
+	o->refs++;
+	mutexUnlock(posixsrv_common.lock);
+}
+
+
 void object_put(object_t *o)
 {
 	while (mutexLock(posixsrv_common.lock) < 0);
