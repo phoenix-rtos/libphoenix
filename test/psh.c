@@ -71,8 +71,8 @@ static int psh_readln(char *line, int size)
 	for (;;) {
 		read(0, &c, 1);
 
-		if (c == 0)
-			break;
+		if (c == 0) /* EOF - exit */
+			exit(EXIT_SUCCESS);
 
 		if (!psh_isAcceptable(c))
 			continue;
