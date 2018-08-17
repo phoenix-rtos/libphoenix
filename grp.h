@@ -26,5 +26,8 @@ struct group {
 	char   *gr_passwd;
 };
 
+struct group *getgrnam(const char *name);
+
+int initgroups(const char *user, gid_t group);
 
 #endif

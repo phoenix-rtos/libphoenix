@@ -199,6 +199,12 @@ extern pid_t setsid(void);
 extern pid_t getsid(pid_t pid);
 
 
+extern int issetugid(void);
+
+
+extern char *getlogin(void);
+
+
 extern char *optarg;
 
 

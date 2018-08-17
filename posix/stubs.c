@@ -21,6 +21,7 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <stdarg.h>
+#include <grp.h>
 
 
 char* setlocale(int category, const char* locale)
@@ -172,4 +173,15 @@ unsigned int minor(int dev)
 int atexit(void (*function)(void))
 {
 	return -1;
+}
+
+struct group *getgrnam(const char *name)
+{
+	return NULL;
+}
+
+
+int initgroups(const char *user, gid_t group)
+{
+	return 0;
 }

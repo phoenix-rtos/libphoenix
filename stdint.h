@@ -29,6 +29,8 @@ typedef s16 int16_t;
 typedef s32 int32_t;
 typedef s64 int64_t;
 
+typedef uint64_t uintmax_t;
+typedef int64_t intmax_t;
 
 #ifndef INT64_MAX
 #define INT64_MAX 0x7fffffffffffffffll
@@ -40,6 +42,12 @@ typedef s64 int64_t;
 #endif
 
 
+#ifndef UINT32_MAX
 #define UINT32_MAX 0xffffffff
+#endif
+
+#ifndef UINT16_MAX
+#define UINT16_MAX 0xffff
+#endif
 
 #endif

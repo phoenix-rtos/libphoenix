@@ -65,27 +65,42 @@ typedef void (*sighandler_t)(int);
 enum { SIG_BLOCK, SIG_SETMASK, SIG_UNBLOCK };
 
 
-enum {
-	SA_NOCLDSTOP = 1 << 0,
-	SA_NOCLDWAIT = 1 << 1,
-	SA_NODEFER = 1 << 2,
-	SA_ONSTACK = 1 << 3,
-	SA_RESETHAND = 1 << 4,
-	SA_RESTART = 1 << 5,
-	SA_RESTORER = 1 << 6,
-	SA_SIGINFO = 1 << 7,
-};
-
+#define	SA_NOCLDSTOP	1 << 0
+#define SA_NOCLDWAIT	1 << 1
+#define SA_NODEFER		1 << 2
+#define SA_ONSTACK		1 << 3
+#define	SA_RESETHAND	1 << 4
+#define	SA_RESTART		1 << 5
+#define	SA_RESTORER		1 << 6
+#define SA_SIGINFO		1 << 7
 
 
 typedef int sigset_t;
 typedef int sig_atomic_t;
 
 
+union sigval {
+	int sival_int;
+	void *sival_ptr;
+};
+
+
+typedef struct {
+	int si_signo;
+	int si_code;
+	pid_t si_pid;
+	uid_t si_uid;
+	void *si_addr;
+	int si_status;
+	union sigval si_value;
+} siginfo_t;
+
+
 struct sigaction {
 	void (*sa_handler) (int);
 	sigset_t sa_mask;
 	int sa_flags;
+	void (*sa_sigaction) (int, siginfo_t *, void *);
 };
 
 

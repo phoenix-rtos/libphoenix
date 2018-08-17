@@ -340,3 +340,14 @@ size_t strftime(char *restrict s, size_t maxsize, const char *restrict format, c
 	/* Length of the result string would exceed max size */
 	return 0;
 }
+
+
+clock_t clock(void)
+{
+	return 0;
+}
+
+char *strptime(const char *restrict buf, const char *restrict format, struct tm *restrict tm)
+{
+	return NULL;
+}

@@ -5,7 +5,7 @@
 # Author: Pawel Pisarczyk
 #
 
-ARCH_SRCS := strtoul.c strtoull.c malloc_dl.c rand.c bsearch.c exit.c qsort.c env.c pty.c
+ARCH_SRCS := strtod.c strtoul.c strtoull.c malloc_dl.c rand.c bsearch.c exit.c qsort.c env.c pty.c abort.c
 
 # include after all dependencies are set
 include $(TOPDIR)/Makefile.rules

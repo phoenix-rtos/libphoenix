@@ -405,3 +405,9 @@ ssize_t getline(char **lineptr, size_t *n, FILE *stream)
 
 	return linesz - 1;
 }
+
+
+int feof(FILE *stream)
+{
+	return 0;
+}

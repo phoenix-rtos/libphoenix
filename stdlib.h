@@ -216,4 +216,6 @@ extern int unlockpt(int fd);
 char *canonicalize_file_name(const char *path);
 
 
+double strtod(const char *restrict nptr, char **restrict endptr);
+
 #endif

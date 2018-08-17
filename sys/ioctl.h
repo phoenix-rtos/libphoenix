@@ -46,6 +46,9 @@
 #define TIOCSPTLCK	_IOW('T', 0x31, int)
 
 
+#define	FIONREAD		_IOR('f', 127, int)
+
+
 int ioctl(int fd, unsigned long cmd, ... );
 
 

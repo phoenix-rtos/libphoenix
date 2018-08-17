@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * tcp.h
+ * abort.c
  *
  * Copyright 2018 Phoenix Systems
  * Author: Kamil Amanowicz
@@ -12,10 +12,12 @@
  *
  * %LICENSE%
  */
+#include <stdlib.h>
+#include <signal.h>
 
-#ifndef _LIBPHOENIX_NETINET_TCP_H_
-#define _LIBPHOENIX_NETINET_TCP_H_
-
-#define TCP_NODELAY 1
-
-#endif
+void abort(void)
+{
+	raise(SIGABRT);
+	while(1)
+		exit(EXIT_FAILURE);
+}

@@ -95,4 +95,9 @@ extern time_t time(time_t *tp);
 extern size_t strftime(char *restrict s, size_t maxsize, const char *restrict format, const struct tm *restrict timeptr);
 
 
+extern clock_t clock(void);
+
+
+extern char *strptime(const char *restrict buf, const char *restrict format, struct tm *restrict tm);
+
 #endif

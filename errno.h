@@ -50,6 +50,7 @@ extern int errno;
 
 #define ENOLCK          116
 #define ENOTRECOVERABLE 131
+#define ENOTSUP			134
 
 
 static inline int set_errno(int x)

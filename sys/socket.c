@@ -38,6 +38,8 @@ WRAP_ERRNO_DEF(int, shutdown, (int socket, int how), (socket, how))
 WRAP_ERRNO_DEF(int, setsockopt, (int socket, int level, int optname, const void *optval, socklen_t optlen), (socket, level, optname, optval, optlen))
 
 
+int h_errno;
+
 static int socksrvcall(msg_t *msg)
 {
 	oid_t oid;
@@ -157,6 +159,18 @@ struct servent *getservbyname(const char *name, const char *proto)
 
 
 struct servent *getservbyport(int port, const char *proto)
+{
+	return NULL;
+}
+
+
+struct hostent *gethostbyname(const char *name)
+{
+	return NULL;
+}
+
+
+struct hostent *gethostbyaddr(const void *addr, socklen_t len, int type)
 {
 	return NULL;
 }
@@ -325,4 +339,10 @@ out_overflow:
 void freeaddrinfo(struct addrinfo *res)
 {
 	free(res);
+}
+
+
+int accept4(int socket, struct sockaddr *address, socklen_t *address_len, int flags)
+{
+	return 0;
 }

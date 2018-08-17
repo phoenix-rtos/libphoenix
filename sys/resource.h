@@ -22,6 +22,8 @@
 #include <errno.h>
 
 #define RLIMIT_CORE 0
+#define RLIMIT_STACK 4096
+#define RLIMIT_NOFILE 65536
 
 typedef int rlim_t;
 

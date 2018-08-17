@@ -39,3 +39,8 @@ int setgroups(size_t size, const gid_t *list)
 {
 	return 0;
 }
+
+int issetugid(void)
+{
+	return 0;
+}

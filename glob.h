@@ -75,10 +75,13 @@ typedef struct {
 #define	GLOB_TILDE	0x0800	/* Expand tilde names from the passwd file. */
 #define	GLOB_LIMIT	0x1000	/* limit number of returned paths */
 
+/* Error values returned by glob(3) */
+#define	GLOB_NOSPACE	(-1)	/* Malloc call failed. */
+#define	GLOB_ABORTED	(-2)	/* Unignored error. */
+#define	GLOB_NOMATCH	(-3)	/* No match and GLOB_NOCHECK was not set. */
+
 /* backwards compatibility, this is the old name for this option */
 #define GLOB_MAXPATH	GLOB_LIMIT
-
-#define	GLOB_NOSPACE	(-1)	/* Malloc call failed. */
 #define	GLOB_ABEND	(-2)	/* Unignored error. */
 //#define GLOB_NOMATCH (-3)
 

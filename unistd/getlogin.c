@@ -3,19 +3,19 @@
  *
  * libphoenix
  *
- * locale.c
+ * unistd (POSIX routines for user operations)
  *
  * Copyright 2018 Phoenix Systems
- * Author: Michał Mirosław
+ * Author: Kamil Amanowicz
  *
  * This file is part of Phoenix-RTOS.
  *
  * %LICENSE%
  */
-#include "locale.h"
+#include <unistd.h>
 
-char *_PathLocale;
 
-const struct lconv _fixed_locale = {
-	"."
-};
+char *getlogin(void)
+{
+	return NULL;
+}
