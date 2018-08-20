@@ -162,7 +162,7 @@ int kill(pid_t pid, int sig)
 int killpg(pid_t pgrp, int sig)
 {
 	if (!pgrp)
-		pgrp = getpgrp();
+		pgrp = -getpgrp();
 	else
 		pgrp = -pgrp;
 
