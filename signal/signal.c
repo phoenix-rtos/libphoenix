@@ -38,7 +38,7 @@ static const int _signals_phx2posix[] = { 0, SIGKILL, SIGSEGV, SIGILL, SIGFPE, S
 	SIGTTIN, SIGTTOU, SIGIO, SIGXCPU, SIGXFSZ, SIGVTALRM, SIGPROF, SIGWINCH, SIGINFO, SIGUSR1, SIGUSR2 };
 
 
-static const int _signals_posix2phx[] = { 0, 5, 6, 7, 3, 8, 9, 10, 11, 4, 1, 12, 2, 13, 14, 15, 16, 17, 18, 19,
+static const int _signals_posix2phx[] = { 0, 4, 5, 6, 3, 7, 8, 9, 10, 1, 11, 2, 12, 13, 14, 15, 16, 17, 18, 19,
 	20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31 };
 
 
