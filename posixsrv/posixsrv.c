@@ -52,7 +52,7 @@ struct {
 		object_t *o;
 	} cache;
 
-	char stacks[8][0x1000] __attribute__ ((aligned(8)));
+	char stacks[4][0x1000] __attribute__ ((aligned(8)));
 } posixsrv_common;
 
 
@@ -159,7 +159,6 @@ int object_link(object_t *o, char *path)
 }
 
 
-
 unsigned srv_port(void)
 {
 	return posixsrv_common.port;
@@ -229,7 +228,8 @@ static void rq_timeoutthr(void *arg)
 				lib_rbRemove(&posixsrv_common.timeout, &r->linkage);
 				if (r->object->operations->timeout != NULL)
 					r->object->operations->timeout(r);
-				rq_wakeup(r, -ETIME);
+				else
+					rq_wakeup(r, -ETIME);
 				continue;
 			}
 

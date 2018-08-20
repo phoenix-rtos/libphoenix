@@ -18,6 +18,7 @@
 #include <termios.h>
 #include <posix/utils.h>
 #include "posix/idtree.h"
+#include <libtty.h>
 
 #define PIPE_BUFSZ 0x1000
 
@@ -30,6 +31,11 @@ typedef struct request_t {
 	time_t wakeup;
 	unsigned int rid;
 	msg_t msg;
+
+	/* Subsystem specific per-request state */
+	union {
+		libtty_read_state_t pts_read;
+	};
 } request_t;
 
 
