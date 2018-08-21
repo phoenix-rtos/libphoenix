@@ -26,9 +26,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
+#include <posixsrv.h>
 
 #include "posix/utils.h"
-#include "posixsrv/posixsrv.h"
 
 
 extern int sys_open(const char *filename, int oflag, ...);

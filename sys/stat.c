@@ -21,9 +21,9 @@
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <posixsrv.h>
 
 #include "posix/utils.h"
-#include "posixsrv/posixsrv.h"
 
 
 int stat(const char *path, struct stat *buf)

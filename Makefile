@@ -27,7 +27,8 @@ LIB := $(BUILD_DIR)/$(LIBNAME)
 
 include Makefile.targets
 
-CFLAGS += -I"$(TOPDIR)"
+POSIXSRV = $(TOPDIR)/../phoenix-rtos-posixsrv
+CFLAGS += -I"$(TOPDIR)" -I"$(POSIXSRV)/include"
 CFLAGS += -DVERSION=\"$(VERSION)\"
 CFLAGS += -fdata-sections -ffunction-sections
 LDFLAGS += --gc-sections
@@ -52,7 +53,7 @@ endif
 export TOPDIR BUILD_DIR SIL TARGET LIB CC CFLAGS MKDEP MKDEPFLAGS AR ARFLAGS LD LDFLAGS GCCLIB OBJDUMP STRIP HEADERS_INSTALL_DIR
 
 
-all: subsystems $(OBJS) $(LIB) tests posixsrv
+all: subsystems $(OBJS) $(LIB) tests
 
 lib: $(LIB)
 
@@ -80,12 +81,8 @@ $(LIB): $(ARCHS) $(OBJS)
 
 tests: test
 
+
 test: $(LIB) .FORCE
-	@echo "\033[1;32mCOMPILE $@\033[0m";\
-	$(MAKE) -C "$@"
-
-
-posixsrv: $(LIB) .FORCE
 	@echo "\033[1;32mCOMPILE $@\033[0m";\
 	$(MAKE) -C "$@"
 
