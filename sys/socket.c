@@ -25,6 +25,7 @@
 
 
 WRAP_ERRNO_DEF(int, accept, (int socket, struct sockaddr *address, socklen_t *address_len), (socket, address, address_len))
+WRAP_ERRNO_DEF(int, accept4, (int socket, struct sockaddr *address, socklen_t *address_len, int flags), (socket, address, address_len, flags))
 WRAP_ERRNO_DEF(int, bind, (int socket, const struct sockaddr *address, socklen_t address_len), (socket, address, address_len))
 WRAP_ERRNO_DEF(int, connect, (int socket, const struct sockaddr *address, socklen_t address_len), (socket, address, address_len))
 WRAP_ERRNO_DEF(int, getpeername, (int socket, struct sockaddr *address, socklen_t *address_len), (socket, address, address_len))
@@ -339,10 +340,4 @@ out_overflow:
 void freeaddrinfo(struct addrinfo *res)
 {
 	free(res);
-}
-
-
-int accept4(int socket, struct sockaddr *address, socklen_t *address_len, int flags)
-{
-	return 0;
 }
