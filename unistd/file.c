@@ -194,7 +194,7 @@ int create_dev(oid_t *oid, const char *path)
 	memcpy(&msg.i.create.dev, oid, sizeof(*oid));
 
 	msg.i.create.type = otDev;
-	msg.i.create.mode = 0;
+	msg.i.create.mode = S_IFCHR | 0666;
 
 	msg.i.data = name;
 	msg.i.size = strlen(name) + 1;
