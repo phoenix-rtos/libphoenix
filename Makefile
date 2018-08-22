@@ -28,7 +28,7 @@ LIB := $(BUILD_DIR)/$(LIBNAME)
 include Makefile.targets
 
 POSIXSRV = $(TOPDIR)/../phoenix-rtos-posixsrv
-CFLAGS += -I"$(TOPDIR)" -I"$(POSIXSRV)/include"
+CFLAGS += -I"$(TOPDIR)"
 CFLAGS += -DVERSION=\"$(VERSION)\"
 CFLAGS += -fdata-sections -ffunction-sections
 LDFLAGS += --gc-sections

@@ -26,7 +26,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
-#include <posixsrv.h>
 
 #include "posix/utils.h"
 

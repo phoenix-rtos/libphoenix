@@ -21,7 +21,6 @@
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <posixsrv.h>
 
 #include "posix/utils.h"
 

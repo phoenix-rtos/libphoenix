@@ -14,8 +14,8 @@
  */
 
 #include <sys/msg.h>
+#include <sys/events.h>
 #include <errno.h>
-#include <posixsrv.h>
 
 
 static struct {

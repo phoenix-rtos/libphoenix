@@ -3,8 +3,6 @@
 #include <sys/msg.h>
 #include <sys/file.h>
 
-#include <posixsrv.h>
-
 
 char *ptsname(int fd)
 {
