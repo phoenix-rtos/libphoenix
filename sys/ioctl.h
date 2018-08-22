@@ -54,10 +54,14 @@ int ioctl(int fd, unsigned long cmd, ... );
 
 const void * ioctl_unpack(const msg_t *msg, unsigned long *request, id_t *id);
 
+const void * ioctl_unpackEx(const msg_t *msg, unsigned long *request, id_t *id, void** response_buf);
+
 pid_t ioctl_getSenderPid(const msg_t *msg);
 
 
 void ioctl_setResponse(msg_t *msg, unsigned long request, int err, const void *data);
+
+void ioctl_setResponseErr(msg_t *msg, unsigned long request, int err);
 
 
 #endif

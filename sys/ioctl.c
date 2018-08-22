@@ -22,6 +22,11 @@
 
 const void * ioctl_unpack(const msg_t *msg, unsigned long *request, id_t *id)
 {
+	return ioctl_unpackEx(msg, request, id, NULL);
+}
+
+const void * ioctl_unpackEx(const msg_t *msg, unsigned long *request, id_t *id, void** response_buf)
+{
 	size_t size;
 	const void *data = NULL;
 	ioctl_in_t *ioctl = (ioctl_in_t *)msg->i.raw;
@@ -43,6 +48,17 @@ const void * ioctl_unpack(const msg_t *msg, unsigned long *request, id_t *id)
 		/* the data is passed by value instead of pointer */
 		size = min(size, sizeof(void*));
 		memcpy(&data, ioctl->data, size);
+	}
+
+	if (response_buf && ioctl->request & IOC_OUT) {
+		ioctl_out_t *ioctl_out = (ioctl_out_t *)msg->o.raw;
+		if (size <= (sizeof(msg->o.raw) - sizeof(ioctl_out_t)))
+			*response_buf = ioctl_out->data;
+		else
+			*response_buf = msg->o.data;
+
+		if (ioctl->request & IOC_IN)
+			memcpy(*response_buf, data, size);
 	}
 
 	return data;
@@ -70,4 +86,10 @@ void ioctl_setResponse(msg_t *msg, unsigned long request, int err, const void *d
 
 		memcpy(dst, data, size);
 	}
+}
+
+void ioctl_setResponseErr(msg_t *msg, unsigned long request, int err)
+{
+	ioctl_out_t *ioctl = (ioctl_out_t *)msg->o.raw;
+	ioctl->err = err;
 }
