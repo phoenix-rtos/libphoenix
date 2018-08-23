@@ -14,7 +14,6 @@ ARCH_SRCS = string.c strdup.c strerror.c fnmatch.c glob.c
 all: $(ARCH)
 
 INCS := errno.str.inc errno.tab.inc gaierr.str.inc gaierr.tab.inc
-$(patsubst $(TOPDIR)/%,$(BUILD_DIR)/%,$(abspath strerror.o)): $(patsubst $(TOPDIR)/%,$(BUILD_DIR)/%,$(abspath $(INCS)))
 
 
 ERR_EXTRACT := sed -En -e '/^\s*\#\s*define\s+E\w+\s+[[:digit:]]+/{s/^[^d]*define\s+(\w+)\s+([[:digit:]]+).*/\2\t\1/;p;d}' \
@@ -39,3 +38,5 @@ ERR_EXTRACT := sed -En -e '/^\s*\#\s*define\s+E\w+\s+[[:digit:]]+/{s/^[^d]*defin
 
 # include after all dependencies are set
 include $(TOPDIR)/Makefile.rules
+
+$(PREFIX_O)strerror.o: $(patsubst %,$(PREFIX_O)%,$(INCS))

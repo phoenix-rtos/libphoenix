@@ -6,8 +6,8 @@
 #
 
 # install tests in separate directory
-PREFIX_PROG := $(BUILD_DIR)/test/
-PREFIX_PROG_STRIPPED := $(BUILD_DIR)/test.stripped/
+PREFIX_PROG := $(BUILD_PREFIX)/test/
+PREFIX_PROG_STRIPPED := $(BUILD_PREFIX)/test.stripped/
 
 PROGS := test_mmap test_malloc test_threads test_str2num test_scanf test_msg test_env test_signals test_condwait psh
 
