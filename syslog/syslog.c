@@ -69,7 +69,7 @@ void openlog(const char *ident, int logopt, int facility)
 
 	syslog_common.logmask = 0;
 	syslog_common.logopt = logopt;
-	syslog_common.facility = facility;
+	syslog_common.facility = (facility > 0) ? facility : LOG_USER;
 }
 
 
@@ -91,15 +91,8 @@ void vsyslog(int priority, const char *format, va_list ap)
 	if ((1 << LOG_PRI(priority)) & syslog_common.logmask)
 		return;
 
-	if (!syslog_common.ident)
-		openlog(NULL, LOG_NDELAY, LOG_USER);
-
-	if (!syslog_common.open) {
-		if ((syslog_common.logfd = open(PATH_LOG, O_RDONLY | O_NONBLOCK)) == -1)
-			return;
-
-		syslog_common.open = 1;
-	}
+	if (!syslog_common.open)
+		openlog(syslog_common.ident, syslog_common.logopt | LOG_NDELAY, syslog_common.facility);
 
 	if (LOG_FAC(priority) == 0)
 		priority |= syslog_common.facility;
@@ -115,9 +108,11 @@ void vsyslog(int priority, const char *format, va_list ap)
 	size_t len = min(prefix_size + cnt, MAX_LOG_SIZE - 1);
 	syslog_common.buf[len] = '\0';
 
-	write(syslog_common.logfd, syslog_common.buf, len);
+	if (syslog_common.open)
+		write(syslog_common.logfd, syslog_common.buf, len);
 
-	if (syslog_common.logopt & LOG_PERROR) {
+	/* output to stderr if logging device is not available */
+	if (syslog_common.logopt & LOG_PERROR || !syslog_common.open) {
 		syslog_common.buf[len] = '\n';
 		write(STDERR_FILENO, syslog_common.buf + prefix_size, len - prefix_size);
 	}
