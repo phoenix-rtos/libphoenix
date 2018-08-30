@@ -18,6 +18,7 @@
 
 #include <arch.h>
 
+#include <alloca.h>
 
 #define RAND_MAX   2147483647
 
