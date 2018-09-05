@@ -43,7 +43,7 @@ enum { F_DUPFD, F_DUPFD_CLOEXEC, F_GETFD, F_SETFD, F_GETFL, F_SETFL,
        F_GETOWN, F_SETOWN, F_GETLK, F_SETLK, F_SETLKW };
 
 
-enum { FD_CLOEXEC = 1 };
+#define FD_CLOEXEC 1
 
 
 enum {
