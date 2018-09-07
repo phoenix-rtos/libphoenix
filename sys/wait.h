@@ -6,7 +6,7 @@
  * sys/wait.h
  *
  * Copyright 2018 Phoenix Systems
- * Author: Jan Sikorski
+ * Author: Jan Sikorski, Krystian Wasik
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -17,6 +17,7 @@
 #define _SYS_WAIT_H_
 
 #include <arch.h>
+#include <sys/types.h>
 
 
 enum {
