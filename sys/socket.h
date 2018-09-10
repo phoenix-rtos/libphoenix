@@ -71,7 +71,7 @@ typedef uint16_t sa_family_t;	// match lwIP size: u8 len + u8 family
 
 struct sockaddr {
 	sa_family_t sa_family;
-	char        sa_data[];
+	char        sa_data[14];   // actual size may be bigger
 
 };
 
@@ -80,6 +80,9 @@ struct sockaddr_storage {
 	sa_family_t ss_family;
 	char        ss_data[128-sizeof(sa_family_t)];
 };
+
+// has to be included after sockaddr is defined
+#include <sys/sockios.h>
 
 
 struct msghdr {

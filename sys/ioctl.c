@@ -19,6 +19,10 @@
 #include <sys/ioctl.h>
 #include <string.h>
 
+/* SIOCGIFCONF handling */
+#include <sys/socket.h>
+#include <sys/sockios.h>
+#include <net/if.h>
 
 const void * ioctl_unpack(const msg_t *msg, unsigned long *request, id_t *id)
 {
@@ -48,6 +52,14 @@ const void * ioctl_unpackEx(const msg_t *msg, unsigned long *request, id_t *id, 
 		/* the data is passed by value instead of pointer */
 		size = min(size, sizeof(void*));
 		memcpy(&data, ioctl->data, size);
+	}
+
+	/* ioctl special case: arg is structure with pointer - has to be custom-packed into message */
+	if (ioctl->request == SIOCGIFCONF) {
+		struct ifconf* ifc = (struct ifconf*) data;
+		if (ifc->ifc_len > 0) {
+			ifc->ifc_buf = msg->o.data;
+		}
 	}
 
 	if (response_buf && ioctl->request & IOC_OUT) {
