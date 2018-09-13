@@ -157,12 +157,6 @@ int symlink(const char *path1, const char *path2)
 }
 
 
-int isatty(int fildes)
-{
-	return fildes == 0 || fildes == 1;
-}
-
-
 int access(const char *path, int amode)
 {
 	return 0;
