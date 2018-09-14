@@ -86,6 +86,12 @@ extern struct tm *localtime_r(const time_t *timep, struct tm *res);
 extern time_t mktime(struct tm *tp);
 
 
+extern time_t timelocal(struct tm *tm);
+
+
+extern time_t timegm(struct tm *tm);
+
+
 extern int clock_gettime(clockid_t clk_id, struct timespec *tp);
 
 

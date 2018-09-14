@@ -249,12 +249,10 @@ char *ctime(const time_t *timep)
 }
 
 
-time_t mktime(struct tm *tp)
+static time_t _mktimeSkel(struct tm *tp)
 {
 	int year = tp->tm_year - 70, leap, i;
 	time_t res, days;
-
-	tzset();
 
 	year += tp->tm_mon / 12;
 	tp->tm_mon %= 12;
@@ -267,9 +265,37 @@ time_t mktime(struct tm *tp)
 
 	res = (days - 1) * 24 * 60 * 60;
 	res += (tp->tm_hour * 60 + tp->tm_min) * 60;
-	res += tp->tm_sec + timezone - (daylight && tp->tm_isdst > 0 ? 3600 : 0);
+	res += tp->tm_sec;
 
+	return res;
+}
+
+
+time_t mktime(struct tm *tp)
+{
+	time_t res;
+
+	tzset();
+
+	res = _mktimeSkel(tp) + timezone - ((daylight && tp->tm_isdst > 0) ? 3600 : 0);
 	localtime_r(&res, tp);
+
+	return res;
+}
+
+
+time_t timelocal(struct tm *tm)
+{
+	return mktime(tm);
+}
+
+
+time_t timegm(struct tm *tm)
+{
+	time_t res;
+
+	res = _mktimeSkel(tm);
+	gmtime_r(&res, tm);
 
 	return res;
 }
