@@ -26,6 +26,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
+#include <termios.h>
 
 #include "posix/utils.h"
 
@@ -266,4 +267,11 @@ int ptsname_r(int fd, char *buf, size_t buflen)
 		return SET_ERRNO(-ERANGE);
 
 	return 0;
+}
+
+
+int isatty(int fd)
+{
+	struct termios t;
+	return tcgetattr(fd, &t) == 0;
 }
