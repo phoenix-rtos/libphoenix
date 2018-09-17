@@ -119,16 +119,6 @@ int setrlimit(int resource, const struct rlimit *rlp)
 	return 0;
 }
 
-void setbuf(FILE *stream, char *buf)
-{
-}
-
-
-int setvbuf(FILE *stream, char *buffer, int mode, size_t size)
-{
-	return 0;
-}
-
 
 struct group *getgrgid(gid_t gid)
 {

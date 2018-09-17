@@ -36,6 +36,7 @@ void _startc(int argc, char **argv, char **env)
 	_malloc_init();
 	_env_init();
 	_signals_init();
+	_file_init();
 
 	exit(main(argc, argv));
 }

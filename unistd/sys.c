@@ -20,6 +20,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <errno.h>
 #include <stdarg.h>
 
@@ -69,6 +70,8 @@ int execve(const char *path, char *const argv[], char *const envp[])
 	int fd, noargs = 0, err;
 	char *interp = exec_buffer, *end, **sb_args = NULL;
 	char *canonical_path;
+
+	fflush(NULL);
 
 	if ((fd = shebang(path)) >= 0) {
 		if (read(fd, exec_buffer, sizeof(exec_buffer)) < 0) {

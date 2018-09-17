@@ -19,28 +19,15 @@
 #include "unistd.h"
 
 typedef struct _printf_ctx_t {
-	char buff[16];
-	int n;
-	size_t total;
+	size_t n;
 } printf_ctx_t;
 
 
 static void printf_feed(void *context, char c)
 {
-	printf_ctx_t* ctx = (printf_ctx_t *)context;
-
-	ctx->buff[ctx->n++] = c;
-	ctx->buff[ctx->n] = '\0';
-
-	if(ctx->n == sizeof(ctx->buff) - 1) {
-
-		if (write(1, ctx->buff, ctx->n) < 0)
-			debug(&ctx->buff[0]);
-
-		ctx->n = 0;
-	}
-
-	ctx->total++;
+	size_t *n = context;
+	*n = *n + 1;
+	putchar(c);
 }
 
 
@@ -59,28 +46,8 @@ int printf(const char *format, ...)
 
 int vprintf(const char *format, va_list arg)
 {
-	printf_ctx_t ctx;
+	size_t n = 0;
+	format_parse(&n, printf_feed, format, arg);
 
-	ctx.n = 0;
-	ctx.total = 0;
-
-	format_parse(&ctx, printf_feed, format, arg);
-
-	if(ctx.n % sizeof(ctx.buff) != 0) {
-		if (write(1, ctx.buff, ctx.n) < 0)
-			debug(ctx.buff);
-	}
-
-	return ctx.total;
-}
-
-
-int putchar(int ci)
-{
-	char c[2] = { ci, 0 };
-
-	if (write(1, c, 1) < 0)
-		debug(c);
-
-	return ci & 0xFF;
+	return n;
 }

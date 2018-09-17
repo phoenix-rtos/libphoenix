@@ -23,24 +23,35 @@
 
 
 #define EOF (-1)
-#define BUFSIZ 8192
+#define BUFSIZ 4096
 #define FILENAME_MAX 128
 
 #define _IOFBF 0x2000
 #define _IOLBF 0x4000
 #define _IONBF 0x8000
 
+#ifndef SEEK_SET
+#define SEEK_SET 0
+#endif
+
+#ifndef SEEK_CUR
+#define SEEK_CUR 1
+#endif
+
+#ifndef SEEK_END
+#define SEEK_END 2
+#endif
+
 typedef offs_t fpos_t;
 
-#define _UBUFSIZ 4
 
 typedef struct _FILE {
 	int fd;
-	char *buff;
-	size_t buffsz;
+	unsigned flags;
 
-	unsigned char ubuf[_UBUFSIZ];
-	size_t ubufsz;
+	size_t bufeof;
+	size_t bufpos;
+	char *buffer;
 } FILE;
 
 
@@ -290,5 +301,8 @@ extern int pclose(FILE *stream);
 
 
 extern ssize_t getline(char **lineptr, size_t *n, FILE *stream);
+
+
+extern void _file_init(void);
 
 #endif
