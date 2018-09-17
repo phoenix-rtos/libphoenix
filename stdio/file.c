@@ -154,6 +154,39 @@ FILE *freopen(const char *pathname, const char *mode, FILE *stream)
 }
 
 
+static int full_read(int fd, void *ptr, size_t size)
+{
+	int err;
+	int total = 0;
+
+	while (size) {
+		if ((err = read(fd, ptr, size)) < 0)
+			return -1;
+		else if (!err)
+			return total;
+		ptr += err;
+		total += err;
+		size -= err;
+	}
+
+	return size;
+}
+
+
+static int full_write(int fd, const void *ptr, size_t size)
+{
+	int err;
+	while (size) {
+		if ((err = write(fd, ptr, size)) < 0)
+			return -1;
+		ptr += err;
+		size -= err;
+	}
+
+	return size;
+}
+
+
 size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
 	int err;
@@ -165,7 +198,7 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
 
 	if (stream->buffer == NULL) {
 		/* unbuffered read */
-		if ((err = read(stream->fd, ptr, readsz)) < 0)
+		if ((err = full_read(stream->fd, ptr, readsz)) < 0)
 			return 0;
 
 		return err / size;
@@ -206,10 +239,10 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
 	}
 
 	/* read remainder directly into ptr */
-	if ((err = read(stream->fd, ptr, readsz)) != -1) {
+	if ((err = full_read(stream->fd, ptr, readsz)) != -1) {
 		bytes += err;
 
-		if (!err)
+		if (err < readsz)
 			stream->flags |= F_EOF;
 	}
 	else {
@@ -250,7 +283,7 @@ size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 		stream->bufpos += writesz;
 
 		if ((stream->flags & F_LINE) && (nl = memrchr(stream->buffer, '\n', stream->bufpos)) != NULL) {
-			if ((err = write(stream->fd, stream->buffer, nl - stream->buffer + 1)) < 0)
+			if ((err = full_write(stream->fd, stream->buffer, nl - stream->buffer + 1)) < 0)
 				return 0;
 
 			stream->bufpos -= nl - stream->buffer + 1;
@@ -266,10 +299,10 @@ size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 
 	stream->bufpos = 0;
 
-	if ((err = write(stream->fd, ptr, writesz)) == -1)
+	if ((err = full_write(stream->fd, ptr, writesz)) == -1)
 		return 0;
 
-	return err / size;
+	return nmemb;
 }
 
 
@@ -461,7 +494,7 @@ int fflush(FILE *stream)
 
 	if (stream->flags & F_WRITING) {
 		if (stream->bufpos) {
-			write(stream->fd, stream->buffer, stream->bufpos);
+			full_write(stream->fd, stream->buffer, stream->bufpos);
 			stream->bufpos = 0;
 		}
 	}
