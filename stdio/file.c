@@ -30,8 +30,10 @@
 #define F_LINE (1 << 2)
 #define F_ERROR (1 << 3)
 
-
-extern FILE *stderr, *stdin, *stdout;
+static FILE stdin_file  = {0, 0};
+static FILE stdout_file = {1, 0};
+static FILE stderr_file = {2, 0};
+FILE *stdin, *stdout, *stderr;
 
 
 static int string2mode(const char *mode)
@@ -611,6 +613,10 @@ int setvbuf(FILE *stream, char *buffer, int mode, size_t size)
 
 void _file_init(void)
 {
+	stdin = &stdin_file;
+	stdout = &stdout_file;
+	stderr = &stderr_file;
+
 	stdin->buffer = mmap(NULL, BUFSIZ, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, NULL, 0);
 	stdin->bufeof = stdin->bufpos = BUFSIZ;
 
