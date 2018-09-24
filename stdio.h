@@ -23,7 +23,7 @@
 
 
 #define EOF (-1)
-#define BUFSIZ 4096
+#define BUFSIZ SIZE_PAGE
 #define FILENAME_MAX 128
 
 #define _IOFBF 0x2000
