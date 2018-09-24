@@ -13,15 +13,17 @@
  * %LICENSE%
  */
 
+#include <sys/msg.h>
+#include <sys/file.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
+#include <sys/threads.h>
+
 #include <stdio.h>
 #include <fcntl.h>
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
-#include <sys/msg.h>
-#include <sys/file.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
 #include <unistd.h>
 
 
@@ -68,6 +70,7 @@ int fclose(FILE *file)
 	if (file->buffer != NULL)
 		munmap(file->buffer, BUFSIZ);
 
+	resourceDestroy(file->lock);
 	free(file);
 
 	return err;
@@ -98,6 +101,7 @@ FILE *fopen(const char *filename, const char *mode)
 		return NULL;
 	}
 
+	mutexCreate(&f->lock);
 	f->fd = fd;
 	fflush(f);
 	return f;
@@ -126,6 +130,7 @@ FILE *fdopen(int fd, const char *mode)
 		return NULL;
 	}
 
+	mutexCreate(&f->lock);
 	f->fd = fd;
 	fflush(f);
 	return f;
@@ -189,7 +194,7 @@ static int full_write(int fd, const void *ptr, size_t size)
 }
 
 
-size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
+size_t fread_unlocked(void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
 	int err;
 	size_t readsz = nmemb * size;
@@ -256,7 +261,17 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
 }
 
 
-size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
+size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
+{
+	size_t ret;
+	mutexLock(stream->lock);
+	ret = fread_unlocked(ptr, size, nmemb, stream);
+	mutexUnlock(stream->lock);
+	return ret;
+}
+
+
+size_t fwrite_unlocked(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
 	int err;
 	size_t writesz = nmemb * size;
@@ -308,17 +323,40 @@ size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 }
 
 
-size_t fwrite_unlocked(const void *ptr, size_t size, size_t nmemb, FILE *stream)
+size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
-	return fwrite(ptr, size, nmemb, stream);
+	size_t ret;
+	mutexLock(stream->lock);
+	ret = fwrite_unlocked(ptr, size, nmemb, stream);
+	mutexUnlock(stream->lock);
+	return ret;
+}
+
+
+int fgetc_unlocked(FILE *stream)
+{
+	unsigned char c;
+
+	if (fread_unlocked(&c, 1, 1, stream) != 1)
+		return EOF;
+
+	return c;
 }
 
 
 int fgetc(FILE *stream)
 {
-	unsigned char c;
+	int ret;
+	mutexLock(stream->lock);
+	ret = fgetc_unlocked(stream);
+	mutexUnlock(stream->lock);
+	return ret;
+}
 
-	if (fread(&c, 1, 1, stream) != 1)
+
+int fputc_unlocked(int c, FILE *stream)
+{
+	if (fwrite_unlocked(&c, 1, 1, stream) != 1)
 		return EOF;
 
 	return c;
@@ -327,17 +365,18 @@ int fgetc(FILE *stream)
 
 int fputc(int c, FILE *stream)
 {
-	if (fwrite(&c, 1, 1, stream) != 1)
-		return EOF;
-
-	return c;
+	int ret;
+	mutexLock(stream->lock);
+	ret = fputc_unlocked(c, stream);
+	mutexUnlock(stream->lock);
+	return ret;
 }
 
 
-char *fgets(char *str, int n, FILE *stream)
+char *fgets_unlocked(char *str, int n, FILE *stream)
 {
 	int c, i = 0;
-	while ((c = fgetc(stream)) != EOF) {
+	while ((c = fgetc_unlocked(stream)) != EOF) {
 		str[i++] = c;
 		if (c == '\n' || i == n - 1)
 			break;
@@ -352,21 +391,99 @@ char *fgets(char *str, int n, FILE *stream)
 }
 
 
+char *fgets(char *str, int n, FILE *stream)
+{
+	char *ret;
+	mutexLock(stream->lock);
+	ret = fgets_unlocked(str, n, stream);
+	mutexUnlock(stream->lock);
+	return ret;
+}
+
+
+int fflush_unlocked(FILE *stream)
+{
+	if (stream == NULL) {
+		fflush_unlocked(stdout);
+		return 0; /* TODO: flush all FILE's */
+	}
+
+	if (stream->flags & F_WRITING) {
+		if (stream->bufpos) {
+			full_write(stream->fd, stream->buffer, stream->bufpos);
+			stream->bufpos = 0;
+		}
+	}
+	else {
+		lseek(stream->fd, stream->bufpos - stream->bufeof, SEEK_CUR);
+		stream->bufpos = stream->bufeof = BUFSIZ;
+	}
+
+	return 0;
+}
+
+
+int fflush(FILE *stream)
+{
+	int ret;
+
+	if (stream == NULL)
+		return fflush(stdout);
+
+	mutexLock(stream->lock);
+	ret = fflush_unlocked(stream);
+	mutexUnlock(stream->lock);
+	return ret;
+}
+
+
+int fseek_unlocked(FILE *stream, long offset, int whence)
+{
+	fflush_unlocked(stream);
+	stream->flags &= ~F_EOF;
+	return lseek(stream->fd, offset, whence);
+}
+
+
+int fseek(FILE *stream, long offset, int whence)
+{
+	int ret;
+	mutexLock(stream->lock);
+	ret = fseek_unlocked(stream, offset, whence);
+	mutexUnlock(stream->lock);
+	return ret;
+}
+
+
+long int ftell_unlocked(FILE *stream)
+{
+	return (long)fseek_unlocked(stream, 0, SEEK_CUR);
+}
+
+
 long int ftell(FILE *stream)
 {
-	return (long)fseek(stream, 0, SEEK_CUR);
+	long int ret;
+	mutexLock(stream->lock);
+	ret = ftell_unlocked(stream);
+	mutexUnlock(stream->lock);
+	return ret;
+}
+
+
+off_t ftello_unlocked(FILE *stream)
+{
+	return (off_t)fseek_unlocked(stream, 0, SEEK_CUR);
 }
 
 
 off_t ftello(FILE *stream)
 {
-	return (off_t)fseek(stream, 0, SEEK_CUR);
-}
-
-
-char *fgets_unlocked(char *str, int n, FILE *stream)
-{
-	return fgets(str, n, stream);
+	off_t ret;
+	mutexLock(stream->lock);
+	ret = ftello_unlocked(stream);
+	mutexUnlock(stream->lock);
+	return ret;
 }
 
 
@@ -382,49 +499,59 @@ int fileno_unlocked(FILE *stream)
 }
 
 
-int getc(FILE *stream)
-{
-	return fgetc(stream);
-}
-
-
 int getc_unlocked(FILE *stream)
 {
-	return fgetc(stream);
+	return fgetc_unlocked(stream);
 }
 
 
-int putc(int c, FILE *stream)
+int getc(FILE *stream)
 {
-	char cc = c;
-	fwrite(&cc, 1, 1, stream);
-	return c;
+	int ret;
+	mutexLock(stream->lock);
+	ret = getc_unlocked(stream);
+	mutexUnlock(stream->lock);
+	return ret;
 }
 
 
 int putc_unlocked(int c, FILE *stream)
 {
 	char cc = c;
-	fwrite(&cc, 1, 1, stream);
+	fwrite_unlocked(&cc, 1, 1, stream);
 	return c;
+}
+
+
+int putc(int c, FILE *stream)
+{
+	int ret;
+	mutexLock(stream->lock);
+	ret = putc_unlocked(c, stream);
+	mutexUnlock(stream->lock);
+	return ret;
 }
 
 
 int putchar_unlocked(int c)
 {
 	char cc = c;
-	fwrite(&cc, 1, 1, stdout);
+	fwrite_unlocked(&cc, 1, 1, stdout);
 	return c;
 }
 
 
-int putchar(int ci)
+int putchar(int c)
 {
-	return putchar_unlocked(ci);
+	int ret;
+	mutexLock(stdout->lock);
+	ret = putchar_unlocked(c);
+	mutexUnlock(stdout->lock);
+	return ret;
 }
 
 
-int ungetc(int c, FILE *stream)
+int ungetc_unlocked(int c, FILE *stream)
 {
 	/* TODO: The file-position indicator is decremented by each successful call to ungetc(); */
 	if (c == EOF)
@@ -447,12 +574,22 @@ int ungetc(int c, FILE *stream)
 }
 
 
-int puts(const char *s)
+int ungetc(int c, FILE *stream)
+{
+	int ret;
+	mutexLock(stream->lock);
+	ret = ungetc_unlocked(c, stream);
+	mutexUnlock(stream->lock);
+	return ret;
+}
+
+
+int puts_unlocked(const char *s)
 {
 	int len = strlen(s), l = 0, err;
 
 	while (l < len) {
-		if ((err = fwrite((void *)s + l, 1, len - l, stdout)) < 0)
+		if ((err = fwrite_unlocked((void *)s + l, 1, len - l, stdout)) < 0)
 			return -1;
 		l += err;
 	}
@@ -462,16 +599,42 @@ int puts(const char *s)
 }
 
 
+int puts(const char *s)
+{
+	int ret;
+	mutexLock(stdout->lock);
+	ret = puts_unlocked(s);
+	mutexUnlock(stdout->lock);
+	return ret;
+}
+
+
 int fputs_unlocked(const char *s, FILE *stream)
 {
 	int len = strlen(s);
-	return fwrite(s, 1, len, stream);
+	return fwrite_unlocked(s, 1, len, stream);
+}
+
+
+int fputs(const char *s, FILE *stream)
+{
+	int ret;
+	mutexLock(stream->lock);
+	ret = fputs_unlocked(s, stream);
+	mutexUnlock(stream->lock);
+	return ret;
+}
+
+
+int ferror_unlocked(FILE *stream)
+{
+	return !!(stream->flags & F_ERROR);
 }
 
 
 int ferror(FILE *stream)
 {
-	return !!(stream->flags & F_ERROR);
+	return ferror_unlocked(stream);
 }
 
 
@@ -481,52 +644,19 @@ void clearerr(FILE *stream)
 }
 
 
-int ferror_unlocked(FILE *stream)
-{
-	return 0;
-}
-
-
-int fflush(FILE *stream)
-{
-	if (stream == NULL) {
-		fflush(stdout);
-		return 0; /* TODO: flush all FILE's */
-	}
-
-	if (stream->flags & F_WRITING) {
-		if (stream->bufpos) {
-			full_write(stream->fd, stream->buffer, stream->bufpos);
-			stream->bufpos = 0;
-		}
-	}
-	else {
-		lseek(stream->fd, stream->bufpos - stream->bufeof, SEEK_CUR);
-		stream->bufpos = stream->bufeof = BUFSIZ;
-	}
-
-	return 0;
-}
-
-
-int fputs(const char *str, FILE *f)
-{
-	int len = strlen(str);
-	return fwrite(str, 1, len, f);
-}
-
-
 int getchar_unlocked(void)
 {
 	return getc_unlocked(stdin);
 }
 
 
-int fseek(FILE *stream, long offset, int whence)
+int getchar(void)
 {
-	fflush(stream);
-	stream->flags &= ~F_EOF;
-	return lseek(stream->fd, offset, whence);
+	int ret;
+	mutexLock(stdin->lock);
+	ret = getc_unlocked(stdin);
+	mutexUnlock(stdin->lock);
+	return ret;
 }
 
 
@@ -619,10 +749,16 @@ void _file_init(void)
 
 	stdin->buffer = mmap(NULL, BUFSIZ, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, NULL, 0);
 	stdin->bufeof = stdin->bufpos = BUFSIZ;
+	mutexCreate(&stdin->lock);
 
 	stdout->buffer = mmap(NULL, BUFSIZ, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, NULL, 0);
 	stdout->bufpos = 0;
-	stdout->flags |= F_WRITING;
+	stdout->flags = F_WRITING;
+	mutexCreate(&stdout->lock);
+
+	stderr->buffer = NULL;
+	stderr->flags = F_WRITING;
+	mutexCreate(&stderr->lock);
 
 	if (isatty(stdout->fd))
 		stdout->flags |= F_LINE;

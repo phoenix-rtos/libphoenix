@@ -52,6 +52,7 @@ typedef struct _FILE {
 	size_t bufeof;
 	size_t bufpos;
 	char *buffer;
+	handle_t lock;
 } FILE;
 
 
