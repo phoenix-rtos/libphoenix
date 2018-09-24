@@ -171,7 +171,7 @@ static int full_read(int fd, void *ptr, size_t size)
 		size -= err;
 	}
 
-	return size;
+	return total;
 }
 
 
