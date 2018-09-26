@@ -410,7 +410,8 @@ static int psh_ps(char *arg)
 {
 	threadinfo_t *info;
 	int tcnt, i, n = 32;
-	unsigned len;
+	unsigned len, ipart, fpart;
+	char unit;
 
 	if ((info = malloc(n * sizeof(threadinfo_t))) == NULL) {
 		printf("ps: out of memory\n");
@@ -441,13 +442,50 @@ static int psh_ps(char *arg)
 			printf("ps: unknown option '%s'\n", arg);
 	}
 
-	printf("%9s %5s %4s  %5s %5s %6s  %s\n", "PID", "TTY", "PRI", "STATE", "%CPU", "TIME", "CMD");
+	printf("%9s %5s %4s  %5s %5s %6s %7s  %s\n", "PID", "TTY", "PRI", "STATE", "%CPU", "TIME", "VMEM", "CMD");
 
 	for (i = 0; i < tcnt; ++i) {
-		printf("%9x %5s %4d  %5s %3d.%d %3u:%02u  %-32s\n", info[i].pid, "-", info[i].priority, info[i].state ? "sleep" : "ready",
+		printf("%9x %5s %4d  %5s %3d.%d %3u:%02u", info[i].pid, "-", info[i].priority, info[i].state ? "sleep" : "ready",
 			info[i].load / 10, info[i].load % 10,
-			info[i].cpu_time / 60, info[i].cpu_time % 60,
-			info[i].name);
+			info[i].cpu_time / 60, info[i].cpu_time % 60);
+
+		info[i].vmem /= 1024;
+
+		if (info[i].vmem < 1000) {
+			ipart = info[i].vmem;
+			fpart = 0;
+			unit = 'K';
+		}
+		else {
+			ipart = info[i].vmem / 1024;
+			fpart = ((info[i].vmem % 1024) * 100) / 1024;
+			fpart = ((fpart % 10 >= 5) ? fpart + 10 : fpart) / 10;
+			unit = 'M';
+
+			if (fpart >= 10) {
+				++ipart;
+				fpart = 0;
+			}
+
+			if (ipart >= 1000) {
+				fpart = ((ipart % 1024) * 100) / 1024;
+				fpart = ((fpart % 10 >= 5) ? fpart + 10 : fpart) / 10;
+				ipart /= 1024;
+				unit = 'G';
+			}
+
+			if (fpart >= 10) {
+				++ipart;
+				fpart = 0;
+			}
+		}
+
+		if (fpart)
+			printf(" %3u.%1u %c", ipart, fpart, unit);
+		else
+			printf("  %4u %c", ipart, unit);
+
+		printf("  %-32s\n", info[i].name);
 	}
 
 	free(info);
