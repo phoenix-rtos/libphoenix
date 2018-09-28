@@ -28,6 +28,7 @@ struct utsname {
 
 static inline int uname(struct utsname *name)
 {
+	memset(name, 0, sizeof(*name));
 	return 0;
 }
 
