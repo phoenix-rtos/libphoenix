@@ -109,12 +109,13 @@ void vsyslog(int priority, const char *format, va_list ap)
 	syslog_common.buf[len] = '\0';
 
 	if (syslog_common.open)
-		write(syslog_common.logfd, syslog_common.buf, len);
+		write(syslog_common.logfd, syslog_common.buf, len + 1);
 
 	/* output to stderr if logging device is not available */
 	if (syslog_common.logopt & LOG_PERROR || !syslog_common.open) {
-		syslog_common.buf[len] = '\n';
-		write(STDERR_FILENO, syslog_common.buf + prefix_size, len - prefix_size);
+		if (syslog_common.buf[len - 1] != '\n')
+			syslog_common.buf[len] = '\n';
+		write(STDERR_FILENO, syslog_common.buf + prefix_size, len - prefix_size + 1);
 	}
 }
 
