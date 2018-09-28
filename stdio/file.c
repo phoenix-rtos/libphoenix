@@ -747,11 +747,17 @@ void _file_init(void)
 	stdout = &stdout_file;
 	stderr = &stderr_file;
 
+#ifndef NOMMU
 	stdin->buffer = mmap(NULL, BUFSIZ, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, NULL, 0);
+	stdout->buffer = mmap(NULL, BUFSIZ, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, NULL, 0);
+#else
+	stdin->buffer = NULL;
+	stdout->buffer = NULL;
+#endif
+
 	stdin->bufeof = stdin->bufpos = BUFSIZ;
 	mutexCreate(&stdin->lock);
 
-	stdout->buffer = mmap(NULL, BUFSIZ, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, NULL, 0);
 	stdout->bufpos = 0;
 	stdout->flags = F_WRITING;
 	mutexCreate(&stdout->lock);
