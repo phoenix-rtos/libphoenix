@@ -160,6 +160,22 @@ int symlink(const char *path1, const char *path2)
 
 int access(const char *path, int amode)
 {
+	oid_t oid, dev;
+
+	if (amode == W_OK)
+		return 0;
+
+	char *canonical_name = canonicalize_file_name(path);
+
+	// NOTE: for now checking only if file exists
+	if (lookup(canonical_name, &oid, &dev) < 0) {
+		free(canonical_name);
+		errno = ENOENT;
+		return -1;
+	}
+
+	free(canonical_name);
+
 	return 0;
 }
 
