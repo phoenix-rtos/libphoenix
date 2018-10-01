@@ -40,20 +40,41 @@ FILE *stdin, *stdout, *stderr;
 
 static int string2mode(const char *mode)
 {
-	if (strcmp(mode, "r") == 0)
-		return O_RDONLY;
-	else if (strcmp(mode, "w") == 0)
-		return O_WRONLY | O_CREAT | O_TRUNC;
-	else if (strcmp(mode, "a") == 0)
-		return O_APPEND | O_CREAT;
-	else if (strcmp(mode, "r+") == 0)
-		return O_RDWR;
-	else if (strcmp(mode, "w+") == 0)
-		return O_RDWR | O_CREAT | O_TRUNC;
-	else if (strcmp(mode, "a+") == 0)
-		return O_RDWR | O_CREAT | O_APPEND;
-	else
-		return -1;
+	int next_char = 1;
+
+	if (mode[0] == 'r') {
+		if (mode[next_char] == 'b')
+			next_char += 1;
+
+		if (mode[next_char] == '\0')
+			return O_RDONLY;
+		else if (mode[next_char] == '+')
+			return O_RDWR;
+		else
+			return -1;
+	} else if (mode[0] == 'w') {
+		if (mode[next_char] == 'b')
+			next_char += 1;
+
+		if (mode[next_char] == '\0')
+			return O_WRONLY | O_CREAT | O_TRUNC;
+		else if (mode[next_char] == '+')
+			return O_RDWR | O_CREAT | O_TRUNC;
+		else
+			return -1;
+	} else if (mode[0] == 'a') {
+		if (mode[next_char] == 'b')
+			next_char += 1;
+
+		if (mode[next_char] == '\0')
+			return O_APPEND | O_CREAT;
+		else if (mode[next_char] == '+')
+			return O_RDWR | O_CREAT | O_APPEND;
+		else
+			return -1;
+	}
+
+	return -1;
 }
 
 
@@ -79,7 +100,7 @@ int fclose(FILE *file)
 
 FILE *fopen(const char *filename, const char *mode)
 {
-	unsigned int m;
+	int m;
 	FILE *f;
 	int fd;
 
