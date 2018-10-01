@@ -27,6 +27,7 @@
 #define O_EXCL 0x0400
 #define O_SYNC 0x0800
 #define O_NONBLOCK 0x1000
+#define O_NDELAY O_NONBLOCK
 #define O_NOCTTY 0x2000
 
 
