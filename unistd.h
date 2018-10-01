@@ -106,6 +106,9 @@ extern int fsync(int fd);
 extern int chdir(const char *path);
 
 
+extern int fchdir(int fd);
+
+
 extern int fchown(int fd, uid_t owner, gid_t group);
 
 
