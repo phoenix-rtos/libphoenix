@@ -21,9 +21,13 @@
 #include <stdarg.h>
 #include <sys/types.h>
 
+#ifndef NOMMU
+#define BUFSIZ SIZE_PAGE
+#else
+#define BUFSIZ 16
+#endif
 
 #define EOF (-1)
-#define BUFSIZ SIZE_PAGE
 #define FILENAME_MAX 128
 
 #define _IOFBF 0x2000
