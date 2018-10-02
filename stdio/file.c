@@ -772,8 +772,11 @@ void _file_init(void)
 	stdin->buffer = mmap(NULL, BUFSIZ, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, NULL, 0);
 	stdout->buffer = mmap(NULL, BUFSIZ, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, NULL, 0);
 #else
-	stdin->buffer = NULL;
-	stdout->buffer = NULL;
+	static char inbuff[16];
+	static char outbuff[16];
+
+	stdin->buffer = inbuff;
+	stdout->buffer = outbuff;
 #endif
 
 	stdin->bufeof = stdin->bufpos = BUFSIZ;
