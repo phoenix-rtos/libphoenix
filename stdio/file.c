@@ -78,6 +78,33 @@ static int string2mode(const char *mode)
 }
 
 
+static void *buffAlloc(void)
+{
+	void *ret;
+
+#ifndef NOMMU
+	if ((ret = mmap(NULL, BUFSIZ, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, NULL, 0)) == MAP_FAILED)
+		return NULL;
+#else
+	ret = malloc(BUFSIZ);
+#endif
+
+	return ret;
+}
+
+
+static void buffFree(void *ptr)
+{
+#ifndef NOMMU
+	munmap(ptr, BUFSIZ);
+#else
+	free(ptr);
+#endif
+}
+
+
+
+
 int fclose(FILE *file)
 {
 	int err;
@@ -89,7 +116,7 @@ int fclose(FILE *file)
 	err = close(file->fd);
 
 	if (file->buffer != NULL)
-		munmap(file->buffer, BUFSIZ);
+		buffFree(file->buffer);
 
 	resourceDestroy(file->lock);
 	free(file);
@@ -116,7 +143,7 @@ FILE *fopen(const char *filename, const char *mode)
 	if ((f = calloc(1, sizeof(FILE))) == NULL)
 		return NULL;
 
-	if ((f->buffer = mmap(NULL, BUFSIZ, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, NULL, 0)) == MAP_FAILED) {
+	if ((f->buffer = buffAlloc()) == NULL) {
 		close(fd);
 		free(f);
 		return NULL;
@@ -145,7 +172,7 @@ FILE *fdopen(int fd, const char *mode)
 	if ((f = calloc(1, sizeof(FILE))) == NULL)
 		return NULL;
 
-	if ((f->buffer = mmap(NULL, BUFSIZ, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, NULL, 0)) == MAP_FAILED) {
+	if ((f->buffer = buffAlloc()) == NULL) {
 		close(fd);
 		free(f);
 		return NULL;
@@ -768,16 +795,8 @@ void _file_init(void)
 	stdout = &stdout_file;
 	stderr = &stderr_file;
 
-#ifndef NOMMU
-	stdin->buffer = mmap(NULL, BUFSIZ, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, NULL, 0);
-	stdout->buffer = mmap(NULL, BUFSIZ, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, NULL, 0);
-#else
-	static char inbuff[BUFSIZ];
-	static char outbuff[BUFSIZ];
-
-	stdin->buffer = inbuff;
-	stdout->buffer = outbuff;
-#endif
+	stdin->buffer = buffAlloc();
+	stdout->buffer = buffAlloc();
 
 	stdin->bufeof = stdin->bufpos = BUFSIZ;
 	mutexCreate(&stdin->lock);
