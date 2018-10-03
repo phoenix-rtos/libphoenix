@@ -175,3 +175,9 @@ int initgroups(const char *user, gid_t group)
 {
 	return 0;
 }
+
+
+int flock(int fd, int operation)
+{
+    return 0;
+}

@@ -37,4 +37,7 @@ extern int fileGet(unsigned int h, char flags, oid_t *oid, offs_t *offs, unsigne
 extern int fileRemove(unsigned int h);
 
 
+extern int flock(int fd, int operation);
+
+
 #endif
