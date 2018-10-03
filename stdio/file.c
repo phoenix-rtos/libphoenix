@@ -261,7 +261,7 @@ size_t fread_unlocked(void *ptr, size_t size, size_t nmemb, FILE *stream)
 
 	/* flush write buffer if writing */
 	if (stream->flags & F_WRITING) {
-		if (fflush(stream) < 0)
+		if (fflush_unlocked(stream) < 0)
 			return 0;
 
 		stream->flags &= ~F_WRITING;
@@ -338,7 +338,7 @@ size_t fwrite_unlocked(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 
 	/* discard reading buffer */
 	if (!(stream->flags & F_WRITING)) {
-		fflush(stream);
+		fflush_unlocked(stream);
 		stream->flags |= F_WRITING;
 	}
 
