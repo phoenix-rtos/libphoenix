@@ -46,7 +46,7 @@ int chdir(const char *path)
 	}
 
 	len = strlen(canonical) + 1;
-	if (realloc(dir_common.cwd, len) == NULL) {
+	if ((dir_common.cwd = realloc(dir_common.cwd, len)) == NULL) {
 		free(canonical);
 		return -1; /* ENOMEM */
 	}
