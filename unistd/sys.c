@@ -61,7 +61,7 @@ static int shebang(const char *path)
 
 int execv(const char *path, char *const argv[])
 {
-	return execve(path, argv, NULL);
+	return execve(path, argv, environ);
 }
 
 
@@ -116,7 +116,7 @@ int execve(const char *path, char *const argv[], char *const envp[])
 
 int execvp(const char *file, char *const argv[])
 {
-	return execvpe(file, argv, NULL);
+	return execvpe(file, argv, environ);
 }
 
 int execvpe(const char *file, char *const argv[], char *const envp[])
@@ -163,7 +163,7 @@ int execl(const char *path, const char *arg, ...)
 	if (argv == NULL)
 		return -ENOMEM;
 
-	err = execve(path, argv, NULL);
+	err = execve(path, argv, environ);
 	free(argv);
 	return err;
 }
