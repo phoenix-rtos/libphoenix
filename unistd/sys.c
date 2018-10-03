@@ -15,6 +15,7 @@
 
 #include <sys/types.h>
 #include <sys/threads.h>
+#include <sys/msg.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <ctype.h>
@@ -39,7 +40,7 @@ pid_t getsid(pid_t pid)
 }
 
 
-char exec_buffer[64];
+char exec_buffer[256];
 
 
 static int shebang(const char *path)
@@ -64,16 +65,42 @@ int execv(const char *path, char *const argv[])
 	return execve(path, argv, environ);
 }
 
+#define PATH_DELIM ':'
 
-int execve(const char *path, char *const argv[], char *const envp[])
+int execve(const char *file, char *const argv[], char *const envp[])
 {
 	int fd, noargs = 0, err;
 	char *interp = exec_buffer, *end, **sb_args = NULL;
 	char *canonical_path;
+	char *path = getenv("PATH");
+	int filename_len = strlen(file);
+	oid_t dir;
 
 	fflush(NULL);
 
-	if ((fd = shebang(path)) >= 0) {
+	if (!strchr(file, '/') && path) {
+		while (*path) {
+			char* delim = strchrnul(path, ':');
+
+			int path_len = delim - path;
+			if (path_len + 1 + filename_len + 1 <= sizeof(exec_buffer)) {
+				memcpy(exec_buffer, path, path_len);
+				exec_buffer[path_len] = '/';
+				memcpy(exec_buffer + path_len + 1, file, filename_len);
+				exec_buffer[path_len + 1 + filename_len] = '\0';
+
+				if (lookup(exec_buffer, NULL, &dir) >= 0) {
+					file = exec_buffer;
+					break;
+				}
+			}
+
+			path = delim;
+			if (*path == PATH_DELIM) path++;
+		}
+	}
+
+	if ((fd = shebang(file)) >= 0) {
 		if (read(fd, exec_buffer, sizeof(exec_buffer)) < 0) {
 			close(fd);
 			return SET_ERRNO(-EIO);
@@ -99,11 +126,11 @@ int execve(const char *path, char *const argv[], char *const envp[])
 		sb_args[0] = interp;
 
 		close(fd);
-		path = interp;
+		file = interp;
 		argv = sb_args;
 	}
 
-	if ((canonical_path = canonicalize_file_name(path)) == NULL)
+	if ((canonical_path = canonicalize_file_name(file)) == NULL)
 		return SET_ERRNO(-ENOMEM);
 
 	err = exec(canonical_path, argv, envp);
