@@ -265,6 +265,7 @@ size_t fread_unlocked(void *ptr, size_t size, size_t nmemb, FILE *stream)
 			return 0;
 
 		stream->flags &= ~F_WRITING;
+		stream->bufpos = stream->bufeof = BUFSIZ;
 	}
 
 	/* refill read buffer */
@@ -340,6 +341,7 @@ size_t fwrite_unlocked(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 	if (!(stream->flags & F_WRITING)) {
 		fflush_unlocked(stream);
 		stream->flags |= F_WRITING;
+		stream->bufpos = 0;
 	}
 
 	/* write to buffer if fits */
