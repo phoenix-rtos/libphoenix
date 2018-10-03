@@ -98,6 +98,7 @@ extern int ferror_unlocked(FILE *stream);
 
 /* Flushes the output buffer of a stream. */
 extern int fflush(FILE *stream);
+extern int fflush_unlocked(FILE *stream);
 
 
 /* Gets the current file position of the stream and writes it to pos. */
@@ -106,6 +107,7 @@ extern int fgetpos(FILE *stream, fpos_t *pos);
 
 /* Opens the filename pointed to by filename using the given mode. */
 extern FILE *fopen(const char *filename, const char *mode);
+extern FILE *fopen_unlocked(const char *filename, const char *mode);
 
 
 /* Associates a stream with existing file descriptor fd. */
@@ -114,6 +116,7 @@ extern FILE *fdopen(int fd, const char *mode);
 
 /* Reads data from the given stream into the array pointed to by ptr. */
 extern size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
+extern size_t fread_unlocked(void *ptr, size_t size, size_t nmemb, FILE *stream);
 
 
 /* Associates a new filename with the given open stream and same time closing the old file in stream. */
@@ -128,6 +131,7 @@ extern int fileno_unlocked(FILE *stream);
  * to seek from the given whence position.
  */
 extern int fseek(FILE *stream, long int offset, int whence);
+extern int fseek_unlocked(FILE *stream, long int offset, int whence);
 extern int fseeko(FILE *stream, off_t offset, int whence);
 
 
@@ -145,6 +149,7 @@ extern off_t ftello(FILE *stream);
 
 /* Writes data from the array pointed to by ptr to the given stream. */
 extern size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
+extern size_t fwrite_unlocked(const void *ptr, size_t size, size_t nmemb, FILE *stream);
 
 
 /* Deletes the given filename so that it is no longer accessible. */
@@ -248,6 +253,7 @@ extern char *fgets_unlocked(char *s, int n, FILE *stream);
  * indicator for the stream.
  */
 extern int fputc(int c, FILE *stream);
+extern int fputc_unlocked(int c, FILE *stream);
 
 
 /* Writes a string to the specified stream up to but not including the null character. */
@@ -293,6 +299,7 @@ extern int puts(const char *str);
 
 /* Pushes the character char (an unsigned char) onto the specified stream so that the next character is read. */
 extern int ungetc(int c, FILE *stream);
+extern int ungetc_unlocked(int c, FILE *stream);
 
 
 /* Prints a descriptive error message to stderr. First the string str is printed followed by a colon and then a space. */
