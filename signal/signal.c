@@ -33,7 +33,7 @@ struct {
 } signal_common;
 
 
-static const int _signals_phx2posix[] = { 0, SIGKILL, SIGSEGV, SIGILL, SIGFPE, SIGHUP, SIGINT, SIGQUIT, SIGTRAP,
+const int _signals_phx2posix[] = { 0, SIGKILL, SIGSEGV, SIGILL, SIGFPE, SIGHUP, SIGINT, SIGQUIT, SIGTRAP,
 	SIGABRT, SIGEMT, SIGBUS, SIGSYS, SIGPIPE, SIGALRM, SIGTERM, SIGURG, SIGSTOP, SIGTSTP, SIGCONT, SIGCHLD,
 	SIGTTIN, SIGTTOU, SIGIO, SIGXCPU, SIGXFSZ, SIGVTALRM, SIGPROF, SIGWINCH, SIGINFO, SIGUSR1, SIGUSR2 };
 
@@ -57,7 +57,9 @@ static void _signal_ignore(int sig)
 
 static void _signal_terminate(int sig)
 {
-	exit((sig & 0x7f) << 8);
+	int phxsig = _signals_posix2phx[sig];
+
+	exit(((phxsig) & 0x7f) << 8);
 }
 
 
