@@ -152,6 +152,5 @@ int idtree_alloc(idtree_t *tree, idnode_t *n)
 	}
 
 	lib_rbInsert(tree, &n->linkage);
-
-	return 0;
+	return n->id;
 }
