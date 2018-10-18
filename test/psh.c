@@ -681,6 +681,7 @@ void psh_run(void)
 
 		else
 			printf("Unknown command!\n");
+		fflush(NULL);
 	}
 }
 
