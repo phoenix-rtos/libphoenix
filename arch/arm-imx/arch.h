@@ -102,11 +102,11 @@ typedef u32 handle_t;
 #define PRIi32      "i"
 #define PRIo32      "o"
 
-#define PRId64      "ld"
-#define PRIu64      "lu"
-#define PRIx64      "lx"
-#define PRIX64      "lX"
-#define PRIi64      "li"
-#define PRIo64      "lo"
+#define PRId64      "lld"
+#define PRIu64      "llu"
+#define PRIx64      "llx"
+#define PRIX64      "llX"
+#define PRIi64      "lli"
+#define PRIo64      "llo"
 
 #endif
