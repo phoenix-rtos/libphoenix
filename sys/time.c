@@ -82,3 +82,8 @@ int lutimes(const char *filename, const struct timeval tv[2])
 {
 	return 0;
 }
+
+int timerisset(struct timeval *tvp)
+{
+	return 0;
+}

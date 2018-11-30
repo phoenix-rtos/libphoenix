@@ -55,4 +55,11 @@ extern int futimes(int fd, const struct timeval tv[2]);
 
 extern int lutimes(const char *filename, const struct timeval tv[2]);
 
+
+extern int timerisset(struct timeval *tvp);
+
+
+#define timercmp(a, b, CMP) \
+	((a.tv_sec == b.tv_sec && a.tv_usec CMP b.tv_usec) || a.tv_sec CMP b.tv_sec)
+
 #endif
