@@ -106,4 +106,7 @@ extern clock_t clock(void);
 
 extern char *strptime(const char *restrict buf, const char *restrict format, struct tm *restrict tm);
 
+
+extern int nanosleep(const struct timespec *req, struct timespec *rem);
+
 #endif

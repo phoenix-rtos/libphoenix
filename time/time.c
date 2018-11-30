@@ -377,3 +377,9 @@ char *strptime(const char *restrict buf, const char *restrict format, struct tm 
 {
 	return NULL;
 }
+
+
+int nanosleep(const struct timespec *req, struct timespec *rem)
+{
+	return 0;
+}
