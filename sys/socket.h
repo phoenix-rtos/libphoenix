@@ -81,6 +81,12 @@ struct sockaddr_storage {
 	char        ss_data[128-sizeof(sa_family_t)];
 };
 
+
+struct linger {
+	int l_onoff;
+	int l_linger;
+};
+
 // has to be included after sockaddr is defined
 #include <sys/sockios.h>
 

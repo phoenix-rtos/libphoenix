@@ -184,15 +184,26 @@ int getnameinfo(const struct sockaddr *addr, socklen_t addrlen,
 	msg_t msg = { 0 };
 	sockport_msg_t *smi = (void *)msg.i.raw;
 	sockport_resp_t *smo = (void *)msg.o.raw;
-	size_t hlen = hostlen;
+	size_t hlen;
 	char *buf;
 
 	if (addrlen > sizeof(smi->send.addr))
 		return EAI_FAMILY;
 
+	if (host == NULL)
+		hostlen = 0;
+
+	if (serv == NULL)
+		servlen = 0;
+
+	if (hostlen == 0 && servlen == 0)
+		return EAI_NONAME;
+
 	buf = malloc(hostlen + servlen);
 	if (!buf)
 		return EAI_MEMORY;
+
+	hlen = hostlen;
 
 	msg.type = sockmGetNameInfo;
 	smi->send.flags = flags;
@@ -209,15 +220,21 @@ int getnameinfo(const struct sockaddr *addr, socklen_t addrlen,
 	}
 
 	if (!smo->ret) {
-		if (hostlen < smo->nameinfo.hostlen)
-			smo->ret = EAI_OVERFLOW;
-		if (servlen < smo->nameinfo.servlen)
-			smo->ret = EAI_OVERFLOW;
-	}
+		if (hostlen > 0) {
+			if (hostlen < smo->nameinfo.hostlen) {
+				smo->ret = EAI_OVERFLOW;
+				memcpy(host, buf, hostlen);
+			} else
+				memcpy(host, buf, smo->nameinfo.hostlen);
+		}
 
-	if (!smo->ret) {
-		memcpy(host, buf, smo->nameinfo.hostlen);
-		memcpy(serv, buf + smo->nameinfo.hostlen, smo->nameinfo.servlen);
+		if (servlen > 0) {
+			if (servlen < smo->nameinfo.servlen) {
+				smo->ret = EAI_OVERFLOW;
+				memcpy(serv, buf + smo->nameinfo.hostlen, servlen);
+			} else
+				memcpy(serv, buf + smo->nameinfo.hostlen, smo->nameinfo.servlen);
+		}
 	}
 
 	if (smo->ret == EAI_SYSTEM)
