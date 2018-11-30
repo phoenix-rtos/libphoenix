@@ -85,4 +85,10 @@ enum {
 	IP_TTL,
 };
 
+enum {
+	IPPORT_RESERVED = 0,
+	IPPORT_USERRESERVED = 4096
+};
+
+
 #endif /* _NETINET_IN_H_ */
