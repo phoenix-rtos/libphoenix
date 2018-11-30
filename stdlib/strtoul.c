@@ -64,3 +64,9 @@ int atoi(char *str)
 {
 	return strtol(str, NULL, 10);
 }
+
+
+int atol(const char *str)
+{
+	return strtol(str, NULL, 10);
+}
