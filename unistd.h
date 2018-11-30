@@ -208,6 +208,12 @@ extern int issetugid(void);
 extern char *getlogin(void);
 
 
+extern int gethostname(char *name, size_t namelen);
+
+
+extern char *getpass(const char *prompt);
+
+
 extern char *optarg;
 
 
