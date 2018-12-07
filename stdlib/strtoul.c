@@ -66,7 +66,7 @@ int atoi(char *str)
 }
 
 
-int atol(const char *str)
+int atol(char *str)
 {
 	return strtol(str, NULL, 10);
 }

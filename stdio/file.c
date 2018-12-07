@@ -50,6 +50,9 @@ static int string2mode(const char *mode)
 			return O_RDONLY;
 		else if (mode[next_char] == '+')
 			return O_RDWR;
+		else if (mode[next_char] == 'c')
+		/* glibc extension - ignored */
+			return O_RDONLY;
 		else
 			return -1;
 	} else if (mode[0] == 'w') {
