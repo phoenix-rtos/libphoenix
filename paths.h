@@ -17,7 +17,7 @@
 #define _LIBPHOENIX_PATHS_H
 
 
-extern const char *_PATH_TTY;
+#define _PATH_TTY "/dev/tty"
 
 
 #endif /* _LIBPHOENIX_PATHS_H */
