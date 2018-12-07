@@ -67,11 +67,12 @@ int select(int nfds, fd_set *rd, fd_set *wr, fd_set *ex, struct timeval *to)
 
 		pfd[n].fd = i;
 		if (SFD_ISSET(i, rd))
-			pfd[n].events |= POLLIN;
+			pfd[n].events |= POLLIN_SET;
 		if (SFD_ISSET(i, wr))
-			pfd[n].events |= POLLOUT;
+			pfd[n].events |= POLLOUT_SET;
 		if (SFD_ISSET(i, ex))
-			pfd[n].events |= POLLPRI;
+			pfd[n].events |= POLLEX_SET;
+		pfd[n].events &= ~POLLIGN_SET;
 		++n;
 	}
 
@@ -101,13 +102,14 @@ int select(int nfds, fd_set *rd, fd_set *wr, fd_set *ex, struct timeval *to)
 		FD_ZERO(ex);
 
 	for (i = nfds = 0; i < n; ++i) {
-		if (rd && (pfd[i].revents & POLLIN))
+		if (rd && (pfd[i].revents & (POLLIN_SET)))
 			FD_SET(pfd[i].fd, rd);
-		if (wr && (pfd[i].revents & POLLOUT))
+		if (wr && (pfd[i].revents & POLLOUT_SET))
 			FD_SET(pfd[i].fd, wr);
-		if (ex && (pfd[i].revents & ~(POLLIN|POLLOUT)))
+		if (ex && (pfd[i].revents & (POLLEX_SET)))
 			FD_SET(pfd[i].fd, ex);
-		if (pfd[i].revents)
+		if (SFD_ISSET(pfd[i].fd, rd) | SFD_ISSET(pfd[i].fd, wr)
+				| SFD_ISSET(pfd[i].fd, ex))
 			nfds++;
 	}
 
