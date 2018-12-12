@@ -18,3 +18,12 @@
 
 
 WRAP_ERRNO_DEF(pid_t, waitpid, (pid_t pid, int *status, int options), (pid, status, options))
+
+
+handle_t sys_waittid(handle_t tid, int options);
+
+
+handle_t waittid(handle_t tid, int options)
+{
+	return sys_waittid(tid, options);
+}
