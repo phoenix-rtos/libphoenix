@@ -370,7 +370,7 @@ size_t strftime(char *restrict s, size_t maxsize, const char *restrict format, c
 
 clock_t clock(void)
 {
-	return 0;
+	return (clock_t)-1;
 }
 
 char *strptime(const char *restrict buf, const char *restrict format, struct tm *restrict tm)
