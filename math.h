@@ -88,6 +88,10 @@ extern double ldexp(double x, int exp);
 extern double log(double x);
 
 
+/* Returns the common (base-2) logarithm of x. */
+extern double log2(double x);
+
+
 /* Returns the common (base-10) logarithm of x. */
 extern double log10(double x);
 

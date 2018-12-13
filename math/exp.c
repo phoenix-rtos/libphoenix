@@ -108,6 +108,12 @@ double log(double x)
 }
 
 
+double log2(double x)
+{
+	return log(x) / M_LN2;
+}
+
+
 /* Uses log10(x) = ln(x) / ln(10) identity */
 double log10(double x)
 {
