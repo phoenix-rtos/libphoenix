@@ -219,4 +219,10 @@ char *canonicalize_file_name(const char *path);
 
 double strtod(const char *restrict nptr, char **restrict endptr);
 
+
+extern long random(void);
+
+
+extern void srandom(unsigned int seed);
+
 #endif
