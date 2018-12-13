@@ -27,6 +27,18 @@ extern int setjmp(jmp_buf var);
 extern void longjmp(jmp_buf var, int m);
 
 
+static inline int _setjmp(jmp_buf var)
+{
+	return setjmp(var);
+}
+
+
+static inline void _longjmp(jmp_buf var, int m)
+{
+	longjmp(var, m);
+}
+
+
 static inline int sigsetjmp(sigjmp_buf env, int savesigs)
 {
 	return setjmp(env);
