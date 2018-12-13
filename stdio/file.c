@@ -817,3 +817,25 @@ void _file_init(void)
 	if (isatty(stdout->fd))
 		stdout->flags |= F_LINE;
 }
+
+
+void flockfile(FILE *file)
+{
+}
+
+
+void funlockfile(FILE *file)
+{
+}
+
+
+FILE *tmpfile(void)
+{
+	return NULL;
+}
+
+
+int remove(const char *path)
+{
+	return unlink(path);
+}

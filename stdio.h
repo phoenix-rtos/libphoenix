@@ -317,4 +317,13 @@ extern ssize_t getline(char **lineptr, size_t *n, FILE *stream);
 
 extern void _file_init(void);
 
+
+/* stdio locking functions */
+extern void flockfile(FILE *file);
+extern void funlockfile(FILE *file);
+
+
+/* create a temporary file */
+extern FILE *tmpfile(void);
+
 #endif
