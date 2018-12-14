@@ -177,7 +177,7 @@ void (*signal(int signum, void (*handler)(int)))(int)
 	sighandler_t t;
 	unsigned int oldmask;
 
-	if (signum <= 0 || signum > NSIG) {
+	if (signum <= 0 || signum >= NSIG) {
 		(void)SET_ERRNO(-EINVAL);
 		return SIG_ERR;
 	}
@@ -218,7 +218,7 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *oact)
 	unsigned int oldmask;
 	int i;
 
-	if (sig <= 0 || sig > NSIG)
+	if (sig <= 0 || sig >= NSIG)
 		return SET_ERRNO(-EINVAL);
 
 	if (oact != NULL) {
