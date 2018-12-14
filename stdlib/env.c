@@ -17,6 +17,9 @@
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
+#include <signal.h>
+#include <unistd.h>
+#include <sys/wait.h>
 
 extern char **environ;
 
@@ -265,5 +268,32 @@ int setenv(const char *name, const char *value, int overwrite)
 /* TODO: Move? */
 int system(const char *command)
 {
-	return -1;
+	sigset_t mask, old_mask;
+	pid_t pid;
+	int ret;
+
+	/* we assume command processor is always available */
+	if (command == NULL)
+		return 1;
+
+	sigemptyset(&mask);
+	sigaddset(&mask, SIGCHLD);
+	sigprocmask(SIG_BLOCK, &mask, &old_mask);
+
+	pid = fork();
+
+	if (pid == -1) {
+		sigprocmask(SIG_SETMASK, &old_mask, NULL);
+		return -1;
+	}
+
+	if (pid == 0) {
+		execl("/bin/sh", "sh", "-c", command, NULL);
+		exit(EXIT_FAILURE);
+	}
+
+	waitpid(pid, &ret, 0);
+	sigprocmask(SIG_SETMASK, &old_mask, NULL);
+
+	return WEXITSTATUS(ret);
 }
