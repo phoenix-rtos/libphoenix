@@ -21,7 +21,7 @@
 double cos(double x)
 {
 	int i;
-	double res, xn, xpow, strong;
+	double res, xn, xpow, factorial;
 
 	/* Normalize argument to -2*PI < x < 2*PI */
 	x = fmod(x, 2.0 * M_PI);
@@ -40,16 +40,16 @@ double cos(double x)
 	res = 1.0;
 	xpow = x * x;
 	xn = xpow;
-	strong = 2.0;
+	factorial = 2.0;
 
 	for (i = 0; i < 10; ++i) {
 		if (i & 1)
-			res += xn / strong;
+			res += xn / factorial;
 		else
-			res -= xn / strong;
+			res -= xn / factorial;
 
 		xn *= xpow;
-		strong = strong * (2 * i + 3) * (2 * i + 4);
+		factorial = factorial * (2 * i + 3) * (2 * i + 4);
 	}
 
 	return res;
@@ -60,7 +60,7 @@ double cos(double x)
 double sin(double x)
 {
 	int i;
-	double res, xn, xpow, strong;
+	double res, xn, xpow, factorial;
 
 	/* Normalize argument to -2*PI < x < 2*PI */
 	x = fmod(x, 2.0 * M_PI);
@@ -79,16 +79,16 @@ double sin(double x)
 	res = x;
 	xpow = x * x;
 	xn = xpow * x;
-	strong = 6.0;
+	factorial = 6.0;
 
 	for (i = 0; i < 10; ++i) {
 		if (i & 1)
-			res += xn / strong;
+			res += xn / factorial;
 		else
-			res -= xn / strong;
+			res -= xn / factorial;
 
 		xn *= xpow;
-		strong = strong * (2 * i + 4) * (2 * i + 5);
+		factorial = factorial * (2 * i + 4) * (2 * i + 5);
 	}
 
 	return res;

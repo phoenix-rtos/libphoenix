@@ -169,7 +169,7 @@ float modff(float x, float* intpart)
 /* Uses quick powering and Maclaurin series to calculate value of e^x */
 double exp(double x)
 {
-	double res, resi, powx, e, strong;
+	double res, resi, powx, e, factorial;
 	int i;
 
 	if (x > 710.0)
@@ -182,15 +182,15 @@ double exp(double x)
 	resi = quickPow(M_E, (int)e);
 
 	/* Calculate rest of the result using Maclaurin series */
-	strong = 1.0;
+	factorial = 1.0;
 	powx = x;
 	res = 1.0;
 
 	for (i = 2; i < 13; ++i) {
 		if (powx == 0.0)
 			break;
-		res += powx / strong;
-		strong *= i;
+		res += powx / factorial;
+		factorial *= i;
 		powx *= x;
 	}
 
