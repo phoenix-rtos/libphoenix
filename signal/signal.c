@@ -274,22 +274,26 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *oact)
 int sigprocmask(int how, const sigset_t *set, sigset_t *oldset)
 {
 	int i;
-	unsigned int v = 0, phxv, mask = 0, old;
+	unsigned int phxv = 0, mask = 0, old;
 
 	if (set != NULL) {
 		if (*set & (1UL << SIGKILL))
 			return SET_ERRNO(-EINVAL);
 
+		for (i = 0, phxv = 0; i < NSIG; ++i) {
+			if (*set & (1UL << i))
+				phxv |= 1UL << _signals_posix2phx[i];
+		}
+
 		if (how == SIG_BLOCK) {
-			v = *set;
-			mask = *set;
+			mask = phxv;
+			phxv = 0;
 		}
 		else if (how == SIG_UNBLOCK) {
-			v = ~(*set);
-			mask = *set;
+			mask = phxv;
+			phxv = 0xffffffffUL;
 		}
 		else if (how == SIG_SETMASK) {
-			v = *set;
 			mask = 0xffffffffUL;
 		}
 		else {
@@ -297,15 +301,15 @@ int sigprocmask(int how, const sigset_t *set, sigset_t *oldset)
 		}
 	}
 
-	for (i = 0, phxv = 0; i < NSIG; ++i) {
-		if (v & (1UL << i))
-			phxv |= 1UL << _signals_posix2phx[i];
+	old = signalMask(phxv, mask);
+
+	if (oldset != NULL) {
+		memset(oldset, 0, sizeof(sigset_t));
+		for (i = 0, phxv = 0; i < NSIG; ++i) {
+			if (old & (1UL << i))
+				(*oldset) |= 1UL << _signals_phx2posix[i];
+		}
 	}
-
-	old = signalMask(v, mask);
-
-	if (oldset != NULL)
-		(*oldset) = old;
 
 	if (set == NULL && oldset == NULL)
 		return SET_ERRNO(-EINVAL);
@@ -328,19 +332,27 @@ int sigfillset(sigset_t *set)
 
 int sigaddset(sigset_t *set, int signo)
 {
-	return -ENOSYS;
+	if (set == NULL || signo >= NSIG)
+		return -1;
+
+	*set |= 1 << signo;
+	return 0;
 }
 
 
 int sigismember(const sigset_t *set, int signum)
 {
-	return -ENOSYS;
+	return !!(*set & (1 << signum));
 }
 
 
 int sigemptyset(sigset_t *set)
 {
-	return -ENOSYS;
+	if (set == NULL)
+		return -1;
+
+	memset(set, 0, sizeof(sigset_t));
+	return 0;
 }
 
 
@@ -352,7 +364,11 @@ int sigisemptyset(sigset_t *set)
 
 int sigdelset(sigset_t *set, int signum)
 {
-	return -ENOSYS;
+	if (set == NULL || signum >= NSIG)
+		return -1;
+
+	*set &= ~(1 << signum);
+	return 0;
 }
 
 
