@@ -5,8 +5,8 @@
 # Author: Pawel Pisarczyk
 #
 
-ARCH_ASMS := _start.S syscalls.S
-ARCH_SRCS := string.c jmp.c
+ARCH_ASMS := _start.S syscalls.S jmp.S
+ARCH_SRCS := string.c
 
 # include after all dependencies are set
 include $(TOPDIR)/Makefile.rules
