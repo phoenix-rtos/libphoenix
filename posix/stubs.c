@@ -54,12 +54,6 @@ char *mkdtemp(char *template)
 }
 
 
-int mkstemp(char *template)
-{
-	return 0;
-}
-
-
 int setgid(gid_t gid)
 {
 	return 0;
@@ -179,5 +173,5 @@ int initgroups(const char *user, gid_t group)
 
 int flock(int fd, int operation)
 {
-    return 0;
+	return 0;
 }
