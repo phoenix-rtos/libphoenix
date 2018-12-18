@@ -388,6 +388,69 @@ static int psh_mem(char *args)
 }
 
 
+static int psh_perf(char *args)
+{
+	char *arg, *end;
+	unsigned int len, i, count, pid;
+	perf_event_t *buffer, *ev, *pev;
+	time_t duration, t0, t;
+	const size_t bufsz = 0x10000;
+
+	arg = psh_nextString(args, &len);
+	args += len + 1;
+
+	pid = strtoul(arg, &end, 16);
+	if (!pid)
+		pid = -1;
+
+	arg = psh_nextString(args, &len);
+	args += len + 1;
+
+	duration = strtoul(arg, &end, 10);
+	duration *= 1000000;
+
+	buffer = malloc(bufsz);
+
+	if (buffer == NULL)
+		return -ENOMEM;
+
+	count = perf(pid, duration, buffer, bufsz);
+	t0 = buffer->timestamp;
+
+	for (i = 0; i < count; ++i) {
+		ev = buffer + i;
+		if (ev->timeout)
+			t = ev->timeout - t0;
+		else
+			t = 0;
+
+		switch (ev->type) {
+			case perf_sche:
+				pev = ev - 1;
+				while (pev >= buffer && pev->tid != ev->tid)
+					pev--;
+
+				if (pev->tid == ev->tid && pev->type == perf_wkup) {
+					t = ev->timestamp - pev->timestamp;
+					printf("%llu: S %lx %lx %llu\n", ev->timestamp - t0, ev->tid, ev->pid, t);
+				}
+				else {
+					printf("%llu: S %lx %lx\n", ev->timestamp - t0, ev->tid, ev->pid);
+				}
+				break;
+			case perf_wkup:
+				printf("%llu: W %lx %lx %llu\n", ev->timestamp - t0, ev->tid, ev->pid, t);
+				break;
+			case perf_enqd:
+				printf("%llu: Q %lx %lx %llu\n", ev->timestamp - t0, ev->tid, ev->pid, t);
+				break;
+		}
+	}
+
+	return EOK;
+}
+
+
 static int psh_ps_cmp_name(const void *t1, const void *t2)
 {
 	return strcmp(((threadinfo_t *)t1)->name, ((threadinfo_t *)t2)->name);
@@ -673,6 +736,9 @@ void psh_run(void)
 		else if (!strcmp(cmd, "kill"))
 			psh_kill(cmd + 5);
 
+		else if (!strcmp(cmd, "perf"))
+			psh_perf(cmd + 5);
+
 		else if (cmd[0] == '/')
 			psh_runfile(cmd);
 
@@ -817,6 +883,8 @@ int main(int argc, char **argv)
 			psh_mem(args);
 		else if (!strcmp(base, "ps"))
 			psh_ps(args);
+		else if (!strcmp(base, "perf"))
+			psh_perf(args);
 		else
 			printf("psh: %s: unknown command\n", argv[0]);
 	}

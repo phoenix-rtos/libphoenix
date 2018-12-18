@@ -28,6 +28,9 @@ typedef struct {
 } semaphore_t;
 
 
+extern unsigned perf(unsigned pid, time_t maxDuration, void *buffer, size_t bufsz);
+
+
 extern int gettid(void);
 
 
