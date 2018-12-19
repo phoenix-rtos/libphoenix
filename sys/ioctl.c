@@ -60,6 +60,15 @@ const void * ioctl_unpackEx(const msg_t *msg, unsigned long *request, id_t *id, 
 		if (ifc->ifc_len > 0) {
 			ifc->ifc_buf = msg->o.data;
 		}
+	} else if (ioctl->request == SIOCADDRT || ioctl->request == SIOCDELRT) {
+		/* input data is read only so we have allocate the in_data if
+		 * we want to change it. TODO: find better place to allocate and free
+		 * message */
+		struct rtentry *rt = malloc(msg->i.size);
+		memcpy(rt, msg->i.data, msg->i.size);
+		rt->rt_dev = malloc(msg->o.size);
+		memcpy(rt->rt_dev, msg->o.data, msg->o.size);
+		data = (void *)rt;
 	}
 
 	if (response_buf && ioctl->request & IOC_OUT) {

@@ -18,10 +18,7 @@
 
 #include <sys/ioctl.h>
 #include <net/if.h>
-
-/* Routing table calls.  */
-//#define SIOCADDRT			0x890B	/* add routing table entry */
-//#define SIOCDELRT			0x890C	/* delete routing table entry */
+#include <net/route.h>
 
 #define SOCK_IOC_TYPE	'S'
 
@@ -51,5 +48,9 @@
 /* unused but needed by busybox ifconfig */
 #define SIOCGIFTXQLEN		_IOWR(SOCK_IOC_TYPE, 0x42, struct ifreq)	/* get the tx queue length */
 #define SIOCSIFTXQLEN		_IOWR(SOCK_IOC_TYPE, 0x43, struct ifreq)	/* set the tx queue length */
+
+/* Routing table calls.  */
+#define SIOCADDRT			_IOW(SOCK_IOC_TYPE, 0x44, struct rtentry)	/* add routing table entry */
+#define SIOCDELRT			_IOW(SOCK_IOC_TYPE, 0x45, struct rtentry)	/* delete routing table entry */
 
 #endif // LIBPHOENIX_SYS_SOCKIOS_H
