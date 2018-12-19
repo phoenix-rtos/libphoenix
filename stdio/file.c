@@ -774,12 +774,20 @@ ssize_t getline(char **lineptr, size_t *n, FILE *stream)
 	return linesz - 1;
 }
 
-
-int feof(FILE *stream)
+int feof_unlocked(FILE *stream)
 {
 	return !!(stream->flags & F_EOF);
 }
 
+
+int feof(FILE *stream)
+{
+	int ret;
+	mutexLock(stream->lock);
+	ret = feof_unlocked(stream);
+	mutexUnlock(stream->lock);
+	return ret;
+}
 
 void setbuf(FILE *stream, char *buf)
 {

@@ -509,6 +509,11 @@ static int scanf_parse(char *ccltab, const char *inp, char const *fmt0, va_list 
 }
 
 
+int fscanf(FILE *stream, const char *format, ...)
+{
+	return 0;
+}
+
 int sscanf(const char *str, const char *format, ...)
 {
 	int retVal;

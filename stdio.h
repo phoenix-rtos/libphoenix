@@ -88,6 +88,10 @@ extern void clearerr(FILE *stream);
 
 
 /* Tests the end-of-file indicator for the given stream. */
+extern int feof_unlocked(FILE *stream);
+
+
+/* Tests the end-of-file indicator for the given stream. */
 extern int feof(FILE *stream);
 
 
