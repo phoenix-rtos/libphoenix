@@ -425,12 +425,12 @@ static int psh_perf(char *args)
 			t = 0;
 
 		switch (ev->type) {
-			case perf_sche:
+			case perf_event_scheduling:
 				pev = ev - 1;
 				while (pev >= buffer && pev->tid != ev->tid)
 					pev--;
 
-				if (pev->tid == ev->tid && pev->type == perf_wkup) {
+				if (pev->tid == ev->tid && (pev->type == perf_event_waking || pev->type == perf_event_preempted)) {
 					t = ev->timestamp - pev->timestamp;
 					printf("%llu: S %lx %lx %llu\n", ev->timestamp - t0, ev->tid, ev->pid, t);
 				}
@@ -438,10 +438,13 @@ static int psh_perf(char *args)
 					printf("%llu: S %lx %lx\n", ev->timestamp - t0, ev->tid, ev->pid);
 				}
 				break;
-			case perf_wkup:
+			case perf_event_waking:
 				printf("%llu: W %lx %lx %llu\n", ev->timestamp - t0, ev->tid, ev->pid, t);
 				break;
-			case perf_enqd:
+			case perf_event_preempted:
+				printf("%llu: P %lx %lx\n", ev->timestamp - t0, ev->tid, ev->pid);
+				break;
+			case perf_event_enqueued:
 				printf("%llu: Q %lx %lx %llu\n", ev->timestamp - t0, ev->tid, ev->pid, t);
 				break;
 		}
@@ -505,11 +508,11 @@ static int psh_ps(char *arg)
 			printf("ps: unknown option '%s'\n", arg);
 	}
 
-	printf("%9s %5s %4s  %5s %5s %6s %7s  %s\n", "PID", "TTY", "PRI", "STATE", "%CPU", "TIME", "VMEM", "CMD");
+	printf("%9s %5s %4s  %5s %5s %12s %6s %7s  %s\n", "PID", "TTY", "PRI", "STATE", "%CPU", "WAIT", "TIME", "VMEM", "CMD");
 
 	for (i = 0; i < tcnt; ++i) {
-		printf("%9x %5s %4d  %5s %3d.%d %3u:%02u", info[i].pid, "-", info[i].priority, info[i].state ? "sleep" : "ready",
-			info[i].load / 10, info[i].load % 10,
+		printf("%9x %5s %4d  %5s %3d.%d %12llu %3u:%02u", info[i].pid, "-", info[i].priority, info[i].state ? "sleep" : "ready",
+			info[i].load / 10, info[i].load % 10, info[i].wait,
 			info[i].cpu_time / 60, info[i].cpu_time % 60);
 
 		info[i].vmem /= 1024;
