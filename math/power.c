@@ -47,6 +47,9 @@ double pow(double base, double exponent)
 		base = -base;
 	}
 
+	if (isInteger(exponent) && exponent <= INT_MAX && exponent >= INT_MIN)
+		return quickPow(base, (int)exponent);
+
 	exponent *= log(base);
 	res = s * exp(exponent);
 
