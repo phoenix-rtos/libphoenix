@@ -23,6 +23,7 @@
 #include <sys/socket.h>
 #include <sys/sockios.h>
 #include <net/if.h>
+#include <stdlib.h>
 
 const void * ioctl_unpack(const msg_t *msg, unsigned long *request, id_t *id)
 {
