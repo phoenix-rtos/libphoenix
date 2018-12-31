@@ -3,6 +3,7 @@
 #
 # Copyright 2012-2018 Phoenix Systems
 #
+
 ifeq (,$(TOPDIR))
 $(error Only main Makefile can be used for compilation)
 endif
@@ -34,57 +35,41 @@ CFLAGS += -I"$(BUILD_DIR)/$(CURR_SUFFIX)"
 PSMK_LDPATH := $(subst ",,$(patsubst -L%,%,$(filter -L%,$(LDFLAGS)))) $(shell $(CC) $(CFLAGS) -print-search-dirs |grep "libraries: " |tr : " ")
 PSMK_RESOLVED_LDLIBS := $(filter-out -l%,$(LDLIBS)) $(foreach lib,$(patsubst -l%,lib%.a,$(LDLIBS)),$(foreach ldpath,$(PSMK_LDPATH),$(wildcard $(ldpath)/$(lib))))
 
+
 $(PREFIX_O)%.o: %.c
 	@mkdir -p $(@D)
-	$(SIL)(printf " CC  %-24s  " "$<")
+	$(SIL)(printf " CC  %s/%-24s\n" "$(notdir $(@D))" "$<")
 	$(SIL)$(CC) -c $(CFLAGS) "$<" -o "$@"
 	$(SIL)$(CC) -M  -MD -MP -MF $(PREFIX_O)$*.c.d -MT "$@" $(CFLAGS) $<
 
-	@(file="$@"; \
-	datasz=0;\
-	textsz=0;\
-	for i in `$(OBJDUMP) -t $$file | grep -e " O " | awk '{ if ($$2 != "O") print $$5; else print $$4 }'`; do \
-		datasz=`echo $$(($$datasz + 0x$$i))`;\
-	done; \
-	for i in `$(OBJDUMP) -t $$file | grep -e " F " | awk '{ print $$5 }'`; do \
-		textsz=`echo $$(($$textsz + 0x$$i))`;\
-	done;\
-	printf "data=%-10s\ttext=%s\n" $$datasz $$textsz)
 
 $(PREFIX_O)%.o: %.S
 	@mkdir -p $(@D)
-	$(SIL)(printf " ASM %-24s  " "$<")
+	$(SIL)(printf " ASM %-24s\n" "$<")
 	$(SIL)$(CC) -c $(CFLAGS) "$<" -o "$@"
 	$(SIL)$(CC) -M  -MD -MP -MF $(PREFIX_O)$*.S.d -MT "$@" $(CFLAGS) $<
 
-	@(file="$@"; \
-	datasz=0;\
-	textsz=0;\
-	for i in `$(OBJDUMP) -t $$file | grep -e " O " | cut -c 18- |awk '{print $$2}'`; do \
-		datasz=`echo $$(($$datasz + 0x$$i))`;\
-	done; \
-	for i in `$(OBJDUMP) -t $$file | grep -e " F " | cut -c 18- |awk '{print $$2}'`; do \
-		textsz=`echo $$(($$textsz + 0x$$i))`;\
-	done;\
-	printf "data=%-10s\ttext=%s\n" $$datasz $$textsz)
 
 $(PREFIX_A)%.a:
-	@mkdir -p $(@D)
-	@(printf " AR  %-24s  \n" "$*")
+	@mkdir -p $(@D),
+	@(printf " AR  %s/%-24s  \n" "$(notdir $(@D))" "$(@F)")
 	$(SIL)$(AR) $(ARFLAGS) $@ $^ 2>/dev/null
 
 
 $(PREFIX_PROG)%: $(PREFIX_O)%.o $(PROGS_OBJS) $(PSMK_RESOLVED_LDLIBS) $(LIB)
 	@mkdir -p $(@D)
-	@(printf " LD  %-24s  \n" "$(@F)")
+	@(printf " LD  %s/%-24s\n" "$(notdir $(@D))" "$(@F)")
 	$(SIL)$(LD) $(LDFLAGS) -o "$@" $(filter %.o,$^) $(LDLIBS) $(LIB) $(GCCLIB)
+
 
 $(PREFIX_PROG_STRIPPED)%: $(PREFIX_PROG)%
 	@mkdir -p $(@D)
-	@(printf " STR %-24s  \n" "$(@F)")
+	@(printf " STR %s/%-24s\n" "$(notdir $(@D))" "$(@F)")
 	$(SIL)$(STRIP) -s -o "$@" "$<"
 
+
 $(ARCH): $(ARCH_OBJS)
+
 
 # include file dependencies
 ALL_D := $(wildcard $(PREFIX_O)*.d)

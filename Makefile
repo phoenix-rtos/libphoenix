@@ -1,7 +1,7 @@
 #
 # Makefile for libphoenix
 #
-# Copyright 2017 Phoenix Systems
+# Copyright 2017, 2018 Phoenix Systems
 #
 # %LICENSE%
 #
@@ -9,10 +9,10 @@
 SIL ?= @
 MAKEFLAGS += --no-print-directory --output-sync
 
-#TARGET ?= arm-imx
+TARGET ?= arm-imx
 #TARGET ?= armv7-stm32-tiramisu
 #TARGET ?= ia32-qemu
-TARGET ?= riscv64
+#TARGET ?= riscv64
 
 VERSION = 0.2
 TOPDIR := $(CURDIR)
@@ -43,8 +43,8 @@ HEADERS := $(shell find . $(EXTRA_HEADER_DIRS) $(SUBDIRS) -maxdepth 1  -name \*.
 SRCS := _startc.c
 OBJS := $(patsubst $(TOPDIR)/%,$(BUILD_DIR)/%,$(abspath $(SRCS:.c=.o)))
 
-SYSROOT 		:= $(shell $(CC) $(CFLAGS) -print-sysroot)
-MULTILIB_DIR 	:= $(shell $(CC) $(CFLAGS) -print-multi-directory)
+SYSROOT := $(shell $(CC) $(CFLAGS) -print-sysroot)
+MULTILIB_DIR := $(shell $(CC) $(CFLAGS) -print-multi-directory)
 LIBC_INSTALL_DIR := $(SYSROOT)/lib/$(MULTILIB_DIR)
 LIBC_INSTALL_NAMES := libc.a libm.a crt0.o libg.a
 HEADERS_INSTALL_DIR := $(SYSROOT)/usr/include/
@@ -64,14 +64,36 @@ $(OBJS): $(filter clean,$(MAKECMDGOALS))
 subsystems: $(ARCHS)
 
 $(ARCHS): %.a: .FORCE $(filter clean,$(MAKECMDGOALS))
-	@+echo "\033[1;32mCOMPILE $(subst $(BUILD_DIR)/,,$(@D))\033[0m";\
-	mkdir -p $(@D); \
+	@mkdir -p $(@D); \
 	$(MAKE) -C "$(subst $(BUILD_DIR)/,,$(@D))" ARCH="$@"
 
 .FORCE:
 
 $(LIB): $(ARCHS) $(OBJS)
 	@echo "\033[1;34mLD $@\033[0m"
+	
+	@(\
+	printf "Subsystem                  | text    | rodata  | data\n";\
+	printf "=========================================================\n";\
+	for f in $(ARCHS) $(OBJS); do\
+	 	datasz=0;\
+		textsz=0;\
+		rodatasz=0;\
+		file=$$f;\
+		for i in `$(OBJDUMP) -t $$file | grep -e " O " | grep -v ".rodata" | awk '{ print $$1 }'`; do\
+			datasz=`echo $$(($$datasz + 0x$$i))`;\
+		done;\
+		for i in `$(OBJDUMP) -t $$file | grep -e " O " | grep ".rodata" | awk '{ print $$1 }'`; do \
+			rodatasz=`echo $$(($$rodatasz + 0x$$i))`;\
+		done; \
+		for i in `$(OBJDUMP) -t $$file | grep -e " F " | awk '{ print $$5 }'`; do \
+			textsz=`echo $$(($$textsz + 0x$$i))`;\
+		done;\
+		n=`dirname $$f`;\
+		n=`basename $$n | sed "s/libphoenix/./"`;\
+		f=`basename $$f`;\
+		printf "%-26s | %-7d | %-7d | %-7d\n" $$n/$$f $$textsz $$rodatasz $$datasz;\
+	done;)
 
 	@rm -rf "$@"
 	$(SIL)$(AR) cqT -o $@ $(abspath $^) && echo "create $@\naddlib $@\nsave\nend" | $(AR) -M
@@ -99,7 +121,7 @@ install: $(LIB) $(HEADERS)
 		fi \
 	done; \
 	for file in $(HEADERS); do\
-		install -p -m 644 -D $${file} $(HEADERS_INSTALL_DIR)/$${file};\
+		install -m 644  $${file} $(HEADERS_INSTALL_DIR)/$${file};\
 	done
 
 uninstall:
