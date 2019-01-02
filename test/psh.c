@@ -390,66 +390,75 @@ static int psh_mem(char *args)
 
 static int psh_perf(char *args)
 {
-	char *arg, *end;
-	unsigned int len, i, count, pid;
-	perf_event_t *buffer, *ev, *pev;
-	time_t duration, t0, t;
-	const size_t bufsz = 0x10000;
+	char *timeout_s;
+	unsigned len;
+	time_t timeout, elapsed = 0, sleeptime = 200 * 1000;
+	perf_event_t *buffer;
+	const size_t bufsz = 4 << 20;
+	int bcount, tcnt, n = 32;
+	threadinfo_t *info;
 
-	arg = psh_nextString(args, &len);
-	args += len + 1;
-
-	pid = strtoul(arg, &end, 16);
-	if (!pid)
-		pid = -1;
-
-	arg = psh_nextString(args, &len);
-	args += len + 1;
-
-	duration = strtoul(arg, &end, 10);
-	duration *= 1000000;
-
-	buffer = malloc(bufsz);
-
-	if (buffer == NULL)
+	if ((info = malloc(n * sizeof(threadinfo_t))) == NULL) {
+		fprintf(stderr, "perf: out of memory\n");
 		return -ENOMEM;
+	}
 
-	count = perf(pid, duration, buffer, bufsz);
-	t0 = buffer->timestamp;
-
-	for (i = 0; i < count; ++i) {
-		ev = buffer + i;
-		if (ev->timeout)
-			t = ev->timeout - t0;
-		else
-			t = 0;
-
-		switch (ev->type) {
-			case perf_event_scheduling:
-				pev = ev - 1;
-				while (pev >= buffer && pev->tid != ev->tid)
-					pev--;
-
-				if (pev->tid == ev->tid && (pev->type == perf_event_waking || pev->type == perf_event_preempted)) {
-					t = ev->timestamp - pev->timestamp;
-					printf("%llu: S %lx %lx %llu\n", ev->timestamp - t0, ev->tid, ev->pid, t);
-				}
-				else {
-					printf("%llu: S %lx %lx\n", ev->timestamp - t0, ev->tid, ev->pid);
-				}
-				break;
-			case perf_event_waking:
-				printf("%llu: W %lx %lx %llu\n", ev->timestamp - t0, ev->tid, ev->pid, t);
-				break;
-			case perf_event_preempted:
-				printf("%llu: P %lx %lx\n", ev->timestamp - t0, ev->tid, ev->pid);
-				break;
-			case perf_event_enqueued:
-				printf("%llu: Q %lx %lx %llu\n", ev->timestamp - t0, ev->tid, ev->pid, t);
-				break;
+	while ((tcnt = threadsinfo(n, info)) >= n) {
+		n *= 2;
+		if ((info = realloc(info, n * sizeof(threadinfo_t))) == NULL) {
+			fprintf(stderr, "perf: out of memory\n");
+			return -ENOMEM;
 		}
 	}
 
+	if (fwrite(&tcnt, sizeof(tcnt), 1, stdout) != 1) {
+		fprintf(stderr, "perf: failed or partial write\n");
+		free(info);
+		return -1;
+	}
+
+	if (fwrite(info, sizeof(threadinfo_t), tcnt, stdout) != tcnt) {
+		fprintf(stderr, "perf: failed or partial write\n");
+		free(info);
+		return -1;
+	}
+
+	free(info);
+
+	timeout_s = psh_nextString(args, &len);
+	args += len + 1;
+
+	timeout = 1000 * 1000 * strtoull(timeout_s, NULL, 10);
+
+	buffer = malloc(bufsz);
+
+	if (buffer == NULL) {
+		fprintf(stderr, "perf: out of memory\n");
+		return -ENOMEM;
+	}
+
+	if (perf_start(-1) < 0) {
+		fprintf(stderr, "perf: could not start\n");
+		free(buffer);
+		return -1;
+	}
+
+	while (elapsed < timeout) {
+		bcount = perf_read(buffer, bufsz);
+
+		if (fwrite(buffer, 1, bcount, stdout) < bcount) {
+			fprintf(stderr, "perf: failed or partial write\n");
+			break;
+		}
+
+		fprintf(stderr, "perf: wrote %d/%d bytes\n", bcount, bufsz);
+
+		usleep(sleeptime);
+		elapsed += sleeptime;
+	}
+
+	perf_finish();
+	free(buffer);
 	return EOK;
 }
 
