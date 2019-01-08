@@ -204,14 +204,10 @@ static int psh_mem(char *args)
 
 		meminfo(&info);
 
-		printf("(%d+%d)/%dKB\n", (info.page.alloc - info.page.boot) / 1024, info.page.boot / 1024,
+		printf("(%d+%d)/%dKB ", (info.page.alloc - info.page.boot) / 1024, info.page.boot / 1024,
 			(info.page.alloc + info.page.free) / 1024);
 
-		/*printf(
-			"total map entries: %12u\n"
-			"free map entries:  %12u\n"
-			"map entry size:    %12u\n",
-			info.entry.total, info.entry.free, info.entry.sz);*/
+		printf("%d/%d entries\n", info.entry.total - info.entry.free, info.entry.total);
 
 		return EOK;
 	}
