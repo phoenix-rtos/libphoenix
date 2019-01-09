@@ -27,8 +27,7 @@ double pow(double base, double exponent)
 
 	if (base == 0.0 || base == -0.0) {
 		if (exponent == 0.0 || exponent == -0.0) {
-			errno = EDOM;
-			return NAN;
+			return 1.0;
 		}
 		else if (exponent < 0.0) {
 			if (base == 0.0)
