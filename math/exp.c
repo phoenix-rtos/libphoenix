@@ -203,7 +203,7 @@ double ceil(double x)
 
 	fpart = modf(x, &ipart);
 
-	if (fpart + x != x)
+	if (x > 0 && fpart + x != x)
 		ipart += 1.0;
 
 	return ipart;
