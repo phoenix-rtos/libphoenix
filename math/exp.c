@@ -24,8 +24,8 @@ double frexp(double x, int* exp)
 
 	*exp = 0;
 
-	if (x == 0.0)
-		return 0.0;
+	if (x == 0.0 || x == -0.0)
+		return x;
 
 	if (conv->i.exponent == 0)
 		normalizeSub(&x, exp);
@@ -42,8 +42,8 @@ double ldexp(double x, int exp)
 	conv_t *conv = (conv_t *)&x;
 	int exponent = 0;
 
-	if (x == 0.0)
-		return 0.0;
+	if (x == 0.0 || x == -0.0)
+		return x;
 
 	if (conv->i.exponent == 0)
 		normalizeSub(&x, &exponent);
@@ -144,9 +144,8 @@ double modf(double x, double* intpart)
 	m = conv->i.mantisa;
 	m &= mask >> exp;
 
-	if (m == 0) {
+	if (m == 0)
 		return 0.0;
-	}
 
 	conv->i.mantisa = m & mask;
 	normalizeSub(&x, &exp);
@@ -187,7 +186,7 @@ double exp(double x)
 	res = 1.0;
 
 	for (i = 2; i < 13; ++i) {
-		if (powx == 0.0)
+		if (powx == 0.0 || powx == -0.0)
 			break;
 		res += powx / factorial;
 		factorial *= i;
@@ -200,24 +199,27 @@ double exp(double x)
 
 double ceil(double x)
 {
-	double tmp;
+	double ipart, fpart;
 
-	x = modf(x, &tmp);
+	fpart = modf(x, &ipart);
 
-	if (x != 0.0)
-		tmp += 1.0;
+	if (fpart + x != x)
+		ipart += 1.0;
 
-	return tmp;
+	return ipart;
 }
 
 
 double floor(double x)
 {
-	double tmp;
+	double ipart, fpart;
 
-	modf(x, &tmp);
+	fpart = modf(x, &ipart);
 
-	return tmp;
+	if (x < 0 && fpart + x != x)
+		ipart -= 1.0;
+
+	return ipart;
 }
 
 
@@ -225,8 +227,8 @@ double fmod(double numer, double denom)
 {
 	double result, tquot;
 
-	if (denom == 0)
-		return 0.0;
+	if (denom == 0.0 || denom == -0.0)
+		return denom;
 
 	modf(numer / denom, &tquot);
 	result = tquot * denom;
