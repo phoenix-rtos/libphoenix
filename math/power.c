@@ -25,15 +25,21 @@ double pow(double base, double exponent)
 	double res = 1.0;
 	int s = 1;
 
-	if (base == 0.0) {
-		if (exponent == 0.0) {
+	if (base == 0.0 || base == -0.0) {
+		if (exponent == 0.0 || exponent == -0.0) {
 			errno = EDOM;
 			return NAN;
+		}
+		else if (exponent < 0.0) {
+			if (base == 0.0)
+				return INFINITY;
+			else if (base == -0.0)
+				return -INFINITY;
 		}
 
 		return 0.0;
 	}
-	else if (exponent == 0.0) {
+	else if (exponent == 0.0 || exponent == -0.0) {
 		return 1.0;
 	}
 
@@ -65,7 +71,7 @@ double sqrt(double x)
 		return -NAN;
 	}
 
-	if (x == 0.0)
+	if (x == 0.0 || x == -0.0)
 		return 0.0;
 
 	return pow(x, 0.5);
