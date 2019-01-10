@@ -110,18 +110,22 @@ double tan(double x)
 /* Calculates arcus cosine value using Newton method solving cos(y) - x = 0 for y */
 double acos(double x)
 {
-	double y;
-	int i;
+	double y, xsqr = x * x, xpow = xsqr * x;
 
 	if (x > 1.0 || x < -1.0) {
 		errno = EDOM;
 		return NAN;
 	}
 
-	y = M_PI_2;
-
-	for (i = 0; i < 10; ++i)
-		y = y + ((cos(y) - x) / sin(y));
+	y = M_PI_2 - x;
+	y -= xpow / 6;               xpow *= xsqr;
+	y -= (3 * xpow) / 40;        xpow *= xsqr;
+	y -= (5 * xpow) / 112;       xpow *= xsqr;
+	y -= (35 * xpow) / 1152;     xpow *= xsqr;
+	y -= (63 * xpow) / 2816;     xpow *= xsqr;
+	y -= (231 * xpow) / 13312;   xpow *= xsqr;
+	y -= (143 * xpow) / 10240;   xpow *= xsqr;
+	y -= (6435 * xpow) / 557056;
 
 	return y;
 }
