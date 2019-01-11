@@ -118,14 +118,18 @@ double acos(double x)
 	}
 
 	y = M_PI_2 - x;
-	y -= xpow / 6;               xpow *= xsqr;
-	y -= (3 * xpow) / 40;        xpow *= xsqr;
-	y -= (5 * xpow) / 112;       xpow *= xsqr;
-	y -= (35 * xpow) / 1152;     xpow *= xsqr;
-	y -= (63 * xpow) / 2816;     xpow *= xsqr;
-	y -= (231 * xpow) / 13312;   xpow *= xsqr;
-	y -= (143 * xpow) / 10240;   xpow *= xsqr;
-	y -= (6435 * xpow) / 557056;
+	y -= xpow / 6;                  xpow *= xsqr;
+	y -= (3 * xpow) / 40;           xpow *= xsqr;
+	y -= (5 * xpow) / 112;          xpow *= xsqr;
+	y -= (35 * xpow) / 1152;        xpow *= xsqr;
+	y -= (63 * xpow) / 2816;        xpow *= xsqr;
+	y -= (231 * xpow) / 13312;      xpow *= xsqr;
+	y -= (143 * xpow) / 10240;      xpow *= xsqr;
+	y -= (6435 * xpow) / 557056;    xpow *= xsqr;
+	y -= (12155 * xpow) / 1245184;  xpow *= xsqr;
+	y -= (46189 * xpow) / 5505024;  xpow *= xsqr;
+	y -= (88179 * xpow) / 12058624; xpow *= xsqr;
+	y -= (676039 * xpow) / 104857600;
 
 	return y;
 }
