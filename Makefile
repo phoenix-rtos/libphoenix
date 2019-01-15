@@ -121,7 +121,7 @@ install: $(LIB) $(HEADERS)
 		fi \
 	done; \
 	for file in $(HEADERS); do\
-		install -m 644  $${file} $(HEADERS_INSTALL_DIR)/$${file};\
+		install -p -m 644 $${file} $(HEADERS_INSTALL_DIR)/$${file};\
 	done
 
 uninstall:
