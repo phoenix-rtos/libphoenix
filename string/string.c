@@ -95,7 +95,7 @@ int strncasecmp(const char *s1, const char *s2, int n)
 /* FIXME it should return -K or +K or 0  */
 #ifndef __STRNCMP
 #define __STRNCMP
-int strncmp(const char *s1, const char *s2, unsigned int count)
+int strncmp(const char *s1, const char *s2, size_t count)
 {
 	const char *p;
 	unsigned int k = 0;
