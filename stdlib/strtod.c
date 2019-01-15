@@ -114,8 +114,6 @@ double strtod(const char *restrict nptr, char **restrict endptr)
 	if (sign)
 		res = -res;
 
-	int *d = &res;
-
 	if (isnum && endptr != NULL)
 		*endptr = (char *)nptr;
 

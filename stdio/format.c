@@ -169,6 +169,7 @@ static void format_sprintf_num(void *ctx, feedfunc feed, u64 num64, u32 flags, i
 			sign = '-';
 			d = -d;
 		}
+		num64 = format_u64FromDouble(d);
 
 		/* check zero */
 		if (!(num64 & 0x7fffffffffffffff)) {
@@ -294,7 +295,7 @@ static void format_sprintf_num(void *ctx, feedfunc feed, u64 num64, u32 flags, i
 				exp--;
 		}
 
-		if (exp > frac_len || (!exps & exp >= 5)) {
+		if (exp > frac_len || (!exps & (exp >= 5))) {
 			*tmp++ = digits[exp % 10];
 			exp /= 10;
 			if (!exp)
@@ -680,7 +681,7 @@ void format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 				break;
 			case 'f':
 				flags |= FLAG_FLOAT;
-				float_frac_len = (float_frac_len >= 0) ? 6 : float_frac_len;
+				float_frac_len = (float_frac_len >= 0) ? float_frac_len : 6;
 				number = format_u32FromFloat((float)va_arg(args, double));
 				format_sprintf_num(ctx, feed, number, flags, min_number_len, float_frac_len);
 				break;
