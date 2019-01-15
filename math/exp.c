@@ -223,17 +223,20 @@ double floor(double x)
 }
 
 
-double fmod(double numer, double denom)
+double fmod(double number, double denom)
 {
 	double result, tquot;
 
 	if (denom == 0.0 || denom == -0.0)
-		return denom;
+		return NAN;
 
-	modf(numer / denom, &tquot);
+	if (denom == INFINITY || denom == -INFINITY)
+		return number;
+
+	modf(number / denom, &tquot);
 	result = tquot * denom;
 
-	return numer - result;
+	return number - result;
 }
 
 
