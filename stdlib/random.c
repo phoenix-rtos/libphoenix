@@ -18,10 +18,11 @@
 
 long random(void)
 {
-	return 0;
+	return rand();
 }
 
 
 void srandom(unsigned int seed)
 {
+	return srand(seed);
 }

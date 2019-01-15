@@ -17,12 +17,12 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+
 double strtod(const char *restrict nptr, char **restrict endptr)
 {
-	long long integer = 0;
-	double res = 0;
-	int sign = 0, fracsz = 0, dotp = -1, exp = 0, exp_sign = 1;
-	int len = 0, overflow = 0;
+	double res = 0, exp_val = 10;
+	int sign = 0, fracsz = 0, sep_pos = -1, exp = 0, exp_sign = 1;
+	int len = 0, overflow = 0, isnum = 0, i;
 
 	if (nptr == NULL)
 		return 0;
@@ -40,18 +40,25 @@ double strtod(const char *restrict nptr, char **restrict endptr)
 
 	/* get the fraction part and store it as integer */
 	while (isdigit(*nptr) || *nptr == '.') {
-		if (*nptr == '.')
-			dotp = fracsz;
+		if (isdigit(*nptr))
+			isnum = 1;
+		if (*nptr == '.') {
+			if (sep_pos != -1) {
+				isnum = 0;
+				break;
+			}
+			sep_pos = fracsz;
+		}
 		fracsz++;
 		nptr++;
 	}
 
 	if (fracsz != 0) {
 		nptr -= fracsz;
-		if (dotp >= 0)
-			dotp = fracsz - dotp - 1;
+		if (sep_pos >= 0)
+			sep_pos = fracsz - sep_pos - 1;
 		else
-			dotp = 0;
+			sep_pos = 0;
 
 		while(isdigit(*nptr) || *nptr == '.') {
 			if (*nptr == '.') {
@@ -59,14 +66,14 @@ double strtod(const char *restrict nptr, char **restrict endptr)
 				continue;
 			}
 
-			/* do not overflow long long... */
+			/* do not overflow long long */
 			if (len < 18)
-				integer = integer * 10 + (*nptr - '0');
+				res = res * 10 + (*nptr - '0');
 			else
 				overflow++;
 			nptr++;
-			/* don't count leading zeros though */
-			if (integer)
+			/* don't count leading zeros */
+			if (res)
 				len++;
 		}
 	}
@@ -80,29 +87,36 @@ double strtod(const char *restrict nptr, char **restrict endptr)
 		} else if (*nptr == '+')
 			nptr++;
 
+		if (!isdigit(*nptr))
+			isnum = 0;
+
 		while(isdigit(*nptr))
 			exp = exp * 10 + (*nptr++ - '0');
 	}
 
-	exp = exp - (exp_sign * dotp) + overflow;
+	exp = exp - (exp_sign * sep_pos) + overflow;
 
 	if (exp < 0 && exp_sign == 1) {
 		exp_sign = -1;
 		exp *= exp_sign;
 	}
 
-	res = (double)integer;
-	while (exp--) {
-		if (exp_sign == -1)
-			res /= 10;
-		else
-			res *= 10;
+	for (i = 0; i < 9; i++) {
+		if ((exp >> i) & 1) {
+			if (exp_sign == -1)
+				res /= exp_val;
+			else
+				res *= exp_val;
+		}
+		exp_val *= exp_val;
 	}
 
 	if (sign)
 		res = -res;
 
-	if (endptr != NULL)
+	int *d = &res;
+
+	if (isnum && endptr != NULL)
 		*endptr = (char *)nptr;
 
 	return res;

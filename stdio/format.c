@@ -156,9 +156,13 @@ static void format_sprintf_num(void *ctx, feedfunc feed, u64 num64, u32 flags, i
 	}
 
 	if (flags & FLAG_DOUBLE) {
-		double d = format_doubleFromU64(num64);
-		int exp = 0, tz = 0, exps = 0, frac_len, int_len;
-		long long integer;
+		double d = format_doubleFromU64(num64), exp_val;
+		/* exponent, exponent sign, trailing zeros, fraction lenght, integer lenght, temp */
+		int exp = 0, exps = 0, tz = 1, frac_len, int_len, temp, i;
+		/* fraction, temporary vars */
+		long long frac, temp1, temp2;
+
+		int *c = &d;
 
 		/* check sign */
 		if ((num64 >> 63) & 1) {
@@ -194,34 +198,103 @@ static void format_sprintf_num(void *ctx, feedfunc feed, u64 num64, u32 flags, i
 			return;
 		}
 
-		frac_len = float_frac_len;
+		frac_len = float_frac_len ? float_frac_len : 1;
 		int_len = 1;
 
-		while (d < 1) {
-			exp++;
-			d *= 10;
+		if ((num64 >> 52) < 0x3ff) {
+
+			temp = ((int)((num64 >> 52) & 0x7ff) - 1023) / -4;
+
+			exp_val = 10;
+
+			for (i = 0; i < 9; i++) {
+				if ((temp >> i) & 1)
+					d *= exp_val;
+				exp_val *= exp_val;
+			}
+
+			temp1 = d;
+			c = &d;
+
+			num64 = format_u64FromDouble(d);
+			/* shift fraction left until it's >= 1*/
+			while ((num64 >> 52) < 0x3ff) {
+				exp++;
+				d *= 10;
+				num64 = format_u64FromDouble(d);
+			}
+			exp = temp + exp;
 		}
 
 		if (exp == 0) {
-			/* number is larger than 1 */
+			/* no shifting - number is larger than 1 */
 			exps = 1;
-			while(d >= 1) {
+
+			temp = ((int)((num64 >> 52) & 0x7ff) - 1023) / 4;
+
+			exp_val = 10;
+
+			for (i = 0; i < 9; i++) {
+				if ((temp >> i) & 1)
+					d /= exp_val;
+				exp_val *= exp_val;
+			}
+
+			num64 = format_u64FromDouble(d);
+			while((num64 >> 52) >= 0x3ff) {
 				exp++;
 				d /= 10;
+				num64 = format_u64FromDouble(d);
 			}
+
 			d *= 10;
 			exp--;
-
+			exp = temp + exp;
 			if (exp < float_frac_len) {
 				int_len += exp;
 				frac_len -= exp;
 				while (exp--)
 					d *= 10;
 				exp = 0;
+				frac = d;
 			}
 		}
+		temp = frac_len;
 
-		if (exp >= 5) {
+		while (frac_len--)
+			d *= 10;
+
+		frac_len = temp - 1;
+		frac = d;
+		temp1 = frac / 10;
+
+		/* rounding */
+		frac += 5;
+		frac /= 10;
+		temp2 = frac;
+
+		while (frac_len--) {
+			temp1 /= 10;
+			temp2 /= 10;
+		}
+
+		frac_len = temp - 1;
+		temp = int_len - 1;
+
+		while(temp--) {
+			temp1 /= 10;
+			temp2 /= 10;
+		}
+
+		if (temp2 > temp1) {
+			frac /= 10;
+			if (exps == 1)
+				exp++;
+			else
+				exp--;
+		}
+
+		if (exp > frac_len || (!exps & exp >= 5)) {
 			*tmp++ = digits[exp % 10];
 			exp /= 10;
 			if (!exp)
@@ -241,29 +314,18 @@ static void format_sprintf_num(void *ctx, feedfunc feed, u64 num64, u32 flags, i
 			*tmp++ ='e';
 		}
 
-		tz = frac_len;
-
-		while (frac_len--)
-			d *= 10;
-
-		frac_len = tz - 1;
-		integer = d;
-		/* rounding */
-		integer += 5;
-		integer /= 10;
-
 		while (frac_len--) {
-			if (integer % 10 || !tz) {
+			if (frac % 10 || !tz) {
 				tz = 0;
-				*tmp++ = digits[integer % 10];
+				*tmp++ = digits[frac % 10];
 			}
-			integer /= 10;
+			frac /= 10;
 		}
 
 		if (exp) {
 			tz = 0;
-			*tmp++ = digits[integer % 10];
-			integer /= 10;
+			*tmp++ = digits[frac % 10];
+			frac /= 10;
 			while (--exp)
 				*tmp++ = '0';
 		}
@@ -272,8 +334,8 @@ static void format_sprintf_num(void *ctx, feedfunc feed, u64 num64, u32 flags, i
 			*tmp++ = '.';
 
 		while (int_len--) {
-			*tmp++ = digits[integer % 10];
-			integer /= 10;
+			*tmp++ = digits[frac % 10];
+			frac /= 10;
 		}
 		/* we need num32 to be 0 and num64 to not be 0 so the rest of the function won't mess our conversion */
 		num64 = 0x100000000;
@@ -464,7 +526,8 @@ void format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 		}
 
 		/* precission, padding (set default to 6 digits) */
-		u32 flags = 0, min_number_len = 0, float_frac_len = -1;
+		u32 flags = 0, min_number_len = 0;
+		int	float_frac_len = -1;
 
 		for (;;) {
 			if (fmt == ' ')
@@ -611,7 +674,7 @@ void format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 				break;
 			case 'g':
 				flags |= FLAG_DOUBLE;
-				float_frac_len = float_frac_len > 0 ? float_frac_len : 6;
+				float_frac_len = float_frac_len >= 0 ? float_frac_len : 6;
 				number = format_u64FromDouble((double)va_arg(args, double));
 				format_sprintf_num(ctx, feed, number, flags, min_number_len, float_frac_len);
 				break;
