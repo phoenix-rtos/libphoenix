@@ -107,35 +107,36 @@ double tan(double x)
 }
 
 
-/* Calculates arcus cosine value using Newton method solving cos(y) - x = 0 for y */
+/* Calculates value of arc cosine using secant method */
 double acos(double x)
 {
-	double y, xsqr = x * x, xpow = xsqr * x;
+	double xa = 0, xb = M_PI, ya, yb, t;
+	int i;
 
 	if (x > 1.0 || x < -1.0) {
 		errno = EDOM;
 		return NAN;
 	}
 
-	y = M_PI_2 - x;
-	y -= xpow / 6;                  xpow *= xsqr;
-	y -= (3 * xpow) / 40;           xpow *= xsqr;
-	y -= (5 * xpow) / 112;          xpow *= xsqr;
-	y -= (35 * xpow) / 1152;        xpow *= xsqr;
-	y -= (63 * xpow) / 2816;        xpow *= xsqr;
-	y -= (231 * xpow) / 13312;      xpow *= xsqr;
-	y -= (143 * xpow) / 10240;      xpow *= xsqr;
-	y -= (6435 * xpow) / 557056;    xpow *= xsqr;
-	y -= (12155 * xpow) / 1245184;  xpow *= xsqr;
-	y -= (46189 * xpow) / 5505024;  xpow *= xsqr;
-	y -= (88179 * xpow) / 12058624; xpow *= xsqr;
-	y -= (676039 * xpow) / 104857600;
+	for (i = 0; i < 16; ++i) {
+		ya = cos(xa) - x;
+		yb = cos(xb) - x;
 
-	return y;
+		t = ya - yb;
+
+		if (t == 0.0 || t == -0.0)
+			break;
+
+		t = (ya * xb - yb * xa) / t;
+		xa = xb;
+		xb = t;
+	}
+
+	return xb;
 }
 
 
-/* Calculates value od sine using asin(x) = pi/2 - acos(x) relationship. */
+/* Calculates value of arc sine using asin(x) = pi/2 - acos(x) relationship. */
 double asin(double x)
 {
 	return M_PI_2 - acos(x);
