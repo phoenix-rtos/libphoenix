@@ -190,7 +190,7 @@ int getnameinfo(const struct sockaddr *addr, socklen_t addrlen,
 	size_t hlen;
 	char *buf;
 
-	if (addrlen > sizeof(smi->send.addr))
+	if (addrlen > MAX_SOCKNAME_LEN)
 		return EAI_FAMILY;
 
 	if (host == NULL)
@@ -241,7 +241,7 @@ int getnameinfo(const struct sockaddr *addr, socklen_t addrlen,
 	}
 
 	if (smo->ret == EAI_SYSTEM)
-		(void)SET_ERRNO(-smo->sys.errno);
+		(void)SET_ERRNO(-smo->sys.error);
 
 	free(buf);
 	return smo->ret;
@@ -312,7 +312,7 @@ int getaddrinfo(const char *node, const char *service,
 	if (smo->ret || bufsz > msg.o.size) {
 		free(msg.o.data);
 		if (smo->ret == EAI_SYSTEM)
-			(void)SET_ERRNO(-smo->sys.errno);
+			(void)SET_ERRNO(-smo->sys.error);
 		return smo->ret;
 	}
 
