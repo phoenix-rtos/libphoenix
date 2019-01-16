@@ -225,13 +225,12 @@ char *strncpy(char *dest, const char *src, size_t n)
 #endif
 
 
-#ifndef __STRPCPY
-#define __STRPCPY
+#ifndef __STPCPY
+#define __STPCPY
 char *stpcpy(char *dest, const char *src)
 {
-	do
+	while (*src)
 		*(dest++) = *(src++);
-	while (*src);
 
 	*dest = 0;
 

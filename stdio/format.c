@@ -162,8 +162,6 @@ static void format_sprintf_num(void *ctx, feedfunc feed, u64 num64, u32 flags, i
 		/* fraction, temporary vars */
 		long long frac, temp1, temp2;
 
-		int *c = &d;
-
 		/* check sign */
 		if ((num64 >> 63) & 1) {
 			sign = '-';
@@ -215,7 +213,6 @@ static void format_sprintf_num(void *ctx, feedfunc feed, u64 num64, u32 flags, i
 			}
 
 			temp1 = d;
-			c = &d;
 
 			num64 = format_u64FromDouble(d);
 			/* shift fraction left until it's >= 1*/
