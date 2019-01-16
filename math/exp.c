@@ -95,16 +95,14 @@ double log(double x)
 
 	conv->i.exponent = 1022;
 
-	tmp -= 1.0;
+	tmp = (tmp - 1.0) / (tmp + 1.0);
 
-	for (i = 1, res = 0, pow = tmp; i < 16; ++i, pow *= tmp) {
-		if (i & 1)
-			res += pow / i;
-		else
-			res -= pow / i;
+	for (i = 1, res = 0, pow = tmp * tmp; i < 16; ++i) {
+		res += tmp / (2 * i - 1);
+		tmp *= pow;
 	}
 
-	return res + (exp / M_LOG2E);
+	return (2 * res) + (exp / M_LOG2E);
 }
 
 
