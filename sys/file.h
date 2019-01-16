@@ -25,6 +25,16 @@ enum { otDir = 0, otFile, otDev, otSymlink, otUnknown };
 enum { atMode = 0, atUid, atGid, atSize, atType, atPort, atPollStatus, atEventMask, atCTime, atMTime, atATime, atLinks, atDev };
 
 
+enum { mtMount = 0xf50, mtUmount, mtSync };
+
+
+typedef struct {
+	long id;
+	unsigned mode;
+	char fstype[16];
+} mount_msg_t;
+
+
 extern int fileAdd(unsigned int *h, oid_t *oid, unsigned mode);
 
 

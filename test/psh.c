@@ -23,6 +23,7 @@
 #include <sys/threads.h>
 #include <sys/mman.h>
 #include <sys/msg.h>
+#include <sys/mount.h>
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -701,6 +702,23 @@ static int psh_kill(char *arg)
 }
 
 
+static int psh_mount(int argc, char **argv)
+{
+	int err;
+
+	if (argc != 5 && argc != 4) {
+		printf("usage: mount source target fstype mode %d\n", argc);
+		return -1;
+	}
+
+	err = mount(argv[0], argv[1], argv[2], atoi(argv[3]), argv[4]);
+
+	if (err < 0)
+		printf("mount: %s\n", strerror(err));
+
+	return err;
+}
+
 
 void psh_run(void)
 {
@@ -770,6 +788,7 @@ int psh_runscript(char *path)
 	char **argv = NULL;;
 	char *bin;
 	int err;
+	pid_t pid;
 
 	stream = fopen(path, "r");
 
@@ -790,7 +809,7 @@ int psh_runscript(char *path)
 
 	while (getline(&line, &n, stream) > 0) {
 
-		if (line[0] == 'X') {
+		if (line[0] == 'X' || line[0] == 'W') {
 			strtok(line, " ");
 
 			bin = strtok(NULL, " ");
@@ -827,11 +846,14 @@ int psh_runscript(char *path)
 
 			argv[argc] = NULL;
 
-			if (!vfork()) {
+			if (!(pid = vfork())) {
 				err = execve(bin, argv, NULL);
 				printf("psh: execve failed %d\n", err);
 				exit(err);
 			}
+
+			if (line[0] == 'W')
+				waitpid(pid, NULL, 0);
 		}
 
 		free(argv);
@@ -854,7 +876,8 @@ int main(int argc, char **argv)
 	int c;
 	oid_t oid;
 	char *args;
-	char *base, *dir;
+	char *base, *dir, *cmd;
+	FILE *file;
 
 	splitname(argv[0], &base, &dir);
 
@@ -868,13 +891,24 @@ int main(int argc, char **argv)
 			usleep(50000);
 
 		if (argc > 0 && (c = getopt(argc, argv, "i:")) != -1) {
-			if (psh_runscript(optarg) == EOK) {
-				for (;;) /* TODO: exec last program */
-					usleep(10000000);
+			if (psh_runscript(optarg) != EOK)
+				printf("psh: error during preinit\n");
+
+			file = fopen("/var/preinit", "w+");
+
+			if (file != NULL) {
+				while ((cmd = argv[optind++]) != NULL) {
+					fwrite(cmd, 1, strlen(cmd), file);
+					fwrite(" ", 1, 1, file);
+				}
+
+				fwrite("\n", 1, 1, file);
+				fclose(file);
 			}
 		}
-
-		psh_run();
+		else {
+			psh_run();
+		}
 	}
 	else {
 		if ((args = calloc(3000, 1)) == NULL) {
@@ -893,6 +927,8 @@ int main(int argc, char **argv)
 			psh_ps(args);
 		else if (!strcmp(base, "perf"))
 			psh_perf(args);
+		else if (!strcmp(base, "mount"))
+			psh_mount(argc - 1, argv + 1);
 		else
 			printf("psh: %s: unknown command\n", argv[0]);
 	}
