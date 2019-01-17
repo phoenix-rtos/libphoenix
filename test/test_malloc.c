@@ -25,6 +25,7 @@ enum size_mode {
 	SZMODE_SMALL = 0,
 	SZMODE_MEDIUM,
 	SZMODE_BIG,
+	SZMODE_HUGE,
 	SZMODE_MIXED,
 	SZMODE_NUM_MODES,
 };
@@ -41,7 +42,7 @@ static struct {
 			unsigned sz;
 			char *buf;
 		} allocs[100];
-	} threads[3];
+	} threads[1];
 
 	handle_t mutex;
 } test_malloc_common;
@@ -66,6 +67,8 @@ unsigned random_size(enum size_mode szmode, unsigned *seed)
 		return 100 + rand_r(seed) % 400;
 	case SZMODE_BIG:
 		return 500 + rand_r(seed) % (10 * SIZE_PAGE);
+	case SZMODE_HUGE:
+		return 500 + rand_r(seed) % (32 << 20);
 	case SZMODE_MIXED:
 		return random_size(rand_r(seed) % SZMODE_MIXED, seed);
 	default:
@@ -80,8 +83,8 @@ void test_malloc(unsigned threadId)
 	char *ptr;
 	int i, j, k;
 	enum size_mode szmode;
-	unsigned size = 0, imax, total = 0, ftotal = 0, nofailed = 0, counter = 0;
-	const char szmodes[SZMODE_NUM_MODES][7] = {"small", "medium", "big", "mixed"};
+	unsigned size = 0, imax, total = 0, ftotal = 0, nofailed = 0, counter = 0, maxtotal = 0;
+	const char szmodes[SZMODE_NUM_MODES][7] = {"small", "medium", "big", "huge", "mixed"};
 	struct test_malloc_alloc *allocs = test_malloc_common.threads[threadId].allocs;
 
 	test_printf("test thread %d: malloc/realloc randomized tests, seed = %u\n", threadId, *seed);
@@ -94,6 +97,7 @@ void test_malloc(unsigned threadId)
 	for (;;) {
 		szmode = rand_r(seed) % SZMODE_NUM_MODES;
 		imax = 1 + rand_r(seed) % test_malloc_common.allocslen;
+		maxtotal = 0;
 
 		test_printf("test thread %d: allocation size: %s, up to %u buffers\n", threadId, szmodes[szmode], imax);
 
@@ -157,11 +161,12 @@ void test_malloc(unsigned threadId)
 				}
 			}
 
+			maxtotal = max(total, maxtotal);
 			malloc_test();
 		}
 
 		if (nofailed)
-			test_printf("test thread %d: %d/%u allocations failed with avg %u bytes in use\n", threadId, nofailed, test_malloc_common.threads[threadId].noallocs, ftotal / nofailed);
+			test_printf("test thread %d: %d/%u allocations failed with avg %u bytes in use, maxtotal: %u\n", threadId, nofailed, test_malloc_common.threads[threadId].noallocs, ftotal / nofailed, maxtotal);
 
 		if (rand_r(seed) % 2) {
 			test_printf("test thread %d: freeing all memory, global counter: %u, seed: %u\n", threadId, counter++, *seed);

@@ -304,8 +304,13 @@ static heap_t *_malloc_heapAlloc(size_t size)
 {
 	chunk_t *chunk;
 	size_t heapSize = CEIL(sizeof(heap_t) + size, SIZE_PAGE);
-	heap_t *heap = mmap(NULL, heapSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, NULL, 0);
-	if (heap == (heap_t*) -1)
+	heap_t *heap;
+
+	if (heapSize < size)
+		return NULL;
+
+	heap = mmap(NULL, heapSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, NULL, 0);
+	if (heap == MAP_FAILED)
 		return NULL;
 
 	chunk = (chunk_t*) heap->space;
@@ -345,7 +350,7 @@ static void *_malloc_allocLarge(size_t size)
 		   0x17f,    0x1ff,    0x2ff,    0x3ff,    0x5ff,    0x7ff,    0xbff,      0xfff,
 		  0x17ff,   0x1fff,   0x2fff,   0x3fff,   0x5fff,   0x7fff,   0xbfff,     0xffff,
 		 0x17fff,  0x1ffff,  0x2ffff,  0x3ffff,  0x5ffff,  0x7ffff,  0xbffff,    0xfffff,
-		0x17ffff, 0x1fffff, 0x2fffff, 0x3fffff, 0x5fffff, 0x7fffff, 0xbfffff, 0xffffffff
+		0x17ffff, 0x1fffff, 0x2fffff, 0x3fffff, 0x5fffff, 0x7fffff, 0xbfffff,        0x0
 	};
 
 	unsigned int idx = malloc_getlidx(size);
@@ -365,7 +370,7 @@ static void *_malloc_allocLarge(size_t size)
 
 	if (chunk == NULL) {
 		idx = malloc_getlidx(size);
-		if ((heap = _malloc_heapAlloc(lookup[idx])) == NULL)
+		if ((heap = _malloc_heapAlloc(max(lookup[idx], size))) == NULL)
 			return NULL;
 
 		chunk = (chunk_t *) heap->space;
