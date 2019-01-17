@@ -720,6 +720,24 @@ static int psh_mount(int argc, char **argv)
 }
 
 
+static int psh_sync(int argc, char **argv)
+{
+	oid_t oid;
+	msg_t msg = {0};
+	msg.type = mtSync;
+
+	if (!argc) {
+		printf("usage: sync path-to-device\n");
+		return -1;
+	}
+
+	if (lookup(argv[0], NULL, &oid) < 0)
+		return -1;
+
+	return msgSend(oid.port, &msg);
+}
+
+
 void psh_run(void)
 {
 	unsigned int n;
@@ -929,6 +947,8 @@ int main(int argc, char **argv)
 			psh_perf(args);
 		else if (!strcmp(base, "mount"))
 			psh_mount(argc - 1, argv + 1);
+		else if (!strcmp(base, "sync"))
+			psh_sync(argc - 1, argv + 1);
 		else
 			printf("psh: %s: unknown command\n", argv[0]);
 	}
