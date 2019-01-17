@@ -789,6 +789,11 @@ void psh_run(void)
 		else if (!strcmp(cmd, "exit"))
 			exit(EXIT_SUCCESS);
 
+		else if (!strcmp(cmd, "reboot")) {
+			priority(0);
+			for (;;) ;
+		}
+
 		else
 			printf("Unknown command!\n");
 		fflush(NULL);
