@@ -17,7 +17,7 @@
 #define _LIBPHOENIX_SETJMP_H_
 
 
-typedef unsigned int jmp_buf[11];
+typedef unsigned int jmp_buf[12];
 typedef jmp_buf sigjmp_buf;
 
 
