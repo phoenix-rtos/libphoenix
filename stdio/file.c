@@ -31,6 +31,7 @@
 #define F_WRITING (1 << 1)
 #define F_LINE (1 << 2)
 #define F_ERROR (1 << 3)
+#define F_USRBUF (1 << 4)
 
 static FILE stdin_file  = {0, 0};
 static FILE stdout_file = {1, 0};
@@ -81,25 +82,25 @@ static int string2mode(const char *mode)
 }
 
 
-static void *buffAlloc(void)
+static void *buffAlloc(size_t size)
 {
 	void *ret;
 
 #ifndef NOMMU
-	if ((ret = mmap(NULL, BUFSIZ, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, NULL, 0)) == MAP_FAILED)
+	if ((ret = mmap(NULL, (size + (SIZE_PAGE - 1)) & ~(SIZE_PAGE - 1), PROT_READ | PROT_WRITE, MAP_ANONYMOUS, NULL, 0)) == MAP_FAILED)
 		return NULL;
 #else
-	ret = malloc(BUFSIZ);
+	ret = malloc(size);
 #endif
 
 	return ret;
 }
 
 
-static void buffFree(void *ptr)
+static void buffFree(void *ptr, size_t size)
 {
 #ifndef NOMMU
-	munmap(ptr, BUFSIZ);
+	munmap(ptr, (size + (SIZE_PAGE - 1)) & ~(SIZE_PAGE - 1));
 #else
 	free(ptr);
 #endif
@@ -118,8 +119,8 @@ int fclose(FILE *file)
 	fflush(file);
 	err = close(file->fd);
 
-	if (file->buffer != NULL)
-		buffFree(file->buffer);
+	if (file->buffer != NULL && !(file->flags & F_USRBUF))
+		buffFree(file->buffer, file->bufsz);
 
 	resourceDestroy(file->lock);
 	free(file);
@@ -146,14 +147,16 @@ FILE *fopen(const char *filename, const char *mode)
 	if ((f = calloc(1, sizeof(FILE))) == NULL)
 		return NULL;
 
-	if ((f->buffer = buffAlloc()) == NULL) {
+	if ((f->buffer = buffAlloc(BUFSIZ)) == NULL) {
 		close(fd);
 		free(f);
 		return NULL;
 	}
 
 	mutexCreate(&f->lock);
+	f->bufsz = BUFSIZ;
 	f->fd = fd;
+	f->mode = m;
 	fflush(f);
 	return f;
 }
@@ -161,28 +164,33 @@ FILE *fopen(const char *filename, const char *mode)
 
 FILE *fdopen(int fd, const char *mode)
 {
-//	unsigned int m;
+	int m, fdm;
 	FILE *f;
 
 	if (mode == NULL)
 		return NULL;
 
-#if 0 /* TODO: check if mode is compatible with fd's mode */
 	if ((m = string2mode(mode)) < 0)
 		return NULL;
-#endif
+
+	fdm = fcntl(fd, F_GETFL);
+
+	if (fdm != (fdm | (m & 0xf)))
+		return NULL;
 
 	if ((f = calloc(1, sizeof(FILE))) == NULL)
 		return NULL;
 
-	if ((f->buffer = buffAlloc()) == NULL) {
+	if ((f->buffer = buffAlloc(BUFSIZ)) == NULL) {
 		close(fd);
 		free(f);
 		return NULL;
 	}
 
 	mutexCreate(&f->lock);
+	f->bufsz = BUFSIZ;
 	f->fd = fd;
+	f->mode = m;
 	fflush(f);
 	return f;
 }
@@ -203,6 +211,7 @@ FILE *freopen(const char *pathname, const char *mode, FILE *stream)
 			return NULL;
 
 		stream->fd = open(pathname, m);
+		stream->mode = m;
 	}
 	else {
 		/* change mode */
@@ -251,7 +260,7 @@ size_t fread_unlocked(void *ptr, size_t size, size_t nmemb, FILE *stream)
 	size_t readsz = nmemb * size;
 	size_t bytes;
 
-	if (!readsz || (stream->flags & F_EOF))
+	if (!readsz)
 		return 0;
 
 	if (stream->buffer == NULL) {
@@ -268,12 +277,18 @@ size_t fread_unlocked(void *ptr, size_t size, size_t nmemb, FILE *stream)
 			return 0;
 
 		stream->flags &= ~F_WRITING;
-		stream->bufpos = stream->bufeof = BUFSIZ;
+		stream->bufpos = stream->bufeof = stream->bufsz;
+	}
+
+	if (stream->mode & O_WRONLY) {
+		set_errno(-EBADF);
+		stream->flags |= F_ERROR;
+		return 0;
 	}
 
 	/* refill read buffer */
 	if (stream->bufpos == stream->bufeof) {
-		if ((err = read(stream->fd, stream->buffer, BUFSIZ)) == -1)
+		if ((err = read(stream->fd, stream->buffer, stream->bufsz)) == -1)
 			return 0;
 
 		stream->bufpos = 0;
@@ -347,8 +362,14 @@ size_t fwrite_unlocked(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 		stream->bufpos = 0;
 	}
 
+	if (stream->mode & O_RDONLY) {
+		set_errno(-EBADF);
+		stream->flags |= F_ERROR;
+		return 0;
+	}
+
 	/* write to buffer if fits */
-	if ((BUFSIZ - stream->bufpos) > writesz) {
+	if ((stream->bufsz - stream->bufpos) > writesz) {
 		memcpy(stream->buffer + stream->bufpos, ptr, writesz);
 		stream->bufpos += writesz;
 
@@ -469,7 +490,7 @@ int fflush_unlocked(FILE *stream)
 	}
 	else {
 		lseek(stream->fd, stream->bufpos - stream->bufeof, SEEK_CUR);
-		stream->bufpos = stream->bufeof = BUFSIZ;
+		stream->bufpos = stream->bufeof = stream->bufsz;
 	}
 
 	return 0;
@@ -504,7 +525,7 @@ int fseek(FILE *stream, long offset, int whence)
 	mutexLock(stream->lock);
 	ret = fseek_unlocked(stream, offset, whence);
 	mutexUnlock(stream->lock);
-	return ret;
+	return ret >= 0 ? 0 : -1;
 }
 
 
@@ -789,17 +810,55 @@ int feof(FILE *stream)
 	return ret;
 }
 
-void setbuf(FILE *stream, char *buf)
-{
-	/* TODO */
-}
-
-
 int setvbuf(FILE *stream, char *buffer, int mode, size_t size)
 {
-	/* TODO */
+
+	char *old_buf;
+	size_t old_siz;
+	int old_flags;
+
+	mutexLock(stream->lock);
+
+	old_buf = stream->buffer;
+	old_flags = stream->flags;
+	old_siz = stream->bufsz;
+
+	stream->buffer = NULL;
+	stream->bufsz = size;
+	stream->flags &= ~(F_USRBUF & F_LINE);
+
+	if (mode != _IONBF) {
+		if (buffer != NULL) {
+			stream->buffer = buffer;
+			stream->flags |= F_USRBUF;
+		}
+		else if (old_siz != size) {
+			stream->buffer = buffAlloc(size);
+			if (stream->buffer == NULL) {
+				stream->buffer = old_buf;
+				stream->bufsz = old_siz;
+				stream->flags = old_flags;
+				mutexUnlock(stream->lock);
+				return -1;
+			}
+		}
+
+		if (mode == _IOLBF)
+			stream->flags |= F_LINE;
+	}
+
+	if (!(old_flags & F_USRBUF) && old_siz != size)
+		buffFree(old_buf, old_siz);
+
+	mutexUnlock(stream->lock);
 	return 0;
 }
+
+void setbuf(FILE *stream, char *buf)
+{
+	setvbuf(stream, buf, buf != NULL ? _IOFBF : _IONBF, BUFSIZ);
+}
+
 
 
 void _file_init(void)
@@ -808,8 +867,10 @@ void _file_init(void)
 	stdout = &stdout_file;
 	stderr = &stderr_file;
 
-	stdin->buffer = buffAlloc();
-	stdout->buffer = buffAlloc();
+	stdin->buffer = buffAlloc(BUFSIZ);
+	stdout->buffer = buffAlloc(BUFSIZ);
+	stdin->bufsz = BUFSIZ;
+	stdout->bufsz = BUFSIZ;
 
 	stdin->bufeof = stdin->bufpos = BUFSIZ;
 	mutexCreate(&stdin->lock);
@@ -819,11 +880,16 @@ void _file_init(void)
 	mutexCreate(&stdout->lock);
 
 	stderr->buffer = NULL;
+	stderr->bufsz = 0;
 	stderr->flags = F_WRITING;
 	mutexCreate(&stderr->lock);
 
 	if (isatty(stdout->fd))
 		stdout->flags |= F_LINE;
+
+	stdin->mode = O_RDONLY;
+	stdout->mode = O_WRONLY;
+	stderr->mode = O_WRONLY;
 }
 
 

@@ -63,6 +63,7 @@ FILE *popen(const char *command, const char *mode)
 	pf->pid = pid;
 	pf->file.buffer = mmap(NULL, BUFSIZ, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, NULL, 0);
 	pf->file.bufpos = pf->file.bufeof = 0;
+	pf->file.bufsz = BUFSIZ;
 	pf->file.flags = 0;
 
 	if (mode[0] == 'r') {

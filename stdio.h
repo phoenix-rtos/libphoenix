@@ -53,8 +53,10 @@ typedef struct _FILE {
 	int fd;
 	unsigned flags;
 
+	int mode;
 	size_t bufeof;
 	size_t bufpos;
+	size_t bufsz;
 	char *buffer;
 	handle_t lock;
 } FILE;
