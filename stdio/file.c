@@ -905,7 +905,12 @@ void funlockfile(FILE *file)
 
 FILE *tmpfile(void)
 {
-	return NULL;
+	oid_t oid;
+
+	if (lookup("/dev/posix/tmpfile", NULL, &oid) < 0)
+		return NULL;
+
+	return fopen("/dev/posix/tmpfile", "w+");
 }
 
 
