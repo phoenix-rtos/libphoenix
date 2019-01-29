@@ -31,11 +31,11 @@ long timezone;
 int daylight;
 
 
-static const char wdayasc[8][4] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "???" };
+static const char wdayasc[8][10] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "???" };
 
 
-static const char monasc[13][4] = { "Jan", "Feb", "Mar", "Apr", "May",
-	"Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "???" };
+static const char monasc[13][10] = { "January", "February", "March", "April", "May",
+	"June", "July", "August", "September", "October", "November", "December", "???" };
 
 
 static int daysofmonth(int month, int leap)
@@ -128,7 +128,7 @@ char *asctime_r(const struct tm *tp, char *buf)
 	wday = tp->tm_wday < 0 || tp->tm_wday > 6 ? 7 : tp->tm_wday;
 	mon = tp->tm_mon < 0 || tp->tm_mon > 11 ? 12 : tp->tm_mon;
 
-	sprintf(buf, "%s %s %d %02d:%02d:%02d %d\n", wdayasc[wday], monasc[mon],
+	sprintf(buf, "%.3s %.3s %d %02d:%02d:%02d %d\n", wdayasc[wday], monasc[mon],
 		tp->tm_mday, tp->tm_hour, tp->tm_min, tp->tm_sec, tp->tm_year + 1900);
 
 	return buf;
@@ -145,7 +145,7 @@ char *asctime(const struct tm *tp)
 
 double difftime(time_t t1, time_t t2)
 {
-	return (double)t2 - (double)t1;
+	return (double)t1 - (double)t2;
 }
 
 
@@ -312,22 +312,49 @@ size_t strftime(char *restrict s, size_t maxsize, const char *restrict format, c
 		if (*c == '%') {
 			c++;
 			switch (*c) {
+			case 'A':
+				tmp = wdayasc[timeptr->tm_wday < 7 ? timeptr->tm_wday : 7];
+				res = snprintf(s + size, maxsize - size, "%s", tmp);
+				break;
 			case 'a':
 				tmp = wdayasc[timeptr->tm_wday < 7 ? timeptr->tm_wday : 7];
+				res = snprintf(s + size, maxsize - size, "%.3s", tmp);
+				break;
+			case 'B':
+				tmp = monasc[timeptr->tm_mon < 12 ? timeptr->tm_mon : 12];
 				res = snprintf(s + size, maxsize - size, "%s", tmp);
 				break;
 			case 'b':
 				tmp = monasc[timeptr->tm_mon < 12 ? timeptr->tm_mon : 12];
-				res = snprintf(s + size, maxsize - size, "%s", tmp);
+				res = snprintf(s + size, maxsize - size, "%.3s", tmp);
+				break;
+			case 'c':
+				res = snprintf(s + size, maxsize - size, "%.3s %.3s %u %02u:%02u:%02u %u",
+						wdayasc[timeptr->tm_wday < 7 ? timeptr->tm_wday : 7],
+						monasc[timeptr->tm_mon < 12 ? timeptr->tm_mon : 12],
+						timeptr->tm_mday,
+						timeptr->tm_hour,
+						timeptr->tm_min,
+						timeptr->tm_sec,
+						1900 + timeptr->tm_year);
+				break;
+			case 'd':
+				res = snprintf(s + size, maxsize - size, "%u", timeptr->tm_mday);
 				break;
 			case 'e':
-				res = snprintf(s + size, maxsize - size, "%02u", timeptr->tm_mday);
+				res = snprintf(s + size, maxsize - size, "%2u", timeptr->tm_mday);
 				break;
 			case 'H':
 				res = snprintf(s + size, maxsize - size, "%02u", timeptr->tm_hour);
 				break;
+			case 'j':
+				res = snprintf(s + size, maxsize - size, "%u", timeptr->tm_yday + 1);
+				break;
 			case 'M':
 				res = snprintf(s + size, maxsize - size, "%02u", timeptr->tm_min);
+				break;
+			case 'm':
+				res = snprintf(s + size, maxsize - size, "%u", timeptr->tm_mon < 12 ? timeptr->tm_mon + 1 : 13);
 				break;
 			case 'S':
 				res = snprintf(s + size, maxsize - size, "%02u", timeptr->tm_sec);
@@ -336,12 +363,19 @@ size_t strftime(char *restrict s, size_t maxsize, const char *restrict format, c
 				memcpy(&time, timeptr, sizeof(struct tm));
 				res = snprintf(s + size, maxsize - size, "%llu", mktime(&time));
 				break;
+			case 'w':
+				res = snprintf(s + size, maxsize - size, "%u", timeptr->tm_wday < 7 ? timeptr->tm_wday : 7);
+				break;
 			case 'Y':
 				res = snprintf(s + size, maxsize - size, "%u", 1900 + timeptr->tm_year);
 				break;
 			case 'Z':
 				c++;
 				continue;
+			case '%':
+				s[size] = *c;
+				res = 1;
+				break;
 			default: /* Unsupported conversion specifier */
 				if (maxsize - size < 3)
 					return 0;
