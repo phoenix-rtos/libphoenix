@@ -13,6 +13,8 @@
  * %LICENSE%
  */
 
+#include <locale.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/socket.h>
 #include <time.h>
@@ -26,7 +28,13 @@
 
 char* setlocale(int category, const char* locale)
 {
-	return NULL;
+	if (category != LC_ALL)
+		return NULL;
+
+	if (strcmp(locale, "POSIX") && strcmp(locale, "C"))
+		return NULL;
+
+	return "POSIX";
 }
 
 
