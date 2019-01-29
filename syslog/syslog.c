@@ -62,7 +62,7 @@ void openlog(const char *ident, int logopt, int facility)
 
 	if (logopt & LOG_NDELAY) {
 		if (!syslog_common.open) {
-			syslog_common.logfd = open(PATH_LOG, O_RDONLY | O_NONBLOCK);
+			syslog_common.logfd = open(PATH_LOG, O_WRONLY | O_NONBLOCK);
 			syslog_common.open = syslog_common.logfd != -1;
 		}
 	}
