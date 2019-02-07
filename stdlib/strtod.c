@@ -16,13 +16,15 @@
 
 #include <stdlib.h>
 #include <ctype.h>
+#include <math.h>
 
 
 double strtod(const char *restrict nptr, char **restrict endptr)
 {
+	unsigned long long integer = 0, frac = 0;
 	double res = 0, exp_val = 10;
-	int sign = 0, fracsz = 0, sep_pos = -1, exp = 0, exp_sign = 1;
-	int len = 0, overflow = 0, isnum = 0, i;
+	int sign = 0, intsz = 0, fracsz = 0, exp = 0, exp_sign = 1;
+	int len_int = 0, len_frac = 0, overflow_int = 0, isnum = 0, i;
 
 	if (nptr == NULL)
 		return 0;
@@ -38,45 +40,36 @@ double strtod(const char *restrict nptr, char **restrict endptr)
 	} else if (*nptr == '+')
 		nptr++;
 
-	/* get the fraction part and store it as integer */
-	while (isdigit(*nptr) || *nptr == '.') {
-		if (isdigit(*nptr))
-			isnum = 1;
-		if (*nptr == '.') {
-			if (sep_pos != -1) {
-				isnum = 0;
-				break;
-			}
-			sep_pos = fracsz;
-		}
-		fracsz++;
+	/* get the integer part */
+	while (isdigit(*nptr)) {
+		if (len_int < 20)
+			integer = integer * 10 + (*nptr - '0');
+		else
+			overflow_int++;
+		if (integer)
+			len_int++;
+		intsz++;
 		nptr++;
 	}
 
-	if (fracsz != 0) {
-		nptr -= fracsz;
-		if (sep_pos >= 0)
-			sep_pos = fracsz - sep_pos - 1;
-		else
-			sep_pos = 0;
+	if (intsz)
+		isnum = 1;
 
-		while(isdigit(*nptr) || *nptr == '.') {
-			if (*nptr == '.') {
-				nptr++;
-				continue;
-			}
-
-			/* do not overflow long long */
-			if (len < 18)
-				res = res * 10 + (*nptr - '0');
-			else
-				overflow++;
+	/* get the fraction part */
+	if (*nptr == '.') {
+		nptr++;
+		while (isdigit(*nptr)) {
+			if (len_frac < 20)
+				frac = frac * 10 + (*nptr - '0');
+			if (frac)
+				len_frac++;
+			fracsz++;
 			nptr++;
-			/* don't count leading zeros */
-			if (res)
-				len++;
 		}
 	}
+
+	if (fracsz)
+		isnum = 1;
 
 	/* get the exponent part */
 	if (*nptr == 'E' || *nptr == 'e') {
@@ -87,20 +80,24 @@ double strtod(const char *restrict nptr, char **restrict endptr)
 		} else if (*nptr == '+')
 			nptr++;
 
-		if (!isdigit(*nptr))
-			isnum = 0;
-
 		while(isdigit(*nptr))
 			exp = exp * 10 + (*nptr++ - '0');
 	}
-
-	exp = exp - (exp_sign * sep_pos) + overflow;
 
 	if (exp < 0 && exp_sign == 1) {
 		exp_sign = -1;
 		exp *= exp_sign;
 	}
 
+	res = (double)integer;
+	for (i = 0; i < 9; i++) {
+		if ((overflow_int >> i) & 1)
+			res *= exp_val;
+		exp_val *= exp_val;
+	}
+
+	res += (double)frac * pow(10, -fracsz);
+	exp_val = 10;
 	for (i = 0; i < 9; i++) {
 		if ((exp >> i) & 1) {
 			if (exp_sign == -1)
@@ -117,5 +114,5 @@ double strtod(const char *restrict nptr, char **restrict endptr)
 	if (isnum && endptr != NULL)
 		*endptr = (char *)nptr;
 
-	return res;
+	return isnum ? res : 0;
 }
