@@ -791,7 +791,7 @@ void psh_run(void)
 
 		else if (!strcmp(cmd, "reboot")) {
 			priority(0);
-			for (;;) :
+			for (;;);
 		}
 
 		else

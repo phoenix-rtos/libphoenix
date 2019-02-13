@@ -21,19 +21,19 @@ ERR_EXTRACT := sed -En -e '/^\s*\#\s*define\s+E\w+\s+[[:digit:]]+/{s/^[^d]*defin
 
 
 %/errno.list: $(HEADERS_INSTALL_DIR)/phoenix/errno.h $(TOPDIR)/errno.h
-	@(printf " GEN %-24s  \n" "$(@F)")
+	@(printf "GEN %-24s  \n" "$(@F)")
 	$(SIL)$(ERR_EXTRACT) $^ | sort -n > $@
 
 %/gaierr.list: $(TOPDIR)/netdb.h
-	@(printf " GEN %-24s  \n" "$(@F)")
+	@(printf "GEN %-24s  \n" "$(@F)")
 	$(SIL)$(ERR_EXTRACT) $^ | sort -n > $@
 
 %.str.inc: %.list Makefile
-	@(printf " GEN %-24s  \n" "$(@F)")
+	@(printf "GEN %-24s  \n" "$(@F)")
 	$(SIL)sed -e 's/^.*\t\(.*\)$$/"\1\\0"/' $< > $@
 
 %.tab.inc: %.list Makefile
-	@(printf " GEN %-24s  \n" "$(@F)")
+	@(printf "GEN %-24s  \n" "$(@F)")
 	$(SIL)bash -c 'o=0; while read num name; do echo "{ $$num, $$o },"; o=$$((o+$${#name}+1)); done' < $< > $@
 
 # include after all dependencies are set
