@@ -121,6 +121,8 @@ install: $(LIB) $(HEADERS)
 		fi \
 	done; \
 	for file in $(HEADERS); do\
+		base=`dirname $${file}`; \
+		mkdir -p "$(HEADERS_INSTALL_DIR)/$${base}"; \
 		install -p -m 644 $${file} $(HEADERS_INSTALL_DIR)/$${file};\
 	done
 

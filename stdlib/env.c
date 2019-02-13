@@ -295,5 +295,5 @@ int system(const char *command)
 	waitpid(pid, &ret, 0);
 	sigprocmask(SIG_SETMASK, &old_mask, NULL);
 
-	return WEXITSTATUS(ret);
+	return ret;
 }

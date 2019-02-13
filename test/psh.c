@@ -954,6 +954,10 @@ int main(int argc, char **argv)
 			psh_mount(argc - 1, argv + 1);
 		else if (!strcmp(base, "sync"))
 			psh_sync(argc - 1, argv + 1);
+		else if (!strcmp(base, "reboot")) {
+			priority(0);
+			for (;;) ;
+		}
 		else
 			printf("psh: %s: unknown command\n", argv[0]);
 	}
