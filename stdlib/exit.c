@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-
+extern void _atexit_call(void);
 extern void sys_exit(int) __attribute__((noreturn));
 
 
@@ -35,5 +35,6 @@ void _Exit(int status)
 void exit(int status)
 {
 	fflush(NULL);
+	_atexit_call();
 	_exit(status);
 }

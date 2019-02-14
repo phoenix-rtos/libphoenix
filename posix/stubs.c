@@ -162,10 +162,6 @@ unsigned int minor(int dev)
 	return 0;
 }
 
-int atexit(void (*function)(void))
-{
-	return -1;
-}
 
 struct group *getgrnam(const char *name)
 {

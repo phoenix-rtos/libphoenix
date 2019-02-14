@@ -25,6 +25,8 @@
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1
 
+#define ATEXIT_MAX 32
+
 typedef struct {
   int quot;
   int rem;
@@ -229,6 +231,10 @@ extern void srandom(unsigned int seed);
 
 /* make unique filename */
 extern int mkstemp(char *template);
+
+
+/* register a funtion to run at process termination */
+extern int atexit(void (*func)(void));
 
 
 #endif
