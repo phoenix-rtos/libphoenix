@@ -36,6 +36,17 @@ typedef int64_t intmax_t;
 #define INT64_MAX 0x7fffffffffffffffll
 #endif
 
+#ifndef INT64_MIN
+#define INT64_MIN 0x8000000000000000ll
+#endif
+
+#ifndef UINT64_MAX
+#define UINT64_MAX 0xffffffffffffffffll
+#endif
+
+#ifndef UINT64_MIN
+#define UINT64_MIN 0x0000000000000000ll
+#endif
 
 #ifndef SIZE_MAX
 #define SIZE_MAX (~(size_t)0)
