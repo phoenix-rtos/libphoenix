@@ -69,16 +69,8 @@ extern char *strchr(const char *str, int c);
 extern int strcmp(const char *str1, const char *str2);
 
 
-/* Compares the string pointed to, by str1 to the string pointed to by str2 case-insensitively. */
-extern int strcasecmp(const char *str1, const char *str2);
-
-
 /* Compares at most the first n bytes of str1 and str2. */
 extern int strncmp(const char *str1, const char *str2, unsigned int n);
-
-
-/* Compares at most the first n bytes of str1 and str2 case-insensitively. */
-extern int strncasecmp(const char *s1, const char *s2, int n);
 
 
 /* Compares string str1 to str2. The result is dependent on the LC_COLLATE setting of the location. */
