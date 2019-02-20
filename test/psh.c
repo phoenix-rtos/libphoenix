@@ -238,7 +238,7 @@ static int psh_mem(char *args)
 		else {
 			/* show memory map of a process */
 			if (len) {
-				info.entry.pid = strtoul(arg, &end, 16);
+				info.entry.pid = strtoul(arg, &end, 10);
 
 				if (end != args + len || (!info.entry.pid && *arg != '0')) {
 					printf("mem: could not parse process id: '%s'\n", arg);
@@ -691,7 +691,7 @@ static int psh_kill(char *arg)
 		return -EINVAL;
 	}
 
-	pid = strtoul(arg, &end, 16);
+	pid = strtoul(arg, &end, 10);
 
 	if ((end != arg + len) || (pid == 0 && *arg != '0')) {
 		printf("kill: could not parse process id: '%s'\n", arg);
