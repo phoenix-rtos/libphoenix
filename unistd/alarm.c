@@ -36,6 +36,7 @@ static void alarm_thread(void *arg)
 	time_t now;
 	long long int sleep;
 
+	signalMask(0xffffffff, 0xffffffff);
 	mutexLock(alarm_common.lock);
 	for (;;) {
 		gettime(&now, NULL);
@@ -48,7 +49,7 @@ static void alarm_thread(void *arg)
 	}
 
 	if (alarm_common.wakeup) {
-		raise(SIGALRM);
+		kill(getpid(), SIGALRM);
 		alarm_common.wakeup = 0;
 	}
 
