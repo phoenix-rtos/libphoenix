@@ -22,7 +22,7 @@
 
 
 #ifndef FD_SETSIZE
-#define FD_SETSIZE 32
+#define FD_SETSIZE 1024
 #endif
 
 #define __NFDBITS (8 * (int)sizeof(uint32_t))
