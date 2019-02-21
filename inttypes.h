@@ -16,6 +16,7 @@
 #ifndef _LIBPHOENIX_INTTYPES_H_
 #define _LIBPHOENIX_INTTYPES_H_
 
+#include <stdint.h>
 
 # define PRId8		"d"
 # define PRId16		"d"
