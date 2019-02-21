@@ -37,6 +37,7 @@ extern int errno;
 #define EAFNOSUPPORT    97
 #define EADDRINUSE      98
 #define EADDRNOTAVAIL   99
+#define ENETUNREACH		101
 #define ECONNABORTED    103
 #define ECONNRESET      104
 #define ENOBUFS         105
