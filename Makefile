@@ -16,9 +16,9 @@ TARGET ?= arm-imx6ull
 
 VERSION = 0.2
 TOPDIR := $(CURDIR)
-BUILD_PREFIX ?= ../build/$(TARGET)
-BUILD_PREFIX := $(abspath $(BUILD_PREFIX))
-BUILD_DIR ?= $(BUILD_PREFIX)/$(notdir $(TOPDIR))
+PREFIX_BUILD ?= ../build/$(TARGET)
+PREFIX_BUILD := $(abspath $(PREFIX_BUILD))
+BUILD_DIR ?= $(PREFIX_BUILD)/$(notdir $(TOPDIR))
 BUILD_DIR := $(abspath $(BUILD_DIR))
 
 SUBSYSTEMS := math stdio stdlib string sys ctype time unistd errno signal termios posix err locale regex net syslog
@@ -52,7 +52,7 @@ ifeq (/,$(SYSROOT))
 $(error Sysroot is not supported by Your toolchain. Use cross-toolchain to compile)
 endif
 
-export TOPDIR BUILD_PREFIX BUILD_DIR SIL TARGET LIB CC CFLAGS AR ARFLAGS LD LDFLAGS GCCLIB OBJDUMP STRIP HEADERS_INSTALL_DIR
+export TOPDIR PREFIX_BUILD BUILD_DIR SIL TARGET LIB CC CFLAGS AR ARFLAGS LD LDFLAGS GCCLIB OBJDUMP STRIP HEADERS_INSTALL_DIR
 
 
 all: subsystems $(OBJS) $(LIB) tests
