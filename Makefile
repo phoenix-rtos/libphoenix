@@ -16,7 +16,7 @@ TARGET ?= arm-imx6ull
 
 VERSION = 0.2
 TOPDIR := $(CURDIR)
-PREFIX_BUILD ?= ../build/$(TARGET)
+PREFIX_BUILD ?= ../_build/$(TARGET)
 PREFIX_BUILD := $(abspath $(PREFIX_BUILD))
 BUILD_DIR ?= $(PREFIX_BUILD)/$(notdir $(TOPDIR))
 BUILD_DIR := $(abspath $(BUILD_DIR))
