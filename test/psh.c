@@ -238,7 +238,7 @@ static int psh_mem(char *args)
 		else {
 			/* show memory map of a process */
 			if (len) {
-				info.entry.pid = strtoul(arg, &end, 16);
+				info.entry.pid = strtoul(arg, &end, 10);
 
 				if (end != args + len || (!info.entry.pid && *arg != '0')) {
 					printf("mem: could not parse process id: '%s'\n", arg);
@@ -517,7 +517,7 @@ static int psh_ps(char *arg)
 	printf("%9s %5s %4s  %5s %5s %12s %6s %7s  %s\n", "PID", "TTY", "PRI", "STATE", "%CPU", "WAIT", "TIME", "VMEM", "CMD");
 
 	for (i = 0; i < tcnt; ++i) {
-		printf("%9x %5s %4d  %5s %3d.%d %12llu %3u:%02u", info[i].pid, "-", info[i].priority, info[i].state ? "sleep" : "ready",
+		printf("%9d %5s %4d  %5s %3d.%d %12llu %3u:%02u", info[i].pid, "-", info[i].priority, info[i].state ? "sleep" : "ready",
 			info[i].load / 10, info[i].load % 10, info[i].wait,
 			info[i].cpu_time / 60, info[i].cpu_time % 60);
 
@@ -691,7 +691,7 @@ static int psh_kill(char *arg)
 		return -EINVAL;
 	}
 
-	pid = strtoul(arg, &end, 16);
+	pid = strtoul(arg, &end, 10);
 
 	if ((end != arg + len) || (pid == 0 && *arg != '0')) {
 		printf("kill: could not parse process id: '%s'\n", arg);

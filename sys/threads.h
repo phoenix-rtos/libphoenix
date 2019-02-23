@@ -46,6 +46,7 @@ extern int exec(const char *path, char *const argv[], char *const env[]);
 extern int beginthreadex(void (*start)(void *), unsigned int priority, void *stack, unsigned int stacksz, void *arg, handle_t *id);
 
 
+__attribute__((noreturn))
 extern void endthread(void);
 
 
