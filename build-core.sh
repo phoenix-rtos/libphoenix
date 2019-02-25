@@ -16,8 +16,8 @@ if [ "X$CLEAN" == "Xclean" ]; then
 fi
 
 (cd phoenix-rtos-kernel/src/ && make $MAKEFLAGS $KERNEL_MAKECMDGOALS all)
-cp -a phoenix-rtos-kernel/phoenix-arm-imx.elf _build
-cp -a phoenix-rtos-kernel/phoenix-arm-imx.img _build
+cp -a phoenix-rtos-kernel/phoenix-arm-imx6ull.elf _build
+cp -a phoenix-rtos-kernel/phoenix-arm-imx6ull.img _build
 
 b_log "Building libphoenix"
 (cd libphoenix && make $MAKEFLAGS $CLEAN all install)

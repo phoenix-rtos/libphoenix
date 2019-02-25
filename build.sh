@@ -32,8 +32,6 @@ AS=${CROSS}as
 LD=${CROSS}ld
 AR=${CROSS}ar
 
-CLEAN="clean"
-#CLEAN=""
 MAKEFLAGS="--no-print-directory -j 19"
 
 export TARGET TARGET_FAMILY TOPDIR PREFIX_BUILD PREFIX_FS PREFIX_BOOT PREFIX_PROG PREFIX_PROG_STRIPPED PREFIX_A PREFIX_H CROSS CFLAGS LDFLAGS CC LD AR CLEAN MAKEFLAGS
@@ -57,12 +55,15 @@ b_log "Saving git-version"
 echo " "$(git rev-parse HEAD)" incotex" > $PREFIX_FS/root/etc/git-version
 git submodule status >> $PREFIX_FS/root/etc/git-version
 
+#
+# Build core part
+#
 mkdir -p $PREFIX_BUILD
+./phoenix-rtos-build/build-core.sh
 
 #
-# Compile and install components
+# Build ports
 #
-#./phoenix-rtos-build/build-core.sh
 #./phoenix-rtos-ports/busybox/build.sh
 
 #
