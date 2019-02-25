@@ -231,9 +231,9 @@ int getnameinfo(const struct sockaddr *addr, socklen_t addrlen,
 		if (servlen > 0) {
 			if (servlen < smo->nameinfo.servlen) {
 				smo->ret = EAI_OVERFLOW;
-				memcpy(serv, buf + smo->nameinfo.hostlen, servlen);
+				memcpy(serv, buf + hostlen, servlen);
 			} else
-				memcpy(serv, buf + smo->nameinfo.hostlen, smo->nameinfo.servlen);
+				memcpy(serv, buf + hostlen, smo->nameinfo.servlen);
 		}
 	}
 
