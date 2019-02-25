@@ -8,7 +8,7 @@
 # Author: Kaja Swat, Aleksander Kaminski, Pawel Pisarczyk
 #
 
-b_install () {
+b_install() {
     bin="$1"
     dir="$2"
 

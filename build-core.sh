@@ -38,10 +38,6 @@ b_log "Building phoenix-rtos-usb"
 (cd phoenix-rtos-usb && make $MAKEFLAGS $CLEAN all)
 b_install "$PREFIX_PROG_STRIPPED/usb" /sbin
 
-b_log "Building USB device drivers"
-(cd phoenix-rtos-devices && make $MAKEFLAGS $CLEAN all gsm/telit-le910)
-b_install "$PREFIX_PROG_STRIPPED/telit-le910" /sbin
-
 b_log "phoenix-rtos-lwip"
 (cd phoenix-rtos-lwip && make $MAKEFLAGS $CLEAN all)
 b_install "$PREFIX_PROG_STRIPPED/lwip" /sbin

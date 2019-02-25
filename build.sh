@@ -10,8 +10,7 @@
 
 set -e
 
-TARGET=arm-imx6ull
-TARGET_FAMILY=arm
+. ./build.project
 
 TOPDIR="$(pwd)"
 
@@ -63,11 +62,15 @@ mkdir -p $PREFIX_BUILD
 #
 # Compile and install components
 #
-./phoenix-rtos-build/build-core.sh
-./phoenix-rtos-ports/busybox/build.sh
+#./phoenix-rtos-build/build-core.sh
+#./phoenix-rtos-ports/busybox/build.sh
 
-#./phoenix-ports/pcre/build.sh
-#./phoenix-ports/dropbear/build.sh
-#./phoenix-ports/lighttpd/build.sh
+#
+# Build project part
+#
+b_build
 
-exit 0
+#
+# Build final filesystems
+#
+b_createfs
