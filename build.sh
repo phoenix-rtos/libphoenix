@@ -64,7 +64,7 @@ mkdir -p $PREFIX_BUILD
 #
 # Build ports
 #
-#./phoenix-rtos-ports/busybox/build.sh
+./phoenix-rtos-ports/build.sh
 
 #
 # Build project part
