@@ -23,10 +23,10 @@
 
 
 static struct {
-	char stack[128] __attribute__((aligned(8)));
+	char stack[1024] __attribute__((aligned(8)));
 	handle_t cond, lock;
 	time_t wakeup;
-	unsigned tid, dead;
+	unsigned tid;
 } alarm_common;
 
 
@@ -38,25 +38,22 @@ static void alarm_thread(void *arg)
 
 	signalMask(0xffffffff, 0xffffffff);
 	mutexLock(alarm_common.lock);
+
 	for (;;) {
 		gettime(&now, NULL);
 		sleep = alarm_common.wakeup - now;
 
-		if (alarm_common.wakeup && sleep > 0)
+		if (!alarm_common.wakeup) {
+			condWait(alarm_common.cond, alarm_common.lock, 0);
+		}
+		else if (sleep > 0) {
 			condWait(alarm_common.cond, alarm_common.lock, sleep);
-		else
-			break;
+		}
+		else {
+			kill(getpid(), SIGALRM);
+			alarm_common.wakeup = 0;
+		}
 	}
-
-	if (alarm_common.wakeup) {
-		kill(getpid(), SIGALRM);
-		alarm_common.wakeup = 0;
-	}
-
-	alarm_common.dead = alarm_common.tid;
-	alarm_common.tid = 0;
-	mutexUnlock(alarm_common.lock);
-	endthread();
 }
 
 
@@ -64,33 +61,21 @@ unsigned int alarm(unsigned int seconds)
 {
 	time_t now, previous;
 
-	if (!alarm_common.lock) {
+	if (!alarm_common.tid) {
 		mutexCreate(&alarm_common.lock);
 		condCreate(&alarm_common.cond);
+		beginthreadex(alarm_thread, priority(-1), alarm_common.stack, sizeof(alarm_common.stack), NULL, &alarm_common.tid);
 	}
 
 	mutexLock(alarm_common.lock);
 	previous = alarm_common.wakeup;
-	if (seconds) {
-		gettime(&now, NULL);
+	gettime(&now, NULL);
+	if (seconds)
 		alarm_common.wakeup = now + 1000LL * 1000LL * seconds;
-	}
-	else {
+	else
 		alarm_common.wakeup = 0;
-	}
-
-	if (alarm_common.tid) {
-		condSignal(alarm_common.cond);
-	}
-	else {
-		if (alarm_common.dead) {
-			waittid(alarm_common.dead, 0);
-			alarm_common.dead = 0;
-		}
-
-		beginthreadex(alarm_thread, priority(-1), alarm_common.stack, sizeof(alarm_common.stack), NULL, &alarm_common.tid);
-	}
 	mutexUnlock(alarm_common.lock);
+	condSignal(alarm_common.cond);
 
 	return previous ? (previous - now) / (1000 * 1000) : 0;
 }
