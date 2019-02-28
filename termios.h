@@ -175,22 +175,20 @@ struct winsize
 };
 
 /* ioctls */
-enum {
-	TCGETS     = _IOR('t', 0x1, struct termios),
-	TCSETS     = _IOW('t', 0x2, struct termios),
-	TCSETSW    = _IOW('t', 0x3, struct termios),
-	TCSETSF    = _IOW('t', 0x4, struct termios),
-	TCFLSH     = _IOV('t', 0x5, int),
-	TCDRAIN    = _IO('t', 0x6),
-	TCSBRK     = _IOV('t', 0x9, int),
-	TIOCSCTTY  = _IOV('t', 0xE, int),
-	TIOCGPGRP  = _IOR('t', 0xF, pid_t),
-	TIOCSPGRP  = _IOW('t', 0x10, pid_t),
-	TIOCGWINSZ = _IOR('t', 0x13, struct winsize),
-	TIOCSWINSZ = _IOW('t', 0x14, struct winsize),
-	TIOCNOTTY  = _IO('t', 0x22),
-	TIOCGSID   = _IOR('t', 0x29, pid_t),
-};
+#define TCGETS      _IOR('t', 0x1, struct termios)
+#define TCSETS      _IOW('t', 0x2, struct termios)
+#define TCSETSW     _IOW('t', 0x3, struct termios)
+#define TCSETSF     _IOW('t', 0x4, struct termios)
+#define TCFLSH      _IOV('t', 0x5, int)
+#define TCDRAIN     _IO('t', 0x6)
+#define TCSBRK      _IOV('t', 0x9, int)
+#define TIOCSCTTY   _IOV('t', 0xE, int)
+#define TIOCGPGRP   _IOR('t', 0xF, pid_t)
+#define TIOCSPGRP   _IOW('t', 0x10, pid_t)
+#define TIOCGWINSZ  _IOR('t', 0x13, struct winsize)
+#define TIOCSWINSZ  _IOW('t', 0x14, struct winsize)
+#define TIOCNOTTY   _IO('t', 0x22)
+#define TIOCGSID    _IOR('t', 0x29, pid_t)
 
 /* tcflush */
 enum { TCIFLUSH, TCOFLUSH, TCIOFLUSH };
