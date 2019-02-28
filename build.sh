@@ -38,40 +38,87 @@ export TARGET TARGET_FAMILY TOPDIR PREFIX_BUILD PREFIX_FS PREFIX_BOOT PREFIX_PRO
 
 . ./phoenix-rtos-build/build.subr
 
+#
+# Parse command line
+#
+B_FS="n"
+B_CORE="n"
+B_PORTS="n"
+B_PROJECT="n"
+B_IMAGE="n"
+
+for i in $*; do
+	case "$i"
+	in
+		clean)
+			CLEAN="clean"
+			shift;;
+		fs)
+			B_FS="y"
+			shift;;
+		core)
+			B_CORE="y"
+			shift;;
+		ports)
+			B_PORTS="y"
+			shift;;
+		project)
+			B_PROJECT="y"
+			shift;;
+		image)
+			B_IMAGE="y"
+			shift;;	
+		all)
+			B_FS="y"; B_CORE="y"; B_PORTS="y"; B_PROJECT="y"; B_IMAGE="y";
+			shift;;	
+	esac;
+done
+
 export BUSYBOX_CONFIG=""
 
 #
 # Preparing filesystem
 #
-b_log "Preparing filesystem"
-if [ "X$CLEAN" == "Xclean" ]; then
-	rm -fr $PREFIX_FS/root/*
+if [ "X${B_FS}" == "Xy" ]; then
+	b_log "Preparing filesystem"
+	if [ "X$CLEAN" == "Xclean" ]; then
+		rm -fr $PREFIX_FS/root/*
+	fi
+
+	mkdir -p $PREFIX_FS/root
+	cp -a $PREFIX_FS/root-skel/* $PREFIX_FS/root
+
+	b_log "Saving git-version"
+	echo " "$(git rev-parse HEAD)" incotex" > $PREFIX_FS/root/etc/git-version
+	git submodule status >> $PREFIX_FS/root/etc/git-version
 fi
 
-mkdir -p $PREFIX_FS/root
-cp -a $PREFIX_FS/root-skel/* $PREFIX_FS/root
-
-b_log "Saving git-version"
-echo " "$(git rev-parse HEAD)" incotex" > $PREFIX_FS/root/etc/git-version
-git submodule status >> $PREFIX_FS/root/etc/git-version
+mkdir -p $PREFIX_BUILD
 
 #
 # Build core part
 #
-mkdir -p $PREFIX_BUILD
-./phoenix-rtos-build/build-core.sh
+if [ "X${B_CORE}" == "Xy" ]; then
+	./phoenix-rtos-build/build-core.sh
+fi
 
 #
 # Build ports
 #
-./phoenix-rtos-ports/build.sh
+if [ "X${B_PORTS}" == "Xy" ]; then
+	./phoenix-rtos-ports/build.sh
+fi
 
 #
 # Build project part
 #
-b_build
+if [ "X${B_PROJECT}" == "Xy" ]; then
+	b_build
+fi
 
 #
 # Build final filesystems
 #
-b_createfs
+if [ "X${B_IMAGE}" == "Xy" ]; then
+	b_image
+fi
