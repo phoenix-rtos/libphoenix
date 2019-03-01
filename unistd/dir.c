@@ -51,6 +51,8 @@ int chdir(const char *path)
 		return -1; /* ENOMEM */
 	}
 
+	setenv("PWD", canonical, 1);
+
 	memcpy(dir_common.cwd, canonical, len);
 	free(canonical);
 
