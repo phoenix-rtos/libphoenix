@@ -287,11 +287,11 @@ int sigprocmask(int how, const sigset_t *set, sigset_t *oldset)
 
 		if (how == SIG_BLOCK) {
 			mask = phxv;
-			phxv = 0;
+			phxv = 0xffffffffUL;
 		}
 		else if (how == SIG_UNBLOCK) {
 			mask = phxv;
-			phxv = 0xffffffffUL;
+			phxv = 0;
 		}
 		else if (how == SIG_SETMASK) {
 			mask = 0xffffffffUL;
