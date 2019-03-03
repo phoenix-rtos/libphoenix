@@ -41,6 +41,12 @@ export TARGET TARGET_FAMILY TOPDIR PREFIX_BUILD PREFIX_FS PREFIX_BOOT PREFIX_PRO
 #
 # Parse command line
 #
+if [ $# -lt 1 ]; then
+	echo "Build options should be specified!"
+	echo "Usage: build.sh [clean] [all] [fs] [core] [ports] [project] [image]";
+	exit -1;
+fi
+
 B_FS="n"
 B_CORE="n"
 B_PORTS="n"
