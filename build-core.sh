@@ -21,6 +21,9 @@ cp -a phoenix-rtos-kernel/phoenix-arm-imx6ull.img _build
 
 b_log "Building libphoenix"
 (cd libphoenix && make $MAKEFLAGS $CLEAN all install)
+
+b_log "Building psh"
+(cd psh && make $MAKEFLAGS $CLEAN all)
 b_install $PREFIX_PROG_STRIPPED/psh /bin
 
 b_log "Building phoenix-rtos-filesystems"
