@@ -36,6 +36,7 @@ b_install "$PREFIX_PROG_STRIPPED/imx6ull-gpio" /sbin
 b_install "$PREFIX_PROG_STRIPPED/imx6ull-uart" /sbin
 b_install "$PREFIX_PROG_STRIPPED/imx6ull-sdma" /sbin
 b_install "$PREFIX_PROG_STRIPPED/imx6ull-nandtool" /sbin
+b_install "$PREFIX_PROG_STRIPPED/imx6ull-flash" /sbin
 
 b_log "Building phoenix-rtos-usb"
 (cd phoenix-rtos-usb && make $MAKEFLAGS $CLEAN all)
