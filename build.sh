@@ -36,7 +36,9 @@ AR=${CROSS}ar
 
 MAKEFLAGS="--no-print-directory -j 19"
 
-export TARGET TARGET_FAMILY TOPDIR PREFIX_BUILD PREFIX_FS PREFIX_BOOT PREFIX_PROG PREFIX_PROG_STRIPPED PREFIX_A PREFIX_H PREFIX_ROOTFS CROSS CFLAGS LDFLAGS CC LD AR CLEAN MAKEFLAGS
+export TARGET TARGET_FAMILY TOPDIR PREFIX_BUILD PREFIX_FS PREFIX_BOOT\
+	PREFIX_PROG PREFIX_PROG_STRIPPED PREFIX_A PREFIX_H PREFIX_ROOTFS\
+	CROSS CFLAGS LDFLAGS CC LD AR CLEAN MAKEFLAGS
 
 . ./phoenix-rtos-build/build.subr
 
@@ -106,8 +108,13 @@ mkdir -p $PREFIX_BUILD
 #
 # Build core part
 #
+echo $TARGET_SUBFAMILY
 if [ "X${B_CORE}" == "Xy" ]; then
-	./phoenix-rtos-build/build-core.sh
+	if [ "${TARGET_SUBFAMILY}" == "arm-imx6ull" ]; then
+		./phoenix-rtos-build/build-core-imx6ull.sh
+	elif [ "${TARGET_SUBFAMILY}" == "armv7-stm32" ]; then
+		./phoenix-rtos-build/build-core-stm32.sh
+	fi
 fi
 
 #
