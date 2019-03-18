@@ -23,7 +23,7 @@ b_log "Building libphoenix"
 (cd libphoenix && make $MAKEFLAGS $CLEAN all install)
 
 b_log "Building psh"
-(cd psh && make $MAKEFLAGS $CLEAN all)
+(cd phoenix-rtos-coreutils && make $MAKEFLAGS $CLEAN b_psh)
 b_install $PREFIX_PROG_STRIPPED/psh /bin
 
 b_log "Building phoenix-rtos-filesystems"
@@ -37,6 +37,10 @@ b_install "$PREFIX_PROG_STRIPPED/imx6ull-uart" /sbin
 b_install "$PREFIX_PROG_STRIPPED/imx6ull-sdma" /sbin
 b_install "$PREFIX_PROG_STRIPPED/imx6ull-nandtool" /sbin
 b_install "$PREFIX_PROG_STRIPPED/imx6ull-flash" /sbin
+
+b_log "Building psd"
+(cd phoenix-rtos-coreutils && make $MAKEFLAGS $CLEAN b_psd)
+b_install $PREFIX_PROG_STRIPPED/psd /sbin
 
 b_log "Building phoenix-rtos-usb"
 (cd phoenix-rtos-usb && make $MAKEFLAGS $CLEAN all)
