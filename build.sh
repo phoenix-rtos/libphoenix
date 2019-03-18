@@ -108,7 +108,6 @@ mkdir -p $PREFIX_BUILD
 #
 # Build core part
 #
-echo $TARGET_SUBFAMILY
 if [ "X${B_CORE}" == "Xy" ]; then
 	if [ "${TARGET_SUBFAMILY}" == "arm-imx6ull" ]; then
 		./phoenix-rtos-build/build-core-imx6ull.sh
