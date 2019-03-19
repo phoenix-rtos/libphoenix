@@ -39,7 +39,7 @@ b_install "$PREFIX_PROG_STRIPPED/imx6ull-nandtool" /sbin
 b_install "$PREFIX_PROG_STRIPPED/imx6ull-flash" /sbin
 
 b_log "Building psd"
-(cd phoenix-rtos-coreutils && make $MAKEFLAGS $CLEAN b_psd)
+(cd phoenix-rtos-coreutils && make $MAKEFLAGS b_psd)
 b_install $PREFIX_PROG_STRIPPED/psd /sbin
 
 b_log "Building phoenix-rtos-usb"
