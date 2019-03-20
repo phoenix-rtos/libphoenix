@@ -10,6 +10,8 @@
 
 set -e
 
+. ./build.project
+
 TOPDIR="$(pwd)"
 
 PREFIX_BUILD="$(pwd)/_build/$TARGET"
@@ -18,8 +20,6 @@ PREFIX_BOOT=$(realpath "_boot")
 
 PREFIX_PROG="$PREFIX_BUILD/prog/"
 PREFIX_PROG_STRIPPED="$PREFIX_BUILD/prog.stripped/"
-
-. ./build.project
 
 PREFIX_A="$PREFIX_BUILD/lib/"
 PREFIX_H="$PREFIX_BUILD/include/"
