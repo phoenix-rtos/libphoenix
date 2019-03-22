@@ -22,7 +22,7 @@ ifneq (, $(findstring ia32, $(TARGET)))
 
 
 	CFLAGS += -O2 -g -Wall -Wstrict-prototypes -nostartfiles -nostdlib\
-		-m32 -mtune=generic -mno-mmx -mno-sse -fno-pic -fno-pie\
+		-m32 -march=i586 -mtune=generic -mno-mmx -mno-sse -fno-pic -fno-pie\
 		-fomit-frame-pointer -fno-strength-reduce -fno-builtin-malloc
 
 
