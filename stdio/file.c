@@ -902,7 +902,10 @@ void setbuf(FILE *stream, char *buf)
 	setvbuf(stream, buf, buf != NULL ? _IOFBF : _IONBF, BUFSIZ);
 }
 
-
+static void call_fflush(void)
+{
+	fflush(NULL);
+}
 
 void _file_init(void)
 {
@@ -933,6 +936,8 @@ void _file_init(void)
 	stdin->mode = O_RDONLY;
 	stdout->mode = O_WRONLY;
 	stderr->mode = O_WRONLY;
+
+	atexit(call_fflush);
 }
 
 
