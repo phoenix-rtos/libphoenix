@@ -18,7 +18,7 @@
 
 #include <stdint.h>
 #include <arch.h>
-#include <sys/select.h>
+
 
 typedef int pid_t;
 typedef int off_t;
