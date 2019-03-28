@@ -84,9 +84,6 @@ int strncasecmp(const char *s1, const char *s2, int n)
 			return 1;
 	}
 
-	if (tolower(*p) != tolower(*(s2 + k)))
-		return -1;
-
 	return 0;
 }
 #endif
