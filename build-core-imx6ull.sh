@@ -22,10 +22,6 @@ cp -a phoenix-rtos-kernel/phoenix-arm-imx6ull.img _build
 b_log "Building libphoenix"
 (cd libphoenix && make $MAKEFLAGS $CLEAN all install)
 
-b_log "Building psh"
-(cd phoenix-rtos-coreutils && make $MAKEFLAGS $CLEAN b_psh)
-b_install $PREFIX_PROG_STRIPPED/psh /bin
-
 b_log "Building phoenix-rtos-filesystems"
 (cd phoenix-rtos-filesystems && make $MAKEFLAGS $CLEAN all)
 b_install "$PREFIX_PROG_STRIPPED/dummyfs" /sbin
@@ -38,8 +34,9 @@ b_install "$PREFIX_PROG_STRIPPED/imx6ull-sdma" /sbin
 b_install "$PREFIX_PROG_STRIPPED/imx6ull-nandtool" /sbin
 b_install "$PREFIX_PROG_STRIPPED/imx6ull-flash" /sbin
 
-b_log "Building psd"
-(cd phoenix-rtos-coreutils && make $MAKEFLAGS b_psd)
+b_log "Building coreutils"
+(cd phoenix-rtos-coreutils && make $MAKEFLAGS $CLEAN all)
+b_install $PREFIX_PROG_STRIPPED/psh /bin
 b_install $PREFIX_PROG_STRIPPED/psd /sbin
 
 b_log "Building phoenix-rtos-usb"
@@ -54,6 +51,6 @@ b_log "Building posixsrv"
 (cd phoenix-rtos-posixsrv && make $MAKEFLAGS $CLEAN all)
 b_install "$PREFIX_PROG_STRIPPED/posixsrv" /bin
 
-b_log "Building phoenixd"
-(cd phoenixd/ && make $MAKEFLAGS $CLEAN all)
-cp phoenixd/phoenixd $PREFIX_BOOT
+b_log "Building hostutils"
+(cd phoenix-rtos-hostutils/ && make $MAKEFLAGS $CLEAN all)
+cp phoenix-rtos-hostutils/phoenixd $PREFIX_BOOT
