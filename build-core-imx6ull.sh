@@ -38,6 +38,7 @@ b_log "Building coreutils"
 (cd phoenix-rtos-coreutils && make $MAKEFLAGS $CLEAN all)
 b_install $PREFIX_PROG_STRIPPED/psh /bin
 b_install $PREFIX_PROG_STRIPPED/psd /sbin
+b_install $PREFIX_PROG_STRIPPED/psd-old /sbin
 
 b_log "Building phoenix-rtos-usb"
 (cd phoenix-rtos-usb && make $MAKEFLAGS $CLEAN all)
