@@ -160,5 +160,6 @@ static inline void bzero(void *p, size_t sz)
 	memset(p, 0, sz);
 }
 
+extern int strcasecmp(const char *str1, const char *str2);
 
 #endif

@@ -22,7 +22,10 @@
 #include <poll.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <unistd.h>
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 WRAP_ERRNO_DEF(int, accept, (int socket, struct sockaddr *address, socklen_t *address_len), (socket, address, address_len))
 WRAP_ERRNO_DEF(int, accept4, (int socket, struct sockaddr *address, socklen_t *address_len, int flags), (socket, address, address_len, flags))
@@ -357,4 +360,78 @@ out_overflow:
 void freeaddrinfo(struct addrinfo *res)
 {
 	free(res);
+}
+
+
+int socketpair(int domain, int type, int protocol, int socket_vector[2])
+{
+	int sfd;
+	int flags;
+	int err;
+	struct sockaddr_in serv = { 0 };
+	socklen_t socklen;
+	/* we don't have nonblocking connections on unix sockets
+	 * so we immitate it with inet sockets connected through loopback device */
+	sfd = socket(AF_INET, type, protocol);
+	if (sfd < 0)
+		return sfd;
+
+	flags = fcntl(sfd, F_GETFL);
+	err = fcntl(sfd, F_SETFL, flags | O_NONBLOCK);
+
+	if (err < 0) {
+		close(sfd);
+		return err;
+	}
+
+	serv.sin_family = AF_INET;
+	serv.sin_port = 0;
+	serv.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+	socklen = sizeof(serv);
+
+	if ((err = bind(sfd, (struct sockaddr *)&serv, socklen)) || (err = listen(sfd, 2))) {
+		close(sfd);
+		return err;
+	}
+
+	socket_vector[0] = socket(domain, type, protocol);
+	if (socket_vector[0] < 0) {
+		close(sfd);
+		return socket_vector[0];
+	}
+
+	flags = fcntl(socket_vector[0], F_GETFL);
+	err = fcntl(socket_vector[0], F_SETFL, flags | O_NONBLOCK);
+
+	if (err < 0) {
+		close(sfd);
+		close(socket_vector[0]);
+		return err;
+	}
+
+	if ((err = connect(socket_vector[0], (struct sockaddr *)&serv, socklen)) != EINPROGRESS) {
+		close(sfd);
+		close(socket_vector[0]);
+		return err;
+	}
+
+	/* TODO: check for accidental connection from another process */
+	socket_vector[1] = accept(sfd, (struct sockaddr *)&serv, &socklen);
+	if (socket_vector[0] < 0) {
+		close(sfd);
+		close(socket_vector[0]);
+		return socket_vector[1];
+	}
+
+	close(sfd);
+	flags = fcntl(socket_vector[0], F_GETFL);
+	err = fcntl(socket_vector[0], F_SETFL, flags | O_NONBLOCK);
+
+	if (err < 0) {
+		close(socket_vector[0]);
+		close(socket_vector[1]);
+		return err;
+	}
+
+	return 0;
 }

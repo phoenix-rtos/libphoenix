@@ -88,6 +88,8 @@ enum {
 	EAI_MEMORY = -10,
 	EAI_SYSTEM = -11,
 	EAI_OVERFLOW = -12,
+	/* non-POSIX */
+	EAI_NODATA = -5,
 };
 
 

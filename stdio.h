@@ -329,7 +329,4 @@ extern void flockfile(FILE *file);
 extern void funlockfile(FILE *file);
 
 
-/* create a temporary file */
-extern FILE *tmpfile(void);
-
 #endif
