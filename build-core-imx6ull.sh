@@ -53,4 +53,5 @@ b_install "$PREFIX_PROG_STRIPPED/posixsrv" /bin
 
 b_log "Building hostutils"
 (cd phoenix-rtos-hostutils/ && make $MAKEFLAGS $CLEAN all)
-cp phoenix-rtos-hostutils/phoenixd $PREFIX_BOOT
+cp "$PREFIX_BUILD_HOST/prog.stripped/phoenixd" $PREFIX_BOOT
+cp "$PREFIX_BUILD_HOST/prog.stripped/psu" $PREFIX_BOOT

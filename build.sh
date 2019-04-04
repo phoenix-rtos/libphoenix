@@ -15,6 +15,7 @@ set -e
 TOPDIR="$(pwd)"
 
 PREFIX_BUILD="$(pwd)/_build/$TARGET"
+PREFIX_BUILD_HOST="$(pwd)/_build/host"
 PREFIX_FS=$(realpath "_fs")
 PREFIX_BOOT=$(realpath "_boot")
 
@@ -36,9 +37,9 @@ AR=${CROSS}ar
 
 MAKEFLAGS="--no-print-directory -j 19"
 
-export TARGET TARGET_FAMILY TOPDIR PREFIX_BUILD PREFIX_FS PREFIX_BOOT\
-	PREFIX_PROG PREFIX_PROG_STRIPPED PREFIX_A PREFIX_H PREFIX_ROOTFS\
-	CROSS CFLAGS LDFLAGS CC LD AR CLEAN MAKEFLAGS
+export TARGET TARGET_FAMILY TOPDIR PREFIX_BUILD PREFIX_BUILD_HOST\
+	PREFIX_FS PREFIX_BOOT PREFIX_PROG PREFIX_PROG_STRIPPED PREFIX_A\
+	PREFIX_H PREFIX_ROOTFS CROSS CFLAGS LDFLAGS CC LD AR CLEAN MAKEFLAGS
 
 . ./phoenix-rtos-build/build.subr
 
@@ -77,10 +78,10 @@ for i in $*; do
 			shift;;
 		image)
 			B_IMAGE="y"
-			shift;;	
+			shift;;
 		all)
 			B_FS="y"; B_CORE="y"; B_PORTS="y"; B_PROJECT="y"; B_IMAGE="y";
-			shift;;	
+			shift;;
 	esac;
 done
 
@@ -104,6 +105,7 @@ if [ "X${B_FS}" == "Xy" ]; then
 fi
 
 mkdir -p $PREFIX_BUILD
+mkdir -p $PREFIX_BUILD_HOST
 
 #
 # Build core part
