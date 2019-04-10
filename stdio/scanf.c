@@ -511,7 +511,25 @@ static int scanf_parse(char *ccltab, const char *inp, char const *fmt0, va_list 
 
 int fscanf(FILE *stream, const char *format, ...)
 {
-	return 0;
+	char *lineptr = NULL;
+	size_t n = 0;
+	va_list arg;
+	int ret;
+	char *ccltab = malloc(256);
+
+	if ((ret = getline(&lineptr, &n, stream)) > 0) {
+
+		va_start(arg, format);
+		ret = scanf_parse(ccltab, lineptr, format, arg);
+		va_end(arg);
+		free(lineptr);
+
+		if (ret < 0)
+			ret = 0;
+	}
+
+	free(ccltab);
+	return ret;
 }
 
 int sscanf(const char *str, const char *format, ...)
