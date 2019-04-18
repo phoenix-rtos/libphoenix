@@ -15,6 +15,7 @@
 
 #include <sys/reboot.h>
 #include <sys/platform.h>
+#include <errno.h>
 
 
 int reboot(int magic)
