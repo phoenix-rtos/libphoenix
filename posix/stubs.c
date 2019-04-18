@@ -140,12 +140,6 @@ int getrusage(int who, struct rusage *usage)
 }
 
 
-int reboot(int cmd)
-{
-	return 0;
-}
-
-
 void sync(void)
 {
 }

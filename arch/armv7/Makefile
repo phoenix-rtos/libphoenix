@@ -6,7 +6,7 @@
 #
 
 ARCH_ASMS := _start.S syscalls.S
-ARCH_SRCS := string.c
+ARCH_SRCS := string.c reboot.c
 
 # include after all dependencies are set
 include $(TOPDIR)/Makefile.rules
