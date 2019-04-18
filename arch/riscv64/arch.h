@@ -74,5 +74,6 @@ typedef u32 handle_t;
 
 #define SIZE_PAGE 0x1000
 
+#define STACK_PTR ({ void *p; asm ("mv %0, sp" : "=g" (p)); p; })
 
 #endif
