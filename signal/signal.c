@@ -320,7 +320,14 @@ int sigprocmask(int how, const sigset_t *set, sigset_t *oldset)
 
 int sigsuspend(const sigset_t *sigmask)
 {
-	return -ENOSYS;
+	unsigned int phxv = 0, i;
+
+	for (i = 0, phxv = 0; i < NSIG; ++i) {
+		if (*sigmask & (1UL << i))
+			phxv |= 1UL << _signals_posix2phx[i];
+	}
+
+	return signalSuspend(phxv);
 }
 
 

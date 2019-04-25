@@ -115,5 +115,6 @@ extern int signalReturn(int signal);
 
 extern unsigned int signalMask(unsigned mask, unsigned mmask);
 
+extern int signalSuspend(unsigned mask);
 
 #endif
