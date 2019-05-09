@@ -23,7 +23,6 @@
 void handler(int s)
 {
 	printf("\r%8x: %2d", getpid(), s);
-	signalReturn(s);
 }
 
 
