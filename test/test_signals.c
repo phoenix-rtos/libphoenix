@@ -20,9 +20,11 @@
 #include "sys/threads.h"
 
 
-void handler(int s)
+#warning FIXME: Need to use per-arch trampoline!
+
+void handler(void)
 {
-	printf("\r%8x: %2d", getpid(), s);
+	// printf("\r%8x: %2d", getpid(), s);
 }
 
 
