@@ -123,15 +123,14 @@ static int _signal_ismutable(int sig)
 }
 
 
-static void _signal_handler(int phxsig)
+void _signal_handler(int phxsig)
 {
 	int sig;
 	unsigned int oldmask;
 
 	if (phxsig < 0 || phxsig >= NSIG) {
 		/* Don't know what to do, ignore it */
-		signalReturn(phxsig);
-		/* Never reached */
+		return;
 	}
 
 	/* Received Phoenix signal, need to convert it to POSIX signal */
@@ -143,9 +142,6 @@ static void _signal_handler(int phxsig)
 	(signal_common.sightab[sig])(sig);
 
 	signalMask(oldmask, 0xffffffffUL);
-
-	signalReturn(phxsig);
-	/* Never reached */
 }
 
 
@@ -379,6 +375,9 @@ int sigdelset(sigset_t *set, int signum)
 }
 
 
+extern void _signal_trampoline(void);
+
+
 void _signals_init(void)
 {
 	int i;
@@ -392,5 +391,5 @@ void _signals_init(void)
 	mutexCreate(&signal_common.lock);
 
 	/* Register userspace handler */
-	signalHandle(_signal_handler, 0, 0xffffffffUL);
+	signalHandle(_signal_trampoline, 0, 0xffffffffUL);
 }

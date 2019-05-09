@@ -104,7 +104,7 @@ extern int condBroadcast(handle_t h);
 extern int resourceDestroy(handle_t h);
 
 
-extern int signalHandle(void (*handler)(int), unsigned mask, unsigned mmask);
+extern int signalHandle(void (*handler)(void), unsigned mask, unsigned mmask);
 
 
 extern int signalPost(int pid, int tid, int signal);
