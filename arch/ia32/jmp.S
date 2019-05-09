@@ -23,6 +23,7 @@
 setjmp:
 	mov 4(%esp),   %eax
 	mov   %ebx,   (%eax)
+	mov   %esi,  4(%eax)
 	mov   %edi,  8(%eax)
 	mov   %ebp, 12(%eax)
 	lea 4(%esp),   %ecx
@@ -42,7 +43,8 @@ longjmp:
 	test   %eax,  %eax
 	jnz 1f
 	inc    %eax
-1:	mov   (%edx), %ebx
+1:
+	mov   (%edx), %ebx
 	mov  4(%edx), %esi
 	mov  8(%edx), %edi
 	mov 12(%edx), %ebp
