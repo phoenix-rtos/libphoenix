@@ -240,3 +240,19 @@ unsigned sleep(unsigned seconds)
 {
 	return usleep(seconds * 1000 * 1000);
 }
+
+
+extern pid_t sys_fork(void);
+extern void release(void);
+
+
+pid_t fork(void)
+{
+	pid_t pid;
+	if (!(pid = sys_fork()))
+		release();
+	else if (pid < 0) {
+		return SET_ERRNO(pid);
+	}
+	return pid;
+}
