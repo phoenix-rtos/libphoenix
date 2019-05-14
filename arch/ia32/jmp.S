@@ -35,9 +35,9 @@ setjmp:
 .size setjmp, .-setjmp
 
 
-.globl longjmp
-.type longjmp, %function
-longjmp:
+.globl _longjmp
+.type _longjmp, %function
+_longjmp:
 	mov  4(%esp), %edx
 	mov  8(%esp), %eax
 	test   %eax,  %eax
@@ -51,4 +51,4 @@ longjmp:
 	mov 16(%edx), %esp
 	mov 20(%edx), %ecx
 	jmp *%ecx
-.size longjmp, .-longjmp
+.size _longjmp, .-_longjmp
