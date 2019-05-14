@@ -17,6 +17,27 @@
 #include <errno.h>
 
 
+int mutexLock(handle_t m)
+{
+	int err;
+	while ((err = phMutexLock(m)) == -EINTR) ;
+	return err;
+}
+
+
+int condWait(handle_t h, handle_t m, time_t timeout)
+{
+	int err;
+
+	err = phCondWait(h, m, timeout);
+
+	while (err == -EINTR)
+		err = phMutexLock(m);
+
+	return err;
+}
+
+
 int mutexLock2(handle_t m1, handle_t m2)
 {
 	int err;

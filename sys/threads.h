@@ -68,6 +68,9 @@ extern int priority(int priority);
 extern int mutexCreate(handle_t *h);
 
 
+extern int phMutexLock(handle_t h);
+
+
 extern int mutexLock(handle_t h);
 
 
@@ -96,6 +99,9 @@ extern int condCreate(handle_t *h);
 
 
 extern int condWait(handle_t h, handle_t m, time_t timeout);
+
+
+extern int phCondWait(handle_t h, handle_t m, time_t timeout);
 
 
 extern int condSignal(handle_t h);
