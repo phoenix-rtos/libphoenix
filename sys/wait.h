@@ -42,9 +42,6 @@ extern const int _signals_phx2posix[];
 extern pid_t waitpid(pid_t pid, int *status, int options);
 
 
-extern handle_t waittid(handle_t pid, int options);
-
-
 static inline pid_t wait(int *status)
 {
 	return waitpid(-1, status, 0);
