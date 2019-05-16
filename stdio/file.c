@@ -107,6 +107,47 @@ static void buffFree(void *ptr, size_t size)
 }
 
 
+static void file_free(FILE *file)
+{
+	if (file->buffer != NULL && !(file->flags & F_USRBUF))
+		buffFree(file->buffer, file->bufsz);
+
+	resourceDestroy(file->lock);
+	free(file);
+}
+
+
+static ssize_t safe_read(int fd, void *buf, size_t size)
+{
+	int err;
+	while ((err = read(fd, buf, size)) < 0 && errno == EINTR);
+	return err;
+}
+
+
+static ssize_t safe_write(int fd, const void *buf, size_t size)
+{
+	int err;
+	while ((err = write(fd, buf, size)) < 0 && errno == EINTR);
+	return err;
+}
+
+
+static int safe_open(const char *path, int oflag, mode_t mode)
+{
+	int err;
+	while ((err = open(path, oflag, mode)) < 0 && errno == EINTR);
+	return err;
+}
+
+
+static int safe_close(int fd)
+{
+	int err;
+	while ((err = close(fd)) < 0 && errno == EINTR);
+	return err;
+}
+
 
 
 int fclose(FILE *file)
@@ -117,13 +158,8 @@ int fclose(FILE *file)
 		return -EINVAL;
 
 	fflush(file);
-	err = close(file->fd);
-
-	if (file->buffer != NULL && !(file->flags & F_USRBUF))
-		buffFree(file->buffer, file->bufsz);
-
-	resourceDestroy(file->lock);
-	free(file);
+	while ((err = safe_close(file->fd)) < 0 && errno == EINTR);
+	file_free(file);
 
 	return err;
 }
@@ -141,14 +177,14 @@ FILE *fopen(const char *filename, const char *mode)
 	if ((m = string2mode(mode)) < 0)
 		return NULL;
 
-	if ((fd = open(filename, m, DEFFILEMODE)) < 0)
+	if ((fd = safe_open(filename, m, DEFFILEMODE)) < 0)
 		return NULL;
 
 	if ((f = calloc(1, sizeof(FILE))) == NULL)
 		return NULL;
 
 	if ((f->buffer = buffAlloc(BUFSIZ)) == NULL) {
-		close(fd);
+		safe_close(fd);
 		free(f);
 		return NULL;
 	}
@@ -182,7 +218,7 @@ FILE *fdopen(int fd, const char *mode)
 		return NULL;
 
 	if ((f->buffer = buffAlloc(BUFSIZ)) == NULL) {
-		close(fd);
+		safe_close(fd);
 		free(f);
 		return NULL;
 	}
@@ -206,11 +242,18 @@ FILE *freopen(const char *pathname, const char *mode, FILE *stream)
 	fflush(stream);
 
 	if (pathname != NULL) {
-		close(stream->fd);
-		if ((m = string2mode(mode)) < 0)
-			return NULL;
+		safe_close(stream->fd);
 
-		stream->fd = open(pathname, m);
+		if ((m = string2mode(mode)) < 0) {
+			file_free(stream);
+			return NULL;
+		}
+
+		if ((stream->fd = safe_open(pathname, m, DEFFILEMODE)) < 0) {
+			file_free(stream);
+			return NULL;
+		}
+
 		stream->mode = m;
 	}
 	else {
@@ -227,7 +270,7 @@ static int full_read(int fd, void *ptr, size_t size)
 	int total = 0;
 
 	while (size) {
-		if ((err = read(fd, ptr, size)) < 0)
+		if ((err = safe_read(fd, ptr, size)) < 0)
 			return -1;
 		else if (!err)
 			return total;
@@ -244,7 +287,7 @@ static int full_write(int fd, const void *ptr, size_t size)
 {
 	int err;
 	while (size) {
-		if ((err = write(fd, ptr, size)) < 0)
+		if ((err = safe_write(fd, ptr, size)) < 0)
 			return -1;
 		ptr += err;
 		size -= err;
@@ -288,7 +331,7 @@ size_t fread_unlocked(void *ptr, size_t size, size_t nmemb, FILE *stream)
 
 	/* refill read buffer */
 	if (stream->bufpos == stream->bufeof) {
-		if ((err = read(stream->fd, stream->buffer, stream->bufsz)) == -1)
+		if ((err = safe_read(stream->fd, stream->buffer, stream->bufsz)) == -1)
 			return 0;
 
 		stream->bufpos = 0;
@@ -349,7 +392,7 @@ size_t fwrite_unlocked(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 
 	if (stream->buffer == NULL) {
 		/* unbuffered write */
-		if ((err = write(stream->fd, ptr, writesz)) < 0)
+		if ((err = safe_write(stream->fd, ptr, writesz)) < 0)
 			return 0;
 
 		return err / size;
@@ -385,7 +428,7 @@ size_t fwrite_unlocked(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 	}
 
 	/* flush buffer and write to file */
-	if ((err = write(stream->fd, stream->buffer, stream->bufpos)) == -1)
+	if ((err = safe_write(stream->fd, stream->buffer, stream->bufpos)) == -1)
 		return 0;
 
 	stream->bufpos = 0;
@@ -907,8 +950,10 @@ FILE *tmpfile(void)
 {
 	oid_t oid;
 
-	if (lookup("/dev/posix/tmpfile", NULL, &oid) < 0)
-		return NULL;
+	while (lookup("/dev/posix/tmpfile", NULL, &oid) < 0) {
+		if (errno != EINTR)
+			return NULL;
+	}
 
 	return fopen("/dev/posix/tmpfile", "w+");
 }
