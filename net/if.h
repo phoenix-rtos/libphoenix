@@ -31,11 +31,10 @@
 #define	IFF_SIMPLEX			0x800		/* Can't hear own transmissions */
 #define	IFF_LINK0			0x1000		/* Per link layer defined bit */
 #define	IFF_LINK1			0x2000		/* Per link layer defined bit */
-#define	IFF_LINK2			0x4000		/* Per link layer defined bit */
-#define	IFF_ALTPHYS			IFF_LINK2	/* Use alternate physical connection */
-#define	IFF_MULTICAST		0x8000		/* Supports multicast */
+#define	IFF_MULTICAST		0x4000		/* Supports multicast */
 #define	IFF_MASTER			IFF_LINK0	/* UNUSED but needed by ifconfig */
 #define	IFF_SLAVE		    IFF_LINK1	/* UNUSED but needed by ifconfig */
+#define	IFF_DYNAMIC			0x8000		/* The addresses are lost when the interface goes down */
 
 #define IFHWADDRLEN         6
 #define	IFNAMSIZ            16
