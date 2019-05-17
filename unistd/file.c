@@ -35,6 +35,8 @@ extern int sys_open(const char *filename, int oflag, ...);
 extern int sys_mkfifo(const char *filename, mode_t mode);
 extern int sys_link(const char *path1, const char *path2);
 extern int sys_unlink(const char *path);
+extern int sys_pipe(int fildes[2]);
+extern int sys_fstat(int fd, struct stat *buf);
 
 WRAP_ERRNO_DEF(int, read, (int fildes, void *buf, size_t nbyte), (fildes, buf, nbyte))
 WRAP_ERRNO_DEF(int, write, (int fildes, const void *buf, size_t nbyte), (fildes, buf, nbyte))
@@ -43,8 +45,27 @@ WRAP_ERRNO_DEF(int, ftruncate, (int fildes, off_t length), (fildes, length))
 WRAP_ERRNO_DEF(int, lseek, (int fildes, off_t offset, int whence), (fildes, offset, whence))
 WRAP_ERRNO_DEF(int, dup, (int fildes), (fildes))
 WRAP_ERRNO_DEF(int, dup2, (int fildes, int fildes2), (fildes, fildes2))
-WRAP_ERRNO_DEF(int, pipe, (int fildes[2]), (fildes))
-WRAP_ERRNO_DEF(int, fstat, (int fd, struct stat *buf), (fd, buf))
+// WRAP_ERRNO_DEF(int, pipe, (int fildes[2]), (fildes))
+// WRAP_ERRNO_DEF(int, fstat, (int fd, struct stat *buf), (fd, buf))
+
+
+int pipe(int fildes[2])
+{
+	int err;
+	while ((err = sys_pipe(fildes)) == -EINTR)
+		;
+	return SET_ERRNO(err);
+}
+
+
+int fstat(int fd, struct stat *buf)
+{
+	int err;
+	while ((err = sys_fstat(fd, buf)) == -EINTR)
+		;
+	return SET_ERRNO(err);
+}
+
 
 int link(const char *path1, const char *path2)
 {
@@ -96,7 +117,8 @@ int mkfifo(const char *filename, mode_t mode)
 	char *canonical;
 
 	canonical = canonicalize_file_name(filename);
-	err = sys_mkfifo(canonical, mode);
+	while ((err = sys_mkfifo(canonical, mode)) == -EINTR)
+		;
 	free(canonical);
 	return SET_ERRNO(err);
 }
