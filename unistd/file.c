@@ -105,7 +105,11 @@ int open(const char *filename, int oflag, ...)
 	va_end(ap);
 
 	canonical = canonicalize_file_name(filename);
-	err = sys_open(canonical, oflag, mode);
+
+	do
+		err = sys_open(canonical, oflag, mode);
+	while (err == -EINTR);
+
 	free(canonical);
 	return SET_ERRNO(err);
 }
@@ -296,8 +300,10 @@ int ptsname_r(int fd, char *buf, size_t buflen)
 {
 	int id, len;
 
-	if (ioctl(fd, TIOCGPTN, &id) < 0)
-		return -1;
+	while (ioctl(fd, TIOCGPTN, &id) < 0) {
+		if (errno != EINTR)
+			return -1;
+	}
 
 	len = snprintf(buf, buflen, "/dev/pts/%d", id);
 
