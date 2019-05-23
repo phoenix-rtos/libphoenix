@@ -57,6 +57,7 @@ B_CORE="n"
 B_PORTS="n"
 B_PROJECT="n"
 B_IMAGE="n"
+B_UPDATE_PKG="n"
 
 for i in $*; do
 	case "$i"
@@ -79,8 +80,11 @@ for i in $*; do
 		image)
 			B_IMAGE="y"
 			shift;;
+		update_pkg)
+			B_UPDATE_PKG="y"
+			shift;;
 		all)
-			B_FS="y"; B_CORE="y"; B_PORTS="y"; B_PROJECT="y"; B_IMAGE="y";
+			B_FS="y"; B_CORE="y"; B_PORTS="y"; B_PROJECT="y"; B_IMAGE="y"; B_UPDATE_PKG="y";
 			shift;;
 	esac;
 done
@@ -137,4 +141,11 @@ fi
 #
 if [ "X${B_IMAGE}" == "Xy" ]; then
 	b_image
+fi
+
+#
+# Build final filesystems
+#
+if [ "X${B_UPDATE_PKG}" == "Xy" ]; then
+	b_update_pkg
 fi
