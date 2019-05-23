@@ -17,13 +17,13 @@
 
 .text
 .thumb
+.syntax unified
 
 .globl _start
 .type _start, %function
 _start:
-	mov r0, #0
-	mov r1, #0
-	mov r2, #0
+	pop {lr}
+	pop {r0-r2}
 
 	ldr r3, =~7
 	mov r4, sp
