@@ -33,7 +33,7 @@ sym: \
 	svc $sn; \
 	add sp, #16; \
 	.cfi_adjust_cfa_offset -16; \
-	blx lr; \
+	bx lr; \
 	.cfi_endproc; \
 .size sym, .-sym
 

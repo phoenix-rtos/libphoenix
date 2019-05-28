@@ -24,7 +24,7 @@
 .type sym, %function; \
 sym: \
 	svc $sn; \
-	blx lr; \
+	bx lr; \
 .size sym, .-sym
 
 
