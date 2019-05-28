@@ -18,6 +18,7 @@
 
 #include <sys/msg.h>
 #include <sys/sockdefs.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <time.h>
 
@@ -30,9 +31,6 @@ enum {
 	sockmGetNameInfo, sockmGetAddrInfo,
 };
 
-enum { MAX_SOCKNAME_LEN = sizeof(((msg_t *)0)->o.raw) - 2 * sizeof(size_t) };
-
-
 #define PATH_SOCKSRV "/dev/netsocket"
 
 
@@ -42,16 +40,19 @@ typedef union sockport_msg_ {
 		size_t ai_node_sz;
 	} socket;
 	struct {
+		id_t sock_id;
 		int backlog;
 	} listen;
 	struct {
+		id_t sock_id;
 		int level;
 		int optname;
 	} opt;
 	struct {
-		int flags;
+		id_t sock_id;
 		size_t addrlen;
-		char addr[MAX_SOCKNAME_LEN];
+		int flags;
+		char addr[0];
 	} send;
 } sockport_msg_t;
 
@@ -60,19 +61,27 @@ typedef struct sockport_resp_ {
 	ssize_t ret;
 	union {
 		struct {
+			oid_t socket;
 			size_t addrlen;
-			char addr[MAX_SOCKNAME_LEN];
+			char addr[0];
 		} sockname;
 		struct {
 			size_t hostlen;
 			size_t servlen;
 		} nameinfo;
 		struct {
-			int errno;
+			int error;
 			size_t buflen;
 		} sys;
 	};
 } sockport_resp_t;
+
+
+enum {
+	__MAX_SEND_SOCKNAME_LEN = sizeof(((msg_t *)0)->i.raw) - offsetof(sockport_msg_t, send.addr),
+	__MAX_SOCKNAME_ADDR_LEN = sizeof(((msg_t *)0)->o.raw) - offsetof(sockport_resp_t, sockname.addr),
+	MAX_SOCKNAME_LEN = __MAX_SEND_SOCKNAME_LEN < __MAX_SOCKNAME_ADDR_LEN ? __MAX_SEND_SOCKNAME_LEN : __MAX_SOCKNAME_ADDR_LEN,
+};
 
 
 #endif

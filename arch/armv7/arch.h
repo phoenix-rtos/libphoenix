@@ -112,4 +112,6 @@ typedef u32 handle_t;
 #define PRIi64      "lli"
 #define PRIo64      "llo"
 
+#define STACK_PTR ({ void *p; asm ("mov %0, sp" : "=g" (p)); p; })
+
 #endif

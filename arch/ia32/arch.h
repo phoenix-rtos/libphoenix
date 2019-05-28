@@ -77,5 +77,6 @@ typedef u32 handle_t;
 
 #include <arch/ia32/io.h>
 
+#define STACK_PTR ({ void *p; asm ("mov %%esp, %0" : "=g" (p)); p; })
 
 #endif
