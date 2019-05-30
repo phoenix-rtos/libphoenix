@@ -211,6 +211,7 @@ int create_dev(oid_t *oid, const char *path)
 	oid_t odir;
 	msg_t msg = { 0 };
 	char *canonical_path, *dir, *name;
+	int err;
 
 	if (path == NULL)
 		return -1;
@@ -221,8 +222,16 @@ int create_dev(oid_t *oid, const char *path)
 	splitname(canonical_path, &name, &dir);
 
 	if (lookup(dir, NULL, &odir) < 0) {
-		free(canonical_path);
-		return -1;
+		err = mkdir(dir, 0);
+		if (err < 0 && err != -EEXIST) {
+			free(canonical_path);
+			return -1;
+		}
+
+		if (lookup(dir, NULL, &odir) < 0) {
+			free(canonical_path);
+			return -1;
+		}
 	}
 
 	msg.type = mtCreate;
