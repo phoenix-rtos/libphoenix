@@ -16,10 +16,6 @@
 #ifndef _LIBPHOENIX_ERRNO_H_
 #define _LIBPHOENIX_ERRNO_H_
 
-
-extern int errno;
-
-
 #include <phoenix/errno.h>
 
 
@@ -52,6 +48,12 @@ extern int errno;
 #define ENOLCK          116
 #define ENOTRECOVERABLE 131
 #define ENOTSUP			134
+
+
+#define errno (*__errno_location())
+
+
+extern int *__errno_location(void);
 
 
 static inline int set_errno(int x)

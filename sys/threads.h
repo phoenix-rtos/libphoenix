@@ -19,13 +19,26 @@
 #include <arch.h>
 #include <phoenix/sysinfo.h>
 #include <phoenix/signal.h>
-
+#include <sys/rb.h>
 
 typedef struct {
 	handle_t mutex;
 	handle_t cond;
 	volatile unsigned int v;
 } semaphore_t;
+
+
+struct __errno_t {
+	rbnode_t linkage;
+	int tid;
+	int no;
+};
+
+
+extern void _errno_new(struct __errno_t *e);
+
+
+extern void _errno_remove(struct __errno_t *e);
 
 
 extern int perf_start(unsigned pid);

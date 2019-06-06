@@ -68,7 +68,7 @@ typedef struct sockport_resp_ {
 			size_t servlen;
 		} nameinfo;
 		struct {
-			int errno;
+			int err;
 			size_t buflen;
 		} sys;
 	};
