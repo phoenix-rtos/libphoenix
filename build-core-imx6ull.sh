@@ -56,3 +56,6 @@ b_log "Building hostutils"
 (cd phoenix-rtos-hostutils/ && make $MAKEFLAGS $CLEAN all)
 cp "$PREFIX_BUILD_HOST/prog.stripped/phoenixd" $PREFIX_BOOT
 cp "$PREFIX_BUILD_HOST/prog.stripped/psu" $PREFIX_BOOT
+
+b_log "Building phoenix-rtos-corelibs"
+(cd phoenix-rtos-corelibs/ && make $MAKEFLAGS $CLEAN all)
