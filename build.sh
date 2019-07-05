@@ -101,7 +101,7 @@ if [ "X${B_FS}" == "Xy" ]; then
 	fi
 
 	mkdir -p $PREFIX_FS/root
-	cp -a $PREFIX_FS/root-skel/* $PREFIX_FS/root
+	cp -ra $PREFIX_FS/root-skel/. $PREFIX_FS/root
 
 	b_log "Saving git-version"
 	echo " "$(git rev-parse HEAD)" incotex" > $PREFIX_FS/root/etc/git-version
