@@ -428,7 +428,7 @@ size_t fwrite_unlocked(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 	}
 
 	/* flush buffer and write to file */
-	if ((err = safe_write(stream->fd, stream->buffer, stream->bufpos)) == -1)
+	if ((err = full_write(stream->fd, stream->buffer, stream->bufpos)) == -1)
 		return 0;
 
 	stream->bufpos = 0;
