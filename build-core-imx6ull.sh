@@ -39,6 +39,10 @@ b_log "Building coreutils"
 b_install $PREFIX_PROG_STRIPPED/psh /bin
 b_install $PREFIX_PROG_STRIPPED/psd /sbin
 b_install $PREFIX_PROG_STRIPPED/psd-old /sbin
+if [ "X${PFCONF}" == "Xy" ]; then
+	(cd phoenix-rtos-coreutils && make $MAKEFLAGS pfconf)
+	b_install $PREFIX_PROG_STRIPPED/pfconf /sbin
+fi
 
 b_log "Building phoenix-rtos-usb"
 (cd phoenix-rtos-usb && make $MAKEFLAGS $CLEAN all)
