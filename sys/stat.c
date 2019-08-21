@@ -110,7 +110,7 @@ int mkdir(const char *path, mode_t mode)
 	char *canonical_name, *name, *parent;
 
 	if (path == NULL)
-		return -EINVAL;
+		return -ENOENT;
 
 	canonical_name = canonicalize_file_name(path);
 	name = strrchr(canonical_name, '/');
@@ -142,7 +142,8 @@ int mkdir(const char *path, mode_t mode)
 	}
 
 	free(canonical_name);
-	return 0;
+	SET_ERRNO(msg.o.create.err);
+	return msg.o.create.err;
 }
 
 
