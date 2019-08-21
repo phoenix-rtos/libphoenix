@@ -59,7 +59,7 @@ static void _signal_terminate(int sig)
 {
 	int phxsig = _signals_posix2phx[sig];
 
-	exit(((phxsig) & 0x7f) << 8);
+	_exit(((phxsig) & 0x7f) << 8);
 }
 
 
