@@ -68,6 +68,13 @@ struct passwd *getpwuid(uid_t uid)
 	if ((fp = fopen(PASSWD_PATH, "r")) == NULL)
 		return NULL;
 
+	pwnam.pw_name = pw_name;
+	pwnam.pw_gecos = pw_name;
+	pwnam.pw_dir = pw_dir;
+	pwnam.pw_gecos = pw_gecos;
+	pwnam.pw_shell = pw_shell;
+	pwnam.pw_passwd = pw_passwd;
+
 	while (fgets(buf, sizeof(buf), fp)) {
 		sscanf (buf, "%[^:]:%[^:]:%d:%d:%[^:]:%[^:]:%s\n",
 			pwnam.pw_name, pwnam.pw_passwd,
