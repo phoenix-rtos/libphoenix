@@ -109,8 +109,10 @@ int mkdir(const char *path, mode_t mode)
 	oid_t dir;
 	char *canonical_name, *name, *parent;
 
-	if (path == NULL)
-		return -ENOENT;
+	if (path == NULL) {
+		SET_ERRNO(ENOENT);
+		return -1;
+	}
 
 	canonical_name = canonicalize_file_name(path);
 	name = strrchr(canonical_name, '/');
@@ -126,7 +128,8 @@ int mkdir(const char *path, mode_t mode)
 
 	if (lookup(parent, NULL, &dir) < EOK) {
 		free(canonical_name);
-		return -ENOENT;
+		SET_ERRNO(ENOENT);
+		return -1;
 	}
 
 	msg.type = mtCreate;
@@ -138,12 +141,13 @@ int mkdir(const char *path, mode_t mode)
 
 	if (msgSend(dir.port, &msg) < 0) {
 		free(canonical_name);
-		return -ENOMEM;
+		SET_ERRNO(ENOMEM);
+		return -1;
 	}
 
 	free(canonical_name);
 	SET_ERRNO(msg.o.create.err);
-	return msg.o.create.err;
+	return !msg.o.create.err ? 0 : -1;
 }
 
 

@@ -223,7 +223,7 @@ int create_dev(oid_t *oid, const char *path)
 
 	if (lookup(dir, NULL, &odir) < 0) {
 		err = mkdir(dir, 0);
-		if (err < 0 && err != -EEXIST) {
+		if (err < 0 && errno != EEXIST) {
 			free(canonical_path);
 			return -1;
 		}
