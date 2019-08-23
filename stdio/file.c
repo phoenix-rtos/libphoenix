@@ -13,6 +13,8 @@
  * %LICENSE%
  */
 
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <sys/msg.h>
 #include <sys/file.h>
 #include <sys/stat.h>
@@ -32,6 +34,12 @@
 #define F_LINE (1 << 2)
 #define F_ERROR (1 << 3)
 #define F_USRBUF (1 << 4)
+
+typedef struct {
+	FILE file; /* Must be the first member */
+	pid_t pid;
+} popen_FILE;
+
 
 static FILE stdin_file  = {0, 0};
 static FILE stdout_file = {1, 0};
@@ -902,6 +910,91 @@ void setbuf(FILE *stream, char *buf)
 	setvbuf(stream, buf, buf != NULL ? _IOFBF : _IONBF, BUFSIZ);
 }
 
+
+FILE *popen(const char *command, const char *mode)
+{
+	int fd[2], pid;
+	popen_FILE *pf;
+
+	if (pipe(fd) < 0)
+		return NULL;
+
+	if ((pf = calloc(1, sizeof(popen_FILE))) == NULL)
+		goto failed;
+
+	if ((pf->file.mode = string2mode(mode)) < 0)
+		goto failed;
+
+	if (mutexCreate(&pf->file.lock) < 0) {
+		pf->file.lock = 0;
+		goto failed;
+	}
+
+	if ((pf->file.buffer = mmap(NULL, BUFSIZ, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, NULL, 0)) == MAP_FAILED)
+		goto failed;
+
+	if ((pid = vfork()) < 0) {
+		goto failed;
+	}
+	else if (!pid) {
+		if (mode[0] == 'r')
+			dup2(fd[1], 1);
+		else
+			dup2(fd[0], 0);
+
+		close(fd[1]);
+		close(fd[0]);
+
+		execl("/bin/sh", "sh", "-c", command, NULL);
+		exit(EXIT_FAILURE);
+	}
+
+	pf->pid = pid;
+	pf->file.bufpos = pf->file.bufeof = 0;
+	pf->file.bufsz = BUFSIZ;
+	pf->file.flags = 0;
+
+	if (mode[0] == 'r') {
+		pf->file.fd = fd[0];
+		close(fd[1]);
+	}
+	else {
+		pf->file.fd = fd[1];
+		close(fd[0]);
+	}
+
+	return &pf->file;
+
+	failed:
+
+	if (pf->file.lock)
+		resourceDestroy(pf->file.lock);
+	if (pf->file.buffer != MAP_FAILED)
+		munmap(pf->file.buffer, BUFSIZ);
+	free(pf);
+	close(fd[0]);
+	close(fd[1]);
+	return NULL;
+}
+
+
+int pclose(FILE *file)
+{
+	popen_FILE *pf = (popen_FILE *) file;
+	int stat;
+	pid_t pid = pf->pid;
+
+	fclose(file);
+
+	while (waitpid(pid, &stat, 0) == -1) {
+		if (errno != EINTR) {
+			stat = -1;
+			break;
+		}
+	}
+
+	return stat;
+}
 
 
 void _file_init(void)
