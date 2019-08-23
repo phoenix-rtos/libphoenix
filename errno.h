@@ -24,6 +24,7 @@
 #define ENOTEMPTY       39
 #define EUNATCH         49
 #define ENODATA         61
+#define ENONET          64
 #define EPROTO          71
 #define EBADMSG         74
 #define EMSGSIZE        90
@@ -33,7 +34,8 @@
 #define EAFNOSUPPORT    97
 #define EADDRINUSE      98
 #define EADDRNOTAVAIL   99
-#define ENETUNREACH		101
+#define ENETDOWN        100
+#define ENETUNREACH     101
 #define ECONNABORTED    103
 #define ECONNRESET      104
 #define ENOBUFS         105
@@ -41,6 +43,7 @@
 #define ENOTCONN        107
 #define ETIMEDOUT       110
 #define ECONNREFUSED    111
+#define EHOSTDOWN       112
 #define EHOSTUNREACH    113
 #define EALREADY        114
 #define EINPROGRESS     115
