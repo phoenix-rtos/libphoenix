@@ -172,6 +172,8 @@ extern const struct in6_addr in6addr_loopback;
 enum {
 	IP_TOS,
 	IP_TTL,
+	IP_MULTICAST_TTL = 5,
+	IP_MULTICAST_IF = 6
 };
 
 enum {
