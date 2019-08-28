@@ -13,13 +13,17 @@
  * %LICENSE%
  */
 
-#include "stdlib.h"
-#include "limits.h"
-#include "string.h"
-#include "sys/list.h"
-#include "sys/rb.h"
-#include "sys/threads.h"
-#include "sys/mman.h"
+#include <sys/list.h>
+#include <sys/rb.h>
+#include <sys/threads.h>
+#include <sys/mman.h>
+#include <sys/debug.h>
+
+#include <stdlib.h>
+#include <limits.h>
+#include <string.h>
+#include <sysexits.h>
+#include <unistd.h>
 
 #define CEIL(value, size)			((((value) + (size) - 1) / (size)) * (size))
 #define FLOOR(value, size)			(((value) / (size)) * (size))
@@ -460,6 +464,11 @@ void free(void *ptr)
 
 	chunk = (chunk_t *) ((uintptr_t) ptr - CHUNK_OVERHEAD);
 	heap = chunk->heap;
+
+	if (!(chunk->size & CHUNK_CUSED)) {
+		debug("Double free detected\n");
+		_exit(EX_SOFTWARE);
+	}
 
 	chunk->size &= ~CHUNK_CUSED;
 	malloc_chunkSetFooter(chunk);
