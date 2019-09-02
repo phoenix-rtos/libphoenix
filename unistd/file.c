@@ -251,7 +251,7 @@ int create_dev(oid_t *oid, const char *path)
 
 	free(canonical_path);
 
-	if (msg.o.io.err < 0)
+	if (msg.o.create.err < 0)
 		return -1;
 
 	return 0;
