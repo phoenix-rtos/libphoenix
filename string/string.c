@@ -388,14 +388,13 @@ char *strtok(char *s1, const char *s2)
 char *strsep(char **string_ptr, const char *delimiter)
 {
 	char *ret = (*string_ptr);
-	int count;
 	const char *p;
 
 	if ((*string_ptr) == NULL)
 		return NULL;
 
-	for (; (**string_ptr) != '\0'; ++count, ++(*string_ptr)) {
-		for (p = delimiter; (*p) != '\0' && (**string_ptr) != (*delimiter); ++p)
+	for (; (**string_ptr) != '\0'; ++(*string_ptr)) {
+		for (p = delimiter; (*p) != '\0' && (**string_ptr) != (*p); ++p)
 			;
 
 		if ((*p) != '\0')
