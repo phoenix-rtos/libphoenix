@@ -102,10 +102,17 @@ static int _env_insert(int idx, char *v, unsigned allocated)
 			memset(new_environ + _size, 0, sizeof(char*) * (new_size - _size));
 
 			environ = new_environ;
-			_size = new_size;
 
-			if (_string_allocated)
-				_string_allocated = realloc(_string_allocated, sizeof(unsigned) * new_size);
+			if (_string_allocated) {
+				unsigned * ptr = realloc(_string_allocated, sizeof(unsigned) * new_size);
+				if (!ptr) {
+					errno = ENOMEM;
+					return -1;
+				}
+				_string_allocated = ptr;
+			}
+
+			_size = new_size;
 		}
 
 		idx = cnt++;
