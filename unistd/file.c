@@ -213,7 +213,7 @@ int create_dev(oid_t *oid, const char *path)
 	int retry = 0;
 	char *canonical_path, *dir, *sep, *name;
 
-	if (path == NULL)
+	if (path == NULL || oid == NULL)
 		return -1;
 
 	while (lookup("devfs", NULL, &odev) < 0) {
