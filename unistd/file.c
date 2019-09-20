@@ -208,53 +208,105 @@ int access(const char *path, int amode)
 
 int create_dev(oid_t *oid, const char *path)
 {
-	oid_t odir;
+	oid_t odev;
 	msg_t msg = { 0 };
-	char *canonical_path, *dir, *name;
-	int err;
+	int retry = 0;
+	char *canonical_path, *dir, *sep, *name;
 
-	if (path == NULL)
+	if (path == NULL || oid == NULL)
 		return -1;
+
+	while (lookup("devfs", NULL, &odev) < 0) {
+		/* if create_dev() is called by anyone started from syspage devfs
+		 * may be not registered yet so we try 3 times until we give up */
+		if (++retry > 3)
+			return -ENOSYS;
+		else
+			usleep(100000);
+	}
+
+	/* if someone uses full path to create device cut /dev prefix */
+	if (!strncmp("/dev", path, 4))
+		path += 4;
 
 	if ((canonical_path = canonicalize_file_name(path)) == NULL)
 		return -1;
 
 	splitname(canonical_path, &name, &dir);
 
-	if (lookup(dir, NULL, &odir) < 0) {
-		err = mkdir(dir, 0);
-		if (err < 0 && err != -EEXIST) {
+	if (name == canonical_path)
+		dir = NULL;
+
+	while (dir != NULL && *dir != 0) {
+		while (*dir == '/')
+			dir++;
+
+		if (*dir == 0)
+			break;
+
+		sep = strchr(dir, '/');
+		if (sep != NULL)
+			*sep++ = 0;
+
+		msg.type = mtCreate;
+		msg.i.create.type = otDir;
+		msg.i.create.mode = DEFFILEMODE | S_IFDIR;
+		msg.i.create.dir = odev;
+		msg.i.data = dir;
+		msg.i.size = strlen(dir) + 1;
+
+		if (msgSend(odev.port, &msg) < 0) {
 			free(canonical_path);
-			return -1;
+			return -ENOMEM;
 		}
 
-		if (lookup(dir, NULL, &odir) < 0) {
-			free(canonical_path);
-			return -1;
+		if (!msg.o.create.err) {
+			odev = msg.o.create.oid;
 		}
+		else if (msg.o.create.err == -EEXIST) {
+			msg.type = mtLookup;
+			msg.i.size = strlen(dir) + 1;
+			msg.i.data = dir;
+			msg.i.lookup.dir = odev;
+
+			if (msgSend(odev.port, &msg) < 0) {
+				free(canonical_path);
+				return -ENOMEM;
+			}
+
+			if (msg.o.lookup.err >= 0) {
+				odev = msg.o.lookup.dev;
+			}
+			else {
+				free(canonical_path);
+				return msg.o.lookup.err;
+			}
+		} else {
+			free(canonical_path);
+			return msg.o.create.err;
+		}
+		dir = sep;
 	}
 
 	msg.type = mtCreate;
-	memcpy(&msg.i.create.dir, &odir, sizeof(odir));
+	memcpy(&msg.i.create.dir, &odev, sizeof(oid_t));
 	memcpy(&msg.i.create.dev, oid, sizeof(*oid));
 
 	msg.i.create.type = otDev;
+	/* TODO: create_dev() should take mode argument */
 	msg.i.create.mode = S_IFCHR | 0666;
 
 	msg.i.data = name;
 	msg.i.size = strlen(name) + 1;
 
-	if (msgSend(odir.port, &msg) != EOK) {
+	if (msgSend(odev.port, &msg) != EOK) {
 		free(canonical_path);
-		return -1;
+		return -ENOMEM;
 	}
 
 	free(canonical_path);
 
-	if (msg.o.create.err < 0)
-		return -1;
-
-	return 0;
+	return msg.o.create.err;
 }
 
 
