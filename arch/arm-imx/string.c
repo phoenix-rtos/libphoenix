@@ -311,14 +311,21 @@ char *strncpy(char *dest, const char *src, size_t n)
 		ldrb r1, [r4], #1; \
 	1: \
 		cmp r2, #0; \
-		beq 2f; \
+		beq 3f; \
 		sub r2, #1; \
 		strb r1, [r3], #1; \
 		cmp r1, #0; \
 		itt ne; \
 		ldrbne r1, [r4], #1; \
 		bne 1b; \
-	2:"
+		mov r1, #0; \
+	2: \
+		cmp r2, #0; \
+		beq 3f; \
+		sub r2, #1; \
+		strb r1, [r3], #1; \
+		b 2b; \
+	3:"
 	:
 	: "r" (dest), "r" (src), "r" (n)
 	: "r1", "r2", "r3", "r4", "memory", "cc");

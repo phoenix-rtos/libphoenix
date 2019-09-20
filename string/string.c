@@ -210,12 +210,17 @@ char *strcpy(char *dest, const char *src)
 #define __STRNCPY
 char *strncpy(char *dest, const char *src, size_t n)
 {
-	int i = 0;
+	size_t i;
 
-	do {
-		dest[i] = src[i];
-		i++;
-	} while (i < n && src[i - 1] != '\0');
+	for (i = 0; i < n; ++i) {
+		if (src[i] != '\0') {
+			dest[i] = src[i];
+		} 
+		else {
+			memset(&dest[i], '\0', n - i);
+			break;
+		}
+	}
 
 	return dest;
 }
