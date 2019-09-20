@@ -367,19 +367,23 @@ char *strtok(char *s1, const char *s2)
 {
 	char *tokend;
 
-	if (s1 != NULL)
-		s1 += strspn(s1, s2);
-	else
+	if (s1 == NULL)
 		s1 = string_common.next_token;
+	s1 += strspn(s1, s2);
 
-	if (!*s1)
+	if (!*s1) {
+		string_common.next_token = s1;
 		return NULL;
+	}
 
 	tokend = s1 + strcspn(s1, s2);
 
-	string_common.next_token = tokend + strspn(tokend, s2);
-
-	*tokend = 0;
+	if (*tokend) {
+		*tokend = 0;
+		string_common.next_token = tokend + 1;
+	} else {
+		string_common.next_token = tokend;
+	}
 
 	return s1;
 }
