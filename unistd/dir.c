@@ -86,10 +86,21 @@ char *getcwd(char *buf, size_t size)
 {
 	int len = getcwd_len();
 
-	if (buf == NULL)
-		buf = malloc(len);
-	else if (size < len)
+	if (len == -1) {
+		errno = ENOMEM;
+		return NULL; /* ENOMEM */
+	}
+
+	if (buf == NULL) {
+		if ((buf = malloc(size == 0 ? len + 1 : size)) == NULL) {
+			errno = ENOMEM;
+			return NULL; /* ENOMEM */
+		}
+	}
+	else if (size < (len + 1)) {
+		errno = ERANGE;
 		return NULL; /* ERANGE */
+	}
 
 	memcpy(buf, dir_common.cwd, len + 1);
 	return buf;
