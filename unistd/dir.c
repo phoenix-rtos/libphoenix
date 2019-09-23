@@ -337,34 +337,56 @@ int rmdir(const char *path)
 
 char *dirname(char *path)
 {
-	char *slash;
+	size_t len;
 
-	if ((slash = strrchr(path, '/')) == NULL)
+	if (path == NULL || (len = strlen(path)) == 0)
 		return ".";
 
-	if (slash != path) {
-		*slash = 0;
-		return path;
-	}
+	char *last = path + len - 1;
 
-	return "/";
+	while ((last >= path) && (*last == '/'))
+		--last;
+
+	if (last < path)
+		return "/";
+
+	while ((last >= path) && (*last != '/'))
+		--last;
+
+	if (last < path)
+		return ".";
+
+	while ((last >= path) && (*last == '/'))
+		--last;
+
+	if (last < path)
+		return "/";
+
+	*(last + 1) = '\0';
+
+	return path;
 }
 
 
-char* basename(char* path)
+char *basename(char *path)
 {
-	char *slash;
+	size_t len;
 
-	/* remove trailing '/' */
-	char* lastchar = path + strlen(path) - 1;
-	while ((lastchar > path) && (*lastchar == '/'))
-		*lastchar-- = '\0';
+	if (path == NULL || (len = strlen(path)) == 0)
+		return ".";
 
-	if ((slash = strrchr(path, '/')) == NULL)
-		return path;
+	char *last = path + len - 1;
 
-	if (*(slash + 1) == '\0')
-		return slash;
+	while ((last >= path) && (*last == '/'))
+		--last;
 
-	return slash + 1;
+	if (last < path)
+		return "/";
+
+	*(last + 1) = '\0';
+
+	while ((last >= path) && (*last != '/'))
+		--last;
+
+	return (last + 1);
 }
