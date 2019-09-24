@@ -33,6 +33,7 @@ b_install "$PREFIX_PROG_STRIPPED/imx6ull-uart" /sbin
 b_install "$PREFIX_PROG_STRIPPED/imx6ull-sdma" /sbin
 b_install "$PREFIX_PROG_STRIPPED/imx6ull-nandtool" /sbin
 b_install "$PREFIX_PROG_STRIPPED/imx6ull-flash" /sbin
+b_install "$PREFIX_PROG_STRIPPED/imx6ull-otp" /sbin
 
 b_log "Building coreutils"
 (cd phoenix-rtos-coreutils && make $MAKEFLAGS $CLEAN all)
