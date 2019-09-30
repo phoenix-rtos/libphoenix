@@ -19,6 +19,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/* Included for compability reason */
+#include <strings.h>
+
 
 /*
  * Searches for the first occurrence of the character c (an unsigned char) in the first n bytes of the string
