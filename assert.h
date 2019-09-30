@@ -25,7 +25,7 @@
 #else
 
 
-#define assert(expr)
+#define assert(expr) ((void) 0)
 
 
 #endif

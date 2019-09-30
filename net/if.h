@@ -104,6 +104,12 @@ struct ifconf {
 };
 
 
+struct if_nameindex {
+	unsigned int if_index;
+	char *if_name;
+};
+
+
 unsigned int if_nametoindex(const char *ifname);
 char *if_indextoname(unsigned int ifindex, char *ifname);
 struct if_nameindex *if_nameindex(void);

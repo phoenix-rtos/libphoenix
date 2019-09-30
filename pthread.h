@@ -16,12 +16,8 @@
 #ifndef _LIBPHOENIX_PTHREAD_H_
 #define _LIBPHOENIX_PTHREAD_H_
 
-#include <stdint.h>
+#include <sys/types.h>
 
-
-typedef void *pthread_t;
-typedef void *pthread_attr_t;
-typedef uint32_t pthread_mutex_t;
 
 #define PTHREAD_MUTEX_INITIALIZER 0
 

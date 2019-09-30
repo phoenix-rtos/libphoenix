@@ -16,11 +16,9 @@
 #ifndef _LIBPHOENIX_NETDB_H_
 #define _LIBPHOENIX_NETDB_H_
 
+#include <sys/socktypes.h>
+#include <netinet/intypes.h>
 #include <stdint.h>
-
-
-struct sockaddr;
-typedef size_t socklen_t;
 
 
 struct hostent {

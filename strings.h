@@ -17,6 +17,9 @@
 #define _LIBPHOENIX_STRINGS_H_
 
 
+#include <stddef.h>
+
+
 /* Compares the string pointed to, by str1 to the string pointed to by str2 case-insensitively. */
 extern int strcasecmp(const char *str1, const char *str2);
 

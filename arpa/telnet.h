@@ -16,8 +16,6 @@
 #ifndef _LIBPHOENIX_ARPA_TELNET_H_
 #define _LIBPHOENIX_ARPA_TELNET_H_
 
-#include <sys/select.h>
-
 #define IAC     255
 #define DONT    254
 #define DO      253
