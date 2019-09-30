@@ -16,7 +16,6 @@
 #ifndef _SYS_WAIT_H_
 #define _SYS_WAIT_H_
 
-#include <arch.h>
 #include <sys/types.h>
 
 
@@ -46,8 +45,6 @@ static inline pid_t wait(int *status)
 {
 	return waitpid(-1, status, 0);
 }
-
-
 
 
 #endif

@@ -17,6 +17,7 @@
 #define _LIBPHOENIX_DIRENT_H_
 
 #include <stdio.h>
+#include <stdint.h>
 #include <sys/types.h>
 
 #define NAME_MAX 128
@@ -30,9 +31,9 @@ enum {	dtDir = 0,
 
 struct dirent {
 	ino_t  d_ino;
-	u32    d_type;
-	u16    d_reclen;
-	u16    d_namlen;
+	uint32_t d_type;
+	uint16_t d_reclen;
+	uint16_t d_namlen;
 	char   d_name[];
 };
 

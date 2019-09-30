@@ -16,8 +16,8 @@
 #ifndef _LIBPHOENIX_STDLIB_H_
 #define _LIBPHOENIX_STDLIB_H_
 
-#include <arch.h>
-
+#include <sys/wait.h>
+#include <stddef.h>
 #include <alloca.h>
 
 #define RAND_MAX   2147483647

@@ -18,6 +18,7 @@
 
 
 #include <arch.h>
+#include <stddef.h>
 #include <stdarg.h>
 #include <sys/types.h>
 
@@ -80,6 +81,9 @@ typedef struct _IO_cookie_io_functions
 
 extern FILE *stderr, *stdin, *stdout;
 
+#define stderr stderr
+#define stdin stdin
+#define stdout stdout
 
 /* Closes the stream. All buffers are flushed. */
 extern int fclose(FILE *file);

@@ -16,6 +16,8 @@
 #ifndef _LIBPHOENIX_WCHAR_H_
 #define _LIBPHOENIX_WCHAR_H_
 
+#include <stddef.h>
+
 #define WEOF ((wchar_t)-1)
 
 typedef int wint_t;

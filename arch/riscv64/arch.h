@@ -13,8 +13,8 @@
  * %LICENSE%
  */
 
-#ifndef _LIBPHOENIX_ARCH_IA32_ARCH_H_
-#define _LIBPHOENIX_ARCH_IA32_ARCH_H_
+#ifndef _LIBPHOENIX_ARCH_RISCV64_ARCH_H_
+#define _LIBPHOENIX_ARCH_RISCV64_ARCH_H_
 
 #include <stddef.h>
 

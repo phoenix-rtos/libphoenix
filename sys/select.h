@@ -16,9 +16,14 @@
 #ifndef _SYS_SELECT_H_
 #define _SYS_SELECT_H_
 
+#include <time.h>
 #include <stdint.h>
-#include <string.h>
-#include <sys/time.h>
+
+
+struct timeval {
+	time_t tv_sec;
+	suseconds_t tv_usec;
+};
 
 
 #ifndef FD_SETSIZE
@@ -36,7 +41,12 @@ typedef struct fd_set_t_
 
 #define __FD_OP(i, s, op) ((s)->fds_bits[(i) / __NFDBITS] op (1u << ((i) % __NFDBITS)))
 
-#define FD_ZERO(s) memset((s), 0, sizeof(fd_set))
+#define FD_ZERO(s) \
+do { \
+	uint32_t i; \
+	for (i = 0; i < sizeof((s)->fds_bits) / sizeof((s)->fds_bits[0]); ++i) \
+		(s)->fds_bits[i] = 0; \
+} while (0);
 #define FD_SET(i, s) __FD_OP(i, s, |=)
 #define FD_CLR(i, s) __FD_OP(i, s, &= ~)
 #define FD_ISSET(i, s) !!__FD_OP(i, s, &)

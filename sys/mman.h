@@ -16,7 +16,7 @@
 #ifndef _SYS_MMAN_H_
 #define _SYS_MMAN_H_
 
-#include <arch.h>
+#include <sys/types.h>
 #include <phoenix/sysinfo.h>
 #include <phoenix/mman.h>
 

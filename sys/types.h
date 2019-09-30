@@ -18,7 +18,6 @@
 
 #include <stdint.h>
 #include <arch.h>
-#include <sys/select.h>
 
 typedef int pid_t;
 typedef int off_t;
@@ -35,16 +34,19 @@ typedef int blkcnt_t;
 
 typedef int suseconds_t;
 typedef int clock_t;
+typedef int clockid_t;
 
 typedef char *caddr_t;
-
-struct _FILE;
-typedef struct _FILE FILE;
 
 typedef unsigned char u_char;
 typedef unsigned short u_short;
 typedef unsigned int u_int;
 typedef unsigned long u_long;
+
+typedef void *pthread_t;
+typedef void *pthread_attr_t;
+typedef handle_t pthread_mutex_t;
+
 
 /* BSD legacy types permitted by POSIX */
 typedef uint8_t   u_int8_t;

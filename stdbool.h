@@ -16,9 +16,11 @@
 #ifndef _LIBPHOENIX_STDBOOL_H_
 #define _LIBPHOENIX_STDBOOL_H_
 
+#define __bool_true_false_are_defined 1
 
-typedef _Bool bool;
-enum { false, true };
+#define bool _Bool
+#define true 1
+#define false 0
 
 
 #endif

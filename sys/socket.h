@@ -17,7 +17,7 @@
 #define _SYS_SOCKET_H_
 
 #include <stdint.h>
-#include <time.h>
+#include <sys/socktypes.h>
 #include <sys/sockdefs.h>
 #include <sys/uio.h>
 
@@ -66,7 +66,6 @@
 #define SCM_RIGHTS 1
 
 
-typedef size_t socklen_t;
 typedef uint16_t sa_family_t;	// match lwIP size: u8 len + u8 family
 
 

@@ -16,6 +16,8 @@
 #ifndef _SYS_SYSMACROS_H_
 #define _SYS_SYSMACROS_H_
 
+#include <sys/types.h>
+
 /* NOTE: this can/should be macros */
 
 dev_t makedev(unsigned int maj, unsigned int min);

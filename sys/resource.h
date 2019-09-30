@@ -18,7 +18,7 @@
 
 #include <sys/time.h>
 #include <sys/threads.h>
-#include <time.h>
+#include <sys/types.h>
 #include <errno.h>
 
 #define RLIMIT_CORE 0

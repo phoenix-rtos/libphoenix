@@ -61,7 +61,6 @@ typedef u64 cycles_t;
 typedef u32 uintptr_t;
 typedef s32 intptr_t;
 
-typedef unsigned int size_t;
 typedef int ssize_t;
 typedef unsigned long long time_t;
 typedef unsigned int useconds_t;

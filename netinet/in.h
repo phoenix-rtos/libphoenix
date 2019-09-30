@@ -17,10 +17,8 @@
 #define _NETINET_IN_H_
 
 #include <sys/socket.h>
-
-
-typedef u16 in_port_t;
-typedef u32 in_addr_t;
+#include <stdint.h>
+#include <netinet/intypes.h>
 
 
 struct in_addr {
@@ -29,9 +27,9 @@ struct in_addr {
 
 struct in6_addr {
 	union {
-		u8 s6_addr[16];
-		u16 s6_addr16[8];
-		u32 s6_addr32[4];
+		uint8_t s6_addr[16];
+		uint16_t s6_addr16[8];
+		uint32_t s6_addr32[4];
 	};
 };
 
@@ -41,7 +39,7 @@ struct sockaddr_in {
 	in_port_t       sin_port;
 	struct in_addr  sin_addr;
 #define SIN_ZERO_LEN 8
-	u8		sin_zero[SIN_ZERO_LEN];
+	uint8_t		sin_zero[SIN_ZERO_LEN];
 };
 
 struct sockaddr_in6 {
@@ -85,6 +83,7 @@ extern const struct in6_addr in6addr_loopback;
 #define IN6ADDR_ANY_INIT  {{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}}}
 #define IN6ADDR_LOOPBACK_INIT {{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 1}}}
 
+#define INET_ADDRSTRLEN 16 /* Length of the string form for IPv4 */
 #define INET6_ADDRSTRLEN 46 /* Length of the string form for IPv6 */
 
 #define IPV6_JOIN_GROUP			0x00000001 /* Join a multicast group */

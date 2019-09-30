@@ -25,7 +25,7 @@
 #define CLOCKS_PER_SEC 1000000
 
 
-typedef enum { CLOCK_MONOTONIC = 0, CLOCK_REALTIME } clockid_t;
+enum { CLOCK_MONOTONIC = 0, CLOCK_REALTIME };
 
 
 struct tm {

@@ -16,13 +16,8 @@
 #ifndef _SYS_TIME_H_
 #define _SYS_TIME_H_
 
-#include <arch.h>
-
-
-struct timeval {
-	time_t tv_sec;
-	time_t tv_usec;
-};
+#include <sys/select.h>
+#include <sys/types.h>
 
 
 struct timezone {
