@@ -94,6 +94,18 @@ extern gid_t getgid(void);
 extern gid_t getegid(void);
 
 
+extern int setuid(uid_t uid);
+
+
+extern int seteuid(uid_t uid);
+
+
+extern int setgid(gid_t gid);
+
+
+extern int setegid(gid_t gid);
+
+
 extern int usleep(useconds_t usecs);
 
 
@@ -101,6 +113,9 @@ extern unsigned int sleep(unsigned int seconds);
 
 
 extern int fsync(int fd);
+
+
+extern void sync(void);
 
 
 extern int chdir(const char *path);
@@ -212,6 +227,15 @@ extern int gethostname(char *name, size_t namelen);
 
 
 extern char *getpass(const char *prompt);
+
+
+extern int getgroups(int size, gid_t list[]);
+
+
+extern char *ttyname(int fildes);
+
+
+extern int ttyname_r(int fildes, char *name, size_t namesize);
 
 
 extern char *optarg;
