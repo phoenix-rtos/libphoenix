@@ -14,7 +14,6 @@
  */
 
 #include "common.h"
-#include "consts.h"
 
 
 void normalizeSub(double *x, int *exp)

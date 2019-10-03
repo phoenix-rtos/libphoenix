@@ -14,7 +14,7 @@
  */
 
 #include <arch.h>
-#include "list.h"
+#include <sys/list.h>
 
 
 void lib_listAdd(void **list, void *t, size_t noff, size_t poff)
