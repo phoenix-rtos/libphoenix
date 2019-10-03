@@ -22,22 +22,21 @@ BUILD_DIR ?= $(PREFIX_BUILD)/$(notdir $(TOPDIR))
 BUILD_DIR := $(abspath $(BUILD_DIR))
 
 SUBSYSTEMS := math stdio stdlib string sys ctype time unistd errno signal termios posix err locale regex net syslog netinet
-EXTRA_HEADER_DIRS := net netinet arpa
 
 LIBNAME := libphoenix.a
 LIB := $(BUILD_DIR)/$(LIBNAME)
 
 include Makefile.targets
 
-POSIXSRV = $(TOPDIR)/../phoenix-rtos-posixsrv
-CFLAGS += -I"$(TOPDIR)"
+HEADER_DIR = $(TOPDIR)/include/
+
+CFLAGS += -I"$(HEADER_DIR)"
 CFLAGS += -DVERSION=\"$(VERSION)\"
 CFLAGS += -fdata-sections -ffunction-sections
 LDFLAGS += --gc-sections
 
 ARCH = code.a
 ARCHS := $(patsubst %,$(BUILD_DIR)/%/$(ARCH),$(SUBDIRS))
-HEADERS := $(shell find . $(EXTRA_HEADER_DIRS) $(SUBDIRS) -maxdepth 1  -name \*.h)
 
 # compiling files from CWD
 SRCS := _startc.c
@@ -52,7 +51,9 @@ ifeq (/,$(SYSROOT))
 $(error Sysroot is not supported by Your toolchain. Use cross-toolchain to compile)
 endif
 
-export TOPDIR PREFIX_BUILD BUILD_DIR SIL TARGET LIB CC CFLAGS AR ARFLAGS LD LDFLAGS GCCLIB OBJDUMP STRIP HEADERS_INSTALL_DIR
+HEADERS := $(patsubst $(HEADER_DIR)%,$(HEADERS_INSTALL_DIR)%,$(shell find $(HEADER_DIR) -name \*.h))
+
+export TOPDIR PREFIX_BUILD BUILD_DIR SIL TARGET LIB CC CFLAGS AR ARFLAGS LD LDFLAGS GCCLIB OBJDUMP STRIP HEADERS_INSTALL_DIR HEADER_DIR
 
 
 all: subsystems $(OBJS) $(LIB) tests
@@ -120,11 +121,6 @@ install: $(LIB) $(HEADERS)
 			ln -sf "$(LIBC_INSTALL_DIR)/$(LIBNAME)" "$(LIBC_INSTALL_DIR)/$$lib"; \
 		fi \
 	done; \
-	for file in $(HEADERS); do\
-		base=`dirname $${file}`; \
-		mkdir -p "$(HEADERS_INSTALL_DIR)/$${base}"; \
-		install -p -m 644 $${file} $(HEADERS_INSTALL_DIR)/$${file};\
-	done
 
 uninstall:
 	rm -rf "$(LIBC_INSTALL_DIR)/$(LIBNAME)"
@@ -132,7 +128,7 @@ uninstall:
 		rm -rf "$(LIBC_INSTALL_DIR)/$$lib"; \
 	done
 	@for file in $(HEADERS); do \
-		rm -rf "$(HEADERS_INSTALL_DIR)/$${file}"; \
+		rm -rf $$file; \
 	done
 
 clean:

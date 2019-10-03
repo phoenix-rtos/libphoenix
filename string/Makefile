@@ -20,11 +20,11 @@ ERR_EXTRACT := sed -En -e '/^\s*\#\s*define\s+E\w+\s+[[:digit:]]+/{s/^[^d]*defin
  -e '/^\s*E\w+\s*=\s*-?[[:digit:]]+/{s/^\s*(\w+)\s*=\s*-?([[:digit:]]+).*/\2\t\1/;p;d}'
 
 
-%/errno.list: $(HEADERS_INSTALL_DIR)/phoenix/errno.h $(TOPDIR)/errno.h
+%/errno.list: $(HEADERS_INSTALL_DIR)/phoenix/errno.h ${HEADER_DIR}/errno.h
 	@(printf "GEN %-24s  \n" "$(@F)")
 	$(SIL)$(ERR_EXTRACT) $^ | sort -n > $@
 
-%/gaierr.list: $(TOPDIR)/netdb.h
+%/gaierr.list: ${HEADER_DIR}/netdb.h
 	@(printf "GEN %-24s  \n" "$(@F)")
 	$(SIL)$(ERR_EXTRACT) $^ | sort -n > $@
 

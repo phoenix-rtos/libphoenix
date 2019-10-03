@@ -51,7 +51,7 @@ $(PREFIX_O)%.o: %.S
 
 
 $(PREFIX_A)%.a:
-	@mkdir -p $(@D),
+	@mkdir -p $(@D)
 	@(printf "AR  %s/%-24s  \n" "$(notdir $(@D))" "$(@F)")
 	$(SIL)$(AR) $(ARFLAGS) $@ $^ 2>/dev/null
 
@@ -67,6 +67,10 @@ $(PREFIX_PROG_STRIPPED)%: $(PREFIX_PROG)%
 	@(printf "STR %s/%-24s\n" "$(notdir $(@D))" "$(@F)")
 	$(SIL)$(STRIP) -s -o "$@" "$<"
 
+
+$(HEADERS_INSTALL_DIR)%.h: $(HEADER_DIR)%.h
+	@mkdir -p $(@D)
+	$(SIL)install -p -m 644 "$<" "$@"
 
 $(ARCH): $(ARCH_OBJS)
 

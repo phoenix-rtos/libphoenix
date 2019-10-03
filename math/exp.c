@@ -14,7 +14,7 @@
  */
 
 #include <errno.h>
-#include "consts.h"
+#include <math.h>
 #include "common.h"
 
 

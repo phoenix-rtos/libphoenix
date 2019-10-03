@@ -13,9 +13,9 @@
  * %LICENSE%
  */
 
-#include "rb.h"
-#include "errno.h"
-#include "string.h"
+#include <sys/rb.h>
+#include <errno.h>
+#include <string.h>
 
 
 void lib_rbInit(rbtree_t *tree, rbcomp_t compare, rbaugment_t augment)
