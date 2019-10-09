@@ -13,9 +13,22 @@
  * %LICENSE%
  */
 
-#include "stdlib.h"
-#include "ctype.h"
-#include "limits.h"
+#include <stdint.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <limits.h>
+
+intmax_t strtoimax(const char *nptr, char **endptr, int base)
+{
+	return (intmax_t)strtoll(nptr, endptr, base);
+}
+
+
+uintmax_t strtoumax(const char *nptr, char **endptr, int base)
+{
+	return (uintmax_t)strtoull(nptr, endptr, base);
+}
+
 
 unsigned long long int strtoull(const char *nptr, char **endptr, int base)
 {

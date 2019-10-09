@@ -14,8 +14,10 @@
  */
 
 #include "format.h"
-#include "stdint.h"
-#include "string.h"
+#include <sys/minmax.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <string.h>
 
 
 #define FLAG_SIGNED        0x1
@@ -36,33 +38,33 @@
 
 #define GET_UNSIGNED(number, flags, args) do {		\
 		if ((flags) & FLAG_64BIT)		\
-			(number) = va_arg((args), u64);	\
+			(number) = va_arg((args), uint64_t);	\
 		else					\
-			(number) = va_arg((args), u32);	\
+			(number) = va_arg((args), uint32_t);	\
 	} while (0)
 
 
 #define GET_SIGNED(number, flags, args) do {		\
 		if ((flags) & FLAG_64BIT)		\
-			(number) = va_arg((args), s64);	\
+			(number) = va_arg((args), int64_t);	\
 		else					\
-			(number) = va_arg((args), s32);	\
+			(number) = va_arg((args), int32_t);	\
 	} while (0)
 
 
 union float_u32
 {
 	float f;
-	u32 u;
+	uint32_t u;
 };
 
 union double_u64
 {
 	double d;
-	u64 u;
+	uint64_t u;
 };
 
-static inline double format_doubleFromU64(u64 ui)
+static inline double format_doubleFromU64(uint64_t ui)
 {
 	union double_u64 u;
 
@@ -70,7 +72,7 @@ static inline double format_doubleFromU64(u64 ui)
 	return u.d;
 }
 
-static inline u64 format_u64FromDouble(double d)
+static inline uint64_t format_u64FromDouble(double d)
 {
 	union double_u64 u;
 
@@ -78,7 +80,7 @@ static inline u64 format_u64FromDouble(double d)
 	return u.u;
 }
 
-static inline float format_floatFromU32(u32 ui)
+static inline float format_floatFromU32(uint32_t ui)
 {
 	union float_u32 u;
 
@@ -87,7 +89,7 @@ static inline float format_floatFromU32(u32 ui)
 }
 
 
-static inline u32 format_u32FromFloat(float f)
+static inline uint32_t format_u32FromFloat(float f)
 {
 	union float_u32 u;
 
@@ -121,16 +123,16 @@ static inline float format_modff(float x, float *integral_out)
 }
 
 
-static inline u32 format_fracToU32(float frac, int float_frac_len, float *overflow)
+static inline uint32_t format_fracToU32(float frac, int float_frac_len, float *overflow)
 {
-	const u32 s_powers10[] = { 1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000, };
-	const u32 mult = s_powers10[float_frac_len];
+	const uint32_t s_powers10[] = { 1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000, };
+	const uint32_t mult = s_powers10[float_frac_len];
 
 	frac *= (float)mult;
 
 	/* Ensure proper rounding */
 	frac += 0.5f;
-	u32 ret = (u32)(s32)frac;
+	uint32_t ret = (uint32_t)(int32_t)frac;
 
 	if (ret >= mult) {
 		*overflow += 1;
@@ -140,7 +142,7 @@ static inline u32 format_fracToU32(float frac, int float_frac_len, float *overfl
 }
 
 
-static void format_sprintf_num(void *ctx, feedfunc feed, u64 num64, u32 flags, int min_number_len, int float_frac_len)
+static void format_sprintf_num(void *ctx, feedfunc feed, uint64_t num64, uint32_t flags, int min_number_len, int float_frac_len)
 {
 	const char *digits = (flags & FLAG_LARGE_DIGITS) ? "0123456789ABCDEF" : "0123456789abcdef",
 			*prefix = (flags & FLAG_LARGE_DIGITS) ? "X0" : "x0";
@@ -340,7 +342,7 @@ static void format_sprintf_num(void *ctx, feedfunc feed, u64 num64, u32 flags, i
 	}
 
 	if (flags & FLAG_FLOAT) {
-		float f = format_floatFromU32((u32)num64);
+		float f = format_floatFromU32((uint32_t)num64);
 
 		if (f < 0) {
 			sign = '-';
@@ -354,7 +356,7 @@ static void format_sprintf_num(void *ctx, feedfunc feed, u64 num64, u32 flags, i
 		if (float_frac_len > 9)
 			float_frac_len = 9;
 
-		u32 frac32 = format_fracToU32(frac, float_frac_len, &integral);
+		uint32_t frac32 = format_fracToU32(frac, float_frac_len, &integral);
 		int frac_left = float_frac_len;
 
 		while (frac_left-- > 0) {
@@ -366,34 +368,34 @@ static void format_sprintf_num(void *ctx, feedfunc feed, u64 num64, u32 flags, i
 			*tmp++ = '.';
 
 		if (integral < 4294967296.0f)
-			num64 = (u32)integral;
+			num64 = (uint32_t)integral;
 		else {
 			float higher_part_f = (integral / 4294967296.0f);
-			u32 higher_part = (u32)higher_part_f;
-			u32 lower_part = (u32)(integral - (higher_part * 4294967296.0f));
+			uint32_t higher_part = (uint32_t)higher_part_f;
+			uint32_t lower_part = (uint32_t)(integral - (higher_part * 4294967296.0f));
 
-			num64 = (((u64)higher_part) << 32) | lower_part;
+			num64 = (((uint64_t)higher_part) << 32) | lower_part;
 			flags |= FLAG_64BIT;
 		}
 	}
 
-	u32 num32 = (u32)num64;
-	u32 num_high = (u32)(num64 >> 32);
+	uint32_t num32 = (uint32_t)num64;
+	uint32_t num_high = (uint32_t)(num64 >> 32);
 
 	if (flags & FLAG_SIGNED) {
 
 		if (flags & FLAG_64BIT) {
 
-			if ((s32)num_high < 0) {
-				num64 = -(s64)num64;
-				num32 = (u32)num64;
-				num_high = (u32)(num64 >> 32);
+			if ((int32_t)num_high < 0) {
+				num64 = -(int64_t)num64;
+				num32 = (uint32_t)num64;
+				num_high = (uint32_t)(num64 >> 32);
 				sign = '-';
 			}
 		}
 		else {
-			if ((s32)num32 < 0) {
-				num32 = -(s32)num32;
+			if ((int32_t)num32 < 0) {
+				num32 = -(int32_t)num32;
 				sign = '-';
 			}
 		}
@@ -524,7 +526,7 @@ void format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 		}
 
 		/* precission, padding (set default to 6 digits) */
-		u32 flags = 0, min_number_len = 0;
+		uint32_t flags = 0, min_number_len = 0;
 		int	float_frac_len = -1;
 
 		for (;;) {
@@ -593,13 +595,13 @@ void format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 
 		if (fmt == 'z') {
 			fmt = *format++;
-			if (sizeof(size_t) == sizeof(u64)) // FIXME "size_t" is undefined?
+			if (sizeof(size_t) == sizeof(uint64_t))
 				flags |= FLAG_64BIT;
 		}
 		if (fmt == 0)
 			break;
 
-		u64 number = 0;
+		uint64_t number = 0;
 		switch (fmt) {
 			case 's':
 			{
@@ -645,7 +647,7 @@ void format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 			}
 			case 'p':
 				flags |= (FLAG_HEX | FLAG_NULLMARK | FLAG_ZERO);
-				if (sizeof(void *) == sizeof(u64))
+				if (sizeof(void *) == sizeof(uint64_t))
 					flags |= FLAG_64BIT;
 				min_number_len = sizeof(void *) * 2;
 				GET_UNSIGNED(number, flags, args);

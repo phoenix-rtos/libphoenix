@@ -17,7 +17,7 @@
 #define _LIBPHOENIX_UTIME_H_
 
 
-#include <arch.h>
+#include <sys/types.h>
 
 
 struct utimbuf {

@@ -13,6 +13,7 @@
  * %LICENSE%
  */
 
+#include <arch.h>
 #include "assert.h"
 #include "stdlib.h"
 #include "sys/threads.h"
@@ -178,7 +179,7 @@ static struct page_set *_page_set_of_chunk(struct chunk *chunk)
 #define MAP_FAILED	((void *)-1)
 
 #define CEIL_POWOF2(x, roundto) (((x) + (roundto) - 1) & ~((roundto) - 1))
-#define PAGE_CEIL(x) CEIL_POWOF2((x), SIZE_PAGE)
+#define PAGE_CEIL(x) CEIL_POWOF2((x), _PAGE_SIZE)
 #define ALIGN_CEIL(x) CEIL_POWOF2((x), __BIGGEST_ALIGNMENT__)
 
 static int _page_set_fit(listnode_t *page_set_node, listnode_t *request_node)

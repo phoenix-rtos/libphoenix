@@ -13,13 +13,14 @@
  * %LICENSE%
  */
 
+#include <arch.h>
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
 #include "unistd.h"
 #include "sys/threads.h"
 #include "sys/mman.h"
-
+#include <sys/minmax.h>
 
 enum size_mode {
 	SZMODE_SMALL = 0,
@@ -66,7 +67,7 @@ unsigned random_size(enum size_mode szmode, unsigned *seed)
 	case SZMODE_MEDIUM:
 		return 100 + rand_r(seed) % 400;
 	case SZMODE_BIG:
-		return 500 + rand_r(seed) % (10 * SIZE_PAGE);
+		return 500 + rand_r(seed) % (10 * _PAGE_SIZE);
 	case SZMODE_HUGE:
 		return 500 + rand_r(seed) % (32 << 20);
 	case SZMODE_MIXED:

@@ -13,6 +13,7 @@
  * %LICENSE%
  */
 
+#include <sys/minmax.h>
 #include <sys/rb.h>
 
 #include "posix/idtree.h"

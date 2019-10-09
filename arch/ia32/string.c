@@ -13,7 +13,7 @@
  * %LICENSE%
  */
 
-#include <arch.h>
+#include <stddef.h>
 
 
 void *memcpy(void *to, const void *from, size_t n)
