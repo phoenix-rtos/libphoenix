@@ -13,6 +13,7 @@
  * %LICENSE%
  */
 
+#include <sys/minmax.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -20,6 +21,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <syslog.h>
+
 
 #ifndef PATH_LOG
 #define PATH_LOG "/dev/log"

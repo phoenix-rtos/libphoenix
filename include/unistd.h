@@ -17,6 +17,8 @@
 #ifndef _LIBPHOENIX_UNISTD_H_
 #define _LIBPHOENIX_UNISTD_H_
 
+#include <arch.h>
+#include <stddef.h>
 #include <sys/types.h>
 
 #define STDIN_FILENO 0
@@ -45,7 +47,7 @@ enum {
 
 static inline int getpagesize(void)
 {
-	return SIZE_PAGE;
+	return _PAGE_SIZE;
 }
 
 

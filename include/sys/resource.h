@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * termios.h
+ * resource.h
  *
  * Copyright 2018 Phoenix Systems
  * Author: Jan Sikorski, Aleksander Kaminski
@@ -17,9 +17,7 @@
 #define _SYS_RESOURCE_H_
 
 #include <sys/time.h>
-#include <sys/threads.h>
 #include <sys/types.h>
-#include <errno.h>
 
 #define RLIMIT_CORE 0
 #define RLIMIT_STACK 4096
@@ -58,15 +56,9 @@ extern int getrlimit(int resource, struct rlimit *rlp);
 extern int setrlimit(int resource, const struct rlimit *rlp);
 
 
-static inline int setpriority(int which, id_t who, int prio)
-{
-	return SET_ERRNO(priority(min(max(prio + 4, 0), 7)));
-}
+extern int setpriority(int which, id_t who, int prio);
 
 
-static inline int getpriority(int which, id_t who)
-{
-	return priority(-1) - 4;
-}
+extern int getpriority(int which, id_t who);
 
 #endif

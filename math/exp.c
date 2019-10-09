@@ -15,6 +15,7 @@
 
 #include <errno.h>
 #include <math.h>
+#include <stdint.h>
 #include "common.h"
 
 
@@ -124,7 +125,7 @@ double modf(double x, double* intpart)
 	conv_t *conv = (conv_t *)&x;
 	double tmp = x;
 	int exp = conv->i.exponent - 1023;
-	u64 m, mask = 0xfffffffffffffLL;
+	uint64_t m, mask = 0xfffffffffffffLL;
 
 	if (exp > 52) {
 		*intpart = x;

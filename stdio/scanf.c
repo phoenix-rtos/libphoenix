@@ -13,13 +13,13 @@
  * %LICENSE%
  */
 
-#include "stdio.h"
-#include "stdint.h"
-#include "stdlib.h"
-#include "ctype.h"
-#include "string.h"
-#include "limits.h"
-#include "stdarg.h"
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
+#include <limits.h>
+#include <stdarg.h>
 
 
 #define	LONG		0x01	/* l: long or double */
@@ -55,7 +55,7 @@ static const unsigned char *__sccl(char *tab, const unsigned char *fmt)
 	} else
 		v = 0;
 
-	memset(tab, (u8)v, 256);
+	memset(tab, (uint8_t)v, 256);
 
 	if (c == 0)
 		return (fmt - 1);
