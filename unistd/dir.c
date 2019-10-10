@@ -88,18 +88,28 @@ char *getcwd(char *buf, size_t size)
 
 	if (len == -1) {
 		errno = ENOMEM;
-		return NULL; /* ENOMEM */
+		return NULL;
 	}
 
-	if (buf == NULL) {
-		if ((buf = malloc(size == 0 ? len + 1 : size)) == NULL) {
-			errno = ENOMEM;
-			return NULL; /* ENOMEM */
+	if (size == 0) {
+		if (buf == NULL) {
+			size = len + 1;
+		}
+		else {
+			errno = EINVAL;
+			return NULL;
 		}
 	}
 	else if (size < (len + 1)) {
 		errno = ERANGE;
-		return NULL; /* ERANGE */
+		return NULL;
+	}
+
+	if (buf == NULL) {
+		if ((buf = malloc(size)) == NULL) {
+			errno = ENOMEM;
+			return NULL;
+		}
 	}
 
 	memcpy(buf, dir_common.cwd, len + 1);
@@ -111,7 +121,8 @@ char *getcwd(char *buf, size_t size)
 char *canonicalize_file_name(const char *path)
 {
 	char *buf;
-	int cwdlen = getcwd_len();
+	int bufsiz;
+	int cwdlen;
 	int pathlen;
 
 	if (path == NULL)
@@ -120,10 +131,18 @@ char *canonicalize_file_name(const char *path)
 	pathlen = strlen(path);
 
 	if (*path != '/') {
-		if ((buf = malloc(cwdlen + pathlen + 3)) == NULL)
+		cwdlen = getcwd_len();
+		if (cwdlen < 0)
+			return  NULL; /* ENOMEM */
+
+		bufsiz = cwdlen + pathlen + 3;
+		if ((buf = malloc(bufsiz)) == NULL)
 			return NULL; /* ENOMEM */
 
-		buf = getcwd(buf, cwdlen);
+		buf = getcwd(buf, bufsiz);
+		if (buf == NULL)
+			return NULL;
+
 		if (buf[cwdlen - 1] != '/') {
 			buf[cwdlen] = '/';
 			buf[cwdlen + 1] = 0;
@@ -133,7 +152,8 @@ char *canonicalize_file_name(const char *path)
 		pathlen += cwdlen + 1;
 	}
 	else {
-		if ((buf = malloc(pathlen + 2)) == NULL)
+		bufsiz = pathlen + 2;
+		if ((buf = malloc(bufsiz)) == NULL)
 			return NULL; /* ENOMEM */
 
 		strcpy(buf, path);
@@ -141,7 +161,7 @@ char *canonicalize_file_name(const char *path)
 
 	if (buf[pathlen - 1] == '/') {
 		buf[pathlen] = '.';
-		buf[pathlen + 1] = 0;
+		buf[pathlen + 1] = '\0';
 	}
 
 	return buf;
