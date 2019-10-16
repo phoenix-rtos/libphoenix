@@ -18,6 +18,7 @@
 #include <sys/msg.h>
 #include <sys/file.h>
 #include <sys/stat.h>
+#include <sys/minmax.h>
 #include <sys/mman.h>
 #include <sys/threads.h>
 

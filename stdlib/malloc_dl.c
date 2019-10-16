@@ -14,6 +14,7 @@
  */
 
 #include <sys/list.h>
+#include <sys/minmax.h>
 #include <sys/rb.h>
 #include <sys/threads.h>
 #include <sys/mman.h>

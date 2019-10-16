@@ -58,15 +58,9 @@ extern int getrlimit(int resource, struct rlimit *rlp);
 extern int setrlimit(int resource, const struct rlimit *rlp);
 
 
-static inline int setpriority(int which, id_t who, int prio)
-{
-	return SET_ERRNO(priority(min(max(prio + 4, 0), 7)));
-}
+int setpriority(int which, id_t who, int prio);
 
 
-static inline int getpriority(int which, id_t who)
-{
-	return priority(-1) - 4;
-}
+int getpriority(int which, id_t who);
 
 #endif

@@ -33,19 +33,6 @@
 #define __STRNCPY
 #define __MEMMOVE
 
-
-#define max(a, b) ({ \
-  __typeof__ (a) _a = (a); \
-  __typeof__ (b) _b = (b); \
-  _a > _b ? _a : _b; })
-
-#define min(a, b) ({ \
-  __typeof__ (a) _a = (a); \
-  __typeof__ (b) _b = (b); \
-        _a > _b ? _b : _a; \
-})
-
-
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef unsigned int u32;
@@ -79,6 +66,7 @@ typedef u32 handle_t;
 #include <limits.h>
 
 #define SIZE_PAGE 0x1000
+#define _PAGE_SIZE SIZE_PAGE
 
 #define PRId8       "d"
 #define PRIu8       "u"

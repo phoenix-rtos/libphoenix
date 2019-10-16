@@ -18,6 +18,7 @@
 #include "string.h"
 #include "unistd.h"
 #include "sys/threads.h"
+#include "sys/minmax.h"
 #include "sys/mman.h"
 
 

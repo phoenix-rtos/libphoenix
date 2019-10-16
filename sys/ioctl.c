@@ -16,6 +16,7 @@
 #include <arch.h>
 
 #include <phoenix/ioctl.h>
+#include <sys/minmax.h>
 #include <sys/ioctl.h>
 #include <string.h>
 

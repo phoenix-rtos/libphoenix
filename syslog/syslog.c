@@ -13,6 +13,7 @@
  * %LICENSE%
  */
 
+#include <sys/minmax.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>

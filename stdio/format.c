@@ -13,6 +13,7 @@
  * %LICENSE%
  */
 
+#include <sys/minmax.h>
 #include "format.h"
 #include "stdint.h"
 #include "string.h"
