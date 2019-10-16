@@ -16,11 +16,10 @@
 #ifndef _LIBPHOENIX_SYS_THREADS_H_
 #define _LIBPHOENIX_SYS_THREADS_H_
 
-#include <sys/types.h>
-#include <sys/rb.h>
-#include <stddef.h>
+#include <arch.h>
 #include <phoenix/sysinfo.h>
 #include <phoenix/signal.h>
+#include <sys/rb.h>
 
 typedef struct {
 	handle_t mutex;

@@ -13,7 +13,6 @@
  * %LICENSE%
  */
 
-#include <arch.h>
 #include "stdio.h"
 #include "stdlib.h"
 #include "unistd.h"
@@ -28,7 +27,7 @@ unsigned test_randsize(unsigned *seed, unsigned bufsz)
 	unsigned sz;
 
 	if (rand_r(seed) % 2)
-		sz = (rand_r(seed) % (bufsz / _PAGE_SIZE)) * _PAGE_SIZE;
+		sz = (rand_r(seed) % (bufsz / SIZE_PAGE)) * SIZE_PAGE;
 	else
 		sz = 1 + (rand_r(seed) % bufsz);
 
@@ -38,14 +37,14 @@ unsigned test_randsize(unsigned *seed, unsigned bufsz)
 
 unsigned test_offset(unsigned *seed, unsigned size, unsigned bufsz)
 {
-	unsigned offs = (bufsz - size) / _PAGE_SIZE;
+	unsigned offs = (bufsz - size) / SIZE_PAGE;
 
 	if (offs && rand_r(seed) % 2)
-		offs = (rand_r(seed) % offs) * _PAGE_SIZE;
+		offs = (rand_r(seed) % offs) * SIZE_PAGE;
 	else if (offs && rand_r(seed) % 10)
-		offs = _PAGE_SIZE - (size & (_PAGE_SIZE - 1));
+		offs = SIZE_PAGE - (size & (SIZE_PAGE - 1));
 	else if (offs && rand_r(seed) % 10)
-		offs = _PAGE_SIZE - (size & (_PAGE_SIZE - 1)) / 2;
+		offs = SIZE_PAGE - (size & (SIZE_PAGE - 1)) / 2;
 	else if (bufsz - size)
 		offs = rand_r(seed) % (bufsz - size);
 	else
@@ -58,7 +57,7 @@ unsigned test_offset(unsigned *seed, unsigned size, unsigned bufsz)
 int test_ping(unsigned seed, unsigned port, unsigned count)
 {
 	msg_t msg;
-	unsigned bufsz = 4 * _PAGE_SIZE, offs[2], i, k;
+	unsigned bufsz = 4 * SIZE_PAGE, offs[2], i, k;
 	void *buf[2];
 
 	printf("test_msg/ping: starting\n");

@@ -13,8 +13,8 @@
  * %LICENSE%
  */
 
+#include <arch.h>
 #include <sys/list.h>
-#include <stdint.h>
 
 
 void lib_listAdd(void **list, void *t, size_t noff, size_t poff)
@@ -22,15 +22,15 @@ void lib_listAdd(void **list, void *t, size_t noff, size_t poff)
 	if (t == NULL)
 		return;
 	if (*list == NULL) {
-		*((uintptr_t *)(t + noff)) = (uintptr_t)t;
-		*((uintptr_t *)(t + poff)) = (uintptr_t)t;
+		*((addr_t *)(t + noff)) = (addr_t)t;
+		*((addr_t *)(t + poff)) = (addr_t)t;
 		*list = t;
 	}
 	else {
-		*((uintptr_t *)(t + poff)) = *((uintptr_t *)(*list + poff));
-		*((uintptr_t *)((void *)*((uintptr_t *)(*list + poff)) + noff)) = (uintptr_t)t;
-		*((uintptr_t *)(t + noff)) = *((uintptr_t *)list);
-		*((uintptr_t *)(*list + poff)) = (uintptr_t)t;
+		*((addr_t *)(t + poff)) = *((addr_t *)(*list + poff));
+		*((addr_t *)((void *)*((addr_t *)(*list + poff)) + noff)) = (addr_t)t;
+		*((addr_t *)(t + noff)) = *((addr_t *)list);
+		*((addr_t *)(*list + poff)) = (addr_t)t;
 	}
 }
 
@@ -39,15 +39,15 @@ void lib_listRemove(void **list, void *t, size_t noff, size_t poff)
 {
 	if (t == NULL)
 		return;
-	if (*((uintptr_t *)(t + noff)) == (uintptr_t)t && *((uintptr_t *)(t + poff)) == (uintptr_t)t) {
+	if (*((addr_t *)(t + noff)) == (addr_t)t && *((addr_t *)(t + poff)) == (addr_t)t) {
 		*list = NULL;
 	}
 	else {
-		*((uintptr_t *)((void *)(*((uintptr_t *)(t + poff))) + noff)) = *((uintptr_t *)(t + noff));
-		*((uintptr_t *)((void *)(*((uintptr_t *)(t + noff))) + poff)) = *((uintptr_t *)(t + poff));
+		*((addr_t *)((void *)(*((addr_t *)(t + poff))) + noff)) = *((addr_t *)(t + noff));
+		*((addr_t *)((void *)(*((addr_t *)(t + noff))) + poff)) = *((addr_t *)(t + poff));
 		if (t == *list)
-			*list = (void *)*((uintptr_t *)(t + noff));
+			*list = (void *)*((addr_t *)(t + noff));
 	}
-	*((uintptr_t *)(t + noff)) = (uintptr_t)NULL;
-	*((uintptr_t *)(t + poff)) = (uintptr_t)NULL;
+	*((addr_t *)(t + noff)) = (addr_t)NULL;
+	*((addr_t *)(t + poff)) = (addr_t)NULL;
 }

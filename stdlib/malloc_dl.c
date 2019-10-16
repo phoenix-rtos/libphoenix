@@ -16,12 +16,9 @@
 #include <sys/list.h>
 #include <sys/rb.h>
 #include <sys/threads.h>
-#include <sys/minmax.h>
 #include <sys/mman.h>
 #include <sys/debug.h>
 
-#include <arch.h>
-#include <stddef.h>
 #include <stdlib.h>
 #include <limits.h>
 #include <string.h>
@@ -42,7 +39,7 @@
 typedef struct _heap_t {
 	size_t size;
 	size_t freesz;
-	uint8_t space[];
+	u8 space[];
 } __attribute__ ((packed)) heap_t;
 
 
@@ -59,8 +56,8 @@ typedef struct _chunk_t {
 
 
 struct {
-	uint32_t sbinmap;
-	uint32_t lbinmap;
+	u32 sbinmap;
+	u32 lbinmap;
 	chunk_t *sbins[32];
 	rbtree_t lbins[32];
 
@@ -144,7 +141,7 @@ static inline size_t malloc_chunkPrevSize(chunk_t *chunk)
 
 static inline int malloc_chunkIsFirst(chunk_t *chunk)
 {
-	return (chunk->heap->space == (uint8_t*) chunk);
+	return (chunk->heap->space == (u8*) chunk);
 }
 
 
@@ -310,7 +307,7 @@ static void malloc_heapInit(heap_t *heap, size_t size)
 static heap_t *_malloc_heapAlloc(size_t size)
 {
 	chunk_t *chunk;
-	size_t heapSize = CEIL(sizeof(heap_t) + size, _PAGE_SIZE);
+	size_t heapSize = CEIL(sizeof(heap_t) + size, SIZE_PAGE);
 	heap_t *heap;
 
 	if (heapSize < size)
@@ -442,7 +439,7 @@ void *malloc(size_t size)
 void *calloc(size_t nitems, size_t size)
 {
 	void *ptr;
-	uint64_t allocSize = nitems * size;
+	u64 allocSize = nitems * size;
 
 	if (allocSize > UINT_MAX)
 		return NULL;

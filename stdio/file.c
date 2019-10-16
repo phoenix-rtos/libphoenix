@@ -18,11 +18,9 @@
 #include <sys/msg.h>
 #include <sys/file.h>
 #include <sys/stat.h>
-#include <sys/minmax.h>
 #include <sys/mman.h>
 #include <sys/threads.h>
 
-#include <arch.h>
 #include <stdio.h>
 #include <fcntl.h>
 #include <string.h>
@@ -97,7 +95,7 @@ static void *buffAlloc(size_t size)
 	void *ret;
 
 #ifndef NOMMU
-	if ((ret = mmap(NULL, (size + (_PAGE_SIZE - 1)) & ~(_PAGE_SIZE - 1), PROT_READ | PROT_WRITE, MAP_ANONYMOUS, NULL, 0)) == MAP_FAILED)
+	if ((ret = mmap(NULL, (size + (SIZE_PAGE - 1)) & ~(SIZE_PAGE - 1), PROT_READ | PROT_WRITE, MAP_ANONYMOUS, NULL, 0)) == MAP_FAILED)
 		return NULL;
 #else
 	ret = malloc(size);
@@ -110,7 +108,7 @@ static void *buffAlloc(size_t size)
 static void buffFree(void *ptr, size_t size)
 {
 #ifndef NOMMU
-	munmap(ptr, (size + (_PAGE_SIZE - 1)) & ~(_PAGE_SIZE - 1));
+	munmap(ptr, (size + (SIZE_PAGE - 1)) & ~(SIZE_PAGE - 1));
 #else
 	free(ptr);
 #endif

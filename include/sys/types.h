@@ -16,15 +16,8 @@
 #ifndef _SYS_TYPES_H
 #define _SYS_TYPES_H
 
-#include <arch.h>
-#include <stddef.h>
 #include <stdint.h>
-
-#ifdef __ARCH_SYS_TYPES
-#include __ARCH_SYS_TYPES
-#else
-#error "Required header sys/types.h is not defined for current architectue!"
-#endif
+#include <arch.h>
 
 typedef int pid_t;
 typedef int off_t;
@@ -39,6 +32,7 @@ typedef int nlink_t;
 typedef int blksize_t;
 typedef int blkcnt_t;
 
+typedef int suseconds_t;
 typedef int clock_t;
 typedef int clockid_t;
 

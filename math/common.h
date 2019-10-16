@@ -22,13 +22,13 @@
 typedef union {
 		struct {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
-			uint64_t mantisa:52;
-			uint16_t exponent:11;
-			uint8_t sign:1;
+			u64 mantisa:52;
+			u16 exponent:11;
+			u8 sign:1;
 #else
-			uint8_t sign:1;
-			uint16_t exponent:11;
-			uint64_t mantisa:52;
+			u8 sign:1;
+			u16 exponent:11;
+			u64 mantisa:52;
 #endif
 		} i;
 		double d;

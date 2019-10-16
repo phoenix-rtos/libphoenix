@@ -13,7 +13,6 @@
  * %LICENSE%
  */
 
-#include <stdint.h>
 #include "common.h"
 
 
@@ -135,8 +134,8 @@ int isInteger(double x)
 {
 	conv_t *conv = (conv_t *)&x;
 	int exp = conv->i.exponent - 1023;
-	uint64_t mask = 0xfffffffffffffLL;
-	uint64_t m;
+	u64 mask = 0xfffffffffffffLL;
+	u64 m;
 
 	if (exp > 52)
 		return 1;

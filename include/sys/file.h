@@ -16,7 +16,7 @@
 #ifndef _LIBPHOENIX_SYS_FILE_H_
 #define _LIBPHOENIX_SYS_FILE_H_
 
-#include <sys/types.h>
+#include <arch.h>
 
 
 enum { otDir = 0, otFile, otDev, otSymlink, otUnknown };

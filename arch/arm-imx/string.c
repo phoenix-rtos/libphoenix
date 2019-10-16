@@ -14,7 +14,7 @@
  */
 
 
-#include <stddef.h>
+#include "arch.h"
 
 
 void *memcpy(void *dst, const void *src, size_t l)

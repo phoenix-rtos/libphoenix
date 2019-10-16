@@ -15,9 +15,8 @@
 
 #include <arch.h>
 
-#include <sys/ioctl.h>
 #include <phoenix/ioctl.h>
-#include <sys/minmax.h>
+#include <sys/ioctl.h>
 #include <string.h>
 
 /* SIOCGIFCONF handling */
@@ -25,7 +24,6 @@
 #include <sys/sockios.h>
 #include <net/if.h>
 #include <stdlib.h>
-
 
 const void * ioctl_unpack(const msg_t *msg, unsigned long *request, id_t *id)
 {

@@ -16,13 +16,14 @@
 #ifndef _LIBPHOENIX_STDIO_H_
 #define _LIBPHOENIX_STDIO_H_
 
+
 #include <arch.h>
 #include <stddef.h>
 #include <stdarg.h>
 #include <sys/types.h>
 
 #ifndef NOMMU
-#define BUFSIZ _PAGE_SIZE
+#define BUFSIZ SIZE_PAGE
 #else
 #define BUFSIZ 16
 #endif

@@ -17,9 +17,9 @@
 #define _LIBPHOENIX_IA32_IO_H_
 
 
-static inline unsigned char inb(void *addr)
+static inline u8 inb(void *addr)
 {
-	unsigned char b;
+	u8 b;
 	
 	__asm__ volatile
 	(" \
@@ -33,7 +33,7 @@ static inline unsigned char inb(void *addr)
 }
 
 
-static inline void outb(void *addr, unsigned char b)
+static inline void outb(void *addr, u8 b)
 {
 	__asm__ volatile
 	(" \
@@ -48,9 +48,9 @@ static inline void outb(void *addr, unsigned char b)
 }
 
 
-static inline unsigned short inw(void *addr)
+static inline u16 inw(void *addr)
 {
-	unsigned short w;
+	u16 w;
 
 	__asm__ volatile
 	(" \
@@ -65,7 +65,7 @@ static inline unsigned short inw(void *addr)
 }
 
 
-static inline void outw(void *addr, unsigned short w)
+static inline void outw(void *addr, u16 w)
 {
 	__asm__ volatile
 	(" \
@@ -80,9 +80,9 @@ static inline void outw(void *addr, unsigned short w)
 }
 
 
-static inline unsigned int inl(void *addr)
+static inline u32 inl(void *addr)
 {
-	unsigned int l;
+	u32 l;
 	
 	__asm__ volatile
 	(" \
@@ -97,7 +97,7 @@ static inline unsigned int inl(void *addr)
 }
 
 
-static inline void outl(void *addr, unsigned int l)
+static inline void outl(void *addr, u32 l)
 {
 	__asm__ volatile
 	(" \
