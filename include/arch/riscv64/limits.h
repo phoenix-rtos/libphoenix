@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * Architecture dependent part of limits (arch/armv7)
+ * Architecture dependent part of limits (arch/ia32)
  *
  * Copyright 2017-2019 Phoenix Systems
  * Author: Pawel Pisarczyk, Aleksander Kaminski, Andrzej Glowinski
@@ -13,8 +13,8 @@
  * %LICENSE%
  */
 
-#ifndef _LIBPHOENIX_ARCH_ARMV7_LIMITS_H_
-#define _LIBPHOENIX_ARCH_ARMV7_LIMITS_H_
+#ifndef _LIBPHOENIX_ARCH_RISCV64_LIMITS_H_
+#define _LIBPHOENIX_ARCH_RISCV64_LIMITS_H_
 
 #include "arch.h"
 
@@ -22,8 +22,8 @@
 #define SCHAR_MAX 127
 #define UCHAR_MAX 255
 
-#define CHAR_MIN 0
-#define CHAR_MAX UCHAR_MAX
+#define CHAR_MIN SCHAR_MIN
+#define CHAR_MAX SCHAR_MAX
 #define CHAR_BIT 8
 
 #define MB_LEN_MAX 4
@@ -36,13 +36,13 @@
 #define INT_MAX 0x7fffffff
 #define UINT_MAX 0xffffffff
 
-#define LONG_MIN INT_MIN
-#define LONG_MAX INT_MAX
-#define ULONG_MAX UINT_MAX
+#define LONG_MIN 0x8000000000000000L
+#define LONG_MAX 0x7fffffffffffffffL
+#define ULONG_MAX 0xffffffffffffffffL
 
-#define LONG_LONG_MIN 0x8000000000000000LL
-#define LONG_LONG_MAX 0x7fffffffffffffffLL
-#define ULONG_LONG_MAX 0xffffffffffffffffLL
+#define LONG_LONG_MIN LONG_MIN
+#define LONG_LONG_MAX LONG_MAX
+#define ULONG_LONG_MAX ULONG_MAX
 #define LLONG_MIN LONG_LONG_MIN
 #define LLONG_MAX LONG_LONG_MAX
 #define ULLONG_MAX ULONG_LONG_MAX

@@ -16,18 +16,19 @@
 #ifndef _LIBPHOENIX_MSG_H_
 #define _LIBPHOENIX_MSG_H_
 
-#include <arch.h>
+#include <stddef.h>
+#include <sys/types.h>
 #include <phoenix/msg.h>
 
 
 /* Port management */
 
 
-extern int portCreate(u32 *port);
+extern int portCreate(uint32_t *port);
 
-extern void portDestroy(u32 port);
+extern void portDestroy(uint32_t port);
 
-extern int portRegister(u32 port, const char *name, oid_t *oid);
+extern int portRegister(uint32_t port, const char *name, oid_t *oid);
 
 extern int lookup(const char *name, oid_t *file, oid_t *dev);
 
@@ -35,13 +36,13 @@ extern int lookup(const char *name, oid_t *file, oid_t *dev);
 /* Message passing */
 
 
-extern int msgSend(u32 port, msg_t *m);
+extern int msgSend(uint32_t port, msg_t *m);
 
-extern int msgPulse(u32 port, msg_t *m);
+extern int msgPulse(uint32_t port, msg_t *m);
 
-extern int msgRecv(u32 port, msg_t *m, unsigned int *rid);
+extern int msgRecv(uint32_t port, msg_t *m, unsigned int *rid);
 
-extern int msgRespond(u32 port, msg_t *m, unsigned int rid);
+extern int msgRespond(uint32_t port, msg_t *m, unsigned int rid);
 
 
 #endif

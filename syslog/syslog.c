@@ -22,6 +22,7 @@
 #include <fcntl.h>
 #include <syslog.h>
 
+
 #ifndef PATH_LOG
 #define PATH_LOG "/dev/log"
 #endif

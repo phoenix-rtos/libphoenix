@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * limits.h
+ * sys/io.h
  *
  * Copyright 2019 Phoenix Systems
  * Author: Andrzej Glowinski
@@ -13,15 +13,15 @@
  * %LICENSE%
  */
 
-#ifndef _LIMITS_H_
-#define _LIMITS_H_
+#ifndef _LIBPHOENIX_SYS_IO_H_
+#define _LIBPHOENIX_SYS_IO_H_
 
 #include <arch.h>
 
-#ifdef __ARCH_LIMITS
-#include __ARCH_LIMITS
+#ifdef __ARCH_SYS_IO
+#include __ARCH_SYS_IO
 #else
-#error "Required header limits.h is not defined for current architectue!"
+#error "sys/io.h is not defined for current architectue!"
 #endif
 
 #endif

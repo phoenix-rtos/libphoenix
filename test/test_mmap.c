@@ -13,6 +13,7 @@
  * %LICENSE%
  */
 
+#include <arch.h>
 #include "stdio.h"
 #include "stdlib.h"
 #include "unistd.h"
@@ -73,7 +74,7 @@ void test_mmap(void *threadId)
 			sizes[i] = 0;
 		}
 
-		sz = SIZE_PAGE * (1 + rand_r(&seed) % 32);
+		sz = _PAGE_SIZE * (1 + rand_r(&seed) % 32);
 
 		buf[i] = mmap(NULL, sz, PROT_READ | PROT_WRITE, MAP_PRIVATE, NULL, 0);
 
