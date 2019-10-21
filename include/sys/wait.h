@@ -18,12 +18,7 @@
 
 #include <sys/types.h>
 
-
-enum {
-	WNOHANG = 1 << 0,
-	WUNTRACED = 1 << 1,
-};
-
+#include <phoenix/wait.h>
 
 extern const int _signals_phx2posix[];
 

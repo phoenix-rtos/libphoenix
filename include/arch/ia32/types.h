@@ -24,12 +24,6 @@ typedef unsigned long long time_t;
 typedef unsigned int useconds_t;
 typedef int suseconds_t;
 
-typedef unsigned long long id_t;
-typedef struct _oid_t {
-	unsigned int port;
-	id_t id;
-} oid_t;
-
 typedef unsigned int handle_t;
 
 

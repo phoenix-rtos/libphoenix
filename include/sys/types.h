@@ -26,18 +26,7 @@
 #error "Required header sys/types.h is not defined for current architectue!"
 #endif
 
-typedef int pid_t;
-typedef int off_t;
-typedef long long off64_t;
-typedef int mode_t;
-typedef int gid_t;
-typedef int uid_t;
-
-typedef int dev_t;
-typedef int ino_t;
-typedef int nlink_t;
-typedef int blksize_t;
-typedef int blkcnt_t;
+#include <phoenix/types.h>
 
 typedef int clock_t;
 typedef int clockid_t;
