@@ -5,8 +5,8 @@
  *
  * unistd (POSIX routines for file operations)
  *
- * Copyright 2017-2018 Phoenix Systems
- * Author: Aleksander Kaminski, Pawel Pisarczyk, Kamil Amanowicz
+ * Copyright 2017-2019 Phoenix Systems
+ * Author: Aleksander Kaminski, Pawel Pisarczyk, Kamil Amanowicz, Andrzej Glowinski
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -31,22 +31,39 @@
 #include "posix/utils.h"
 
 
-extern int sys_open(const char *filename, int oflag, ...);
-extern int sys_mkfifo(const char *filename, mode_t mode);
-extern int sys_link(const char *path1, const char *path2);
-extern int sys_unlink(const char *path);
+extern int sys_openat(int dirfd, const char *filename, int oflag, mode_t mode);
+extern int fileLink(int fildes, const char *path, int dirfd,  const char *name, int flags);
+extern int fileUnlink(int dirfd, const char *path, int flags);
+extern int sys_fcntl(int fd, int cmd, long val);
 extern int sys_pipe(int fildes[2]);
-extern int sys_fstat(int fd, struct stat *buf);
+extern int sys_dup3(int fildes, int fildes2, int flags);
 
 WRAP_ERRNO_DEF(int, read, (int fildes, void *buf, size_t nbyte), (fildes, buf, nbyte))
 WRAP_ERRNO_DEF(int, write, (int fildes, const void *buf, size_t nbyte), (fildes, buf, nbyte))
 WRAP_ERRNO_DEF(int, close, (int fildes), (fildes))
 WRAP_ERRNO_DEF(int, ftruncate, (int fildes, off_t length), (fildes, length))
-WRAP_ERRNO_DEF(int, lseek, (int fildes, off_t offset, int whence), (fildes, offset, whence))
-WRAP_ERRNO_DEF(int, dup, (int fildes), (fildes))
-WRAP_ERRNO_DEF(int, dup2, (int fildes, int fildes2), (fildes, fildes2))
-// WRAP_ERRNO_DEF(int, pipe, (int fildes[2]), (fildes))
-// WRAP_ERRNO_DEF(int, fstat, (int fd, struct stat *buf), (fd, buf))
+// WRAP_ERRNO_DEF(int, lseek, (int fildes, off_t offset, int whence), (fildes, offset, whence))
+
+
+int dup3(int fildes, int fildes2, int flags)
+{
+	int err;
+	while ((err = sys_dup3(fildes, fildes2, flags) == -EINTR))
+		;
+	return SET_ERRNO(err);
+}
+
+
+int dup(int fildes)
+{
+	return fcntl(fildes, F_DUPFD, 0);
+}
+
+
+int dup2(int fildes, int fildes2)
+{
+	return dup3(fildes, fildes2, 0);
+}
 
 
 int pipe(int fildes[2])
@@ -58,298 +75,122 @@ int pipe(int fildes[2])
 }
 
 
-int fstat(int fd, struct stat *buf)
+int linkat(int fildes, const char *path, int dirfd, const char *name, int flags)
 {
-	int err;
-	while ((err = sys_fstat(fd, buf)) == -EINTR)
-		;
-	return SET_ERRNO(err);
+	return SET_ERRNO(fileLink(fildes, path, dirfd, name, flags));
 }
 
 
 int link(const char *path1, const char *path2)
 {
-	char *canonical1, *canonical2;
-	int err;
-	canonical1 = canonicalize_file_name(path1);
-	canonical2 = canonicalize_file_name(path2);
-	err = sys_link(canonical1, canonical2);
-	free(canonical1);
-	free(canonical2);
+	return linkat(AT_FDCWD, path1, AT_FDCWD, path2, 0);
+}
 
-	return SET_ERRNO(err);
+
+int unlinkat(int dirfd, const char *path, int flags)
+{
+	return SET_ERRNO(fileUnlink(dirfd, path, flags));
 }
 
 
 int unlink(const char *path)
 {
-	char *canonical;
-	int err;
-	canonical = canonicalize_file_name(path);
-	err = sys_unlink(canonical);
-	free(canonical);
-	return SET_ERRNO(err);
+	unlinkat(AT_FDCWD, path, 0);
 }
 
 
-int open(const char *filename, int oflag, ...)
-{
-	va_list ap;
+static int vopenat(int dirfd, const char *path, int oflag, va_list ap) {
 	mode_t mode = 0;
 	int err;
-	char *canonical;
 
-	/* FIXME: handle varargs properly */
-	va_start(ap, oflag);
-	mode = va_arg(ap, mode_t);
-	va_end(ap);
-
-	canonical = canonicalize_file_name(filename);
+	if (oflag & O_CREAT)
+		mode = va_arg(ap, mode_t);
 
 	do
-		err = sys_open(canonical, oflag, mode);
+		err = sys_openat(dirfd, path, oflag, mode);
 	while (err == -EINTR);
 
-	free(canonical);
 	return SET_ERRNO(err);
+
 }
 
 
-int mkfifo(const char *filename, mode_t mode)
+int openat(int dirfd, const char *path, int oflag, ...)
 {
-	int err;
-	char *canonical;
+	int ret;
+	va_list ap;
 
-	canonical = canonicalize_file_name(filename);
-	while ((err = sys_mkfifo(canonical, mode)) == -EINTR)
-		;
-	free(canonical);
-	return SET_ERRNO(err);
+	va_start(ap, oflag);
+	ret = vopenat(dirfd, path, oflag, ap);
+	va_end(ap);
+
+	return ret;
+}
+
+
+int open(const char *path, int oflag, ...)
+{
+	int ret;
+	va_list ap;
+
+	va_start(ap, oflag);
+	ret = vopenat(AT_FDCWD, path, oflag, ap);
+	va_end(ap);
+
+	return ret;
+}
+
+
+int creat(const char *path, int mode)
+{
+	return open(path, O_WRONLY | O_CREAT | O_TRUNC, mode);
+}
+
+
+int symlinkat(const char *path1, int dirfd, const char *path2)
+{
+	return SET_ERRNO(-ENOSYS);
 }
 
 
 int symlink(const char *path1, const char *path2)
 {
-	oid_t dir;
-	char *canonical1, *canonical2;
-	char *dir_name, *name;
-	msg_t msg;
-	int len1, len2;
-	int ret;
-
-	if (path1 == NULL || path2 == NULL)
-		return -EINVAL;
-
-	canonical1 = canonicalize_file_name(path2);
-	canonical2 = strdup(canonical1);
-
-	dir_name = dirname(canonical1);
-
-	if ((ret = lookup(dir_name, NULL, &dir)) < 0) {
-		free(canonical1);
-		free(canonical2);
-		return ret;
-	}
-
-	free(canonical1);
-	name = basename(canonical2);
-
-	memset(&msg, 0, sizeof(msg_t));
-	msg.type = mtCreate;
-
-	memcpy(&msg.i.create.dir, &dir, sizeof(oid_t));
-	msg.i.create.type = otSymlink;
-	msg.i.create.mode = S_IFLNK | DEFFILEMODE;
-
-	len1  = strlen(name);
-	len2  = strlen(path1);
-
-	msg.i.size = len1 + len2 + 2;
-	msg.i.data = malloc(msg.i.size);
-	memset(msg.i.data, 0, msg.i.size);
-
-	memcpy(msg.i.data, name, len1);
-	memcpy(msg.i.data + len1 + 1, path1, len2);
-
-	if ((ret = msgSend(dir.port, &msg)) != EOK) {
-		free(canonical2);
-		free(msg.i.data);
-		return ret;
-	}
-
-	free(canonical2);
-	free(msg.i.data);
-
-	return msg.o.create.err;
+	return symlinkat(path1, AT_FDCWD, path2);
 }
 
 
 int access(const char *path, int amode)
 {
-	oid_t oid, dev;
-
-	if (amode == W_OK)
-		return 0;
-
-	char *canonical_name = canonicalize_file_name(path);
+	int fd;
 
 	// NOTE: for now checking only if file exists
-	if (lookup(canonical_name, &oid, &dev) < 0) {
-		free(canonical_name);
-		errno = ENOENT;
-		return -1;
-	}
+	if ((fd = open(path, 0)) != -1)
+		close(fd);
 
-	free(canonical_name);
-
-	return 0;
+	return fd < 0 ? -1 : 0;
 }
 
 
 int create_dev(oid_t *oid, const char *path)
 {
-	oid_t odev;
-	msg_t msg = { 0 };
-	int retry = 0;
-	char *canonical_path, *dir, *sep, *name;
+	int err = EOK;
+	int fd = open(path, O_RDWR | O_CREAT | O_EXCL | O_NOFOLLOW, S_IFCHR | 0777);
 
-	if (path == NULL || oid == NULL)
+	if (fd == -1)
 		return -1;
 
-	while (lookup("devfs", NULL, &odev) < 0) {
-		/* if create_dev() is called by anyone started from syspage devfs
-		 * may be not registered yet so we try 3 times until we give up */
-		if (++retry > 3) {
-			/* fallback */
-			oid_t odir = { 0 };
-			mkdir("/dev", 0666);
+	if ((err = write(fd, oid, sizeof(oid))) != sizeof(oid))
+		err = -1;
 
-			if (lookup("/dev", NULL, &odir) < 0)
-				return -ENOENT;
-
-			if (!strncmp("/dev", path, 4))
-				path += 4;
-
-			if ((canonical_path = canonicalize_file_name(path)) == NULL)
-				return -1;
-
-			splitname(canonical_path, &name, &dir);
-
-			msg.type = mtCreate;
-			memcpy(&msg.i.create.dir, &odir, sizeof(oid_t));
-			memcpy(&msg.i.create.dev, oid, sizeof(oid_t));
-
-			msg.i.create.type = otDev;
-			msg.i.create.mode = S_IFCHR | 0666;
-
-			msg.i.data = name;
-			msg.i.size = strlen(name) + 1;
-
-			if (msgSend(odir.port, &msg) != EOK) {
-				free(canonical_path);
-				return -ENOMEM;
-			}
-
-			free(canonical_path);
-			return msg.o.create.err;
-
-		}
-		else
-			usleep(100000);
-	}
-
-	/* if someone uses full path to create device cut /dev prefix */
-	if (!strncmp("/dev", path, 4))
-		path += 4;
-
-	if ((canonical_path = canonicalize_file_name(path)) == NULL)
-		return -1;
-
-	splitname(canonical_path, &name, &dir);
-
-	if (name == canonical_path)
-		dir = NULL;
-
-	while (dir != NULL && *dir != 0) {
-		while (*dir == '/')
-			dir++;
-
-		if (*dir == 0)
-			break;
-
-		sep = strchr(dir, '/');
-		if (sep != NULL)
-			*sep++ = 0;
-
-		msg.type = mtCreate;
-		msg.i.create.type = otDir;
-		msg.i.create.mode = DEFFILEMODE | S_IFDIR;
-		msg.i.create.dir = odev;
-		msg.i.data = dir;
-		msg.i.size = strlen(dir) + 1;
-
-		if (msgSend(odev.port, &msg) < 0) {
-			free(canonical_path);
-			return -ENOMEM;
-		}
-
-		if (!msg.o.create.err) {
-			odev = msg.o.create.oid;
-		}
-		else if (msg.o.create.err == -EEXIST) {
-			msg.type = mtLookup;
-			msg.i.size = strlen(dir) + 1;
-			msg.i.data = dir;
-			msg.i.lookup.dir = odev;
-
-			if (msgSend(odev.port, &msg) < 0) {
-				free(canonical_path);
-				return -ENOMEM;
-			}
-
-			if (msg.o.lookup.err >= 0) {
-				odev = msg.o.lookup.dev;
-			}
-			else {
-				free(canonical_path);
-				return msg.o.lookup.err;
-			}
-		} else {
-			free(canonical_path);
-			return msg.o.create.err;
-		}
-		dir = sep;
-	}
-
-	msg.type = mtCreate;
-	memcpy(&msg.i.create.dir, &odev, sizeof(oid_t));
-	memcpy(&msg.i.create.dev, oid, sizeof(*oid));
-
-	msg.i.create.type = otDev;
-	/* TODO: create_dev() should take mode argument */
-	msg.i.create.mode = S_IFCHR | 0666;
-
-	msg.i.data = name;
-	msg.i.size = strlen(name) + 1;
-
-	if (msgSend(odev.port, &msg) != EOK) {
-		free(canonical_path);
-		return -ENOMEM;
-	}
-
-	free(canonical_path);
-
-	return msg.o.create.err;
+	close(fd);
+	return err;
 }
-
-
-extern int sys_fcntl(int fd, int cmd, unsigned val);
 
 
 int fcntl(int fd, int cmd, ...)
 {
 	va_list ap;
-	unsigned val;
+	long val;
 
 	/* FIXME: handle varargs properly */
 	va_start(ap, cmd);

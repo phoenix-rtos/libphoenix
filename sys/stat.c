@@ -5,8 +5,8 @@
  *
  * stat
  *
- * Copyright 2018 Phoenix Systems
- * Author: Jan Sikorski, Kamil Amanowicz
+ * Copyright 2018-2019 Phoenix Systems
+ * Author: Jan Sikorski, Kamil Amanowicz, Andrzej Glowinski
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -22,66 +22,34 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include "posix/utils.h"
+
+extern int fifoCreate(int dirfd, const char *filename, mode_t mode);
+extern int fileStat(int dirfd, const char *path, struct stat *stat, int flags);
+extern int sys_chmod(const char *path, mode_t mode);
+
+
+int fstatat(int dirfd, const char *path, struct stat *buf, int flags)
+{
+	return SET_ERRNO(fileStat(dirfd, path, buf, flags));
+}
 
 
 int stat(const char *path, struct stat *buf)
 {
-	oid_t oid, dev;
-	msg_t msg = {0};
-	char *canonical_name = canonicalize_file_name(path);
+	return fstatat(AT_FDCWD, path, buf, 0);
+}
 
-	if (lookup(canonical_name, &oid, &dev) < 0) {
-		free(canonical_name);
-		errno = ENOENT;
-		return -1;
-	}
 
-	free(canonical_name);
+/* FIXME AT_SYMLINK_NOFOLLOW should be use instead */
+int lstat(const char *path, struct stat *buf)
+{
+	return fstatat(AT_FDCWD, path, buf, O_NOFOLLOW);
+}
 
-	memset(buf, 0, sizeof(struct stat));
 
-	buf->st_dev = oid.port;
-	buf->st_ino = oid.id;
-	buf->st_rdev = dev.port;
-
-	msg.type = mtGetAttr;
-	msg.i.attr.oid = oid;
-	msg.i.attr.val = 0;
-
-	msg.i.attr.type = atMTime;
-	if (!msgSend(oid.port, &msg))
-		buf->st_mtime = msg.o.attr.val;
-
-	msg.i.attr.type = atATime;
-	if (!msgSend(oid.port, &msg))
-		buf->st_atime = msg.o.attr.val;
-
-	msg.i.attr.type = atCTime;
-	if (!msgSend(oid.port, &msg))
-		buf->st_ctime = msg.o.attr.val;
-
-	msg.i.attr.type = atLinks;
-	if (!msgSend(oid.port, &msg))
-		buf->st_nlink = msg.o.attr.val;
-
-	msg.i.attr.type = atMode;
-	if (!msgSend(oid.port, &msg))
-		buf->st_mode = msg.o.attr.val;
-
-	msg.i.attr.type = atUid;
-	if (!msgSend(oid.port, &msg))
-		buf->st_uid = msg.o.attr.val;
-
-	msg.i.attr.type = atGid;
-	if (!msgSend(oid.port, &msg))
-		buf->st_gid = msg.o.attr.val;
-
-	msg.i.attr.type = atSize;
-	if (!msgSend(oid.port, &msg))
-		buf->st_size = msg.o.attr.val;
-
-	return EOK;
+int fstat(int fd, struct stat *buf)
+{
+	return fstatat(fd, NULL, buf, 0);
 }
 
 
@@ -91,73 +59,25 @@ mode_t umask(mode_t cmask)
 }
 
 
-int lstat(const char *path, struct stat *buf)
+int mkdirat(int dirfd, const char *path, mode_t mode)
 {
-	return stat(path, buf);
-}
+	int fd;
+	if ((fd = openat(dirfd, path, O_CREAT | O_EXCL | O_DIRECTORY, mode | S_IFDIR)) != -1)
+		close(fd);
 
-
-int creat(const char *pathname, int mode)
-{
-	return open(pathname, O_WRONLY | O_CREAT | O_TRUNC, mode);
+	return fd < 0 ? -1 : 0;
 }
 
 
 int mkdir(const char *path, mode_t mode)
 {
-	msg_t msg = { 0 };
-	oid_t dir;
-	char *canonical_name, *name, *parent;
-
-	if (path == NULL)
-		return -ENOENT;
-
-	canonical_name = canonicalize_file_name(path);
-	name = strrchr(canonical_name, '/');
-
-	if (name == canonical_name) {
-		name++;
-		parent = "/";
-	}
-	else {
-		*(name++) = 0;
-		parent = canonical_name;
-	}
-
-	if (lookup(parent, NULL, &dir) < EOK) {
-		free(canonical_name);
-		return -ENOENT;
-	}
-
-	msg.type = mtCreate;
-	msg.i.create.type = otDir;
-	msg.i.create.mode = mode | S_IFDIR;
-	msg.i.create.dir = dir;
-	msg.i.data = name;
-	msg.i.size = strlen(name) + 1;
-
-	if (msgSend(dir.port, &msg) < 0) {
-		free(canonical_name);
-		return -ENOMEM;
-	}
-
-	free(canonical_name);
-	SET_ERRNO(msg.o.create.err);
-	return msg.o.create.err;
+	return mkdirat(AT_FDCWD, path, mode);
 }
-
-
-extern int sys_chmod(const char *path, mode_t mode);
 
 
 int chmod(const char *path, mode_t mode)
 {
-	char *canonical;
-	int err;
-	canonical = canonicalize_file_name(path);
-	err = sys_chmod(canonical, mode);
-	free(canonical);
-	return err;
+	return SET_ERRNO(-ENOSYS);
 }
 
 
@@ -167,12 +87,34 @@ int lchown(const char *path, uid_t owner, gid_t group)
 }
 
 
-int mknod(const char *path, mode_t mode, dev_t dev)
+int mkfifoat(int dirfd, const char *filename, mode_t mode)
+{
+	int err;
+
+	while ((err = fifoCreate(dirfd, filename, mode)) == -EINTR)
+		;
+	return SET_ERRNO(err);
+}
+
+
+int mkfifo(const char *filename, mode_t mode)
+{
+	return mkfifoat(AT_FDCWD, filename, mode);
+}
+
+
+int mknodat(int dirfd, const char *path, mode_t mode, dev_t dev)
 {
 	if (S_ISFIFO(mode))
-		return mkfifo(path, mode);
+		return mkfifoat(dirfd, path, mode);
 	else
 		return -EINVAL;
+}
+
+
+int mknod(const char *path, mode_t mode, dev_t dev)
+{
+	return mknodat(AT_FDCWD, path, mode, dev);
 }
 
 

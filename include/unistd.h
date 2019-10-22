@@ -153,10 +153,19 @@ extern void _exit(int status);
 extern int symlink(const char *path1, const char *path2);
 
 
+extern int symlinkat(const char *path1, int dirfd, const char *path2);
+
+
 extern int link(const char *path1, const char *path2);
 
 
-extern int unlink(const char *pathname);
+extern int linkat(int fildes, const char *path, int dirfd, const char *name, int flags);
+
+
+extern int unlink(const char *path);
+
+
+extern int unlinkat(int dirfd, const char *path, int flags);
 
 
 extern ssize_t readlink(const char *path, char *buf, size_t bufsiz);

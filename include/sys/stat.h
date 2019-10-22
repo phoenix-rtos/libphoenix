@@ -29,16 +29,22 @@ extern int stat(const char *path, struct stat *buf);
 extern int fstat(int fildes, struct stat *buf);
 
 
+extern int fstatat(int dirfd, const char *path, struct stat *buf, int flags);
+
+
 extern mode_t umask(mode_t cmask);
 
 
 extern int mkdir(const char *pathname, mode_t mode);
+extern int mkdirat(int dirfd, const char *pathname, mode_t mode);
 
 
 extern int mkfifo(const char *pathname, mode_t mode);
+extern int mkfifoat(int dirfd, const char *pathname, mode_t mode);
 
 
 extern int mknod(const char *pathname, mode_t mode, dev_t dev);
+extern int mknodat(int dirfd, const char *pathname, mode_t mode, dev_t dev);
 
 
 extern int chmod(const char *path, mode_t mode);
