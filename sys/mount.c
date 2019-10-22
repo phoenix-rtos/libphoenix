@@ -24,7 +24,7 @@
 
 int mount(const char *source, const char *target, const char *fstype, long mode, char *data)
 {
-	struct stat buf;
+/*	struct stat buf;
 	oid_t toid, soid, doid, *doidp;
 	msg_t msg = {0};
 	int err;
@@ -67,6 +67,6 @@ int mount(const char *source, const char *target, const char *fstype, long mode,
 
 	if ((err = msgSend(toid.port, &msg)) < 0)
 		return err;
-
+*/
 	return EOK;
 }

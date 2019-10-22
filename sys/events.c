@@ -32,7 +32,7 @@ int eventsSend(event_t *event, int count)
 	if (event_common.sink_open || (event_common.sink_open = (lookup("/dev/event/sink", NULL, &event_common.sink) == EOK))) {
 		msg.type = mtWrite;
 
-		msg.i.io.oid = event_common.sink;
+		msg.object = event_common.sink.id;
 		msg.i.data = event;
 		msg.i.size = count * sizeof(event_t);
 		msg.o.data = NULL;

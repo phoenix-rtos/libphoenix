@@ -18,6 +18,6 @@
 
 #include <stddef.h>
 
-typedef size_t socklen_t;
+typedef int socklen_t;
 
 #endif

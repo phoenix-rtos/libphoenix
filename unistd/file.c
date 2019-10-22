@@ -95,7 +95,7 @@ int unlinkat(int dirfd, const char *path, int flags)
 
 int unlink(const char *path)
 {
-	unlinkat(AT_FDCWD, path, 0);
+	return unlinkat(AT_FDCWD, path, 0);
 }
 
 
@@ -111,7 +111,6 @@ static int vopenat(int dirfd, const char *path, int oflag, va_list ap) {
 	while (err == -EINTR);
 
 	return SET_ERRNO(err);
-
 }
 
 

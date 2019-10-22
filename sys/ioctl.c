@@ -25,6 +25,8 @@
 #include <sys/sockios.h>
 #include <net/if.h>
 #include <stdlib.h>
+#include <stdarg.h>
+#include <errno.h>
 
 
 struct ioctl_data {
@@ -34,12 +36,13 @@ struct ioctl_data {
 	size_t 	outsz;
 };
 
-extern int sys_ioctl(int fildes, unsigned long request, void *val);
+extern int sys_ioctl(int fd, unsigned long req, void *indata, size_t insz, void *outdata, size_t outsz);
 
 
-static void *ioctl_serialize(, unsigned long req, struct ioctl_data *ioc, void *indata)
+static int ioctl_serialize(unsigned long request, struct ioctl_data *ioc, void *indata)
 {
 	void *iocdata = indata;
+	size_t size = IOCPARM_LEN(request);
 
 	if ((request & IOC_INOUT) && !iocdata)
 		return -EINVAL;
@@ -51,7 +54,7 @@ static void *ioctl_serialize(, unsigned long req, struct ioctl_data *ioc, void *
 		iocdata = calloc(1, size + ifc->ifc_len);
 		if (!iocdata)
 			return -ENOMEM;
-		memcpy(iocdata, data, size);
+		memcpy(iocdata, indata, size);
 		memcpy(iocdata + size, ifc->ifc_buf, ifc->ifc_len);
 		size += ifc->ifc_len;
 	}
@@ -63,8 +66,8 @@ static void *ioctl_serialize(, unsigned long req, struct ioctl_data *ioc, void *
 			iocdata = calloc(1, size + dev_len);
 			if (!iocdata)
 				return -ENOMEM;
-			memcpy(iocdata, data, size);
-			memcpy(iocdata + size, dev_len);
+			memcpy(iocdata, indata, size);
+			memcpy(iocdata + size, rt->rt_dev, dev_len);
 			size += dev_len;
 		}
 	}
@@ -76,66 +79,39 @@ static void *ioctl_serialize(, unsigned long req, struct ioctl_data *ioc, void *
 
 	if ((request & IOC_OUT)) {
 		ioc->outdata = iocdata;
-		ioc->outsz = size
+		ioc->outsz = size;
 	}
+	return 0;
 }
 
-static void *ioctl_deserialize(unsigned long req, struct ioctl_data *ioc, void *outdata)
+static void ioctl_deserialize(unsigned long request, struct ioctl_data *ioc, void *outdata)
 {
 	if (request == SIOCGIFCONF) {
 		struct ifconf *ifc = (struct ifconf*)ioc->outdata;
 		struct ifconf *oifc = (struct ifconf*)outdata;
-		memcpy(oifc->ifc_buf, data + sizeof(struct ifconf), ifc->ifc_len);
+		memcpy(oifc->ifc_buf, outdata + sizeof(struct ifconf), ifc->ifc_len);
 		oifc->ifc_len = ifc->ifc_len;
 	}
 
-	if (ioc.outdata != outdata)
-		free(iocdata);
-
-	return out_data;
+	if (ioc->outdata != outdata)
+		free(ioc->outdata);
 }
 
 static int do_ioctl(int fd, unsigned long request, void *data)
 {
 	int ret;
 	struct ioctl_data ioc = { 0 };
-	size_t size = IOCPARM_LEN(request);
 
-	ioctl_serialize(request, &ioc, data);
+	ret = ioctl_serialize(request, &ioc, data);
+
+	if (ret)
+		return ret;
 
 	ret = sys_ioctl(fd, request, ioc.indata, ioc.insz, ioc.outdata, ioc.outsz);
 
-	ioctl_deserialize(requset, &ioc, data);
+	ioctl_deserialize(request, &ioc, data);
 
 	return ret;
-}
-
-const void * ioctl_getData(const msg_t *msg, unsigned long *request, id_t *id)
-{
-	*id = msg.id;
-
-	if (request == SIOCGIFCONF) {
-		struct ifconf *ifc = (struct ifconf*)msg.o.data;
-		ifc->ifc_len = ((struct ifconf*)msg.i.data)->ifc_len;
-		ifc->ifc_buf = msg.o.data + (struct ifconf);
-		return ifc;
-	}
-	else if (request == SIOCADDRT || request == SIOCDELRT) {
-		struct rtentry *rt = (struct rtentry *)msg.o.data;
-		memcpy(msg.o.data, msg.i.data, msg.i.size);
-		rt->rt_dev = msg.o.data + sizeof(struct rtentry);
-		return rt;
-	}
-
-	if (request & IOC_IN)
-		return msg.i.data;
-
-	return msg.o.data;
-}
-
-pid_t ioctl_getSenderPid(const msg_t *msg)
-{
-	return msg->pid;
 }
 
 void ioctl_setResponse(msg_t *msg, unsigned long request, int err, const void *data)
@@ -156,7 +132,6 @@ int ioctl(int fildes, unsigned long request, ...)
 {
 	va_list ap;
 	void *val = NULL;
-	struct ioctl_struct ioc;
 
 	if (request & IOC_INOUT) {
 		va_start(ap, request);
