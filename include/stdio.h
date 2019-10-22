@@ -63,9 +63,7 @@ typedef struct _FILE {
 
 
 typedef struct _DIR {
-	oid_t oid;
-	size_t pos;
-	struct dirent *dirent;
+	int fd;
 } DIR;
 
 

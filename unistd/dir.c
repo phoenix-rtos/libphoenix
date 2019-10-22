@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
@@ -168,111 +169,54 @@ char *canonicalize_file_name(const char *path)
 }
 
 
-struct dirent *readdir(DIR *s)
+int readdir_r(DIR *dirp, struct dirent *entry, struct dirent **result)
 {
-	msg_t msg;
-	memset(&msg, 0, sizeof(msg));
-
-	if (s->dirent == NULL) {
-		if ((s->dirent = calloc(1, sizeof(struct dirent) + NAME_MAX)) == NULL)
-			return NULL;
+	if (read(dirp->fd, entry, sizeof(struct dirent) + NAME_MAX) != -1) {
+		*result = entry;
+		return 0;
 	}
-
-	msg.type = mtReaddir;
-	msg.i.readdir.offs = s->pos;
-
-	memcpy(&msg.i.readdir.dir, &s->oid, sizeof(oid_t));
-	msg.o.data = s->dirent;
-	msg.o.size = sizeof(struct dirent) + NAME_MAX;
-
-	if (msgSend(s->oid.port, &msg) < 0) {
-		free(s->dirent);
-		s->dirent = NULL;
-		return NULL; /* EIO */
+	else {
+		*result = NULL;
+		return errno;
 	}
+}
 
-	if (msg.o.io.err < 0) {
-		free(s->dirent);
-		s->dirent = NULL;
-		return NULL;
-	}
 
-	s->pos += s->dirent->d_reclen;
+struct dirent *readdir(DIR *dirp)
+{
+	static union {
+		struct dirent storage;
+		char bytes[sizeof(struct dirent) + NAME_MAX];
+	} u;
 
-	return s->dirent;
+	struct dirent *result;
+	readdir_r(dirp, &u.storage, &result);
+	return result;
 }
 
 
 DIR *opendir(const char *dirname)
 {
-	msg_t msg = { 0 };
-	char *canonical_name = canonicalize_file_name(dirname);
-	DIR *s = calloc(1, sizeof(DIR));
+	DIR *d;
+	int fd;
 
-	if (!dirname[0] || (lookup((char *)canonical_name, NULL, &s->oid) < 0)) {
-		free(s);
-		return NULL; /* ENOENT */
-	}
+	if ((fd = open(dirname, O_DIRECTORY | O_RDONLY)) == -1)
+		return NULL;
 
-	free(canonical_name);
-	s->dirent = NULL;
-
-#if 1
-	memset(&msg, 0, sizeof(msg));
-	msg.type = mtGetAttr;
-	msg.i.attr.type = atType;
-	memcpy(&msg.i.attr.oid, &s->oid, sizeof(oid_t));
-
-	if (msgSend(s->oid.port, &msg) < 0) {
-		free(s);
-		errno = EIO;
-		return NULL; /* EIO */
-	}
-
-	if (msg.o.attr.val != otDir) {
-		free(s);
-		errno = ENOTDIR;
-		return NULL; /* ENOTDIR */
-	}
-#endif
-
-	memset(&msg, 0, sizeof(msg));
-	msg.type = mtOpen;
-	memcpy(&msg.i.openclose.oid, &s->oid, sizeof(oid_t));
-	msg.i.openclose.flags = 0;
-
-	if (msgSend(s->oid.port, &msg) < 0) {
-		free(s);
-		errno = EIO;
-		return NULL; /* EIO */
-	}
-
-	if (msg.o.io.err < 0) {
-		free(s);
-		errno = EIO;
+	if ((d = malloc(sizeof(*d) + NAME_MAX)) == NULL) {
+		close(fd);
 		return NULL;
 	}
 
-	return s;
+	d->fd = fd;
+	return d;
 }
 
 
 int closedir(DIR *dirp)
 {
-	msg_t msg = { 0 };
-
-	msg.type = mtClose;
-	memcpy(&msg.i.openclose.oid, &dirp->oid, sizeof(oid_t));
-
-	if (msgSend(dirp->oid.port, &msg) < 0)
-		return -1; /* EIO */
-
-	if (msg.o.io.err < 0)
-		return -1;
-
-	free(dirp->dirent);
+	close(dirp->fd);
 	free(dirp);
-
 	return 0;
 }
 
