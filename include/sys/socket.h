@@ -20,6 +20,7 @@
 #include <sys/socktypes.h>
 #include <sys/sockdefs.h>
 #include <sys/uio.h>
+#include <phoenix/socket.h>
 
 typedef uint16_t sa_family_t;	// match lwIP size: u8 len + u8 family
 
