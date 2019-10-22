@@ -48,7 +48,7 @@ WRAP_ERRNO_DEF(int, ftruncate, (int fildes, off_t length), (fildes, length))
 int dup3(int fildes, int fildes2, int flags)
 {
 	int err;
-	while ((err = sys_dup3(fildes, fildes2, flags) == -EINTR))
+	while ((err = sys_dup3(fildes, fildes2, flags)) == -EINTR)
 		;
 	return SET_ERRNO(err);
 }
