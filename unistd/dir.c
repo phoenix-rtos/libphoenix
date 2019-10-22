@@ -223,90 +223,13 @@ int closedir(DIR *dirp)
 
 ssize_t readlink(const char *path, char *buf, size_t bufsiz)
 {
-	int ret;
-	char *canonical;
-	msg_t msg;
-	oid_t oid;
-
-	if (path == NULL)
-		return -EINVAL;
-
-	canonical = canonicalize_file_name(path);
-
-	if ((ret = lookup(canonical, NULL, &oid)) < 0) {
-		free(canonical);
-		return ret;
-	}
-
-	memset(&msg, 0, sizeof(msg_t));
-	msg.type = mtGetAttr;
-
-	memcpy(&msg.i.attr.oid, &oid, sizeof(oid_t));
-	msg.i.attr.type = atMode;
-
-	if ((ret = msgSend(oid.port, &msg)) != EOK) {
-		free(canonical);
-		return ret;
-	}
-
-	if (!S_ISLNK(msg.o.attr.val)) {
-		free(canonical);
-		return -EINVAL;
-	}
-
-	memset(&msg, 0, sizeof(msg_t));
-	msg.type = mtRead;
-
-	memcpy(&msg.i.io.oid, &oid, sizeof(oid_t));
-
-	msg.o.size = bufsiz;
-	msg.o.data = buf;
-
-	if ((ret = msgSend(oid.port, &msg)) != EOK) {
-		free(canonical);
-		return ret;
-	}
-
-	free(canonical);
-	return msg.o.io.err;
+	return -ENOSYS;
 }
 
 
 int rmdir(const char *path)
 {
-	oid_t dir;
-	msg_t msg = { 0 };
-	char *canonical_name, *dirname, *name;
-
-	if (path == NULL)
-		return -1;
-
-	if ((canonical_name = canonicalize_file_name(path)) == NULL)
-		return -1;
-
-	splitname(canonical_name, &name, &dirname);
-
-	if (lookup(dirname, NULL, &dir)) {
-		free(canonical_name);
-		return -1;
-	}
-
-	msg.type = mtUnlink;
-	memcpy(&msg.i.ln.dir, &dir, sizeof(dir));
-	msg.i.data = name;
-	msg.i.size = strlen(name) + 1;
-
-	if (msgSend(dir.port, &msg) != EOK) {
-		free(canonical_name);
-		return -1;
-	}
-
-	free(canonical_name);
-
-	if (msg.o.io.err < 0)
-		return -1;
-
-	return 0;
+	return -ENOSYS;
 }
 
 
