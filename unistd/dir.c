@@ -203,7 +203,7 @@ DIR *opendir(const char *dirname)
 	if ((fd = open(dirname, O_DIRECTORY | O_RDONLY)) == -1)
 		return NULL;
 
-	if ((d = malloc(sizeof(*d) + NAME_MAX)) == NULL) {
+	if ((d = malloc(sizeof(*d))) == NULL) {
 		close(fd);
 		return NULL;
 	}
@@ -221,15 +221,21 @@ int closedir(DIR *dirp)
 }
 
 
+ssize_t readlinkat(int dirfd, const char *path, char *buf, size_t bufsiz)
+{
+	return SET_ERRNO(-ENOSYS);
+}
+
+
 ssize_t readlink(const char *path, char *buf, size_t bufsiz)
 {
-	return -ENOSYS;
+	return readlinkat(AT_FDCWD, path, buf, bufsiz);
 }
 
 
 int rmdir(const char *path)
 {
-	return -ENOSYS;
+	return unlink(path);
 }
 
 

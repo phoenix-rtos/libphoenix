@@ -62,11 +62,6 @@ typedef struct _FILE {
 } FILE;
 
 
-typedef struct _DIR {
-	int fd;
-} DIR;
-
-
 typedef struct _IO_cookie_io_functions
 {
 	void *read;

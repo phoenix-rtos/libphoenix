@@ -16,11 +16,15 @@
 #ifndef _LIBPHOENIX_DIRENT_H_
 #define _LIBPHOENIX_DIRENT_H_
 
-#include <stdio.h>
 #include <stdint.h>
 #include <sys/types.h>
 
 #define NAME_MAX 128
+
+typedef struct _DIR {
+	int fd;
+} DIR;
+
 
 /* dirent types */
 enum {	dtDir = 0,

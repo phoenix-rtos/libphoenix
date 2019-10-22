@@ -171,6 +171,9 @@ extern int unlinkat(int dirfd, const char *path, int flags);
 extern ssize_t readlink(const char *path, char *buf, size_t bufsiz);
 
 
+extern ssize_t readlinkat(int dirfd, const char *path, char *buf, size_t bufsiz);
+
+
 extern int access(const char *pathname, int mode);
 
 
