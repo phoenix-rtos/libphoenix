@@ -23,7 +23,7 @@
 #include <stdio.h>
 
 
-extern int sys_tkill(int pid, int tid, int signal);
+extern int threadKill(int pid, int tid, int signal);
 
 
 struct {
@@ -147,13 +147,13 @@ void _signal_handler(int phxsig)
 
 int raise(int sig)
 {
-	return SET_ERRNO(sys_tkill(getpid(), gettid(), _signals_posix2phx[sig]));
+	return SET_ERRNO(threadKill(getpid(), gettid(), _signals_posix2phx[sig]));
 }
 
 
 int kill(pid_t pid, int sig)
 {
-	return SET_ERRNO(sys_tkill(pid, 0, _signals_posix2phx[sig]));
+	return SET_ERRNO(threadKill(pid, 0, _signals_posix2phx[sig]));
 }
 
 
@@ -164,7 +164,7 @@ int killpg(pid_t pgrp, int sig)
 	else
 		pgrp = -pgrp;
 
-	return SET_ERRNO(sys_tkill(pgrp, 0, _signals_posix2phx[sig]));
+	return SET_ERRNO(threadKill(pgrp, 0, _signals_posix2phx[sig]));
 }
 
 

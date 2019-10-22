@@ -27,10 +27,7 @@
 
 
 WRAP_ERRNO_DEF(int, setpgid, (pid_t pid, pid_t pgid), (pid, pgid))
-WRAP_ERRNO_DEF(int, setpgrp, (void), ())
-
 WRAP_ERRNO_DEF(pid_t, getpgid, (pid_t pid), (pid))
-WRAP_ERRNO_DEF(pid_t, getpgrp, (void), ())
 
 WRAP_ERRNO_DEF(int, setsid, (void), ())
 
@@ -39,6 +36,15 @@ pid_t getsid(pid_t pid)
 	return getpgid(pid);
 }
 
+int setpgrp(void)
+{
+	return setpgid(0, 0);
+}
+
+pid_t getpgrp(void)
+{
+	getpgid(getpid());
+}
 
 char exec_buffer[256];
 
@@ -133,7 +139,7 @@ int execve(const char *file, char *const argv[], char *const envp[])
 	if ((canonical_path = canonicalize_file_name(file)) == NULL)
 		return SET_ERRNO(-ENOMEM);
 
-	err = exec(canonical_path, argv, envp);
+	err = ProcExec(canonical_path, argv, envp);
 	free(canonical_path);
 	free(sb_args);
 
@@ -242,14 +248,14 @@ unsigned sleep(unsigned seconds)
 }
 
 
-extern pid_t sys_fork(void);
+extern pid_t ProcFork(void);
 extern void release(void);
 
 
 pid_t fork(void)
 {
 	pid_t pid;
-	if (!(pid = sys_fork()))
+	if (!(pid = ProcFork()))
 		release();
 	else if (pid < 0) {
 		return SET_ERRNO(pid);

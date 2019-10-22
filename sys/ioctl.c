@@ -36,7 +36,7 @@ struct ioctl_data {
 	size_t 	outsz;
 };
 
-extern int sys_ioctl(int fd, unsigned long req, void *indata, size_t insz, void *outdata, size_t outsz);
+extern int fileIoctl(int fd, unsigned long req, void *indata, size_t insz, void *outdata, size_t outsz);
 
 
 static int ioctl_serialize(unsigned long request, struct ioctl_data *ioc, void *indata)
@@ -107,7 +107,7 @@ static int do_ioctl(int fd, unsigned long request, void *data)
 	if (ret)
 		return ret;
 
-	ret = sys_ioctl(fd, request, ioc.indata, ioc.insz, ioc.outdata, ioc.outsz);
+	ret = fileIoctl(fd, request, ioc.indata, ioc.insz, ioc.outdata, ioc.outsz);
 
 	ioctl_deserialize(request, &ioc, data);
 

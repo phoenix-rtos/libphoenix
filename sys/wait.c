@@ -16,6 +16,8 @@
 #include <errno.h>
 #include <sys/wait.h>
 
-
-WRAP_ERRNO_DEF(pid_t, waitpid, (pid_t pid, int *status, int options), (pid, status, options))
+pid_t waitpid(pid_t pid, int *status, int options)
+{
+	return SET_ERRNO(ProcWait(pid, status, options));
+}
 

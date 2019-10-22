@@ -22,13 +22,13 @@ extern void sys_exit(int) __attribute__((noreturn));
 
 void _exit(int status)
 {
-	sys_exit(status);
+	ProcExit(status);
 }
 
 
 void _Exit(int status)
 {
-	sys_exit(status);
+	ProcExit(status);
 }
 
 
