@@ -360,23 +360,6 @@ int fcntl(int fd, int cmd, ...)
 }
 
 
-extern int sys_ioctl(int fildes, unsigned long request, void *val);
-
-
-int ioctl(int fildes, unsigned long request, ...)
-{
-	va_list ap;
-	void * val;
-
-	/* FIXME: handle varargs properly */
-	va_start(ap, request);
-	val = va_arg(ap, void *);
-	va_end(ap);
-
-	return SET_ERRNO(sys_ioctl(fildes, request, val));
-}
-
-
 int grantpt(int fd)
 {
 	return EOK;

@@ -50,7 +50,7 @@
 #define SIOCSIFTXQLEN		_IOWR(SOCK_IOC_TYPE, 0x43, struct ifreq)	/* set the tx queue length */
 
 /* Routing table calls.  */
-#define SIOCADDRT			_IOW(SOCK_IOC_TYPE, 0x44, struct rtentry)	/* add routing table entry */
-#define SIOCDELRT			_IOW(SOCK_IOC_TYPE, 0x45, struct rtentry)	/* delete routing table entry */
+#define SIOCADDRT			_IOWR(SOCK_IOC_TYPE, 0x44, struct rtentry)	/* add routing table entry */
+#define SIOCDELRT			_IOWR(SOCK_IOC_TYPE, 0x45, struct rtentry)	/* delete routing table entry */
 
 #endif // LIBPHOENIX_SYS_SOCKIOS_H
