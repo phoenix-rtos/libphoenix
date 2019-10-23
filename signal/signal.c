@@ -33,15 +33,6 @@ struct {
 } signal_common;
 
 
-const int _signals_phx2posix[] = { 0, SIGKILL, SIGSEGV, SIGILL, SIGFPE, SIGHUP, SIGINT, SIGQUIT, SIGTRAP,
-	SIGABRT, SIGEMT, SIGBUS, SIGSYS, SIGPIPE, SIGALRM, SIGTERM, SIGURG, SIGSTOP, SIGTSTP, SIGCONT, SIGCHLD,
-	SIGTTIN, SIGTTOU, SIGIO, SIGXCPU, SIGXFSZ, SIGVTALRM, SIGPROF, SIGWINCH, SIGINFO, SIGUSR1, SIGUSR2 };
-
-
-static const int _signals_posix2phx[] = { 0, 5, 6, 7, 3, 8, 9, 10, 4, 1, 11, 2, 12, 13, 14, 15, 16, 17, 18, 19,
-	20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31 };
-
-
 static void _signal_bug(int sig)
 {
 #ifndef NDEBUG
@@ -57,9 +48,7 @@ static void _signal_ignore(int sig)
 
 static void _signal_terminate(int sig)
 {
-	int phxsig = _signals_posix2phx[sig];
-
-	_exit(((phxsig) & 0x7f) << 8);
+	_exit(((sig) & 0x7f) << 8);
 }
 
 
@@ -147,13 +136,13 @@ void _signal_handler(int phxsig)
 
 int raise(int sig)
 {
-	return SET_ERRNO(threadKill(getpid(), gettid(), _signals_posix2phx[sig]));
+	return SET_ERRNO(threadKill(getpid(), gettid(), sig));
 }
 
 
 int kill(pid_t pid, int sig)
 {
-	return SET_ERRNO(threadKill(pid, 0, _signals_posix2phx[sig]));
+	return SET_ERRNO(threadKill(pid, 0, sig));
 }
 
 
@@ -164,7 +153,7 @@ int killpg(pid_t pgrp, int sig)
 	else
 		pgrp = -pgrp;
 
-	return SET_ERRNO(threadKill(pgrp, 0, _signals_posix2phx[sig]));
+	return SET_ERRNO(threadKill(pgrp, 0, sig));
 }
 
 
@@ -185,7 +174,7 @@ void (*signal(int signum, void (*handler)(int)))(int)
 
 	/* Mask signal before change */
 	mutexLock(signal_common.lock);
-	oldmask = signalMask(1UL << _signals_posix2phx[signum], 0xffffffffUL);
+	oldmask = signalMask(1UL << signum, 0xffffffffUL);
 
 	t = signal_common.sightab[signum];
 
@@ -237,7 +226,7 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *oact)
 
 		/* Mask signal before change */
 		mutexLock(signal_common.lock);
-		oldmask = signalMask(1UL << _signals_posix2phx[sig], 0xffffffffUL);
+		oldmask = signalMask(1UL << sig, 0xffffffffUL);
 
 		if (act->sa_handler == (sighandler_t)SIG_IGN)
 			signal_common.sightab[sig] = _signal_ignore;
@@ -248,11 +237,11 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *oact)
 
 		for (i = 0, signal_common.sigset[sig] = 0; i < NSIG; ++i) {
 			if (act->sa_mask & (1UL << i))
-				signal_common.sigset[sig] |= 1UL << _signals_posix2phx[i];
+				signal_common.sigset[sig] |= 1UL << i;
 		}
 
 		if (!(act->sa_flags & SA_NODEFER))
-			signal_common.sigset[sig] |= 1UL << _signals_posix2phx[sig];
+			signal_common.sigset[sig] |= 1UL << sig;
 
 		signal_common.sigset[sig] = act->sa_mask;
 
@@ -278,7 +267,7 @@ int sigprocmask(int how, const sigset_t *set, sigset_t *oldset)
 
 		for (i = 0, phxv = 0; i < NSIG; ++i) {
 			if (*set & (1UL << i))
-				phxv |= 1UL << _signals_posix2phx[i];
+				phxv |= 1UL << i;
 		}
 
 		if (how == SIG_BLOCK) {
@@ -303,7 +292,7 @@ int sigprocmask(int how, const sigset_t *set, sigset_t *oldset)
 		memset(oldset, 0, sizeof(sigset_t));
 		for (i = 0, phxv = 0; i < NSIG; ++i) {
 			if (old & (1UL << i))
-				(*oldset) |= 1UL << _signals_phx2posix[i];
+				(*oldset) |= 1UL << i;
 		}
 	}
 
@@ -320,7 +309,7 @@ int sigsuspend(const sigset_t *sigmask)
 
 	for (i = 0, phxv = 0; i < NSIG; ++i) {
 		if (*sigmask & (1UL << i))
-			phxv |= 1UL << _signals_posix2phx[i];
+			phxv |= 1UL << i;
 	}
 
 	return signalSuspend(phxv);
@@ -385,7 +374,7 @@ void _signals_init(void)
 	/* Set default actions */
 	for (i = 0; i < NSIG; ++i) {
 		signal_common.sightab[i] = _signal_getdefault(i);
-		signal_common.sigset[i] = 1UL << _signals_posix2phx[i];
+		signal_common.sigset[i] = 1UL << i;
 	}
 
 	mutexCreate(&signal_common.lock);
