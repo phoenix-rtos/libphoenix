@@ -112,18 +112,14 @@ static int _signal_ismutable(int sig)
 }
 
 
-void _signal_handler(int phxsig)
+void _signal_handler(int sig)
 {
-	int sig;
 	unsigned int oldmask;
 
-	if (phxsig < 0 || phxsig >= NSIG) {
+	if (sig < 0 || sig >= NSIG) {
 		/* Don't know what to do, ignore it */
 		return;
 	}
-
-	/* Received Phoenix signal, need to convert it to POSIX signal */
-	sig = _signals_phx2posix[phxsig];
 
 	oldmask = signalMask(signal_common.sigset[sig], 0xffffffffUL);
 
