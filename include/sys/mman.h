@@ -41,7 +41,7 @@ extern void meminfo(meminfo_t *info);
 extern int syspageprog(syspageprog_t *prog, int index);
 
 
-extern void *mmap(void *vaddr, size_t size, int prot, int flags, oid_t *oid, offs_t offs);
+extern void *mmap(void *vaddr, size_t size, int prot, int flags, int fd, off_t offs);
 
 
 extern int munmap(void *vaddr, size_t size);

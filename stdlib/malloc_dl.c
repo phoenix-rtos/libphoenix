@@ -317,7 +317,7 @@ static heap_t *_malloc_heapAlloc(size_t size)
 	if (heapSize < size)
 		return NULL;
 
-	heap = mmap(NULL, heapSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, NULL, 0);
+	heap = mmap(NULL, heapSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 	if (heap == MAP_FAILED)
 		return NULL;
 
