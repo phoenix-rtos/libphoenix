@@ -25,6 +25,7 @@
 #include <errno.h>
 #include <stdarg.h>
 
+extern int ProcExec(int dirfd, const char *path, char *const *argv, char *const *envp);
 
 WRAP_ERRNO_DEF(int, setpgid, (pid_t pid, pid_t pgid), (pid, pgid))
 WRAP_ERRNO_DEF(pid_t, getpgid, (pid_t pid), (pid))
@@ -43,7 +44,7 @@ int setpgrp(void)
 
 pid_t getpgrp(void)
 {
-	getpgid(getpid());
+	return getpgid(getpid());
 }
 
 char exec_buffer[256];
@@ -77,7 +78,6 @@ int execve(const char *file, char *const argv[], char *const envp[])
 {
 	int fd, noargs = 0, err;
 	char *interp = exec_buffer, *end, **sb_args = NULL;
-	char *canonical_path;
 	char *path = getenv("PATH");
 	int filename_len = strlen(file);
 	oid_t dir;
@@ -136,11 +136,7 @@ int execve(const char *file, char *const argv[], char *const envp[])
 		argv = sb_args;
 	}
 
-	if ((canonical_path = canonicalize_file_name(file)) == NULL)
-		return SET_ERRNO(-ENOMEM);
-
-	err = ProcExec(canonical_path, argv, envp);
-	free(canonical_path);
+	err = ProcExec(AT_FDCWD, file, argv, envp);
 	free(sb_args);
 
 	return SET_ERRNO(err);

@@ -147,7 +147,7 @@ extern int isatty(int fildes);
 extern int dup2(int fildes, int fildes2);
 
 
-extern void _exit(int status);
+extern void _exit(int status) __attribute__((noreturn));
 
 
 extern int symlink(const char *path1, const char *path2);

@@ -17,7 +17,7 @@
 #include <stdio.h>
 
 extern void _atexit_call(void);
-extern void sys_exit(int) __attribute__((noreturn));
+extern void ProcExit(int) __attribute__((noreturn));
 
 
 void _exit(int status)
