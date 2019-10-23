@@ -16,6 +16,7 @@
 #ifndef _LIBPHOENIX_NET_IF_H
 #define _LIBPHOENIX_NET_IF_H
 
+#include <sys/socket.h>
 
 #define	IFF_UP				0x1			/* Interface is up */
 #define	IFF_BROADCAST		0x2			/* Broadcast address valid */

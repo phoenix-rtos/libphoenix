@@ -1,6 +1,7 @@
 #ifndef _LIBPHOENIX_NET_ROUTE_H_
 #define _LIBPHOENIX_NET_ROUTE_H_
 
+#include <sys/socket.h>
 
 #define RTF_UP          0x0001
 #define RTF_GATEWAY     0x0002
