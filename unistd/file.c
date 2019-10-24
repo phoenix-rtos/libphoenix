@@ -219,8 +219,41 @@ int create_dev(oid_t *oid, const char *path)
 	while (lookup("devfs", NULL, &odev) < 0) {
 		/* if create_dev() is called by anyone started from syspage devfs
 		 * may be not registered yet so we try 3 times until we give up */
-		if (++retry > 3)
-			return -ENOSYS;
+		if (++retry > 3) {
+			/* fallback */
+			oid_t odir = { 0 };
+			mkdir("/dev", 0666);
+
+			if (lookup("/dev", NULL, &odir) < 0)
+				return -ENOENT;
+
+			if (!strncmp("/dev", path, 4))
+				path += 4;
+
+			if ((canonical_path = canonicalize_file_name(path)) == NULL)
+				return -1;
+
+			splitname(canonical_path, &name, &dir);
+
+			msg.type = mtCreate;
+			memcpy(&msg.i.create.dir, &odir, sizeof(oid_t));
+			memcpy(&msg.i.create.dev, oid, sizeof(oid_t));
+
+			msg.i.create.type = otDev;
+			msg.i.create.mode = S_IFCHR | 0666;
+
+			msg.i.data = name;
+			msg.i.size = strlen(name) + 1;
+
+			if (msgSend(odev.port, &msg) != EOK) {
+				free(canonical_path);
+				return -ENOMEM;
+			}
+
+			free(canonical_path);
+			return msg.o.create.err;
+
+		}
 		else
 			usleep(100000);
 	}
