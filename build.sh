@@ -27,7 +27,6 @@ PREFIX_H="$PREFIX_BUILD/include/"
 
 PREFIX_ROOTFS="$PREFIX_FS/root/"
 
-CROSS=arm-phoenix-
 CFLAGS="${CFLAGS} -I${PREFIX_H}"
 LDFLAGS="$LDFLAGS -L$PREFIX_A"
 CC=${CROSS}gcc
@@ -115,11 +114,7 @@ mkdir -p $PREFIX_BUILD_HOST
 # Build core part
 #
 if [ "X${B_CORE}" == "Xy" ]; then
-	if [ "${TARGET_SUBFAMILY}" == "arm-imx6ull" ]; then
-		./phoenix-rtos-build/build-core-imx6ull.sh
-	elif [ "${TARGET_SUBFAMILY}" == "armv7-stm32" ]; then
-		./phoenix-rtos-build/build-core-stm32.sh
-	fi
+	./phoenix-rtos-build/build-core-${TARGET_SUBFAMILY}.sh
 fi
 
 #

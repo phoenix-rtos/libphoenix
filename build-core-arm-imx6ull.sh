@@ -10,9 +10,9 @@
 
 b_log "Building phoenix-rtos-kernel"
 
-KERNEL_MAKECMDGOALS=""
+KERNEL_MAKECMDGOALS="install-headers"
 if [ "X$CLEAN" == "Xclean" ]; then
-	KERNEL_MAKECMDGOALS="$CLEAN install-headers"
+	KERNEL_MAKECMDGOALS="$CLEAN $KERNEL_MAKECMDGOALS"
 fi
 
 (cd phoenix-rtos-kernel/src/ && make $MAKEFLAGS $KERNEL_MAKECMDGOALS all)
