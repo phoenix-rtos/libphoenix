@@ -170,19 +170,13 @@ int access(const char *path, int amode)
 }
 
 
+extern int deviceCreate(int cwd, const char *, int portfd, id_t id, mode_t mode);
+
+
 int create_dev(oid_t *oid, const char *path)
 {
 	int err = EOK;
-	int fd = open(path, O_RDWR | O_CREAT | O_EXCL | O_NOFOLLOW, S_IFCHR | 0777);
-
-	if (fd == -1)
-		return -1;
-
-	if ((err = write(fd, oid, sizeof(oid))) != sizeof(oid))
-		err = -1;
-
-	close(fd);
-	return err;
+	return deviceCreate(AT_FDCWD, path, oid->port, oid->id, S_IFCHR | 0777);
 }
 
 
