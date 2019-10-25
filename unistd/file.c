@@ -62,7 +62,10 @@ int dup(int fildes)
 
 int dup2(int fildes, int fildes2)
 {
-	return dup3(fildes, fildes2, 0);
+	int err;
+	if ((err = sys_dup3(fildes, fildes2, 0)) == -EINVAL && fildes == fildes2)
+		return fildes2;
+	return SET_ERRNO(err);
 }
 
 
