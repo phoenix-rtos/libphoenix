@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Phoenix-RTOS
  *
  * libphoenix
@@ -245,7 +245,7 @@ int create_dev(oid_t *oid, const char *path)
 			msg.i.data = name;
 			msg.i.size = strlen(name) + 1;
 
-			if (msgSend(odev.port, &msg) != EOK) {
+			if (msgSend(odir.port, &msg) != EOK) {
 				free(canonical_path);
 				return -ENOMEM;
 			}
