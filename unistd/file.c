@@ -34,6 +34,8 @@
 extern int sys_openat(int dirfd, const char *filename, int oflag, mode_t mode);
 extern int fileLink(int fildes, const char *path, int dirfd,  const char *name, int flags);
 extern int fileUnlink(int dirfd, const char *path, int flags);
+extern int fileSeek (int fildes, off_t *offset, int whence);
+
 extern int sys_fcntl(int fd, int cmd, long val);
 extern int sys_pipe(int fildes[2]);
 extern int sys_dup3(int fildes, int fildes2, int flags);
@@ -42,7 +44,6 @@ WRAP_ERRNO_DEF(int, read, (int fildes, void *buf, size_t nbyte), (fildes, buf, n
 WRAP_ERRNO_DEF(int, write, (int fildes, const void *buf, size_t nbyte), (fildes, buf, nbyte))
 WRAP_ERRNO_DEF(int, close, (int fildes), (fildes))
 WRAP_ERRNO_DEF(int, ftruncate, (int fildes, off_t length), (fildes, length))
-// WRAP_ERRNO_DEF(int, lseek, (int fildes, off_t offset, int whence), (fildes, offset, whence))
 
 
 int dup3(int fildes, int fildes2, int flags)
@@ -170,6 +171,12 @@ int access(const char *path, int amode)
 		close(fd);
 
 	return fd < 0 ? -1 : 0;
+}
+
+
+off_t lseek(int fd, off_t offset, int whence)
+{
+	return SET_ERRNO(fileSeek(fd, &offset, whence));
 }
 
 
