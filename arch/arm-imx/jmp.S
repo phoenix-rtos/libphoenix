@@ -40,7 +40,11 @@ _setjmp:
 .globl _longjmp
 .type _longjmp, %function
 _longjmp:
-	/* move return value to r3 */
+	/* move return value to r3.
+	 * longjmp should not make setjmp return 0 though */
+	cmp r1, #0
+	it eq
+	addeq r1, r1, #1
 	mov r3, r1
 	/* restore registers from jmpbuf */
 	ldmia r0!, {r1, r2, r4, r5, r6, r7, r8, r9, r10, r11, lr}
