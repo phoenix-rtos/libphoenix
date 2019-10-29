@@ -27,6 +27,8 @@
 #include <posix/utils.h>
 
 
+extern int procChangeDir(int fildes, const char* path);
+
 static struct {
 	char *cwd;
 } dir_common;
@@ -34,30 +36,7 @@ static struct {
 
 int chdir(const char *path)
 {
-	struct stat s;
-	int len;
-	char *canonical;
-
-	if ((canonical = canonicalize_file_name(path)) == NULL)
-		return -ENOMEM;
-
-	if (stat(canonical, &s) < 0 || !S_ISDIR(s.st_mode)) {
-		free(canonical);
-		return -1;
-	}
-
-	len = strlen(canonical) + 1;
-	if ((dir_common.cwd = realloc(dir_common.cwd, len)) == NULL) {
-		free(canonical);
-		return -1; /* ENOMEM */
-	}
-
-	setenv("PWD", canonical, 1);
-
-	memcpy(dir_common.cwd, canonical, len);
-	free(canonical);
-
-	return EOK;
+	return SET_ERRNO(procChangeDir(AT_FDCWD, path));
 }
 
 
