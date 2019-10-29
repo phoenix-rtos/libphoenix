@@ -19,17 +19,10 @@
 
 #include "posix/utils.h"
 
-extern int sys_utimes(const char *filename, const struct timeval times[2]);
-
 
 int utimes(const char *filename, const struct timeval times[2])
 {
-	char *canonical;
-	int err;
-	canonical = canonicalize_file_name(filename);
-	err = sys_utimes(canonical, times);
-	free(canonical);
-	return SET_ERRNO(err);
+	return SET_ERRNO(-ENOSYS);
 }
 
 
