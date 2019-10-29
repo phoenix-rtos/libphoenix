@@ -27,7 +27,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-WRAP_ERRNO_DEF(int, accept, (int socket, struct sockaddr *address, socklen_t *address_len), (socket, address, address_len))
 WRAP_ERRNO_DEF(int, accept4, (int socket, struct sockaddr *address, socklen_t *address_len, int flags), (socket, address, address_len, flags))
 WRAP_ERRNO_DEF(int, bind, (int socket, const struct sockaddr *address, socklen_t address_len), (socket, address, address_len))
 WRAP_ERRNO_DEF(int, connect, (int socket, const struct sockaddr *address, socklen_t address_len), (socket, address, address_len))
@@ -43,6 +42,13 @@ WRAP_ERRNO_DEF(int, setsockopt, (int socket, int level, int optname, const void 
 
 
 int h_errno;
+
+
+int accept(int socket, struct sockaddr *address, socklen_t *address_len)
+{
+	return accept4(socket, address, address_len, 0);
+}
+
 
 static int socksrvcall(msg_t *msg)
 {
