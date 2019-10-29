@@ -30,7 +30,7 @@ extern void _longjmp(jmp_buf var, int m);
 extern int setjmp(jmp_buf var);
 
 
-static inline longjmp(jmp_buf var, int m)
+static inline void longjmp(jmp_buf var, int m)
 {
 	_longjmp(var, m);
 }
