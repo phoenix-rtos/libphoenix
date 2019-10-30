@@ -185,7 +185,6 @@ extern int deviceCreate(int cwd, const char *, int portfd, id_t id, mode_t mode)
 
 int create_dev(oid_t *oid, const char *path)
 {
-	int err = EOK;
 	return deviceCreate(AT_FDCWD, path, oid->port, oid->id, S_IFCHR | 0777);
 }
 
