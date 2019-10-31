@@ -120,7 +120,7 @@ void ioctl_setResponse(msg_t *msg, unsigned long request, int err, const void *d
 
 	msg->o.io = err;
 	if ((request & IOC_OUT) && data != NULL)
-		memcpy(&msg->o.data, data, size);
+		memcpy(msg->o.data, data, size);
 }
 
 void ioctl_setResponseErr(msg_t *msg, unsigned long request, int err)
