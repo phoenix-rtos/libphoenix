@@ -18,6 +18,8 @@
 
 #include <sys/rb.h>
 
+#define IDTREE_MAXID 0x3fffffff
+
 
 typedef rbtree_t idtree_t;
 

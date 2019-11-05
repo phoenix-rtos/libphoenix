@@ -117,6 +117,10 @@ idnode_t *idtree_find(idtree_t *tree, int id)
 {
 	idnode_t n;
 	n.id = id;
+
+	if (id > IDTREE_MAXID)
+		return NULL;
+
 	return lib_treeof(idnode_t, linkage, lib_rbFind(tree, &n.linkage));
 }
 
