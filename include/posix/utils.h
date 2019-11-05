@@ -16,7 +16,13 @@
 #ifndef _LIBPHOENIX_POSIX_UTILS_H_
 #define _LIBPHOENIX_POSIX_UTILS_H_
 
-extern int create_dev(oid_t *oid, const char *path);
+#include <sys/types.h>
+
+
+#define PORT_DESCRIPTOR 3
+
+
+extern int create_dev(int portfd, id_t id, const char *path, mode_t mode);
 
 
 extern void splitname(char *path, char **base, char **dir);

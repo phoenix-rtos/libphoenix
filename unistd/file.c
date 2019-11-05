@@ -183,9 +183,11 @@ off_t lseek(int fd, off_t offset, int whence)
 extern int deviceCreate(int cwd, const char *, int portfd, id_t id, mode_t mode);
 
 
-int create_dev(oid_t *oid, const char *path)
+int create_dev(int portfd, id_t id, const char *path, mode_t mode)
 {
-	return deviceCreate(AT_FDCWD, path, oid->port, oid->id, S_IFCHR | 0777);
+	if (!(mode & (S_IFCHR | S_IFBLK)))
+		return -EINVAL;
+	return deviceCreate(AT_FDCWD, path, portfd, id, (mode & (S_IFCHR | S_IFBLK)) | 0500);
 }
 
 
