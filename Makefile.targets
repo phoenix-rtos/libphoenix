@@ -44,6 +44,24 @@ ifneq (, $(findstring armv7, $(TARGET)))
 		-DNOMMU
 
 	LDFLAGS += -nostdlib -e _start --section-start .text=0 -Tbss=20000000 -z max-page-size=0x10
+	GCCLIB := $(shell echo $(CC) $(CFLAGS) -print-libgcc-file-name)
+endif
+
+############ ARM (Cortex-M7) ############
+
+#FIXME: -mfpu=fpv5-d16 does not work with current toolchain
+
+ifneq (, $(findstring arm-cm7, $(TARGET)))
+	CROSS ?= arm-phoenix-
+	SUBDIRS = arch/armv7 $(SUBSYSTEMS)
+
+	CFLAGS += -O2 -Wall -Wstrict-prototypes -g -nostartfiles -nostdlib\
+		-mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -mthumb\
+		-fomit-frame-pointer -ffreestanding\
+		-fpic -fpie -msingle-pic-base -mno-pic-data-is-text-relative\
+		-DNOMMU
+
+	LDFLAGS += -nostdlib -e _start --section-start .text=0 -Tbss=20000000 -z max-page-size=0x10
 	GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 endif
 
