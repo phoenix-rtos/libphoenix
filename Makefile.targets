@@ -53,7 +53,7 @@ ifneq (, $(findstring armv7, $(TARGET)))
 	endif
 
 	LDFLAGS += -nostdlib -e _start --section-start .text=0 -Tbss=20000000 -z max-page-size=0x10
-	GCCLIB := $(shell echo $(CC) $(CFLAGS) -print-libgcc-file-name)
+	GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 endif
 
 ############ ARM (Cortex-A5/A7/A9) ############
