@@ -10,8 +10,8 @@ SIL ?= @
 MAKEFLAGS += --no-print-directory --output-sync
 
 TARGET ?= arm-imx6ull
-#TARGET ?= armv7-stm32-tiramisu
-#TARGET ?= arm-cm7-evk
+#TARGET ?= armv7-stm32-l152xe
+#TARGET ?= armv7-imxrt
 #TARGET ?= ia32-qemu
 #TARGET ?= riscv64
 
