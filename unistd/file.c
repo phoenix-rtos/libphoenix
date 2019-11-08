@@ -208,7 +208,7 @@ int access(const char *path, int amode)
 
 int create_dev(oid_t *oid, const char *path)
 {
-	oid_t odev;
+	oid_t odev, odir;
 	msg_t msg = { 0 };
 	int retry = 0;
 	char *canonical_path, *dir, *sep, *name;
@@ -221,38 +221,12 @@ int create_dev(oid_t *oid, const char *path)
 		 * may be not registered yet so we try 3 times until we give up */
 		if (++retry > 3) {
 			/* fallback */
-			oid_t odir = { 0 };
 			mkdir("/dev", 0666);
 
 			if (lookup("/dev", NULL, &odir) < 0)
 				return -ENOENT;
-
-			if (!strncmp("/dev", path, 4))
-				path += 4;
-
-			if ((canonical_path = canonicalize_file_name(path)) == NULL)
-				return -1;
-
-			splitname(canonical_path, &name, &dir);
-
-			msg.type = mtCreate;
-			memcpy(&msg.i.create.dir, &odir, sizeof(oid_t));
-			memcpy(&msg.i.create.dev, oid, sizeof(oid_t));
-
-			msg.i.create.type = otDev;
-			msg.i.create.mode = S_IFCHR | 0666;
-
-			msg.i.data = name;
-			msg.i.size = strlen(name) + 1;
-
-			if (msgSend(odir.port, &msg) != EOK) {
-				free(canonical_path);
-				return -ENOMEM;
-			}
-
-			free(canonical_path);
-			return msg.o.create.err;
-
+			odev = odir;
+			break;
 		}
 		else
 			usleep(100000);
