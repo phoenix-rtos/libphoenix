@@ -26,7 +26,7 @@
 extern int fifoCreate(int dirfd, const char *filename, mode_t mode);
 extern int fileStat(int dirfd, const char *path, struct stat *stat, int flags);
 extern int sys_chmod(const char *path, mode_t mode);
-
+extern int deviceCreate(int dirfd, const char *name, int portfd, id_t id, mode_t mode);
 
 int fstatat(int dirfd, const char *path, struct stat *buf, int flags)
 {
@@ -105,10 +105,12 @@ int mkfifo(const char *filename, mode_t mode)
 
 int mknodat(int dirfd, const char *path, mode_t mode, dev_t dev)
 {
-	if (S_ISFIFO(mode))
+	if (S_ISFIFO(mode)) {
 		return mkfifoat(dirfd, path, mode);
-	else
-		return -EINVAL;
+	}
+	else {
+		return deviceCreate(dirfd, path, -1, dev, mode);
+	}
 }
 
 
