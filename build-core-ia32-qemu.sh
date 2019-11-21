@@ -36,3 +36,11 @@ b_install "$PREFIX_PROG_STRIPPED/pc-ata" /sbin
 b_log "Building psh"
 (cd psh && make $MAKEFLAGS $CLEAN all)
 b_install "$PREFIX_PROG_STRIPPED/psh" /bin
+
+b_log "Building phoenix-rtos-lwip"
+(cd phoenix-rtos-lwip && make $MAKEFLAGS $CLEAN all)
+b_install "$PREFIX_PROG_STRIPPED/lwip" /sbin
+
+b_log "Building posixsrv"
+(cd phoenix-rtos-posixsrv && make $MAKEFLAGS $CLEAN all)
+b_install "$PREFIX_PROG_STRIPPED/posixsrv" /bin
