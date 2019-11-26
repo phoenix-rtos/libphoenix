@@ -39,8 +39,6 @@
 #define ETIMEDOUT       110
 #define EHOSTDOWN       112
 #define EHOSTUNREACH    113
-#define EALREADY        114
-#define EINPROGRESS     115
 
 #define ENOLCK          116
 #define ENOTRECOVERABLE 131
