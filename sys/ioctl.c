@@ -34,6 +34,7 @@ struct ioctl_data {
 	void 	*outdata;
 	size_t 	insz;
 	size_t 	outsz;
+	int retval;
 };
 
 extern int fileIoctl(int fd, unsigned long req, void *indata, size_t insz, void *outdata, size_t outsz);
@@ -47,18 +48,15 @@ static int ioctl_serialize(unsigned long request, struct ioctl_data *ioc, void *
 	if ((request & IOC_INOUT) && !iocdata)
 		return -EINVAL;
 
-	/* ioctl special case: arg is structure with pointer - has to be custom-packed into message
-	 * WARNING: all special ioctls are assumed to be defined as IOCWR */
+	/* Special cases, WARNING: all special ioctls are assumed to be defined as IOCWR */
 	if (request == SIOCGIFCONF) {
-		struct ifconf *ifc = (struct ifconf*)iocdata;
-		iocdata = calloc(1, size + ifc->ifc_len);
-		if (!iocdata)
-			return -ENOMEM;
-		memcpy(iocdata, indata, size);
-		memcpy(iocdata + size, ifc->ifc_buf, ifc->ifc_len);
-		size += ifc->ifc_len;
+		/* Unpack and send the buffer directly */
+		struct ifconf *ifc = iocdata;
+		iocdata = ifc->ifc_req;
+		size = ifc->ifc_len;
 	}
 	else if (request == SIOCADDRT || request == SIOCDELRT) {
+		/* arg is structure with pointer - has to be custom-packed into message */
 		struct rtentry *rt = (struct rtentry *)iocdata;
 		size_t dev_len;
 		if (rt->rt_dev != NULL) {
@@ -87,14 +85,20 @@ static int ioctl_serialize(unsigned long request, struct ioctl_data *ioc, void *
 static void ioctl_deserialize(unsigned long request, struct ioctl_data *ioc, void *outdata)
 {
 	if (request == SIOCGIFCONF) {
-		struct ifconf *ifc = (struct ifconf*)ioc->outdata;
-		struct ifconf *oifc = (struct ifconf*)outdata;
-		memcpy(oifc->ifc_buf, outdata + sizeof(struct ifconf), ifc->ifc_len);
-		oifc->ifc_len = ifc->ifc_len;
+		struct ifreq *ifr = (struct ifconf *)ioc->outdata;
+		size_t len = ioc->retval;
+		struct ifconf *oifc = (struct ifconf *)outdata;
+		oifc->ifc_len = len;
+
+		if (oifc->ifc_buf != NULL) {
+			memcpy(oifc->ifc_buf, ioc->outdata, len);
+		}
+
+		ioc->retval = 0;
 	}
 
-	if (ioc->outdata != outdata)
-		free(ioc->outdata);
+//	if (ioc->outdata != outdata)
+//		free(ioc->outdata);
 }
 
 static int do_ioctl(int fd, unsigned long request, void *data)
@@ -107,11 +111,11 @@ static int do_ioctl(int fd, unsigned long request, void *data)
 	if (ret)
 		return ret;
 
-	ret = fileIoctl(fd, request, ioc.indata, ioc.insz, ioc.outdata, ioc.outsz);
+	ioc.retval = fileIoctl(fd, request, ioc.indata, ioc.insz, ioc.outdata, ioc.outsz);
 
 	ioctl_deserialize(request, &ioc, data);
 
-	return ret;
+	return ioc.retval;
 }
 
 void ioctl_setResponse(msg_t *msg, unsigned long request, int err, const void *data)
