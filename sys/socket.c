@@ -186,71 +186,28 @@ struct hostent *gethostbyaddr(const void *addr, socklen_t len, int type)
 }
 
 
-int getnameinfo(const struct sockaddr *addr, socklen_t addrlen,
-                char *host, socklen_t hostlen,
-                char *serv, socklen_t servlen, int flags)
+int getnameinfo(const struct sockaddr *sa, socklen_t addrlen, char *host, socklen_t hostsz, char *serv, socklen_t servsz, int flags)
 {
-	msg_t msg = { 0 };
-	sockport_msg_t *smi = (void *)msg.i.raw;
-	sockport_resp_t *smo = (void *)msg.o.raw;
-	size_t hlen;
-	char *buf;
+	// TODO: implement real netdb (for now always return the IP representation)
+	if (sa == NULL)
+		return EAI_FAIL;
 
-	if (addrlen > sizeof(smi->send.addr))
-		return EAI_FAMILY;
+	if (sa->sa_family == AF_INET) {
+		struct sockaddr_in *sa_in = (struct sockaddr_in *)sa;
 
-	if (host == NULL)
-		hostlen = 0;
-
-	if (serv == NULL)
-		servlen = 0;
-
-	if (hostlen == 0 && servlen == 0)
-		return EAI_NONAME;
-
-	buf = malloc(hostlen + servlen);
-	if (!buf)
-		return EAI_MEMORY;
-
-	hlen = hostlen;
-
-	msg.type = sockmGetNameInfo;
-	smi->send.flags = flags;
-	smi->send.addrlen = addrlen;
-	memcpy(smi->send.addr, addr, addrlen);
-	msg.i.data = &hlen;
-	msg.i.size = sizeof(hlen);
-	msg.o.data = buf;
-	msg.o.size = hostlen + servlen;
-
-	if (socksrvcall(&msg) < 0) {
-		free(buf);
-		return EAI_SYSTEM;
-	}
-
-	if (!smo->ret) {
-		if (hostlen > 0) {
-			if (hostlen < smo->nameinfo.hostlen) {
-				smo->ret = EAI_OVERFLOW;
-				memcpy(host, buf, hostlen);
-			} else
-				memcpy(host, buf, smo->nameinfo.hostlen);
+		if (host != NULL) {
+			snprintf(host, hostsz, "%u.%u.%u.%u", (unsigned char)sa->sa_data[2], (unsigned char)sa->sa_data[3],
+				(unsigned char)sa->sa_data[4], (unsigned char)sa->sa_data[5]);
 		}
 
-		if (servlen > 0) {
-			if (servlen < smo->nameinfo.servlen) {
-				smo->ret = EAI_OVERFLOW;
-				memcpy(serv, buf + hostlen, servlen);
-			} else
-				memcpy(serv, buf + hostlen, smo->nameinfo.servlen);
+		if (serv != NULL) {
+			snprintf(serv, servsz, "%u", ntohs(sa_in->sin_port));
 		}
+
+		return 0;
 	}
 
-	if (smo->ret == EAI_SYSTEM)
-		(void)SET_ERRNO(-smo->sys.err);
-
-	free(buf);
-	return smo->ret;
+	return EAI_FAMILY;
 }
 
 
