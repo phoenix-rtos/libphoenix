@@ -23,7 +23,7 @@
 .type _setjmp, %function
 _setjmp:
 	/* set jump address and stack pointer */
-	addw r1, pc, #((1f - _setjmp - 4) | 1) /* 4 is the size of addw instruction itself */
+	addw r1, pc, #((1f - . - 4) | 1) /* 4 is the size of addw instruction itself */
 	mov r2, sp
 	/* store everythig in jmpbuf */
 	stm r0, {r1-r2, r4-r11, lr}
@@ -62,7 +62,7 @@ setjmp:
 	mov r3, r0
 	pop {r0, lr}
 	/* set jump address and stack pointer */
-	addw r1, pc, #((1f - _setjmp - 4) | 1) /* 4 is the size of addw instruction itself */
+	addw r1, pc, #((1f - . - 4) | 1) /* 4 is the size of addw instruction itself */
 	mov r2, sp
 	/* store everythig in jmpbuf */
 	stm r0, {r1-r2, r4-r11, lr}
