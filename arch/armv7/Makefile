@@ -5,7 +5,7 @@
 # Author: Pawel Pisarczyk
 #
 
-ARCH_ASMS := _start.S syscalls.S signal.S
+ARCH_ASMS := _start.S syscalls.S signal.S jmp.S
 ARCH_SRCS := string.c reboot.c
 
 # include after all dependencies are set
