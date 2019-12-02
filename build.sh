@@ -88,8 +88,6 @@ for i in $*; do
 	esac;
 done
 
-export BUSYBOX_CONFIG=""
-
 #
 # Preparing filesystem
 #
