@@ -81,7 +81,8 @@ void tzset(void)
 }
 
 
-time_t time(time_t *tp) {
+time_t time(time_t *tp)
+{
 	time_t now, offs;
 
 	gettime(&now, &offs);
@@ -257,8 +258,8 @@ static time_t _mktimeSkel(struct tm *tp)
 	year += tp->tm_mon / 12;
 	tp->tm_mon %= 12;
 
-	days = year * 365 + tp->tm_mday + leapcount(tp->tm_year + 1900);
-	leap = isleap(tp->tm_year + 1900);
+	days = year * 365 + tp->tm_mday + leapcount(year + 1970);
+	leap = isleap(year + 1970);
 
 	for (i = 0; i < tp->tm_mon; ++i)
 		days += daysofmonth(i, leap);
