@@ -5,8 +5,8 @@
  *
  * types.h
  *
- * Copyright 2018 Phoenix Systems
- * Author: Jan Sikorski
+ * Copyright 2018, 2019 Phoenix Systems
+ * Author: Jan Sikorski, Marcin Baran
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -49,9 +49,18 @@ typedef unsigned short u_short;
 typedef unsigned int u_int;
 typedef unsigned long u_long;
 
-typedef void *pthread_t;
-typedef void *pthread_attr_t;
+typedef struct pthread_attr_t {
+	void *stackaddr;
+	int policy;
+	int priority;
+	int detached;
+	size_t stacksize;
+} pthread_attr_t;
+
+typedef uintptr_t pthread_t;
+
 typedef handle_t pthread_mutex_t;
+typedef void *pthread_mutexattr_t;
 
 
 /* BSD legacy types permitted by POSIX */

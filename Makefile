@@ -22,7 +22,7 @@ PREFIX_BUILD := $(abspath $(PREFIX_BUILD))
 BUILD_DIR ?= $(PREFIX_BUILD)/$(notdir $(TOPDIR))
 BUILD_DIR := $(abspath $(BUILD_DIR))
 
-SUBSYSTEMS := math stdio stdlib string sys ctype time unistd errno signal termios posix err locale regex net syslog netinet
+SUBSYSTEMS := math stdio stdlib string sys ctype time unistd errno signal termios posix err locale regex net syslog netinet pthread
 
 LIBNAME := libphoenix.a
 LIB := $(BUILD_DIR)/$(LIBNAME)
@@ -73,7 +73,7 @@ $(ARCHS): %.a: .FORCE $(filter clean,$(MAKECMDGOALS))
 
 $(LIB): $(ARCHS) $(OBJS)
 	@echo "\033[1;34mLD $@\033[0m"
-	
+
 	@(\
 	printf "Subsystem                  | text    | rodata  | data\n";\
 	printf "=========================================================\n";\
