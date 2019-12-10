@@ -28,7 +28,7 @@ cp "$PREFIX_PROG_STRIPPED/dummyfs" _build
 cp "$PREFIX_PROG_STRIPPED/meterfs" _build
 
 b_log "Building phoenix-rtos-devices"
-(cd phoenix-rtos-devices && make $MAKEFLAGS $CLEAN all)
+(cd phoenix-rtos-devices && CFLAGS+=$DEVICE_FLAGS make $MAKEFLAGS $CLEAN all)
 cp "$PREFIX_PROG_STRIPPED/imxrt-multi" _build
 cp "$PREFIX_PROG_STRIPPED/imxrt-flash" _build
 
