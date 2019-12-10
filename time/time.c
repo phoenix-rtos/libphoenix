@@ -111,7 +111,7 @@ int clock_gettime(clockid_t clk_id, struct timespec *tp)
 
 	if (clk_id == CLOCK_REALTIME)
 		now += offs;
-	else if (clk_id != CLOCK_MONOTONIC)
+	else if (clk_id != CLOCK_MONOTONIC && clk_id != CLOCK_MONOTONIC_RAW)
 		return -EINVAL;
 
 	tp->tv_sec = now / (1000 * 1000);
