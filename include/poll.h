@@ -22,6 +22,9 @@
 
 typedef unsigned int nfds_t;
 
+/* TODO: move/rename */
+extern portEvent(int portfd, id_t id, int events);
+
 
 extern int poll(struct pollfd *fds, nfds_t nfds, int timeout);
 
