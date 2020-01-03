@@ -20,12 +20,6 @@
 
 
 #define UIO_MAXIOV	1024
-
-
-struct iovec {
-	void *iov_base;
-	size_t iov_len;
-};
-
+#include <phoenix/types.h>
 
 #endif /* _SYS_UIO_H_ */
