@@ -21,6 +21,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <syslog.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 
 
 #ifndef PATH_LOG
@@ -56,6 +58,8 @@ extern const char *argv_progname;
 
 void openlog(const char *ident, int logopt, int facility)
 {
+	struct sockaddr_un addr;
+
 	if (ident != NULL) {
 		syslog_common.ident = ident;
 	} else {
@@ -64,7 +68,17 @@ void openlog(const char *ident, int logopt, int facility)
 
 	if (logopt & LOG_NDELAY) {
 		if (!syslog_common.open) {
-			syslog_common.logfd = open(PATH_LOG, O_WRONLY | O_NONBLOCK);
+			addr.sun_family = AF_UNIX;
+			memcpy(addr.sun_path, PATH_LOG, sizeof(PATH_LOG));
+
+			syslog_common.logfd = socket(AF_UNIX, SOCK_DGRAM, 0);
+			if (syslog_common.logfd >= 0) {
+				if (connect(syslog_common.logfd, &addr, sizeof(addr)) < 0) {
+					close(syslog_common.logfd);
+					syslog_common.logfd = -1;
+				}
+			}
+
 			syslog_common.open = syslog_common.logfd != -1;
 		}
 	}
