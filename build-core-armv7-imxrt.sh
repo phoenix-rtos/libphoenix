@@ -9,13 +9,8 @@
 #
 
 b_log "Building phoenix-rtos-kernel"
-
 KERNEL_MAKECMDGOALS="install-headers"
-if [ "X$CLEAN" == "Xclean" ]; then
-	KERNEL_MAKECMDGOALS="$CLEAN $KERNEL_MAKECMDGOALS"
-fi
-
-(cd phoenix-rtos-kernel/src/ && make $MAKEFLAGS $KERNEL_MAKECMDGOALS all)
+(cd phoenix-rtos-kernel/src/ && make $MAKEFLAGS $CLEAN $KERNEL_MAKECMDGOALS all)
 cp -a "phoenix-rtos-kernel/phoenix-${TARGET}.elf" _build
 cp -a "phoenix-rtos-kernel/phoenix-${TARGET}.img" _build
 
@@ -24,18 +19,15 @@ b_log "Building libphoenix"
 
 b_log "Building phoenix-rtos-filesystems"
 (cd phoenix-rtos-filesystems && make $MAKEFLAGS $CLEAN all)
-cp "$PREFIX_PROG_STRIPPED/dummyfs" _build
-cp "$PREFIX_PROG_STRIPPED/meterfs" _build
 
 b_log "Building phoenix-rtos-devices"
 (cd phoenix-rtos-devices && CFLAGS+=$DEVICE_FLAGS make $MAKEFLAGS $CLEAN all)
-cp "$PREFIX_PROG_STRIPPED/imxrt-multi" _build
-cp "$PREFIX_PROG_STRIPPED/imxrt-flash" _build
+
+b_log "Building phoenix-rtos-usb"
+(cd phoenix-rtos-usb && make $MAKEFLAGS $CLEAN all)
 
 b_log "Building coreutils"
 (cd phoenix-rtos-coreutils && make $MAKEFLAGS $CLEAN all)
-cp "$PREFIX_PROG_STRIPPED/psh" _build
-cp "$PREFIX_PROG_STRIPPED/psd" _build
 
 b_log "Building hostutils"
 (cd phoenix-rtos-hostutils/ && make $MAKEFLAGS $CLEAN all)
