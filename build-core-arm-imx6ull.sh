@@ -35,15 +35,15 @@ b_install "$PREFIX_PROG_STRIPPED/imx6ull-nandtool" /sbin
 b_install "$PREFIX_PROG_STRIPPED/imx6ull-flash" /sbin
 b_install "$PREFIX_PROG_STRIPPED/imx6ull-otp" /sbin
 
+b_log "Building phoenix-rtos-usb"
+(cd phoenix-rtos-usb && make $MAKEFLAGS $CLEAN all)
+b_install "$PREFIX_PROG_STRIPPED/hostsrv" /sbin
+
 b_log "Building coreutils"
 (cd phoenix-rtos-coreutils && make $MAKEFLAGS $CLEAN all)
 b_install $PREFIX_PROG_STRIPPED/psh /bin
 b_install $PREFIX_PROG_STRIPPED/psd /sbin
 b_install $PREFIX_PROG_STRIPPED/psd-old /sbin
-
-b_log "Building phoenix-rtos-usb"
-(cd phoenix-rtos-usb && make $MAKEFLAGS $CLEAN all)
-b_install "$PREFIX_PROG_STRIPPED/usb" /sbin
 
 b_log "phoenix-rtos-lwip"
 (cd phoenix-rtos-lwip && make $MAKEFLAGS $CLEAN all)
