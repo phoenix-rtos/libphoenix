@@ -72,13 +72,13 @@ $(ARCHS): %.a: .FORCE $(filter clean,$(MAKECMDGOALS))
 .FORCE:
 
 $(LIB): $(ARCHS) $(OBJS)
-	@echo "\033[1;34mLD $@\033[0m"
+	@echo -e "\033[1;34mLD $@\033[0m"
 
 	@(\
 	printf "Subsystem                  | text    | rodata  | data\n";\
 	printf "=========================================================\n";\
 	for f in $(ARCHS) $(OBJS); do\
-	 	datasz=0;\
+		datasz=0;\
 		textsz=0;\
 		rodatasz=0;\
 		file=$$f;\
@@ -109,7 +109,7 @@ tests: test
 
 
 test: $(LIB) .FORCE
-	@echo "\033[1;32mCOMPILE $@\033[0m";\
+	@echo -e "\033[1;32mCOMPILE $@\033[0m";\
 	$(MAKE) -C "$@"
 
 
