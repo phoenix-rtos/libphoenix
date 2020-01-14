@@ -98,7 +98,7 @@ $(LIB): $(ARCHS) $(OBJS)
 	done;)
 
 	@rm -rf "$@"
-	$(SIL)$(AR) cqT -o $@ $(abspath $^) && echo "create $@\naddlib $@\nsave\nend" | $(AR) -M
+	$(SIL)$(AR) cqT -o $@ $(abspath $^) && echo -e "create $@\naddlib $@\nsave\nend" | $(AR) -M
 
 	@(echo "";\
 	echo "=> libphoenix for [$(TARGET)] has been created";\
