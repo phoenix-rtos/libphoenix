@@ -10,7 +10,7 @@
 
 b_log "Building phoenix-rtos-kernel"
 KERNEL_MAKECMDGOALS="install-headers"
-(cd phoenix-rtos-kernel/src/ && make $MAKEFLAGS $CLEAN $KERNEL_MAKECMDGOALS all)
+(cd phoenix-rtos-kernel/src && CFLAGS+=$KERNEL_CFLAGS make $MAKEFLAGS $CLEAN $KERNEL_MAKECMDGOALS all)
 cp -a "phoenix-rtos-kernel/phoenix-${TARGET}.elf" _build
 cp -a "phoenix-rtos-kernel/phoenix-${TARGET}.img" _build
 
@@ -21,7 +21,7 @@ b_log "Building phoenix-rtos-filesystems"
 (cd phoenix-rtos-filesystems && make $MAKEFLAGS $CLEAN all)
 
 b_log "Building phoenix-rtos-devices"
-(cd phoenix-rtos-devices && CFLAGS+=$DEVICE_FLAGS make $MAKEFLAGS $CLEAN all)
+(cd phoenix-rtos-devices && CFLAGS+=$DEVICES_CFLAGS make $MAKEFLAGS $CLEAN all)
 
 b_log "Building phoenix-rtos-usb"
 (cd phoenix-rtos-usb && make $MAKEFLAGS $CLEAN all)
