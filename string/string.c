@@ -17,6 +17,7 @@
 #include <ctype.h>
 #include <stddef.h>
 #include <string.h>
+#include <signal.h>
 
 
 struct {
@@ -313,9 +314,40 @@ char *strrchr(const char *s, int c)
 char *strsignal(int signum)
 {
 	switch (signum) {
-	default:
-		return "strsignal not implemented";
+		case SIGHUP: return "SIGHUP";
+		case SIGINT: return "SIGINT";
+		case SIGQUIT: return "SIGQUIT";
+		case SIGILL: return "SIGILL";
+		case SIGTRAP: return "SIGTRAP";
+		case SIGABRT: return "SIGABRT";
+		case SIGEMT: return "SIGEMT";
+		case SIGFPE: return "SIGFPE";
+		case SIGKILL: return "SIGKILL";
+		case SIGBUS: return "SIGBUS";
+		case SIGSEGV: return "SIGSEGV";
+		case SIGSYS: return "SIGSYS";
+		case SIGPIPE: return "SIGPIPE";
+		case SIGALRM: return "SIGALRM";
+		case SIGTERM: return "SIGTERM";
+		case SIGURG: return "SIGURG";
+		case SIGSTOP: return "SIGSTOP";
+		case SIGTSTP: return "SIGTSTP";
+		case SIGCONT: return "SIGCONT";
+		case SIGCHLD: return "SIGCHLD";
+		case SIGTTIN: return "SIGTTIN";
+		case SIGTTOU: return "SIGTTOU";
+		case SIGIO: return "SIGIO";
+		case SIGXCPU: return "SIGXCPU";
+		case SIGXFSZ: return "SIGXFSZ";
+		case SIGVTALRM: return "SIGVTALRM";
+		case SIGPROF: return "SIGPROF";
+		case SIGWINCH: return "SIGWINCH";
+		case SIGINFO: return "SIGINFO";
+		case SIGUSR1: return "SIGUSR1";
+		case SIGUSR2: return "SIGUSR2";
 	}
+
+	return "INVALID SIGNAL";
 }
 
 

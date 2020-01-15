@@ -20,15 +20,15 @@
 .globl _signal_trampoline
 .type _signal_trampoline, %function
 _signal_trampoline:
-	// stack: return address, signal number
-	xchgl (%esp), %eax
-	push %ebx
+	// stack: return address, signal number, handler
+	xchgl  4(%esp), %eax
+	xchgl   (%esp), %ebx
 	push %ecx
 	push %edx
 	pushf
 
 	push %eax
-	call _signal_handler
+	call %ebx
 	addl $4, %esp
 
 	popf

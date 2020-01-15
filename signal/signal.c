@@ -155,100 +155,22 @@ int killpg(pid_t pgrp, int sig)
 
 void (*signal(int signum, void (*handler)(int)))(int)
 {
-	sighandler_t t;
-	unsigned int oldmask;
+	struct sigaction sa, osa;
+	sa.sa_handler = handler;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = 0;
 
-	if (signum <= 0 || signum >= NSIG) {
-		(void)SET_ERRNO(-EINVAL);
+	if (sigaction(SIGALRM, &sa, &osa) == -1)
 		return SIG_ERR;
-	}
 
-	if (!_signal_ismutable(signum)) {
-		(void)SET_ERRNO(-EINVAL);
-		return SIG_ERR;
-	}
-
-	/* Mask signal before change */
-	mutexLock(signal_common.lock);
-	oldmask = signalMask(1UL << signum, 0xffffffffUL);
-
-	t = signal_common.sightab[signum];
-
-	if (handler == SIG_DFL)
-		signal_common.sightab[signum] = _signal_getdefault(signum);
-	else if (handler == SIG_IGN)
-		signal_common.sightab[signum] = _signal_ignore;
-	else
-		signal_common.sightab[signum] = handler;
-
-	signalMask(oldmask, 0xffffffffUL);
-	mutexUnlock(signal_common.lock);
-
-	if (t == _signal_ignore)
-		return SIG_IGN;
-	else if (t == _signal_getdefault(signum))
-		return SIG_DFL;
-	else
-		return t;
+	return osa.sa_handler;
 }
 
 
 /* TODO: Handle flags */
 int sigaction(int sig, const struct sigaction *act, struct sigaction *oact)
 {
-	unsigned int oldmask;
-	int i;
-
-	if (sig <= 0 || sig >= NSIG)
-		return SET_ERRNO(-EINVAL);
-
-	if (oact != NULL) {
-		mutexLock(signal_common.lock);
-		if (signal_common.sightab[sig] == _signal_ignore)
-			oact->sa_handler = (sighandler_t)SIG_IGN;
-		else if (signal_common.sightab[sig] == _signal_getdefault(sig))
-			oact->sa_handler = (sighandler_t)SIG_DFL;
-		else
-			oact->sa_handler = signal_common.sightab[sig];
-
-		oact->sa_mask = signal_common.sigset[sig];
-		oact->sa_flags = 0; /* TODO: flags */
-		mutexUnlock(signal_common.lock);
-	}
-
-	if (act != NULL) {
-		if (!_signal_ismutable(sig))
-			return SET_ERRNO(-EINVAL);
-
-		/* Mask signal before change */
-		mutexLock(signal_common.lock);
-		oldmask = signalMask(1UL << sig, 0xffffffffUL);
-
-		if (act->sa_handler == (sighandler_t)SIG_IGN)
-			signal_common.sightab[sig] = _signal_ignore;
-		else if (act->sa_handler == (sighandler_t)SIG_DFL)
-			signal_common.sightab[sig] = _signal_getdefault(sig);
-		else
-			signal_common.sightab[sig] = act->sa_handler;
-
-		for (i = 0, signal_common.sigset[sig] = 0; i < NSIG; ++i) {
-			if (act->sa_mask & (1UL << i))
-				signal_common.sigset[sig] |= 1UL << i;
-		}
-
-		if (!(act->sa_flags & SA_NODEFER))
-			signal_common.sigset[sig] |= 1UL << sig;
-
-		signal_common.sigset[sig] = act->sa_mask;
-
-		signalMask(oldmask, 0xffffffffUL);
-		mutexUnlock(signal_common.lock);
-	}
-
-	if (oact == NULL && act == NULL)
-		return SET_ERRNO(-EINVAL);
-
-	return EOK;
+	return SET_ERRNO(sys_sigaction(sig, act, oact));
 }
 
 
