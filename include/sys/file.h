@@ -21,7 +21,7 @@
 
 enum { otDir = 0, otFile, otDev, otSymlink, otUnknown };
 
-enum { mtMount = 0xf50, mtUmount, mtSync };
+enum { mtUmount = 0xafaf2, mtSync };
 
 
 typedef struct {

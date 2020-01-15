@@ -17,9 +17,8 @@
 #define _SYS_UIO_H_
 
 #include <stdint.h>
-
+#include <phoenix/uio.h>
 
 #define UIO_MAXIOV	1024
-#include <phoenix/types.h>
 
 #endif /* _SYS_UIO_H_ */

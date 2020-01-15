@@ -17,7 +17,7 @@
 #ifndef _SYS_EVENTS_H_
 #define _SYS_EVENTS_H_
 
-#include <sys/msg.h>
+#include <sys/types.h>
 
 
 enum { evtDataOut = 0, evtDataIn, evtError, evtGone };
