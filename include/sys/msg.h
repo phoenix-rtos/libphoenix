@@ -40,7 +40,18 @@ extern int msgSend(uint32_t port, msg_t *m);
 
 extern int msgPulse(uint32_t port, msg_t *m);
 
-extern int msgRecv(uint32_t port, msg_t *m, unsigned int *rid);
+extern int portRecv(int port, msg_t *m);
+
+
+static inline int msgRecv(uint32_t port, msg_t *m, unsigned int *rid)
+{
+	int handle = portRecv(port, m);
+	if (handle < 0)
+		return handle;
+	*rid = handle;
+	return 0;
+}
+
 
 extern int msgRespond(uint32_t port, int error, msg_t *m, unsigned int rid);
 
