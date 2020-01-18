@@ -72,7 +72,7 @@ $(ARCHS): %.a: .FORCE $(filter clean,$(MAKECMDGOALS))
 .FORCE:
 
 $(LIB): $(ARCHS) $(OBJS)
-	@echo "\033[1;34mLD $@\033[0m"
+	@printf "\033[1;34mLD $@\033[0m\n"
 
 	@(\
 	printf "Subsystem                  | text    | rodata  | data\n";\
@@ -98,7 +98,7 @@ $(LIB): $(ARCHS) $(OBJS)
 	done;)
 
 	@rm -rf "$@"
-	$(SIL)$(AR) cqT -o $@ $(abspath $^) && echo "create $@\naddlib $@\nsave\nend" | $(AR) -M
+	$(SIL)$(AR) cqT -o $@ $(abspath $^) && printf "create $@\naddlib $@\nsave\nend\n" | $(AR) -M
 
 	@(echo "";\
 	echo "=> libphoenix for [$(TARGET)] has been created";\
@@ -109,7 +109,7 @@ tests: test
 
 
 test: $(LIB) .FORCE
-	@echo "\033[1;32mCOMPILE $@\033[0m";\
+	@printf "\033[1;32mCOMPILE $@\033[0m\n";\
 	$(MAKE) -C "$@"
 
 
