@@ -8,6 +8,8 @@
 # Author: Kaja Swat, Aleksander Kaminski, Pawel Pisarczyk, Lukasz Kosinski
 #
 
+set -e
+
 b_log "Building phoenix-rtos-kernel"
 KERNEL_MAKECMDGOALS="install-headers"
 (cd phoenix-rtos-kernel/src && make $MAKEFLAGS $CLEAN $KERNEL_MAKECMDGOALS all)
