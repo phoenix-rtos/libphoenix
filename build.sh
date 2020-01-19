@@ -64,29 +64,21 @@ for i in "$@"; do
 	case "$i"
 	in
 		clean)
-			CLEAN="clean"
-			shift;;
+			CLEAN="clean";;
 		fs)
-			B_FS="y"
-			shift;;
+			B_FS="y";;
 		core)
-			B_CORE="y"
-			shift;;
+			B_CORE="y";;
 		ports)
-			B_PORTS="y"
-			shift;;
+			B_PORTS="y";;
 		project)
-			B_PROJECT="y"
-			shift;;
+			B_PROJECT="y";;
 		image)
-			B_IMAGE="y"
-			shift;;
+			B_IMAGE="y";;
 		update_pkg)
-			B_UPDATE_PKG="y"
-			shift;;
+			B_UPDATE_PKG="y";;
 		all)
-			B_FS="y"; B_CORE="y"; B_PORTS="y"; B_PROJECT="y"; B_IMAGE="y"; B_UPDATE_PKG="y";
-			shift;;
+			B_FS="y"; B_CORE="y"; B_PORTS="y"; B_PROJECT="y"; B_IMAGE="y"; B_UPDATE_PKG="y";;
 	esac;
 done
 
