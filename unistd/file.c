@@ -37,7 +37,7 @@ extern int fileUnlink(int dirfd, const char *path, int flags);
 extern int fileSeek (int fildes, off_t *offset, int whence);
 
 extern int sys_fcntl(int fd, int cmd, long val);
-extern int sys_pipe(int fildes[2]);
+extern int sys_pipe(int fildes[2], int flags);
 extern int sys_dup3(int fildes, int fildes2, int flags);
 
 WRAP_ERRNO_DEF(int, read, (int fildes, void *buf, size_t nbyte), (fildes, buf, nbyte))
@@ -73,7 +73,7 @@ int dup2(int fildes, int fildes2)
 int pipe(int fildes[2])
 {
 	int err;
-	while ((err = sys_pipe(fildes)) == -EINTR)
+	while ((err = sys_pipe(fildes, 0)) == -EINTR)
 		;
 	return SET_ERRNO(err);
 }
