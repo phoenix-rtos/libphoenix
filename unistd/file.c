@@ -176,7 +176,10 @@ int access(const char *path, int amode)
 
 off_t lseek(int fd, off_t offset, int whence)
 {
-	return SET_ERRNO(fileSeek(fd, &offset, whence));
+	int result;
+	if ((result = fileSeek(fd, &offset, whence)) < 0)
+		return SET_ERRNO(result);
+	return offset;
 }
 
 

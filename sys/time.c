@@ -16,13 +16,19 @@
 #include <sys/time.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <fcntl.h>
 
 #include "posix/utils.h"
 
 
 int utimes(const char *filename, const struct timeval times[2])
 {
-	return SET_ERRNO(-ENOSYS);
+	int retval;
+	if ((retval = open(filename, O_RDONLY | O_CREAT | O_EXCL, 0755)) == -1)
+		return -1;
+
+	close(retval);
+	return 0;
 }
 
 
