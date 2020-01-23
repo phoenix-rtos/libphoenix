@@ -8,7 +8,7 @@ ifeq (,$(TOPDIR))
 $(error Only main Makefile can be used for compilation)
 endif
 
-ARCH_SRCS = string.c strdup.c strerror.c fnmatch.c glob.c
+ARCH_SRCS = string.c strdup.c strerror.c
 
 # first non-pattern target is the default
 all: $(ARCH)
