@@ -83,13 +83,13 @@ $(LIB): $(ARCHS) $(OBJS)
 		rodatasz=0;\
 		file=$$f;\
 		for i in `$(OBJDUMP) -t $$file | grep -e " O " | grep -v ".rodata" | awk '{ print $$1 }'`; do\
-			datasz=`echo $$(($$datasz + 0x$$i))`;\
+			datasz=$$(($$datasz + 0x$$i));\
 		done;\
 		for i in `$(OBJDUMP) -t $$file | grep -e " O " | grep ".rodata" | awk '{ print $$1 }'`; do \
-			rodatasz=`echo $$(($$rodatasz + 0x$$i))`;\
+			rodatasz=$$(($$rodatasz + 0x$$i));\
 		done; \
 		for i in `$(OBJDUMP) -t $$file | grep -e " F " | awk '{ print $$5 }'`; do \
-			textsz=`echo $$(($$textsz + 0x$$i))`;\
+			textsz=$$(($$textsz + 0x$$i));\
 		done;\
 		n=`dirname $$f`;\
 		n=`basename $$n | sed "s/libphoenix/./"`;\
