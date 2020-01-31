@@ -160,7 +160,7 @@ void (*signal(int signum, void (*handler)(int)))(int)
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = 0;
 
-	if (sigaction(SIGALRM, &sa, &osa) == -1)
+	if (sigaction(signum, &sa, &osa) == -1)
 		return SIG_ERR;
 
 	return osa.sa_handler;
