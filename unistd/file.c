@@ -40,10 +40,35 @@ extern int sys_fcntl(int fd, int cmd, long val);
 extern int sys_pipe(int fildes[2], int flags);
 extern int sys_dup3(int fildes, int fildes2, int flags);
 
-WRAP_ERRNO_DEF(int, read, (int fildes, void *buf, size_t nbyte), (fildes, buf, nbyte))
-WRAP_ERRNO_DEF(int, write, (int fildes, const void *buf, size_t nbyte), (fildes, buf, nbyte))
+extern ssize_t fileRead(int fd, void *buf, size_t nbyte, off_t *offset);
+extern ssize_t fileWrite(int fd, const void *buf, size_t nbyte, off_t *offset);
+
 WRAP_ERRNO_DEF(int, close, (int fildes), (fildes))
 WRAP_ERRNO_DEF(int, ftruncate, (int fildes, off_t length), (fildes, length))
+
+
+int read(int fildes, void *buf, size_t nbyte)
+{
+	return SET_ERRNO(fileRead(fildes, buf, nbyte, NULL));
+}
+
+
+int pread(int fildes, void *buf, size_t nbyte, off_t offset)
+{
+	return SET_ERRNO(fileRead(fildes, buf, nbyte, &offset));
+}
+
+
+int write(int fildes, const void *buf, size_t nbyte)
+{
+	return SET_ERRNO(fileWrite(fildes, buf, nbyte, NULL));
+}
+
+
+int pwrite(int fildes, const void *buf, size_t nbyte, off_t offset)
+{
+	return SET_ERRNO(fileWrite(fildes, buf, nbyte, &offset));
+}
 
 
 int dup3(int fildes, int fildes2, int flags)
