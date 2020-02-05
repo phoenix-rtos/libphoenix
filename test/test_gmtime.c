@@ -86,6 +86,8 @@ int gmtime_assert(const time_t input, const int output[])
 int main(void)
 {
 	printf("GMTIME TEST STARTED\n");
+	save_env();
+
 	int i, failed = 0;
 	for (i=0; i < T1_LEN; i++) {
 		failed += gmtime_assert(input_vector[i], output_vector[i]);

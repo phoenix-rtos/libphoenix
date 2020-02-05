@@ -20,6 +20,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+static int test_verbosity;
+
 static inline void tm_to_str(struct tm *t, char *buff)
 {
 	sprintf(buff, "tm_sec %d, tm_min %d, tm_hour %d, tm_mday %d\n"
@@ -52,13 +54,20 @@ static inline int compare_tm(struct tm *t1, struct tm *t2)
 }
 
 
-static inline int verbose_test(void)
+static inline void save_env(void)
 {
 	char *c = getenv("VERBOSE_TEST");
-	if (c == NULL)
-		return 0;
+
+	if (c != NULL && c[0] >= '0' && c[0] <= '9')
+		test_verbosity = (c[0] - '0');
 	else
-		return (c[0] == '1');
+		test_verbosity = 0;
+}
+
+
+static inline int verbose_test(void)
+{
+	return test_verbosity;
 }
 
 #endif

@@ -129,6 +129,7 @@ int main(int argc, char *argv[])
 	 *	Time zones and dst are not tested, because it's not implemented in tzset() function
 	 */
 	printf("MKTIME TEST STARTED\n");
+	save_env();
 
 	tzset();
 	printf("Timezone info: tzname[0]=%s tzname[1]=%s \n", tzname[0], tzname[1]);
