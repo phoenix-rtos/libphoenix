@@ -103,6 +103,8 @@ int strftime_assert(const struct test_data *data)
 int main(void)
 {
 	printf("STRFTIME TEST STARTED\n");
+	save_env();
+
 	int i, failed = 0;
 	for (i = 0; i < T1_LEN; i++) {
 		failed += strftime_assert(&test_vector[i]);
