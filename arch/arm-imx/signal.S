@@ -24,11 +24,14 @@ _signal_trampoline:
 	push {r0-r3,r9,r12,lr}
 	mrs r0, apsr
 	push {r0}
-	ldr r0, [sp, #32]
-	blx _signal_handler
+
+	ldr r0, [sp, #36] // signal number
+	ldr r1, [sp, #32] // signal handler
+	blx r1
+
 	pop {r0}
 	msr apsr_nzcvqg, r0
 	pop {r0-r3,r9,r12,lr}
-	add sp, #4
+	add sp, #8
 	pop {pc}
 .size _signal_trampoline, .-_signal_trampoline
