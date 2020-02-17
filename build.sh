@@ -26,6 +26,7 @@ PREFIX_A="$PREFIX_BUILD/lib/"
 PREFIX_H="$PREFIX_BUILD/include/"
 
 PREFIX_ROOTFS="$PREFIX_FS/root/"
+PREFIX_ROOTSKEL="$PREFIX_FS/root-skel/"
 
 CFLAGS="${CFLAGS} -I${PREFIX_H}"
 LDFLAGS="$LDFLAGS -L$PREFIX_A"
@@ -38,8 +39,8 @@ MAKEFLAGS="--no-print-directory -j 19"
 
 export TARGET TARGET_FAMILY TOPDIR PREFIX_BUILD PREFIX_BUILD_HOST\
 	PREFIX_FS PREFIX_BOOT PREFIX_PROG PREFIX_PROG_STRIPPED PREFIX_A\
-	PREFIX_H PREFIX_ROOTFS CROSS CFLAGS LDFLAGS CC LD AR CLEAN MAKEFLAGS\
-	DEVICE_FLAGS
+	PREFIX_H PREFIX_ROOTFS PREFIX_ROOTSKEL CROSS CFLAGS LDFLAGS CC LD\
+	AR CLEAN MAKEFLAGS DEVICE_FLAGS
 
 . ./phoenix-rtos-build/build.subr
 
@@ -89,25 +90,34 @@ for i in $*; do
 	esac;
 done
 
+
+#
+# Prepare
+#
+mkdir -p $PREFIX_BUILD
+mkdir -p $PREFIX_BUILD_HOST
+if declare -f "b_prepare" > /dev/null; then
+	b_prepare
+fi
+echo " "$(git rev-parse HEAD)" "$(basename $(git rev-parse --show-toplevel))" ("$(git describe --always --dirty)")" > ${PREFIX_BUILD}/git-version
+git submodule status --recursive >> ${PREFIX_BUILD}/git-version
+
+
 #
 # Preparing filesystem
 #
-if [ "X${B_FS}" == "Xy" ]; then
+if [ "X${B_FS}" == "Xy" ] && [ -d  ${PREFIX_ROOTSKEL} ]; then
 	b_log "Preparing filesystem"
 	if [ "X$CLEAN" == "Xclean" ]; then
 		rm -fr $PREFIX_FS/root/*
 	fi
 
-	mkdir -p $PREFIX_FS/root
-	cp -a $PREFIX_FS/root-skel/. $PREFIX_FS/root/
+	mkdir -p ${PREFIX_ROOTFS}
+	cp -a ${PREFIX_ROOTSKEL}/. ${PREFIX_ROOTFS}
 
 	b_log "Saving git-version"
-	echo " "$(git rev-parse HEAD)" incotex" > $PREFIX_FS/root/etc/git-version
-	git submodule status >> $PREFIX_FS/root/etc/git-version
+	install -m 664 "${PREFIX_BUILD}/git-version" "$PREFIX_FS/root/etc"
 fi
-
-mkdir -p $PREFIX_BUILD
-mkdir -p $PREFIX_BUILD_HOST
 
 #
 # Build core part
@@ -119,27 +129,27 @@ fi
 #
 # Build ports
 #
-if [ "X${B_PORTS}" == "Xy" ]; then
+if [ "X${B_PORTS}" == "Xy" ] && [ -d phoenix-rtos-ports ]; then
 	./phoenix-rtos-ports/build.sh
 fi
 
 #
 # Build project part
 #
-if [ "X${B_PROJECT}" == "Xy" ]; then
+if [ "X${B_PROJECT}" == "Xy" ] && declare -f "b_build" > /dev/null; then
 	b_build
 fi
 
 #
 # Build final filesystems
 #
-if [ "X${B_IMAGE}" == "Xy" ]; then
+if [ "X${B_IMAGE}" == "Xy" ] && declare -f "b_image" > /dev/null; then
 	b_image
 fi
 
 #
-# Build final filesystems
+# Create update package
 #
-if [ "X${B_UPDATE_PKG}" == "Xy" ]; then
+if [ "X${B_UPDATE_PKG}" == "Xy" ] && declare -f "b_update_pkg" > /dev/null; then
 	b_update_pkg
 fi
