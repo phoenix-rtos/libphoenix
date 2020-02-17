@@ -19,8 +19,6 @@ b_log "Building libphoenix"
 
 b_log "Building phoenix-rtos-filesystems"
 (cd phoenix-rtos-filesystems && make $MAKEFLAGS $CLEAN all)
-b_install "$PREFIX_PROG_STRIPPED/meterfs" _build
 
 b_log "Building phoenix-rtos-devices"
 (cd phoenix-rtos-devices && make $MAKEFLAGS $CLEAN all)
-b_install "$PREFIX_PROG_STRIPPED/stm32-multi" _build
