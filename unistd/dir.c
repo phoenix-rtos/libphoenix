@@ -150,13 +150,18 @@ char *canonicalize_file_name(const char *path)
 
 int readdir_r(DIR *dirp, struct dirent *entry, struct dirent **result)
 {
-	if (read(dirp->fd, entry, sizeof(struct dirent) + NAME_MAX) != -1) {
-		*result = entry;
-		return 0;
+	int err;
+
+	if ((err = read(dirp->fd, entry, sizeof(struct dirent) + NAME_MAX)) == 0) {
+		return ENOENT;
 	}
-	else {
+	else if (err == -1) {
 		*result = NULL;
 		return errno;
+	}
+	else {
+		*result = entry;
+		return 0;
 	}
 }
 
