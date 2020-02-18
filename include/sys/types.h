@@ -29,7 +29,6 @@
 #include <phoenix/types.h>
 
 typedef int clock_t;
-typedef int clockid_t;
 
 typedef char *caddr_t;
 
