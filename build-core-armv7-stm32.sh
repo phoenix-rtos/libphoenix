@@ -17,8 +17,8 @@ cp -a phoenix-rtos-kernel/phoenix-$TARGET.img _build
 b_log "Building libphoenix"
 (cd libphoenix && make $MAKEFLAGS $CLEAN all install)
 
-b_log "Building phoenix-rtos-filesystems"
-(cd phoenix-rtos-filesystems && make $MAKEFLAGS $CLEAN all)
-
 b_log "Building phoenix-rtos-devices"
 (cd phoenix-rtos-devices && make $MAKEFLAGS $CLEAN all)
+
+b_log "Building phoenix-rtos-filesystems"
+(cd phoenix-rtos-filesystems && make $MAKEFLAGS $CLEAN all)
