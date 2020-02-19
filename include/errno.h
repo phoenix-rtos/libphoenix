@@ -42,7 +42,6 @@
 
 #define ENOLCK          116
 #define ENOTRECOVERABLE 131
-#define ENOTSUP			134
 
 
 #define errno (*__errno_location())
