@@ -77,7 +77,7 @@ int mkdir(const char *path, mode_t mode)
 
 int chmod(const char *path, mode_t mode)
 {
-	return SET_ERRNO(-ENOSYS);
+	return 0;
 }
 
 
