@@ -48,19 +48,6 @@ int accept(int socket, struct sockaddr *address, socklen_t *address_len)
 }
 
 
-static int socksrvcall(msg_t *msg)
-{
-	oid_t oid;
-	int err;
-
-	if ((err = lookup(PATH_SOCKSRV, NULL, &oid)) < 0)
-		return SET_ERRNO(err);
-	if ((err = msgSend(oid.port, msg)) < 0)
-		return SET_ERRNO(err);
-	return 0;
-}
-
-
 ssize_t sendmsg(int socket, const struct msghdr *msg, int flags)
 {
 	return SET_ERRNO(sys_sendmsg(socket, msg, flags));
@@ -182,112 +169,53 @@ int getaddrinfo(const char *node, const char *service,
                 struct addrinfo **res)
 {
 	struct addrinfo *ai;
-	msg_t msg = { 0 };
-	sockport_msg_t *smi = (void *)msg.i.raw;
-	sockport_resp_t *smo = (void *)msg.o.raw;
-	size_t nodesz, servsz, bufsz;
-	char *p;
+	struct sockaddr_in *sa;
+
+	socklen_t sa_len;
+	int port;
+	struct in_addr in_addr;
 
 	if (hints && (hints->ai_addrlen || hints->ai_canonname || hints->ai_next))
 		return EAI_BADFLAGS;
 
-	nodesz = node ? strlen(node) + 1 : 0;
-	servsz = service ? strlen(service) + 1 : 0;
+	if ((ai = malloc(sizeof(*ai))) == NULL)
+		return EAI_MEMORY;
 
-	msg.type = sockmGetAddrInfo;
-	smi->socket.domain = hints ? hints->ai_family : AF_UNSPEC;
-	smi->socket.type = hints ? hints->ai_socktype : 0;
-	smi->socket.protocol = hints ? hints->ai_protocol : 0;
-	smi->socket.flags = hints ? hints->ai_flags : (AI_V4MAPPED | AI_ADDRCONFIG);
-	smi->socket.ai_node_sz = nodesz;
-
-	if (nodesz + servsz) {
-		msg.i.size = nodesz + servsz;
-		msg.i.data = malloc(msg.i.size);
-		if (!msg.i.data)
-			return EAI_MEMORY;
-		memcpy(msg.i.data, node, nodesz);
-		memcpy(msg.i.data + nodesz, service, servsz);
+	if (node == NULL) {
+		inet_aton("0.0.0.0", &in_addr);
+	}
+	else {
+		if (!inet_aton(node, &in_addr))
+			return EAI_NONAME;
 	}
 
-	msg.o.size = 128;
-	for (;;) {
-		void *buf = realloc(msg.o.data, msg.o.size);
-		if (!buf) {
-			realloc(msg.i.data, 0);
-			realloc(msg.o.data, 0);
-			return EAI_MEMORY;
-		}
-		msg.o.data = buf;
+	if ((port = atoi(service)) <= 0 || port >= 65536)
+		return EAI_NONAME;
 
-		if (socksrvcall(&msg) < 0) {
-			realloc(msg.i.data, 0);
-			realloc(msg.o.data, 0);
-			return EAI_SYSTEM;
-		}
+	if ((sa = malloc(sizeof(struct sockaddr_in))) == NULL)
+		return EAI_MEMORY;
 
-		if (smo->ret != EAI_OVERFLOW)
-			break;
+	sa->sin_family = AF_INET;
+	memcpy(&sa->sin_addr, &in_addr, sizeof(in_addr));
+	sa->sin_port = htons(port);
 
-		if (msg.o.size < smo->sys.buflen)
-			msg.o.size = smo->sys.buflen;
-		else
-			msg.o.size *= 2;
-	}
+	ai->ai_flags = 0;
+	ai->ai_family = AF_INET;
+	ai->ai_socktype = SOCK_STREAM;
+	ai->ai_protocol = 0;
+	ai->ai_addrlen = sizeof(struct sockaddr_in);
+	ai->ai_addr = sa;
+	ai->ai_canonname = 0;
+	ai->ai_next = NULL;
 
-	realloc(msg.i.data, 0);
-
-	bufsz = smo->sys.buflen;
-	if (smo->ret || bufsz > msg.o.size) {
-		free(msg.o.data);
-		if (smo->ret == EAI_SYSTEM)
-			(void)SET_ERRNO(-smo->sys.err);
-		return smo->ret;
-	}
-
-	*res = msg.o.data = realloc(msg.o.data, bufsz);
-
-	for (ai = msg.o.data; ai; ai = ai->ai_next) {
-		if (bufsz < (void *)ai - msg.o.data + sizeof(*ai))
-			goto out_overflow;
-
-		if (ai->ai_addrlen) {
-			if (bufsz < (uintptr_t)ai->ai_addr + ai->ai_addrlen)
-				goto out_overflow;
-			ai->ai_addr = msg.o.data + (uintptr_t)ai->ai_addr;
-		}
-
-		if (ai->ai_canonname) {
-			if (bufsz <= (uintptr_t)ai->ai_canonname)
-				goto out_overflow;
-
-			p = msg.o.data + (uintptr_t)ai->ai_canonname;
-			nodesz = strnlen(p, bufsz - (uintptr_t)ai->ai_canonname) + 1;
-
-			if (bufsz < (uintptr_t)ai->ai_canonname + nodesz)
-				goto out_overflow;
-
-			ai->ai_canonname = p;
-		}
-
-		if (ai->ai_next) {
-			if (bufsz < (uintptr_t)ai->ai_next)
-				goto out_overflow;
-			ai->ai_next = msg.o.data + (uintptr_t)ai->ai_next;
-		}
-	}
-
+	*res = ai;
 	return 0;
-
-out_overflow:
-	free(msg.o.data);
-	(void)SET_ERRNO(EPROTO);
-	return EAI_SYSTEM;
 }
 
 
 void freeaddrinfo(struct addrinfo *res)
 {
+	free(res->ai_addr);
 	free(res);
 }
 
