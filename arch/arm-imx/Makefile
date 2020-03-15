@@ -1,12 +1,8 @@
 #
-# Makefile for libphoenix (arch/arm-imx)
+# Makefile for libphoenix/arch/arm-imx
 #
-# Copyright 2017 Phoenix Systems
+# Copyright 2017, 2020 Phoenix Systems
 # Author: Pawel Pisarczyk
 #
 
-ARCH_ASMS := _start.S syscalls.S jmp.S signal.S
-ARCH_SRCS := string.c reboot.c
-
-# include after all dependencies are set
-include $(TOPDIR)/Makefile.rules
+OBJS += $(addprefix $(PREFIX_O)arch/arm-imx/, _start.o syscalls.o jmp.o signal.o string.o reboot.o)

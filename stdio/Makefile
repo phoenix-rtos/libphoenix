@@ -1,12 +1,7 @@
 #
-# Makefile for Phoenix-RTOS kernel (test)
+# Makefile for libphoenix/stdio
 #
-# Copyright 2012-2015 Phoenix Systems
-# Copyright 2001, 2005-2006 Pawel Pisarczyk
+# Copyright 2017, 2019, 2020 Phoenix Systems
 #
 
-ARCH_SRCS := printf.c sprintf.c asprintf.c fprintf.c format.c scanf.c file.c perror.c
-#fs.c
-
-# include after all dependencies are set
-include $(TOPDIR)/Makefile.rules
+OBJS += $(addprefix $(PREFIX_O)stdio/, printf.o sprintf.o asprintf.o fprintf.o format.o scanf.o file.o perror.o)

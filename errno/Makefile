@@ -1,11 +1,8 @@
 #
-# Makefile for libphoenix (errno)
+# Makefile for libphoenix/errno
 #
-# Copyright 2018 Phoenix Systems
+# Copyright 2018, 2020 Phoenix Systems
 # Author: Pawel Pisarczyk
 #
 
-ARCH_SRCS := errno.c
-
-# include after all dependencies are set
-include $(TOPDIR)/Makefile.rules
+OBJS += $(addprefix $(PREFIX_O)errno/, errno.o)

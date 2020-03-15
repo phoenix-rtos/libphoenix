@@ -1,11 +1,7 @@
 #
-# Makefile for libphoenix (termios)
+# Makefile for libphoenix/termios
 #
-# Copyright 2018 Phoenix Systems
-# Author: Pawel Pisarczyk
+# Copyright 2018, 2020 Phoenix Systems
 #
 
-ARCH_SRCS := termios.c
-
-# include after all dependencies are set
-include $(TOPDIR)/Makefile.rules
+OBJS += $(addprefix $(PREFIX_O)termios/, termios.o)

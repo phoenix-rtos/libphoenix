@@ -1,11 +1,8 @@
 #
-# Makefile for libphoenix (net)
+# Makefile for libphoenix/netinet
 #
-# Copyright 2017 Phoenix Systems
-# Author: Marek Białowąs
+# Copyright 2017, 2020 Phoenix Systems
+# Author: Marek Białowąs, Pawel Pisarczyk
 #
 
-ARCH_SRCS = $(wildcard *.c)
-
-# include after all dependencies are set
-include $(TOPDIR)/Makefile.rules
+OBJS += $(addprefix $(PREFIX_O)netinet/, in6.o)

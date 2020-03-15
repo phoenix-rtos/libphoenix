@@ -1,11 +1,7 @@
 #
-# Makefile for libphoenix (time)
+# Makefile for libphoenix/time
 #
-# Copyright 2017 Phoenix Systems
-# Author: Pawel Pisarczyk
+# Copyright 2018, 2020 Phoenix Systems
 #
 
-ARCH_SRCS = time.c
-
-# include after all dependencies are set
-include $(TOPDIR)/Makefile.rules
+OBJS += $(addprefix $(PREFIX_O)time/, time.o)

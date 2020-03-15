@@ -1,11 +1,8 @@
 #
-# Makefile for Phoenix-RTOS kernel (test)
+# Makefile for libphoenix/locale
 #
-# Copyright 2012-2015 Phoenix Systems
+# Copyright 2012-2015, 2020 Phoenix Systems
 # Copyright 2001, 2005-2006 Pawel Pisarczyk
 #
 
-ARCH_SRCS := locale.c
-
-# include after all dependencies are set
-include $(TOPDIR)/Makefile.rules
+OBJS += $(addprefix $(PREFIX_O)locale/, locale.o)

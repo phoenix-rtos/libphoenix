@@ -1,0 +1,35 @@
+#
+# Makefile for libphoenix
+#
+# IA32 options
+#
+# Copyright 2018 Phoenix Systems
+#
+
+CROSS ?= i386-pc-phoenix-
+
+MKDEP = $(CROSS)gcc -MM
+MKDEPFLAGS = $(CFLAGS)
+
+CC = $(CROSS)gcc
+
+CFLAGS += -O2 -g -Wall -Wstrict-prototypes -nostartfiles -nostdlib\
+	-m32 -march=i586 -mtune=generic -mno-mmx -mno-sse -fno-pic -fno-pie\
+	-fomit-frame-pointer -fno-strength-reduce
+#-fno-builtin-malloc
+
+AR = $(CROSS)ar
+ARFLAGS = -r
+
+LD = $(CROSS)ld
+LDFLAGS = -m elf_i386
+GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
+PHOENIXLIB := $(shell $(CC) $(CFLAGS) -print-file-name=libphoenix.a)
+LDLIBS := $(GCCLIB)
+
+OBJCOPY = $(CROSS)objcopy
+OBJDUMP = $(CROSS)objdump
+
+STRIP = $(CROSS)strip
+
+ARCHMAKE = arch/ia32/Makefile

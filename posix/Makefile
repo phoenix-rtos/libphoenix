@@ -1,11 +1,8 @@
 #
-# Makefile for libphoenix (posix compatibility)
+# Makefile for libphoenix/posix
 #
-# Copyright 2018 Phoenix Systems
+# Copyright 2018, 2020 Phoenix Systems
 # Author: Pawel Pisarczyk
 #
 
-ARCH_SRCS := stubs.c utils.c idtree.c
-
-# include after all dependencies are set
-include $(TOPDIR)/Makefile.rules
+OBJS += $(addprefix $(PREFIX_O)posix/, stubs.o utils.o idtree.o)

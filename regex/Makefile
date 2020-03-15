@@ -1,11 +1,10 @@
 #
-# Makefile for libphoenix (foreign)
+# Makefile for libphoenix/regex
 #
-# Copyright 2018 Phoenix Systems
-# Author: Jan Sikorski
+# Copyright 2018, 2020 Phoenix Systems
+# Author: Jan Sikorski, Pawel Pisarczyk
 #
 
-ARCH_SRCS := collate.c collcmp.c fnmatch.c glob.c regcomp.c regerror.c regexec.c regfree.c #wordexp.c wordfree.c
+OBJS += $(addprefix $(PREFIX_O)regex/, collate.o collcmp.o fnmatch.o glob.o regcomp.o regerror.o regexec.o regfree.o)
 
-# include after all dependencies are set
-include $(TOPDIR)/Makefile.rules
+#wordexp.c wordfree.c
