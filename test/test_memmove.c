@@ -1,3 +1,26 @@
+/*
+ * Phoenix-RTOS
+ *
+ * libphoenix
+ *
+ * test/test_mmap
+ *
+ * Copyright 2020 Phoenix Systems
+ * Author: Andrzej Głowinski
+ *
+ * This file is part of Phoenix-RTOS.
+ *
+ * %LICENSE%
+ */
+
+#include <arch.h>
+#include "stdio.h"
+#include "stdlib.h"
+#include "unistd.h"
+#include "string.h"
+#include "sys/mman.h"
+#include "sys/threads.h"
+
 #include <stdio.h>
 #include <string.h>
 #include "test_common.h"
@@ -194,4 +217,5 @@ int main(void)
 	test_memmove_non_overlapping();
 	test_memmove_overlapping();
 	test_memmove_special_cases();
+	return 0;
 }

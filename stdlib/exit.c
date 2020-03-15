@@ -37,4 +37,5 @@ void exit(int status)
 	fflush(NULL);
 	_atexit_call();
 	_exit(status);
+	for(;;);
 }

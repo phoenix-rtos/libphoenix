@@ -110,5 +110,6 @@ int main(void)
 		failed += strftime_assert(&test_vector[i]);
 	}
 	printf("Performed %d testcases %d failed\n", T1_LEN, failed);
+	return 0;
 }
 
