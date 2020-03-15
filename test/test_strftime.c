@@ -92,7 +92,7 @@ int strftime_assert(const struct test_data *data)
 		if (verbose_test()) {
 			printf("Format string \"%s\"\nOutput string \"%s\"\n", data->format, buff);
 			printf("Expected      \"%s\"\n", data->output);
-			printf("Return %d Expected: %d\n", ret, strlen(data->output));
+			printf("Return %d Expected: %d\n", ret, (int)strlen(data->output));
 		}
 		return 1;
 	}

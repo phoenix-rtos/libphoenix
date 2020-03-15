@@ -43,7 +43,7 @@ PREFIX_H ?= $(PREFIX_BUILD)/include/
 PREFIX_PROG ?= $(PREFIX_BUILD)/prog/
 PREFIX_PROG_STRIPPED ?= $(PREFIX_BUILD)/prog.stripped/
 
-CFLAGS += -I"$(PREFIX_H)" -I/usr/local/include
+CFLAGS += -I/usr/local/include
 
 # add include path for auto-generated files
 CFLAGS += -I"$(BUILD_DIR)/$(CURR_SUFFIX)" -Iinclude/
@@ -80,7 +80,7 @@ $(PREFIX_PROG_STRIPPED)%: $(PREFIX_PROG)%
 OBJS = $(PREFIX_O)_startc.o
 
 
-all: $(PREFIX_A)libphoenix.a
+all: $(PREFIX_A)libphoenix.a headers
 
 
 include $(ARCHMAKE)
@@ -110,7 +110,17 @@ $(PREFIX_A)libphoenix.a: $(OBJS)
 	$(ARCH)
 
 
-.PHONY: clean
+SRCHEADERS := $(shell find include -name \*.h)
+headers: $(SRCHEADERS)
+	@echo "HEADERS $(PREFIX_H)*"; \
+	mkdir -p "$(PREFIX_H)"; \
+	cp -a include/* "$(PREFIX_H)";
+
+
+install:
+
+
+.PHONY: clean headers install
 clean:
 	@echo "rm -rf $(BUILD_DIR)"
 
