@@ -19,7 +19,7 @@ UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
 	SED += gsed
 else
-	SED = sed;
+	SED = sed
 endif
 
 TOPDIR := $(CURDIR)

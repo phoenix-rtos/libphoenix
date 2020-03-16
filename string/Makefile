@@ -12,7 +12,7 @@ ERR_EXTRACT := $(SED) -En -e '/^\s*\#\s*define\s+E\w+\s+[[:digit:]]+/{s/^[^d]*de
 	-e '/^\s*E\w+\s*=\s*-?[[:digit:]]+/{s/^\s*(\w+)\s*=\s*-?([[:digit:]]+).*/\2\t\1/;p;d}'
 
 
-%/errno.list: /usr/local/include/phoenix/errno.h include/errno.h
+%/errno.list: include/errno.h
 	@(printf "GEN %-24s  \n" "$(@F)")
 	$(SIL)$(ERR_EXTRACT) $^ | sort -n > $@
 
