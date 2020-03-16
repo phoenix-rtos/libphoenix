@@ -60,13 +60,8 @@ static int ioctl_serialize(unsigned long request, struct ioctl_data *ioc, void *
 		struct rtentry *rt = (struct rtentry *)iocdata;
 		size_t dev_len;
 		if (rt->rt_dev != NULL) {
-			dev_len = strlen(rt->rt_dev) + 1;
-			iocdata = calloc(1, size + dev_len);
-			if (!iocdata)
-				return -ENOMEM;
-			memcpy(iocdata, indata, size);
-			memcpy(iocdata + size, rt->rt_dev, dev_len);
-			size += dev_len;
+			strncpy(rt->rt_devbuf, rt->rt_dev, sizeof(rt->rt_devbuf));
+			rt->rt_devbuf[sizeof(rt->rt_devbuf) - 1] = 0;
 		}
 	}
 

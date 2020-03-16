@@ -24,7 +24,7 @@
 /* Port management */
 
 
-extern int portCreate(uint32_t *port);
+extern int portCreate(uint32_t port);
 
 extern void portDestroy(uint32_t port);
 

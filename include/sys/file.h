@@ -21,7 +21,8 @@
 
 enum { otDir = 0, otFile, otDev, otSymlink, otUnknown };
 
-enum { mtUmount = 0xafaf2, mtSync };
+/* TODO: make those ioctls or include in kernel message types? */
+enum { mtUmount = 0xfaf2, mtSync };
 
 
 typedef struct {

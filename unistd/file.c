@@ -190,12 +190,22 @@ int symlink(const char *path1, const char *path2)
 int access(const char *path, int amode)
 {
 	int fd;
+	int result;
 
-	// NOTE: for now checking only if file exists
-	if ((fd = open(path, 0)) != -1)
+	/* NOTE: for now checking only if file exists
+	 *   nonblocking against fifos */
+	if ((fd = open(path, O_NONBLOCK)) != -1) {
 		close(fd);
+		result = 0;
+	}
+	else if (errno == EAGAIN) {
+		result = 0;
+	}
+	else {
+		result = -1;
+	}
 
-	return fd < 0 ? -1 : 0;
+	return result;
 }
 
 

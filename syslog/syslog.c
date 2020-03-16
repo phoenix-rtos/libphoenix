@@ -73,6 +73,8 @@ void openlog(const char *ident, int logopt, int facility)
 
 			syslog_common.logfd = socket(AF_UNIX, SOCK_DGRAM, 0);
 			if (syslog_common.logfd >= 0) {
+				// xxx
+				fcntl(syslog_common.logfd, F_SETFL, O_NONBLOCK | fcntl(syslog_common.logfd, F_GETFL, 0));
 				if (connect(syslog_common.logfd, &addr, sizeof(addr)) < 0) {
 					close(syslog_common.logfd);
 					syslog_common.logfd = -1;

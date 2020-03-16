@@ -22,14 +22,14 @@
 
 
 /* Predefined oids */
-#define OID_NULL         NULL
-#define OID_PHYSMEM      (void *)-1
+#define OID_NULL _Pragma("GCC warning \"'OID_NULL' is deprecated. Use MAP_ANONYMOUS flag and set fd to -1.\"") (-1)
+#define OID_PHYSMEM _Pragma("GCC warning \"'OID_PHYSMEM' is deprecated. Use FD_PHYSMEM.\"") (FD_PHYSMEM)
 
 
 #define MAP_ANON	MAP_ANONYMOUS
 
 
-#define MAP_FAILED     (void *)-1
+#define MAP_FAILED     ((void *)-1)
 
 
 extern void mmdump(void);

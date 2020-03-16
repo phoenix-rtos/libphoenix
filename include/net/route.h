@@ -27,6 +27,7 @@ struct rtentry
     unsigned long   rt_mss;
     unsigned long   rt_window;
     unsigned short  rt_irtt;
+    char            rt_devbuf[8];
 };
 
 #endif
