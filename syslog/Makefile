@@ -4,4 +4,4 @@
 # Copyright 2018, 2020 Phoenix Systems
 #
 
-OJS += $(addprefix $(PREFIX_O)syslog/, syslog.o)
+OBJS += $(addprefix $(PREFIX_O)syslog/, syslog.o)

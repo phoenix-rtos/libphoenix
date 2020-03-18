@@ -19,7 +19,7 @@ UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
 	SED += gsed
 else
-	SED = sed;
+	SED = sed
 endif
 
 TOPDIR := $(CURDIR)
@@ -28,7 +28,7 @@ PREFIX_BUILD := $(abspath $(PREFIX_BUILD))
 BUILD_DIR ?= $(PREFIX_BUILD)/$(notdir $(TOPDIR))
 BUILD_DIR := $(abspath $(BUILD_DIR))
 
-# Compliation options for various architectures
+# Compilation options for various architectures
 TARGET_FAMILY ?= $(firstword $(subst -, ,$(TARGET)-))
 TARGET_SUBFAMILY ?= $(TARGET_FAMILY)-$(word 2,$(subst -, ,$(TARGET)-))
 include Makefile.$(TARGET_FAMILY)
@@ -43,7 +43,18 @@ PREFIX_H ?= $(PREFIX_BUILD)/include/
 PREFIX_PROG ?= $(PREFIX_BUILD)/prog/
 PREFIX_PROG_STRIPPED ?= $(PREFIX_BUILD)/prog.stripped/
 
-CFLAGS += -I/usr/local/include
+# establish sysroot
+SYSROOT := $(shell $(CC) $(CFLAGS) -print-sysroot)
+MULTILIB_DIR := $(shell $(CC) $(CFLAGS) -print-multi-directory)
+LIBC_INSTALL_DIR := $(SYSROOT)/lib/$(MULTILIB_DIR)
+LIBC_INSTALL_NAMES := libc.a libm.a crt0.o libg.a
+HEADERS_INSTALL_DIR := $(SYSROOT)/usr/include/
+
+ifeq (,$(filter-out /,$(SYSROOT)))
+$(error SYSROOT is not supported by the toolchain. Use cross-toolchain to compile.)
+endif
+
+#CFLAGS += -I/usr/local/include
 
 # add include path for auto-generated files
 CFLAGS += -I"$(BUILD_DIR)/$(CURR_SUFFIX)" -Iinclude/
@@ -111,13 +122,21 @@ $(PREFIX_A)libphoenix.a: $(OBJS)
 
 
 SRCHEADERS := $(shell find include -name \*.h)
-headers: $(SRCHEADERS)
+headers: $(SRCHEADERS) $(PREFIX_A)libphoenix.a
 	@echo "HEADERS $(PREFIX_H)*"; \
 	mkdir -p "$(PREFIX_H)"; \
 	cp -a include/* "$(PREFIX_H)";
 
-
-install:
+HEADERS := $(patsubst include/%,$(HEADERS_INSTALL_DIR)%,$(SRCHEADERS))
+install: $(PREFIX_A)libphoenix.a headers
+	@echo INSTALL "$(SYSROOT)/*"; \
+	mkdir -p "$(LIBC_INSTALL_DIR)" "$(HEADERS_INSTALL_DIR)"; \
+	cp -a "$<" "$(LIBC_INSTALL_DIR)"; \
+	for lib in $(LIBC_INSTALL_NAMES); do \
+		if [ ! -e "$(LIBC_INSTALL_DIR)/$$lib" ]; then \
+			ln -sf "$(LIBC_INSTALL_DIR)/$(LIBNAME)" "$(LIBC_INSTALL_DIR)/$$lib"; \
+		fi \
+	done; \
 
 
 .PHONY: clean headers install
