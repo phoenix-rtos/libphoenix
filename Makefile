@@ -10,9 +10,10 @@ SIL ?= @
 MAKEFLAGS += --no-print-directory
 
 #TARGET ?= ia32-qemu
-#TARGET ?= armv7-stm32l4
+TARGET ?= armv7-stm32l4
+TARGET ?= armv7-imxrt
 #TARGET ?= arm-imx6ull
-TARGET ?= riscv64-spike
+#TARGET ?= riscv64-spike
 
 # Establish sed tool
 UNAME_S := $(shell uname -s)
@@ -48,7 +49,7 @@ SYSROOT := $(shell $(CC) $(CFLAGS) -print-sysroot)
 MULTILIB_DIR := $(shell $(CC) $(CFLAGS) -print-multi-directory)
 LIBC_INSTALL_DIR := $(SYSROOT)/lib/$(MULTILIB_DIR)
 LIBC_INSTALL_NAMES := libc.a libm.a crt0.o libg.a
-HEADERS_INSTALL_DIR := $(SYSROOT)/usr/include/
+HEADERS_INSTALL_DIR := $(SYSROOT)/usr/include
 
 ifeq (,$(filter-out /,$(SYSROOT)))
 $(error SYSROOT is not supported by the toolchain. Use cross-toolchain to compile.)
@@ -129,14 +130,17 @@ headers: $(SRCHEADERS) $(PREFIX_A)libphoenix.a
 
 HEADERS := $(patsubst include/%,$(HEADERS_INSTALL_DIR)%,$(SRCHEADERS))
 install: $(PREFIX_A)libphoenix.a headers
-	@echo INSTALL "$(SYSROOT)/*"; \
-	mkdir -p "$(LIBC_INSTALL_DIR)" "$(HEADERS_INSTALL_DIR)"; \
+	@echo INSTALL "$(LIBC_INSTALL_DIR)/*"; \
+	mkdir -p "$(LIBC_INSTALL_DIR)"; \
 	cp -a "$<" "$(LIBC_INSTALL_DIR)"; \
 	for lib in $(LIBC_INSTALL_NAMES); do \
 		if [ ! -e "$(LIBC_INSTALL_DIR)/$$lib" ]; then \
 			ln -sf "$(LIBC_INSTALL_DIR)/$(LIBNAME)" "$(LIBC_INSTALL_DIR)/$$lib"; \
 		fi \
 	done; \
+	echo INSTALL "$(HEADERS_INSTALL_DIR)/*"; \
+	mkdir -p "$(HEADERS_INSTALL_DIR)"; \
+	cp -a include/* "$(HEADERS_INSTALL_DIR)";
 
 
 .PHONY: clean headers install
