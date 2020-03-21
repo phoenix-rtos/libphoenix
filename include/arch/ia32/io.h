@@ -20,7 +20,7 @@
 static inline unsigned char inb(void *addr)
 {
 	unsigned char b;
-	
+
 	__asm__ volatile
 	(" \
 		movl %1, %%edx; \
@@ -83,7 +83,7 @@ static inline void outw(void *addr, unsigned short w)
 static inline unsigned int inl(void *addr)
 {
 	unsigned int l;
-	
+
 	__asm__ volatile
 	(" \
 		movl %1, %%edx; \

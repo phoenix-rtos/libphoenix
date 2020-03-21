@@ -213,7 +213,7 @@ char *strncpy(char *dest, const char *src, size_t n)
 	for (i = 0; i < n; ++i) {
 		if (src[i] != '\0') {
 			dest[i] = src[i];
-		} 
+		}
 		else {
 			memset(&dest[i], '\0', n - i);
 			break;
@@ -384,7 +384,7 @@ char *strtok(char *s1, const char *s2)
 	if (*tokend) {
 		*tokend = '\0';
 		string_common.next_token = tokend + 1;
-	} 
+	}
 	else {
 		string_common.next_token = tokend;
 	}
