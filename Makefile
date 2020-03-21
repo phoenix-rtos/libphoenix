@@ -67,7 +67,7 @@ ARCH =  $(SIL)@mkdir -p $(@D); \
 LINK = $(SIL)mkdir -p $(@D); \
 	(printf "LD  %-24s\n" "$(@F)"); \
 	$(LD) $(LDFLAGS) -o "$@"  $^ $(LDLIBS)
-	
+
 HEADER = $(SIL)mkdir -p $(@D); \
 	(printf "HEADER %-24s\n" "$<"); \
 	cp -pR "$<" "$@"
@@ -83,7 +83,7 @@ $(PREFIX_O)%.o: %.S
 	$(SIL)(printf "ASM %-24s\n" "$<")
 	$(SIL)$(CC) -c $(CFLAGS) "$<" -o "$@"
 	$(SIL)$(CC) -M  -MD -MP -MF $(PREFIX_O)$*.S.d -MT "$@" $(CFLAGS) $<
-	
+
 $(PREFIX_PROG_STRIPPED)%: $(PREFIX_PROG)%
 	@mkdir -p $(@D)
 	@(printf "STR %-24s\n" "$(@F)")
@@ -111,7 +111,7 @@ include stdio/Makefile
 include stdlib/Makefile
 include string/Makefile
 include sys/Makefile
-include syslog/Makefile	
+include syslog/Makefile
 include termios/Makefile
 include time/Makefile
 include unistd/Makefile

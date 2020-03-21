@@ -33,7 +33,7 @@
 #define BUF_DUMP_WIDTH 20
 
 char pattern[BUF_LEN];
-char buffer[BUF_LEN] __attribute__ ((aligned (4))); 
+char buffer[BUF_LEN] __attribute__ ((aligned (4)));
 
 
 /* print bytes from buffer in hexadecimal form */
@@ -55,7 +55,7 @@ void fill_random(char *buffer, int len)
 	srand(SEED);
 	for (i = 0; i < len; i++) {
 		buffer[i] = (char)rand();
-	}	
+	}
 }
 
 
@@ -66,16 +66,16 @@ int memmove_check_result(char *buffer, char *pattern, int src_off, int dst_off, 
 	int i, err, incorrect_bytes = 0, in_dst;
 
 	for (i = 0; i < BUF_LEN; i++) {
-		err = 0;	
+		err = 0;
 		current_byte = *(buffer + i);
-		/* check if i is in destination buffer */	
+		/* check if i is in destination buffer */
 		in_dst = (i >= dst_off && i < dst_off + len);
-		
-		if (!in_dst) 
+
+		if (!in_dst)
 			err = (current_byte != *(pattern + i));
-		else 
+		else
 			err = (current_byte != *(pattern + src_off + i - dst_off));
-			
+
 		if (err && verbose_test())
 			printf("Incorrect byte nr: %d value: %02X\n", i, (unsigned char)current_byte);
 
@@ -102,17 +102,17 @@ void copy_buffer(char *buffer, char *pattern, int len)
 int memmove_check_var_off(char *buffer, char *pattern, int off_src, int off_dst,  int len)
 {
 	int result;
-	void *ptr_dst, *ptr_src;	
+	void *ptr_dst, *ptr_src;
 	int off_src_shifted, off_dst_shifted, delta_off_src, delta_off_dst;
-	
+
 	for (delta_off_src = 0; delta_off_src < OFFSET_VARIANCE; delta_off_src++) {
 		for (delta_off_dst = 0; delta_off_dst < OFFSET_VARIANCE; delta_off_dst++) {
 			off_src_shifted = off_src + delta_off_src;
 			off_dst_shifted = off_dst + delta_off_dst;
 			ptr_dst = buffer + off_dst_shifted;
-			ptr_src = buffer + off_src_shifted;	
-			
-			copy_buffer(buffer, pattern, BUF_LEN); 
+			ptr_src = buffer + off_src_shifted;
+
+			copy_buffer(buffer, pattern, BUF_LEN);
 			memmove(ptr_dst,  ptr_src, len);
 			result = memmove_check_result(buffer, pattern, off_src_shifted, off_dst_shifted, len);
 
@@ -137,7 +137,7 @@ int memmove_check_var_off(char *buffer, char *pattern, int off_src, int off_dst,
 }
 
 
-/* 
+/*
  * Test for one buffer when dst and src segments are not overlapping.
  * Add variation to nr of bytes copied to simulate ending on aligned/misaligned segment
  */
@@ -145,7 +145,7 @@ void test_memmove_non_overlapping(void)
 {
 	printf("\nStarting %s\n", __func__);
 	int delta_size;
-	
+
 	for (delta_size = 0; delta_size < SIZE_VARIANCE; delta_size++) {
 		/* test memmove when source buffer is before destination, without overlapping */
 		memmove_check_var_off(buffer, pattern, 0, 2000, BYTES_COPIED - delta_size);
@@ -157,8 +157,8 @@ void test_memmove_non_overlapping(void)
 }
 
 
-/* 
- * Test for one buffer and dst and src segments are overlapping  
+/*
+ * Test for one buffer and dst and src segments are overlapping
  * Use variable nr of bytes copied to simulate ending on aligned/misaligned segment
  */
 void test_memmove_overlapping(void)
