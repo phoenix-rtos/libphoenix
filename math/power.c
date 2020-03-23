@@ -61,8 +61,7 @@ double pow(double base, double exponent)
 	return res;
 }
 
-
-/* Uses sqrt(x) = x^(1/2) indentity */
+/* Uses reciprocal square root method: */
 double sqrt(double x)
 {
 	if (x < 0.0) {
@@ -71,7 +70,37 @@ double sqrt(double x)
 	}
 
 	if (x == 0.0 || x == -0.0)
-		return 0.0;
+		return x;
 
-	return pow(x, 0.5);
+	double xn = (double)(1.0f / (float)x);
+
+	/* IEEE-754 compliant: */
+	conv_t *init = (conv_t *)&xn;
+
+	/* +Infinity : */
+	if (init->i.mantisa == 0 && init->i.exponent == 0x7FF)
+		return x;
+
+	/* Subnormals: */
+	if (init->i.exponent == 0)
+		init->i.exponent = 0x1;
+
+
+	/* Initial guess: */
+	init->i.mantisa = (init->i.mantisa >> 1);
+
+	if (init->i.exponent & 0x1) {
+		init->i.exponent = (init->i.exponent >> 1) + 0x200;
+	}
+	else {
+		init->i.exponent = (init->i.exponent >> 1) + 0x1FF;
+		init->i.mantisa |= (0x1ull << 51);
+	}
+
+	int i;
+	/* Reciprocal sqare root iters (avoiding division): */
+	for (i = 0; i < 4; ++i)
+		xn = xn * (1.5 -  0.5 * x * xn * xn);
+
+	return xn * x;
 }
