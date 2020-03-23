@@ -106,7 +106,7 @@ include math/Makefile
 include net/Makefile
 include netinet/Makefile
 include posix/Makefile
-#include pthread/Makefile
+include pthread/Makefile
 include regex/Makefile
 include signal/Makefile
 include stdio/Makefile
