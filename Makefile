@@ -23,6 +23,8 @@ else
 	SED = sed
 endif
 
+LIBNAME := libphoenix.a
+
 TOPDIR := $(CURDIR)
 PREFIX_BUILD ?= ../_build/$(TARGET)
 PREFIX_BUILD := $(abspath $(PREFIX_BUILD))
