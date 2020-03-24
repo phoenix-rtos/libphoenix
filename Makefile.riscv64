@@ -1,0 +1,34 @@
+#
+# Makefile for libphoenix
+#
+# RISCV64 options
+#
+# Copyright 2018 Phoenix Systems
+#
+# %LICENSE%
+#
+
+CROSS ?= riscv64-phoenix-elf-
+
+MKDEP = $(CROSS)gcc -MM
+MKDEPFLAGS = $(CFLAGS)
+
+CC = $(CROSS)gcc
+
+CFLAGS += -Wall -Wstrict-prototypes -I$(SRCDIR) -nostartfiles -nostdlib\
+	-fomit-frame-pointer -ffreestanding -mcmodel=medany
+
+AR = $(CROSS)ar
+ARFLAGS = -r
+
+LD = $(CROSS)ld
+LDFLAGS =
+GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
+PHOENIXLIB := $(shell $(CC) $(CFLAGS) -print-file-name=libphoenix.a)
+LDLIBS := $(GCCLIB)
+
+OBJCOPY = $(CROSS)objcopy
+OBJDUMP = $(CROSS)objdump
+
+STRIP = $(CROSS)strip
+
