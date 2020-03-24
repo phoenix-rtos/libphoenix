@@ -5,4 +5,4 @@
 # Author: Pawel Pisarczyk
 #
 
-OBJS += $(addprefix $(PREFIX_O)arch/arm-imx/, _start.o syscalls.o jmp.o signal.o string.o reboot.o)
+OBJS += $(addprefix $(PREFIX_O)arch/arm/, _start.o syscalls.o jmp.o signal.o string.o reboot.o)
