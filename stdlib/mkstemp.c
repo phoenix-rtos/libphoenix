@@ -29,10 +29,10 @@ static char pfcs[] =
 
 int mkstemp(char *template)
 {
-	int i, fd, rand;
+	int i, fd;
 	char *tail;
 	int templen;
-	oid_t oid;
+	unsigned rand;
 
 	if (template == NULL)
 		return -1;
@@ -52,12 +52,12 @@ int mkstemp(char *template)
 		return -1;
 
 	for (i = 0; i < MKSTEMP_TSZ; i++) {
-		read(fd, &rand, 4);
-		tail[i] = pfcs[rand % 65];
+		read(fd, &rand, sizeof(rand));
+		tail[i] = pfcs[rand % sizeof(pfcs)];
 	}
 	close(fd);
 
-	if (lookup(template, NULL, &oid) == EOK)
+	if (access(template, 0) == EOK)
 		return -1;
 
 	fd = open(template, O_CREAT | O_RDWR, DEFFILEMODE);
