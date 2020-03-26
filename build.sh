@@ -10,6 +10,10 @@
 
 set -e
 
+b_build() { :; }
+b_image() { :; }
+b_update_pkg() { :; }
+
 . ./build.project
 
 TOPDIR="$(pwd)"
@@ -128,20 +132,20 @@ fi
 #
 # Build project part
 #
-if [ "${B_PROJECT}" = "y" ] && declare -f "b_build" > /dev/null; then
+if [ "${B_PROJECT}" = "y" ]; then
 	b_build
 fi
 
 #
 # Build final filesystems
 #
-if [ "${B_IMAGE}" = "y" ] && declare -f "b_image" > /dev/null; then
+if [ "${B_IMAGE}" = "y" ]; then
 	b_image
 fi
 
 #
 # Create update package
 #
-if [ "${B_UPDATE_PKG}" = "y" ] && declare -f "b_update_pkg" > /dev/null; then
+if [ "${B_UPDATE_PKG}" = "y" ]; then
 	b_update_pkg
 fi
