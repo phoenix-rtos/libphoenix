@@ -8,6 +8,9 @@
 # Author: Kaja Swat, Aleksander Kaminski, Pawel Pisarczyk, Lukasz Kosinski
 #
 
+# fail immediately if any of the commands fails
+set -e
+
 b_log "Building phoenix-rtos-kernel"
 KERNEL_MAKECMDGOALS="install-headers"
 (cd phoenix-rtos-kernel/src && CFLAGS+=$KERNEL_CFLAGS make $MAKEFLAGS $CLEAN $KERNEL_MAKECMDGOALS all)
