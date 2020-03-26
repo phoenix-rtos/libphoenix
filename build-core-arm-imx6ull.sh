@@ -36,9 +36,9 @@ b_install "$PREFIX_PROG_STRIPPED/hostsrv" /sbin
 
 b_log "Building coreutils"
 (cd phoenix-rtos-coreutils && make $MAKEFLAGS $CLEAN all)
-b_install $PREFIX_PROG_STRIPPED/psh /bin
-b_install $PREFIX_PROG_STRIPPED/psd /sbin
-b_install $PREFIX_PROG_STRIPPED/psd-old /sbin
+b_install "$PREFIX_PROG_STRIPPED/psh" /bin
+b_install "$PREFIX_PROG_STRIPPED/psd" /sbin
+b_install "$PREFIX_PROG_STRIPPED/psd-old" /sbin
 
 b_log "phoenix-rtos-lwip"
 (cd phoenix-rtos-lwip && make $MAKEFLAGS $CLEAN all)
@@ -50,8 +50,8 @@ b_install "$PREFIX_PROG_STRIPPED/posixsrv" /bin
 
 b_log "Building hostutils"
 (cd phoenix-rtos-hostutils/ && make $MAKEFLAGS $CLEAN all)
-cp "$PREFIX_BUILD_HOST/prog.stripped/phoenixd" $PREFIX_BOOT
-cp "$PREFIX_BUILD_HOST/prog.stripped/psu" $PREFIX_BOOT
+cp "$PREFIX_BUILD_HOST/prog.stripped/phoenixd" "$PREFIX_BOOT"
+cp "$PREFIX_BUILD_HOST/prog.stripped/psu" "$PREFIX_BOOT"
 
 b_log "Building phoenix-rtos-corelibs"
 (cd phoenix-rtos-corelibs/ && make $MAKEFLAGS $CLEAN all)

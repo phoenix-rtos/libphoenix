@@ -40,7 +40,7 @@ MAKEFLAGS="--no-print-directory -j 19"
 export TARGET TARGET_FAMILY TOPDIR PREFIX_BUILD PREFIX_BUILD_HOST\
 	PREFIX_FS PREFIX_BOOT PREFIX_PROG PREFIX_PROG_STRIPPED PREFIX_A\
 	PREFIX_H PREFIX_ROOTFS PREFIX_ROOTSKEL CROSS CFLAGS LDFLAGS CC LD\
-	AR CLEAN MAKEFLAGS DEVICE_FLAGS
+	AR AS CLEAN MAKEFLAGS DEVICE_FLAGS
 
 . ./phoenix-rtos-build/build.subr
 
@@ -50,7 +50,7 @@ export TARGET TARGET_FAMILY TOPDIR PREFIX_BUILD PREFIX_BUILD_HOST\
 if [ $# -lt 1 ]; then
 	echo "Build options should be specified!"
 	echo "Usage: build.sh [clean] [all] [fs] [core] [ports] [project] [image]";
-	exit -1;
+	exit 1;
 fi
 
 B_FS="n"
@@ -60,7 +60,7 @@ B_PROJECT="n"
 B_IMAGE="n"
 B_UPDATE_PKG="n"
 
-for i in $*; do
+for i in "$@"; do
 	case "$i"
 	in
 		clean)
@@ -94,26 +94,26 @@ done
 #
 # Prepare
 #
-mkdir -p $PREFIX_BUILD
-mkdir -p $PREFIX_BUILD_HOST
+mkdir -p "$PREFIX_BUILD"
+mkdir -p "$PREFIX_BUILD_HOST"
 if declare -f "b_prepare" > /dev/null; then
 	b_prepare
 fi
-echo " "$(git rev-parse HEAD)" "$(basename $(git rev-parse --show-toplevel))" ("$(git describe --always --dirty)")" > ${PREFIX_BUILD}/git-version
-git submodule status --recursive >> ${PREFIX_BUILD}/git-version
+echo " $(git rev-parse HEAD) $(basename "$(git rev-parse --show-toplevel)") ($(git describe --always --dirty))" > "${PREFIX_BUILD}/git-version"
+git submodule status --recursive >> "${PREFIX_BUILD}/git-version"
 
 
 #
 # Preparing filesystem
 #
-if [ "X${B_FS}" == "Xy" ] && [ -d  ${PREFIX_ROOTSKEL} ]; then
+if [ "${B_FS}" = "y" ] && [ -d  "${PREFIX_ROOTSKEL}" ]; then
 	b_log "Preparing filesystem"
-	if [ "X$CLEAN" == "Xclean" ]; then
-		rm -fr $PREFIX_FS/root/*
+	if [ "$CLEAN" = "clean" ]; then
+		rm -fr "$PREFIX_FS/root/"*
 	fi
 
-	mkdir -p ${PREFIX_ROOTFS}
-	cp -a ${PREFIX_ROOTSKEL}/. ${PREFIX_ROOTFS}
+	mkdir -p "${PREFIX_ROOTFS}"
+	cp -a "${PREFIX_ROOTSKEL}/." "${PREFIX_ROOTFS}"
 
 	b_log "Saving git-version"
 	install -m 664 "${PREFIX_BUILD}/git-version" "$PREFIX_FS/root/etc"
@@ -122,34 +122,34 @@ fi
 #
 # Build core part
 #
-if [ "X${B_CORE}" == "Xy" ]; then
-	./phoenix-rtos-build/build-core-${TARGET_SUBFAMILY}.sh
+if [ "${B_CORE}" = "y" ]; then
+	"./phoenix-rtos-build/build-core-${TARGET_SUBFAMILY}.sh"
 fi
 
 #
 # Build ports
 #
-if [ "X${B_PORTS}" == "Xy" ] && [ -d phoenix-rtos-ports ]; then
+if [ "${B_PORTS}" = "y" ] && [ -d phoenix-rtos-ports ]; then
 	./phoenix-rtos-ports/build.sh
 fi
 
 #
 # Build project part
 #
-if [ "X${B_PROJECT}" == "Xy" ] && declare -f "b_build" > /dev/null; then
+if [ "${B_PROJECT}" = "y" ] && declare -f "b_build" > /dev/null; then
 	b_build
 fi
 
 #
 # Build final filesystems
 #
-if [ "X${B_IMAGE}" == "Xy" ] && declare -f "b_image" > /dev/null; then
+if [ "${B_IMAGE}" = "y" ] && declare -f "b_image" > /dev/null; then
 	b_image
 fi
 
 #
 # Create update package
 #
-if [ "X${B_UPDATE_PKG}" == "Xy" ] && declare -f "b_update_pkg" > /dev/null; then
+if [ "${B_UPDATE_PKG}" = "y" ] && declare -f "b_update_pkg" > /dev/null; then
 	b_update_pkg
 fi

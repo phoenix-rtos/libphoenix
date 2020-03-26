@@ -11,8 +11,8 @@
 b_log "Building phoenix-rtos-kernel"
 KERNEL_MAKECMDGOALS="install-headers"
 (cd phoenix-rtos-kernel/src/ && make $MAKEFLAGS $CLEAN $KERNEL_MAKECMDGOALS all)
-cp -a phoenix-rtos-kernel/phoenix-$TARGET.elf _build
-cp -a phoenix-rtos-kernel/phoenix-$TARGET.img _build
+cp -a "phoenix-rtos-kernel/phoenix-$TARGET.elf" _build
+cp -a "phoenix-rtos-kernel/phoenix-$TARGET.img" _build
 
 b_log "Building libphoenix"
 (cd libphoenix && make $MAKEFLAGS $CLEAN all install)
