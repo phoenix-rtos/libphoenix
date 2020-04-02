@@ -136,11 +136,7 @@ char *canonicalize_file_name(const char *path)
 			return  NULL; /* ENOMEM */
 
 		bufsiz = cwdlen + pathlen + 3;
-		if ((buf = malloc(bufsiz)) == NULL)
-			return NULL; /* ENOMEM */
-
-		buf = getcwd(buf, bufsiz);
-		if (buf == NULL)
+		if ((buf = getcwd(NULL, bufsiz)) == NULL)
 			return NULL;
 
 		if (buf[cwdlen - 1] != '/') {
