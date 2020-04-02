@@ -206,6 +206,7 @@ DIR *opendir(const char *dirname)
 	DIR *s = calloc(1, sizeof(DIR));
 
 	if (!dirname[0] || (lookup((char *)canonical_name, NULL, &s->oid) < 0)) {
+		free(canonical_name);
 		free(s);
 		return NULL; /* ENOENT */
 	}
