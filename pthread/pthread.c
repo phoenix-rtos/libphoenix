@@ -42,7 +42,7 @@ static pthread_ctx *pthread_list = NULL;
 static const pthread_attr_t pthread_attr_default = {
 	.stackaddr = NULL,
 	.policy = SCHED_RR,
-	.priority = 0,
+	.priority = 4,
 	.detached = PTHREAD_CREATE_JOINABLE,
 	.stacksize = CEIL(PTHREAD_STACK_MIN, PAGE_SIZE)
 };

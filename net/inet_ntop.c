@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 const char *inet_ntop(int af, const void *restrict src,
-		       char *restrict dst, socklen_t size) 
+		      char *restrict dst, socklen_t size)
 {
 	if (af == AF_INET) {
 		if (size < 16 || dst == NULL || src == NULL)

@@ -1,142 +1,103 @@
 #
-# Makefile for libphoenix
+# Makefile for phoenix-rtos-devices
 #
-# Copyright 2017, 2018 Phoenix Systems
+# Copyright 2018, 2019 Phoenix Systems
 #
 # %LICENSE%
 #
 
 SIL ?= @
-MAKEFLAGS += --no-print-directory --output-sync
+MAKEFLAGS += --no-print-directory
 
-TARGET ?= arm-imx6ull
-#TARGET ?= armv7-stm32-l152xe
-#TARGET ?= armv7-imxrt
-#TARGET ?= ia32-qemu
-#TARGET ?= riscv64
+#TARGET ?= armv7m3-stm32l152xd
+#TARGET ?= armv7m3-stm32l152xe
+#TARGET ?= armv7m4-stm32l4x6
+#TARGET ?= armv7m7-imxrt105x
+#TARGET ?= armv7m7-imxrt106x
+#TARGET ?= armv7m7-imxrt117x
+#TARGET ?= armv7a7-imx6ull
+TARGET ?= ia32-generic
+#TARGET ?= riscv64-spike
 
-VERSION = 0.2
-TOPDIR := $(CURDIR)
-PREFIX_BUILD ?= ../_build/$(TARGET)
-PREFIX_BUILD := $(abspath $(PREFIX_BUILD))
-BUILD_DIR ?= $(PREFIX_BUILD)/$(notdir $(TOPDIR))
-BUILD_DIR := $(abspath $(BUILD_DIR))
+include ../phoenix-rtos-build/Makefile.common
+include ../phoenix-rtos-build/Makefile.$(TARGET_SUFF)
 
-SUBSYSTEMS := math stdio stdlib string sys ctype time unistd errno signal termios posix err locale regex net syslog netinet pthread
-
-LIBNAME := libphoenix.a
-LIB := $(BUILD_DIR)/$(LIBNAME)
-
-include Makefile.targets
-
-HEADER_DIR = $(TOPDIR)/include/
-
-CFLAGS += -I"$(HEADER_DIR)"
-CFLAGS += -DVERSION=\"$(VERSION)\"
-CFLAGS += -fdata-sections -ffunction-sections
-LDFLAGS += --gc-sections
-
-ARCH = code.a
-ARCHS := $(patsubst %,$(BUILD_DIR)/%/$(ARCH),$(SUBDIRS))
-
-# compiling files from CWD
-SRCS := _startc.c
-OBJS := $(patsubst $(TOPDIR)/%,$(BUILD_DIR)/%,$(abspath $(SRCS:.c=.o)))
-
+# establish sysroot
 SYSROOT := $(shell $(CC) $(CFLAGS) -print-sysroot)
 MULTILIB_DIR := $(shell $(CC) $(CFLAGS) -print-multi-directory)
 LIBC_INSTALL_DIR := $(SYSROOT)/lib/$(MULTILIB_DIR)
 LIBC_INSTALL_NAMES := libc.a libm.a crt0.o libg.a
-HEADERS_INSTALL_DIR := $(SYSROOT)/usr/include/
-ifeq (/,$(SYSROOT))
-$(error Sysroot is not supported by Your toolchain. Use cross-toolchain to compile)
+HEADERS_INSTALL_DIR := $(SYSROOT)/usr/include
+
+ifeq (,$(filter-out /,$(SYSROOT)))
+$(error SYSROOT is not supported by the toolchain. Use cross-toolchain to compile.)
 endif
 
-HEADERS := $(patsubst $(HEADER_DIR)%,$(HEADERS_INSTALL_DIR)%,$(shell find $(HEADER_DIR) -name \*.h))
-
-export TOPDIR PREFIX_BUILD BUILD_DIR SIL TARGET LIB CC CFLAGS AR ARFLAGS LD LDFLAGS GCCLIB OBJDUMP STRIP HEADERS_INSTALL_DIR HEADER_DIR
-
-
-all: subsystems $(OBJS) $(LIB) tests
-
-lib: $(LIB)
-
-$(OBJS): $(filter clean,$(MAKECMDGOALS))
-
-subsystems: $(ARCHS)
-
-$(ARCHS): %.a: .FORCE $(filter clean,$(MAKECMDGOALS))
-	@mkdir -p $(@D); \
-	$(MAKE) -C "$(subst $(BUILD_DIR)/,,$(@D))" ARCH="$@"
-
-.FORCE:
-
-$(LIB): $(ARCHS) $(OBJS)
-	@printf "\033[1;34mLD $@\033[0m\n"
-
-	@(\
-	printf "Subsystem                  | text    | rodata  | data\n";\
-	printf "=========================================================\n";\
-	for f in $(ARCHS) $(OBJS); do\
-		datasz=0;\
-		textsz=0;\
-		rodatasz=0;\
-		for i in `$(OBJDUMP) -t $$f | awk '/ O / && !/.rodata/{ print $$1 }'`; do\
-			datasz=$$(($$datasz + 0x$$i));\
-		done;\
-		for i in `$(OBJDUMP) -t $$f | awk '/ O / && /.rodata/{ print $$1 }'`; do \
-			rodatasz=$$(($$rodatasz + 0x$$i));\
-		done; \
-		for i in `$(OBJDUMP) -t $$f | awk '/ F /{ print $$5 }'`; do \
-			textsz=$$(($$textsz + 0x$$i));\
-		done;\
-		n=`dirname $$f`;\
-		n=`basename $$n | sed "s/libphoenix/./"`;\
-		f=`basename $$f`;\
-		printf "%-26s | %-7d | %-7d | %-7d\n" $$n/$$f $$textsz $$rodatasz $$datasz;\
-	done;)
-
-	@rm -rf "$@"
-	$(SIL)$(AR) cqT -o $@ $(abspath $^) && printf "create $@\naddlib $@\nsave\nend\n" | $(AR) -M
-
-	@(echo "";\
-	echo "=> libphoenix for [$(TARGET)] has been created";\
-	echo "")
+# libphoenix shoudl be linked only with GCC library therefore LDLIBS is overloaded
+LDLIBS = $(GCCLIB)
+CFLAGS += -Iinclude
 
 
-tests: test
+OBJS = $(PREFIX_O)_startc.o
 
 
-test: $(LIB) .FORCE
-	@printf "\033[1;32mCOMPILE $@\033[0m\n";\
-	$(MAKE) -C "$@"
+all: $(PREFIX_A)libphoenix.a headers
 
 
-install: $(LIB) $(HEADERS)
-	@echo "Installing into: $(LIBC_INSTALL_DIR)"; \
-	mkdir -p "$(LIBC_INSTALL_DIR)" "$(HEADERS_INSTALL_DIR)"; \
+include arch/$(TARGET_SUFF)/Makefile
+include ctype/Makefile
+include err/Makefile
+include errno/Makefile
+include locale/Makefile
+include math/Makefile
+include net/Makefile
+include netinet/Makefile
+include posix/Makefile
+include pthread/Makefile
+include regex/Makefile
+include signal/Makefile
+include stdio/Makefile
+include stdlib/Makefile
+include string/Makefile
+include sys/Makefile
+include syslog/Makefile
+include termios/Makefile
+include time/Makefile
+include unistd/Makefile
+
+include test/Makefile
+
+$(PREFIX_A)libphoenix.a: $(OBJS)
+	$(ARCH)
+
+
+SRCHEADERS := $(shell find include -name \*.h)
+headers: $(SRCHEADERS) $(PREFIX_A)libphoenix.a
+	@echo "HEADERS $(PREFIX_H)*"; \
+	mkdir -p "$(PREFIX_H)"; \
+	cp -a include/* "$(PREFIX_H)";
+
+
+#HEADERS := $(patsubst include/%,$(HEADERS_INSTALL_DIR)%,$(SRCHEADERS))
+install: $(PREFIX_A)libphoenix.a headers
+	@echo INSTALL "$(LIBC_INSTALL_DIR)/*"; \
+	mkdir -p "$(LIBC_INSTALL_DIR)"; \
 	cp -a "$<" "$(LIBC_INSTALL_DIR)"; \
 	for lib in $(LIBC_INSTALL_NAMES); do \
 		if [ ! -e "$(LIBC_INSTALL_DIR)/$$lib" ]; then \
 			ln -sf "$(LIBC_INSTALL_DIR)/$(LIBNAME)" "$(LIBC_INSTALL_DIR)/$$lib"; \
 		fi \
 	done; \
+	echo INSTALL "$(HEADERS_INSTALL_DIR)/*"; \
+	mkdir -p "$(HEADERS_INSTALL_DIR)"; \
+	cp -a include/* "$(HEADERS_INSTALL_DIR)";
 
-uninstall:
-	rm -rf "$(LIBC_INSTALL_DIR)/$(LIBNAME)"
-	@for lib in $(LIBC_INSTALL_NAMES); do \
-		rm -rf "$(LIBC_INSTALL_DIR)/$$lib"; \
-	done
-	@for file in $(HEADERS); do \
-		rm -rf $$file; \
-	done
 
+.PHONY: clean headers install
 clean:
-	@rm -rf $(BUILD_DIR)
+	@echo "rm -rf $(BUILD_DIR)"
 
-
-# include after all dependencies are set
-include $(TOPDIR)/Makefile.rules
-
-.PHONY: clean install uninstall
-# DO NOT DELETE
+ifneq ($(filter clean,$(MAKECMDGOALS)),)
+	$(shell rm -rf $(BUILD_DIR))
+	$(shell rm -f string/*.inc)
+endif

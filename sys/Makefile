@@ -1,11 +1,7 @@
 #
-# Makefile for libphoenix (sys)
+# Makefile for libphoenix/sys
 #
-# Copyright 2017 Phoenix Systems
-# Author: Pawel Pisarczyk
+# Copyright 2018, 2020 Phoenix Systems
 #
 
-ARCH_SRCS = rb.c stat.c time.c times.c list.c semaphore.c socket.c select.c ioctl.c mount.c resource.c threads.c events.c wait.c
-
-# include after all dependencies are set
-include $(TOPDIR)/Makefile.rules
+OBJS += $(addprefix $(PREFIX_O)sys/, events.o ioctl.o list.o mount.o rb.o resource.o select.o semaphore.o socket.o stat.o threads.o time.o times.o wait.o)

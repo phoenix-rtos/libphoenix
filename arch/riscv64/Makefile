@@ -1,12 +1,9 @@
 #
-# Makefile for libphoenix (arch/riscv64)
+# Makefile for libphoenix/arch/riscv64
 #
-# Copyright 2017, 2018 Phoenix Systems
+# Copyright 2017, 2018, 2020 Phoenix Systems
 # Author: Pawel Pisarczyk
 #
 
-ARCH_ASMS := _start.S syscalls.S string.S signal.S
-ARCH_SRCS := reboot.c
+OBJS += $(addprefix $(PREFIX_O)arch/riscv64/, _start.o syscalls.o string.o signal.o reboot.o)
 
-# include after all dependencies are set
-include $(TOPDIR)/Makefile.rules

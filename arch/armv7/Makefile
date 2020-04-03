@@ -1,12 +1,8 @@
 #
-# Makefile for libphoenix (arch/armv7)
+# Makefile for libphoenix/arch/armv7
 #
-# Copyright 2017 Phoenix Systems
+# Copyright 2017, 2020 Phoenix Systems
 # Author: Pawel Pisarczyk
 #
 
-ARCH_ASMS := _start.S syscalls.S signal.S jmp.S
-ARCH_SRCS := string.c reboot.c
-
-# include after all dependencies are set
-include $(TOPDIR)/Makefile.rules
+OBJS += $(addprefix $(PREFIX_O)arch/armv7/, _start.o syscalls.o jmp.o signal.o string.o reboot.o)

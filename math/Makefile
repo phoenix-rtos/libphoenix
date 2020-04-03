@@ -1,11 +1,7 @@
 #
-# Makefile for Phoenix-RTOS kernel (test)
+# Makefile for libphoenix/math
 #
-# Copyright 2012-2015 Phoenix Systems
-# Copyright 2001, 2005-2006 Pawel Pisarczyk
+# Copyright 2012-2015, 2020 Phoenix Systems
 #
 
-ARCH_SRCS := trig.c power.c exp.c common.c hyper.c
-
-# include after all dependencies are set
-include $(TOPDIR)/Makefile.rules
+OBJS += $(addprefix $(PREFIX_O)math/, trig.o power.o exp.o common.o hyper.o)

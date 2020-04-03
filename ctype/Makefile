@@ -1,11 +1,7 @@
 #
-# Makefile for libphoenix (ctype)
+# Makefile for libphoenix/ctype
 #
-# Copyright 2012-2015 Phoenix Systems
-# Copyright 2001, 2005-2006 Pawel Pisarczyk
+# Copyright 2018, 2020 Phoenix Systems
 #
 
-ARCH_SRCS := ctype.c
-
-# include after all dependencies are set
-include $(TOPDIR)/Makefile.rules
+OBJS += $(PREFIX_O)ctype/ctype.o

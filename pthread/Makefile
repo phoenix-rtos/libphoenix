@@ -1,11 +1,8 @@
 #
-# Makefile for libphoenix (sys)
+# Makefile for libphoenix/pthread
 #
-# Copyright 2017 Phoenix Systems
+# Copyright 2017, 2020 Phoenix Systems
 # Author: Pawel Pisarczyk
 #
 
-ARCH_SRCS := pthread.c
-
-# include after all dependencies are set
-include $(TOPDIR)/Makefile.rules
+OBJS += $(addprefix $(PREFIX_O)pthread/, pthread.o)

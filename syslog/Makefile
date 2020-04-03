@@ -1,11 +1,7 @@
 #
-# Makefile for libphoenix (syslog)
+# Makefile for libphoenix/syslog
 #
-# Copyright 2012-2015 Phoenix Systems
-# Copyright 2001, 2005-2006 Pawel Pisarczyk
+# Copyright 2018, 2020 Phoenix Systems
 #
 
-ARCH_SRCS := syslog.c
-
-# include after all dependencies are set
-include $(TOPDIR)/Makefile.rules
+OBJS += $(addprefix $(PREFIX_O)syslog/, syslog.o)

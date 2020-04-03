@@ -16,7 +16,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 void (*atexit_funcs[ATEXIT_MAX])(void);
 
 
@@ -30,6 +29,8 @@ void _atexit_call(void)
 	}
 }
 
+
+#warning FIXME: atexit() uses GCC built-in function defined in Intel Pentium ABI! Works only with -mcpu=i586
 
 int atexit(void (*func)(void))
 {

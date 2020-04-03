@@ -155,7 +155,7 @@ void free(void *ptr)
 	mutexLock(malloc_common.mutex);
 
 	chunk = ptr - sizeof(size_t);
-	heap = _malloc_heapFind(chunk);	
+	heap = _malloc_heapFind(chunk);
 	_malloc_heapRelease(heap, chunk);
 	mutexUnlock(malloc_common.mutex);
 }
@@ -208,7 +208,7 @@ void *realloc(void *ptr, size_t size)
 			newchunk = _malloc_heapAllocate(heap, size);
 			memcpy(newchunk->userspace, chunk->userspace, chunk->size);
 			_malloc_heapRelease(heap, chunk);
-		} 
+		}
 	}
 	else if (size < chunk->size) {
 		newchunk = (chunk_t *)(chunk->userspace + chunk->size + sizeof(size_t));

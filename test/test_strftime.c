@@ -31,13 +31,13 @@ struct test_data {
 	int ret;
 };
 
-static const struct tm t1 = { .tm_sec = 1, .tm_min = 1, .tm_hour = 6, .tm_mday = 2, .tm_mon = 2, 
+static const struct tm t1 = { .tm_sec = 1, .tm_min = 1, .tm_hour = 6, .tm_mday = 2, .tm_mon = 2,
 							  .tm_year = 111, .tm_wday = 0, .tm_yday = 2, .tm_isdst = 0 };
 
-static const struct tm t2 = { .tm_sec = 11, .tm_min = 12, .tm_hour = 13, .tm_mday = 23, .tm_mon = 11, 
+static const struct tm t2 = { .tm_sec = 11, .tm_min = 12, .tm_hour = 13, .tm_mday = 23, .tm_mon = 11,
 							  .tm_year = 95, .tm_wday = 6, .tm_yday = 235, .tm_isdst = 0 };
 
-static const struct tm t3 = { .tm_sec = 11, .tm_min = 12, .tm_hour = 13, .tm_mday = 23, .tm_mon = 11, 
+static const struct tm t3 = { .tm_sec = 11, .tm_min = 12, .tm_hour = 13, .tm_mday = 23, .tm_mon = 11,
 							  .tm_year = 105, .tm_wday = 1, .tm_yday = 235, .tm_isdst = 0 };
 
 static const struct test_data test_vector[T1_LEN] = {
@@ -92,7 +92,7 @@ int strftime_assert(const struct test_data *data)
 		if (verbose_test()) {
 			printf("Format string \"%s\"\nOutput string \"%s\"\n", data->format, buff);
 			printf("Expected      \"%s\"\n", data->output);
-			printf("Return %d Expected: %d\n", ret, strlen(data->output));
+			printf("Return %d Expected: %d\n", ret, (int)strlen(data->output));
 		}
 		return 1;
 	}
@@ -110,5 +110,6 @@ int main(void)
 		failed += strftime_assert(&test_vector[i]);
 	}
 	printf("Performed %d testcases %d failed\n", T1_LEN, failed);
+	return 0;
 }
 

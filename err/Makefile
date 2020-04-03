@@ -1,11 +1,8 @@
 #
-# Makefile for libphoenix (err)
+# Makefile for libphoenix/err
 #
-# Copyright 2018 Phoenix Systems
+# Copyright 2018, 2020 Phoenix Systems
 # Author: Pawel Pisarczyk
 #
 
-ARCH_SRCS := err.c
-
-# include after all dependencies are set
-include $(TOPDIR)/Makefile.rules
+OBJS += $(addprefix $(PREFIX_O)err/, err.o)

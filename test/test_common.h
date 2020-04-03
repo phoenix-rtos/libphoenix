@@ -36,9 +36,9 @@ static inline void init_tm(struct tm *t, const int *input)
 {
 	t->tm_sec = input[0];
 	t->tm_min = input[1];
-	t->tm_hour = input[2]; 
-	t->tm_mday = input[3]; 
-	t->tm_mon = input[4]; 
+	t->tm_hour = input[2];
+	t->tm_mday = input[3];
+	t->tm_mon = input[4];
 	t->tm_year = input[5];
 	t->tm_wday = input[6];
 	t->tm_yday = input[7];
@@ -48,8 +48,8 @@ static inline void init_tm(struct tm *t, const int *input)
 
 static inline int compare_tm(struct tm *t1, struct tm *t2)
 {
-	return ((t1->tm_sec != t2->tm_sec) || (t1->tm_min != t2->tm_min) || (t1->tm_hour != t2->tm_hour) || 
-		   (t1->tm_mday != t2->tm_mday) || (t1->tm_mon != t2->tm_mon) || (t1->tm_year != t2->tm_year) || 
+	return ((t1->tm_sec != t2->tm_sec) || (t1->tm_min != t2->tm_min) || (t1->tm_hour != t2->tm_hour) ||
+		   (t1->tm_mday != t2->tm_mday) || (t1->tm_mon != t2->tm_mon) || (t1->tm_year != t2->tm_year) ||
 		   (t1->tm_wday != t2->tm_wday) || (t1->tm_yday != t2->tm_yday) || (t1->tm_isdst != t2->tm_isdst));
 }
 

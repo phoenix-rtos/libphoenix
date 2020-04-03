@@ -1,11 +1,7 @@
 #
-# Makefile for libphoenix (stdlib)
+# Makefile for libphoenix/stdlib
 #
-# Copyright 2017 Phoenix Systems
-# Author: Pawel Pisarczyk
+# Copyright 2018, 2019, 2020 Phoenix Systems
 #
 
-ARCH_SRCS := strtod.c strtoul.c strtoull.c malloc_dl.c rand.c bsearch.c exit.c qsort.c env.c pty.c abort.c random.c mkstemp.c atexit.c
-
-# include after all dependencies are set
-include $(TOPDIR)/Makefile.rules
+OBJS += $(addprefix $(PREFIX_O)stdlib/, abort.o bsearch.o exit.o mkstemp.o qsort.o random.o strtoul.o atexit.o env.o malloc_dl.o pty.o rand.o strtod.o strtoull.o)

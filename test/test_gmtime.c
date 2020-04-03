@@ -32,8 +32,8 @@ void generate_input_host(void)
 	struct tm t;
 	srand(time(NULL));
 	for (i = 0; i < T1_LEN; i++) {
-		t = (struct tm) { .tm_sec = rand() % 59, .tm_min = rand() % 59, .tm_hour = rand() % 23, 
-						  .tm_mday = rand() % 30, .tm_mon = rand() % 11, .tm_year = 1980 + rand() % 60, 
+		t = (struct tm) { .tm_sec = rand() % 59, .tm_min = rand() % 59, .tm_hour = rand() % 23,
+						  .tm_mday = rand() % 30, .tm_mon = rand() % 11, .tm_year = 1980 + rand() % 60,
 						  .tm_wday = 0, .tm_yday = 0, .tm_isdst = 0 };
 		printf("%lld", mktime(&t));
 		if (i != T1_LEN - 1)
@@ -75,10 +75,10 @@ int gmtime_assert(const time_t input, const int output[])
 			tm_to_str(&t_exp, buff);
 			printf("Expected: %s \n\n", buff);
 		}
-		return 1;	
+		return 1;
 	}
 	else
-	{	
+	{
 		return 0;
 	}
 }
@@ -103,7 +103,7 @@ static const time_t input_vector[] = {
 	61414952400,
 	/* 1 MAR 2017 - non-leap year */
 	61417630800,
-	/* rest are just various dates */ 
+	/* rest are just various dates */
 	61908090106,
 	61541479484,
 	60434228293,
