@@ -5,8 +5,8 @@
  *
  * endian checks and conversions
  *
- * Copyright 2017, 2018 Phoenix Systems
- * Author: Michał Mirosław
+ * Copyright 2017, 2018, 2020 Phoenix Systems
+ * Author: Michal Miroslaw, Lukasz Kosinski
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -24,21 +24,17 @@
 
 #include <arch.h>
 
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-#define __swap_le u
-#define __swap_be __builtin_bswap
-#else
-#define __swap_le __builtin_bswap
-#define __swap_be u
-#endif
-
-
 #define __CPP_CONCAT1(x, y) x ## y
 #define __CPP_CONCAT(x, y) __CPP_CONCAT1(x, y)
 
 
-#define __swap_le__(b) __CPP_CONCAT(__swap_le, b)
-#define __swap_be__(b) __CPP_CONCAT(__swap_be, b)
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+#define __swap_le__(b) __CPP_CONCAT(__CPP_CONCAT(uint, b), _t)
+#define __swap_be__(b) __CPP_CONCAT(__builtin_bswap, b)
+#else
+#define __swap_le__(b) __CPP_CONCAT(__builtin_bswap, b)
+#define __swap_be__(b) __CPP_CONCAT(__CPP_CONCAT(uint, b), _t)
+#endif
 
 
 #define le16toh(x) (__swap_le__(16))(x)
