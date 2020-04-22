@@ -28,6 +28,7 @@ MULTILIB_DIR := $(shell $(CC) $(CFLAGS) -print-multi-directory)
 LIBC_INSTALL_DIR := $(SYSROOT)/lib/$(MULTILIB_DIR)
 LIBC_INSTALL_NAMES := libc.a libm.a crt0.o libg.a
 HEADERS_INSTALL_DIR := $(SYSROOT)/usr/include
+LIBNAME := libphoenix.a
 
 ifeq (,$(filter-out /,$(SYSROOT)))
 $(error SYSROOT is not supported by the toolchain. Use cross-toolchain to compile.)
