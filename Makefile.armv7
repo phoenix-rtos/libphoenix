@@ -14,7 +14,7 @@ MKDEPFLAGS = $(CFLAGS)
 CC = $(CROSS)gcc
 
 ifeq ($(DEBUG), 1)
-	CFLAGS += -Og
+	CFLAGS += -Og -g
 else
 	CFLAGS += -O2 -DNDEBUG
 endif
