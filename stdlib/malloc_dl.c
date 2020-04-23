@@ -56,7 +56,7 @@ typedef struct _chunk_t {
 	struct _chunk_t *next;
 	struct _chunk_t *prev;
 	rbnode_t node; /* Only used for big chunks */
-} __attribute__ ((packed)) chunk_t;
+} __attribute__ ((packed, aligned(8))) chunk_t;
 
 
 struct {
