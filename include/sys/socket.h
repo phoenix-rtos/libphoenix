@@ -54,6 +54,7 @@
 #define SO_SNDLOWAT 0x1003
 #define SO_SNDTIMEO 0x1005
 #define SO_TYPE 0x1008
+#define SO_BINDTODEVICE 0x100b
 
 #define MSG_OOB  0x01
 #define MSG_PEEK 0x02
