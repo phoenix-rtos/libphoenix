@@ -56,9 +56,9 @@ void *memmove(void *dst, const void *src, size_t l)
 		mov r1, %2; \
 		mov r3, %1; \
 		mov r4, %0; \
-		orr r2, r3, r4; \
 		cmp %0, %1; \
 		bhs 3f; \
+		orr r2, r3, r4; \
 		ands r2, #3; \
 		bne 2f; \
 	1: \
@@ -77,6 +77,10 @@ void *memmove(void *dst, const void *src, size_t l)
 		bne 2b; \
 		b 8f; \
 	3: \
+		add r2, r3, r1; \
+		ands r2, #3; \
+		bne 6f; \
+		add r2, r4, r1; \
 		ands r2, #3; \
 		bne 6f; \
 		cmp r1, #4; \
