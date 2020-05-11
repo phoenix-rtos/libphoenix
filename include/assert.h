@@ -16,6 +16,8 @@
 #ifndef _LIBPHOENIX_ASSERT_H_
 #define _LIBPHOENIX_ASSERT_H_
 
+#include <stdio.h>
+#include <stdlib.h>
 
 #ifndef NDEBUG
 #define assert(__expr) \
