@@ -28,7 +28,6 @@ char **environ;
 const char *argv_progname;
 
 
-
 void _startc(int argc, char **argv, char **env)
 {
 	environ = env;

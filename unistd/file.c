@@ -42,7 +42,7 @@ WRAP_ERRNO_DEF(int, read, (int fildes, void *buf, size_t nbyte), (fildes, buf, n
 WRAP_ERRNO_DEF(int, write, (int fildes, const void *buf, size_t nbyte), (fildes, buf, nbyte))
 WRAP_ERRNO_DEF(int, close, (int fildes), (fildes))
 WRAP_ERRNO_DEF(int, ftruncate, (int fildes, off_t length), (fildes, length))
-WRAP_ERRNO_DEF(int, lseek, (int fildes, off_t offset, int whence), (fildes, offset, whence))
+WRAP_ERRNO_DEF(off_t, lseek, (int fildes, off_t offset, int whence), (fildes, offset, whence))
 WRAP_ERRNO_DEF(int, dup, (int fildes), (fildes))
 WRAP_ERRNO_DEF(int, dup2, (int fildes, int fildes2), (fildes, fildes2))
 // WRAP_ERRNO_DEF(int, pipe, (int fildes[2]), (fildes))

@@ -73,4 +73,10 @@ extern int tolower(int c);
 extern int toupper(int c);
 
 
+static inline int isascii(int c)
+{
+	return (c & ~0x7f);
+}
+
+
 #endif

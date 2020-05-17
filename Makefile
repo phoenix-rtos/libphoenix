@@ -16,8 +16,8 @@ MAKEFLAGS += --no-print-directory
 #TARGET ?= armv7m7-imxrt106x
 #TARGET ?= armv7m7-imxrt117x
 #TARGET ?= armv7a7-imx6ull
-TARGET ?= ia32-generic
-#TARGET ?= riscv64-spike
+#TARGET ?= ia32-generic
+TARGET ?= riscv64-spike
 
 include ../phoenix-rtos-build/Makefile.common
 include ../phoenix-rtos-build/Makefile.$(TARGET_SUFF)
@@ -35,7 +35,7 @@ endif
 
 # libphoenix shoudl be linked only with GCC library therefore LDLIBS is overloaded
 LDLIBS = $(GCCLIB)
-CFLAGS += -Iinclude
+CFLAGS += -Iinclude -fno-builtin-malloc
 
 
 OBJS = $(PREFIX_O)_startc.o
@@ -85,7 +85,7 @@ install: $(PREFIX_A)libphoenix.a headers
 	cp -a "$<" "$(LIBC_INSTALL_DIR)"; \
 	for lib in $(LIBC_INSTALL_NAMES); do \
 		if [ ! -e "$(LIBC_INSTALL_DIR)/$$lib" ]; then \
-			ln -sf "$(LIBC_INSTALL_DIR)/$(LIBNAME)" "$(LIBC_INSTALL_DIR)/$$lib"; \
+			ln -sf "$(LIBC_INSTALL_DIR)/libphoenix.a" "$(LIBC_INSTALL_DIR)/$$lib"; \
 		fi \
 	done; \
 	echo INSTALL "$(HEADERS_INSTALL_DIR)/*"; \

@@ -27,7 +27,7 @@
 #endif
 
 typedef int pid_t;
-typedef int off_t;
+typedef long off_t;
 typedef long long off64_t;
 typedef int mode_t;
 typedef int gid_t;
