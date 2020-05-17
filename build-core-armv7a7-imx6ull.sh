@@ -8,6 +8,9 @@
 # Author: Kaja Swat, Aleksander Kaminski, Pawel Pisarczyk
 #
 
+# fail immediately if any of the commands fails
+set -e
+
 b_log "Building phoenix-rtos-kernel"
 KERNEL_MAKECMDGOALS="install-headers"
 (cd phoenix-rtos-kernel/src/ && make $MAKEFLAGS $CLEAN $KERNEL_MAKECMDGOALS all)
@@ -50,8 +53,8 @@ b_install $PREFIX_PROG_STRIPPED/psd-old /sbin
 
 b_log "Building hostutils"
 (cd phoenix-rtos-hostutils/ && make $MAKEFLAGS $CLEAN all)
-cp "$PREFIX_BUILD_HOST/prog.stripped/phoenixd" $PREFIX_BOOT
-cp "$PREFIX_BUILD_HOST/prog.stripped/psu" $PREFIX_BOOT
+cp "$PREFIX_BUILD_HOST/prog.stripped/phoenixd" "$PREFIX_BOOT"
+cp "$PREFIX_BUILD_HOST/prog.stripped/psu" "$PREFIX_BOOT"
 
 b_log "Building phoenix-rtos-corelibs"
 (cd phoenix-rtos-corelibs/ && make $MAKEFLAGS $CLEAN all)
