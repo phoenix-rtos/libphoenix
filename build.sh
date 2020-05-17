@@ -18,7 +18,7 @@ TOPDIR="$(pwd)"
 PREFIX_BUILD="$(pwd)/_build/$TARGET"
 PREFIX_BUILD_HOST="$(pwd)/_build/host"
 PREFIX_FS="$(pwd)/_fs/$TARGET"
-PREFIX_BOOT=$(realpath "_boot")
+PREFIX_BOOT="$(pwd)/_boot"
 
 PREFIX_PROG="$PREFIX_BUILD/prog/"
 PREFIX_PROG_STRIPPED="$PREFIX_BUILD/prog.stripped/"
@@ -42,8 +42,6 @@ export TARGET TARGET_FAMILY TOPDIR PREFIX_BUILD PREFIX_BUILD_HOST\
 	PREFIX_FS PREFIX_BOOT PREFIX_PROG PREFIX_PROG_STRIPPED PREFIX_A\
 	PREFIX_H PREFIX_ROOTFS PREFIX_ROOTSKEL CROSS CFLAGS LDFLAGS CC LD\
 	AR AS CLEAN MAKEFLAGS DEVICE_FLAGS
-
-
 
 #
 # Parse command line
@@ -82,11 +80,6 @@ for i in "$@"; do
 	esac;
 done
 
-
-#if [ "X$CLEAN" == "Xclean" ]; then
-#	rm -fr $PREFIX_BUILD/*
-#fi
-
 #
 # Prepare
 #
@@ -98,9 +91,6 @@ fi
 echo " $(git rev-parse HEAD) $(basename "$(git rev-parse --show-toplevel)") ($(git describe --always --dirty))" > "${PREFIX_BUILD}/git-version"
 git submodule status --recursive >> "${PREFIX_BUILD}/git-version"
 
-
-echo $PREFIX_BUILD
-#exit 0
 #
 # Preparing filesystem
 #
@@ -142,5 +132,6 @@ fi
 # Build final filesystems
 #
 if [ "${B_IMAGE}" = "y" ]; then
+	mkdir -p "${PREFIX_BOOT}"
 	b_image
 fi
