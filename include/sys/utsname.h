@@ -16,7 +16,7 @@
 #ifndef _SYS_UTSNAME_H_
 #define _SYS_UTSNAME_H_
 
-#include <string.>
+#include <string.h>
 
 struct utsname {
 	char  sysname[16];
