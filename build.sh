@@ -10,13 +10,14 @@
 
 set -e
 
+. ./phoenix-rtos-build/build.subr
 . ./build.project
 
 TOPDIR="$(pwd)"
 
 PREFIX_BUILD="$(pwd)/_build/$TARGET"
 PREFIX_BUILD_HOST="$(pwd)/_build/host"
-PREFIX_FS=$(realpath "_fs")
+PREFIX_FS="$(pwd)/_fs/$TARGET"
 PREFIX_BOOT=$(realpath "_boot")
 
 PREFIX_PROG="$PREFIX_BUILD/prog/"
@@ -26,7 +27,7 @@ PREFIX_A="$PREFIX_BUILD/lib/"
 PREFIX_H="$PREFIX_BUILD/include/"
 
 PREFIX_ROOTFS="$PREFIX_FS/root/"
-PREFIX_ROOTSKEL="$PREFIX_FS/root-skel/"
+PREFIX_ROOTSKEL="$(pwd)/_fs//root-skel/"
 
 CFLAGS="${CFLAGS} -I${PREFIX_H}"
 LDFLAGS="$LDFLAGS -L$PREFIX_A"
@@ -42,7 +43,7 @@ export TARGET TARGET_FAMILY TOPDIR PREFIX_BUILD PREFIX_BUILD_HOST\
 	PREFIX_H PREFIX_ROOTFS PREFIX_ROOTSKEL CROSS CFLAGS LDFLAGS CC LD\
 	AR CLEAN MAKEFLAGS DEVICE_FLAGS
 
-. ./phoenix-rtos-build/build.subr
+
 
 #
 # Parse command line
@@ -58,7 +59,6 @@ B_CORE="n"
 B_PORTS="n"
 B_PROJECT="n"
 B_IMAGE="n"
-B_UPDATE_PKG="n"
 
 for i in $*; do
 	case "$i"
@@ -81,15 +81,16 @@ for i in $*; do
 		image)
 			B_IMAGE="y"
 			shift;;
-		update_pkg)
-			B_UPDATE_PKG="y"
-			shift;;
 		all)
-			B_FS="y"; B_CORE="y"; B_PORTS="y"; B_PROJECT="y"; B_IMAGE="y"; B_UPDATE_PKG="y";
+			B_FS="y"; B_CORE="y"; B_PORTS="y"; B_PROJECT="y"; B_IMAGE="y";
 			shift;;
 	esac;
 done
 
+
+#if [ "X$CLEAN" == "Xclean" ]; then
+#	rm -fr $PREFIX_BUILD/*
+#fi
 
 #
 # Prepare
@@ -103,6 +104,8 @@ echo " "$(git rev-parse HEAD)" "$(basename $(git rev-parse --show-toplevel))" ("
 git submodule status --recursive >> ${PREFIX_BUILD}/git-version
 
 
+echo $PREFIX_BUILD
+#exit 0
 #
 # Preparing filesystem
 #
@@ -114,6 +117,9 @@ if [ "X${B_FS}" == "Xy" ] && [ -d  ${PREFIX_ROOTSKEL} ]; then
 
 	mkdir -p ${PREFIX_ROOTFS}
 	cp -a ${PREFIX_ROOTSKEL}/. ${PREFIX_ROOTFS}
+
+
+echo "DSADSDASADs"
 
 	b_log "Saving git-version"
 	install -m 664 "${PREFIX_BUILD}/git-version" "$PREFIX_FS/root/etc"
@@ -145,11 +151,4 @@ fi
 #
 if [ "X${B_IMAGE}" == "Xy" ] && declare -f "b_image" > /dev/null; then
 	b_image
-fi
-
-#
-# Create update package
-#
-if [ "X${B_UPDATE_PKG}" == "Xy" ] && declare -f "b_update_pkg" > /dev/null; then
-	b_update_pkg
 fi

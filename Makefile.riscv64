@@ -25,7 +25,7 @@ LD = $(CROSS)ld
 LDFLAGS =
 GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 PHOENIXLIB := $(shell $(CC) $(CFLAGS) -print-file-name=libphoenix.a)
-LDLIBS := $(GCCLIB)
+LDLIBS := $(PHOENIXLIB) $(GCCLIB) 
 
 OBJCOPY = $(CROSS)objcopy
 OBJDUMP = $(CROSS)objdump

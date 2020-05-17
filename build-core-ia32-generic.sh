@@ -13,8 +13,8 @@ set -e
 b_log "Building phoenix-rtos-kernel"
 KERNEL_MAKECMDGOALS="install-headers"
 (cd phoenix-rtos-kernel/src && make $MAKEFLAGS $CLEAN $KERNEL_MAKECMDGOALS all)
-cp -a phoenix-rtos-kernel/phoenix-ia32-qemu.elf _build
-cp -a phoenix-rtos-kernel/phoenix-ia32-qemu.img _build
+cp -a phoenix-rtos-kernel/phoenix-ia32-generic.elf _build
+cp -a phoenix-rtos-kernel/phoenix-ia32-generic.img _build
 
 b_log "Building libphoenix"
 (cd libphoenix && make $MAKEFLAGS $CLEAN all install)
@@ -31,12 +31,12 @@ b_install "$PREFIX_PROG_STRIPPED/pc-uart" /sbin
 b_install "$PREFIX_PROG_STRIPPED/pc-ata" /sbin
 
 b_log "Building psh"
-(cd psh && make $MAKEFLAGS $CLEAN all)
+(cd phoenix-rtos-utils && make $MAKEFLAGS $CLEAN all)
 b_install "$PREFIX_PROG_STRIPPED/psh" /bin
 
-b_log "Building phoenix-rtos-lwip"
-(cd phoenix-rtos-lwip && make $MAKEFLAGS $CLEAN all)
-b_install "$PREFIX_PROG_STRIPPED/lwip" /sbin
+#b_log "Building phoenix-rtos-lwip"
+#(cd phoenix-rtos-lwip && make $MAKEFLAGS $CLEAN all)
+#b_install "$PREFIX_PROG_STRIPPED/lwip" /sbin
 
 b_log "Building posixsrv"
 (cd phoenix-rtos-posixsrv && make $MAKEFLAGS $CLEAN all)
