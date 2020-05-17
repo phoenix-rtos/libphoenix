@@ -210,8 +210,10 @@ int create_dev(oid_t *oid, const char *path)
 {
 	oid_t odev, odir;
 	msg_t msg = { 0 };
-	int retry = 0;
-	char *canonical_path, *dir, *sep, *name;
+	int retry = 0, err;
+	char *canonical_path, *dir, *sep, *name, *tpathalloc = NULL;
+	const char *tpath = path;
+	static int nodevfs = 0;
 
 	if (path == NULL || oid == NULL)
 		return -1;
@@ -219,17 +221,39 @@ int create_dev(oid_t *oid, const char *path)
 	while (lookup("devfs", NULL, &odev) < 0) {
 		/* if create_dev() is called by anyone started from syspage devfs
 		 * may be not registered yet so we try 3 times until we give up */
-		if (++retry > 3) {
+		if (++retry > 3 || nodevfs) {
+			nodevfs = 1;
 			/* fallback */
 			mkdir("/dev", 0666);
 
-			if (lookup("/dev", NULL, &odir) < 0)
-				return -ENOENT;
+			if (lookup("/dev", NULL, &odir) < 0) {
+				/* Looks like we don't have a filesystem.
+				 * Fall back to portRegister. */
+				if (*path != '/') {
+					/* Move point to /dev */
+					if ((tpathalloc = malloc(strlen(path) + 5)) == NULL)
+						return -ENOMEM;
+					strcpy(tpathalloc, "/dev/");
+					strcpy(tpathalloc + 5, path);
+					tpath = tpathalloc;
+				}
+
+				if ((canonical_path = canonicalize_file_name(tpath)) == NULL) {
+					free(tpathalloc);
+					return -1;
+				}
+
+				err = portRegister(oid->port, canonical_path, oid);
+				free(canonical_path);
+				free(tpathalloc);
+				return err;
+			}
 			odev = odir;
 			break;
 		}
-		else
+		else {
 			usleep(100000);
+		}
 	}
 
 	/* if someone uses full path to create device cut /dev prefix */

@@ -8,6 +8,9 @@
 $(PREFIX_PROG)test_condwait: $(PREFIX_O)test/test_condwait.o $(PREFIX_A)libphoenix.a
 	$(LINK)
 
+$(PREFIX_PROG)test_fcntl: $(PREFIX_O)test/test_fcntl.o $(PREFIX_A)libphoenix.a
+	$(LINK)
+
 $(PREFIX_PROG)test_env: $(PREFIX_O)test/test_env.o $(PREFIX_A)libphoenix.a
 	$(LINK)
 

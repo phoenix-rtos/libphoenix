@@ -810,6 +810,7 @@ ssize_t getline(char **lineptr, size_t *n, FILE *stream)
 	size_t linesz = 0;
 	offs_t offs;
 	int readsz, i, nl = 0;
+	char *tmp;
 
 	offs = (offs_t)ftell(stream);
 
@@ -832,10 +833,17 @@ ssize_t getline(char **lineptr, size_t *n, FILE *stream)
 	if (!nl)
 	   linesz++;
 
-	if (*lineptr == NULL && linesz > 0)
+	if (*lineptr == NULL)
 		*lineptr = malloc(linesz);
-	else if (*n < linesz)
-		*lineptr = realloc(*lineptr, linesz);
+	else if (*n < linesz) {
+		if ((tmp = realloc(*lineptr, linesz)) == NULL) {
+			free(*lineptr);
+		}
+		*lineptr = tmp;
+	}
+	if (*lineptr == NULL) {
+		return -ENOMEM;
+	}
 
 	*n = linesz - 1;
 
