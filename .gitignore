@@ -1,3 +1,7 @@
 build/*
 .DS_store
 .vscode/*
+string/errno.str.inc
+string/errno.tab.inc
+string/gaierr.str.inc
+string/gaierr.tab.inc
