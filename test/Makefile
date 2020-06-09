@@ -5,6 +5,9 @@
 # Author: Pawel Pisarczyk
 #
 
+$(PREFIX_PROG)test_malloc: $(PREFIX_O)test/test_malloc.o $(PREFIX_A)libphoenix.a
+	$(LINK)
+
 $(PREFIX_PROG)test_condwait: $(PREFIX_O)test/test_condwait.o $(PREFIX_A)libphoenix.a
 	$(LINK)
 
@@ -44,4 +47,4 @@ $(PREFIX_PROG)test_strftime: $(PREFIX_O)test/test_strftime.o $(PREFIX_A)libphoen
 $(PREFIX_PROG)test_memmove: $(PREFIX_O)test/test_memmove.o $(PREFIX_A)libphoenix.a
 	$(LINK)
 
-all: $(addprefix $(PREFIX_PROG_STRIPPED), test_condwait test_env test_mmap test_msg test_scanf test_signals test_str2num test_threads test_mktime test_gmtime test_strftime test_memmove)
+all: $(addprefix $(PREFIX_PROG_STRIPPED), test_malloc test_condwait test_env test_mmap test_msg test_scanf test_signals test_str2num test_threads test_mktime test_gmtime test_strftime test_memmove)
