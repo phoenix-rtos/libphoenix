@@ -5,8 +5,8 @@
  *
  * stdlib/malloc (Doug Lea)
  *
- * Copyright 2017 Phoenix Systems
- * Author: Jakub Sejdak
+ * Copyright 2017, 2020 Phoenix Systems
+ * Author: Jakub Sejdak, Jan Sikorski, Aleksander Kaminski
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -29,22 +29,22 @@
 #include <sysexits.h>
 #include <unistd.h>
 
-#define CEIL(value, size)			((((value) + (size) - 1) / (size)) * (size))
-#define FLOOR(value, size)			(((value) / (size)) * (size))
+#define CEIL(value, size)          ((((value) + (size) - 1) / (size)) * (size))
+#define FLOOR(value, size)         (((value) / (size)) * (size))
 
 #define CHUNK_PUSED                1
 #define CHUNK_CUSED                2
 
-#define CHUNK_OVERHEAD             (sizeof(size_t) + sizeof(heap_t*))
+#define CHUNK_OVERHEAD             CEIL(__builtin_offsetof(chunk_t, next), 8)
 #define CHUNK_MIN_SIZE             CEIL(__builtin_offsetof(chunk_t, node) + sizeof(size_t), 8)
 #define CHUNK_SMALLBIN_MAX_SIZE    (256 - CHUNK_OVERHEAD)
 
 
-typedef struct _heap_t {
+typedef struct {
 	size_t size;
 	size_t freesz;
 	uint8_t space[];
-} __attribute__ ((packed)) heap_t;
+} heap_t;
 
 
 typedef struct _chunk_t {
@@ -56,7 +56,7 @@ typedef struct _chunk_t {
 	struct _chunk_t *next;
 	struct _chunk_t *prev;
 	rbnode_t node; /* Only used for big chunks */
-} __attribute__ ((packed)) chunk_t;
+} chunk_t;
 
 
 struct {
@@ -137,12 +137,6 @@ static inline unsigned int malloc_getlidx(size_t size)
 }
 
 
-static inline size_t malloc_chunkPrevSize(chunk_t *chunk)
-{
-	return (chunk->size & CHUNK_PUSED) ? 0 : *((size_t*) chunk - 1);
-}
-
-
 static inline int malloc_chunkIsFirst(chunk_t *chunk)
 {
 	return (chunk->heap->space == (uint8_t*) chunk);
@@ -157,7 +151,7 @@ static long int malloc_chunkIsLast(chunk_t *chunk)
 
 static inline chunk_t *malloc_chunkPrev(chunk_t *chunk)
 {
-	unsigned prevSize = malloc_chunkPrevSize(chunk);
+	unsigned prevSize = (chunk->size & CHUNK_PUSED) ? 0 : *((size_t *) chunk - 1);
 	if (prevSize == 0)
 		return NULL;
 
@@ -177,7 +171,7 @@ static inline chunk_t *malloc_chunkNext(chunk_t *chunk)
 static inline void malloc_chunkSetFooter(chunk_t *chunk)
 {
 	size_t size = malloc_chunkSize(chunk);
-	*((size_t*)((uintptr_t) chunk + size) - 1) = size;
+	*((size_t *)((uintptr_t) chunk + size) - 1) = size;
 }
 
 
@@ -533,7 +527,7 @@ void *realloc(void *ptr, size_t size)
 	}
 	else if (size > chunksz) {
 		if ((next = malloc_chunkNext(chunk)) != NULL && !(next->size & CHUNK_CUSED) &&
-		    (malloc_chunkSize(next) >= (size - chunksz))) {
+				(malloc_chunkSize(next) >= (size - chunksz))) {
 			_malloc_allocFrom(next, size - chunksz);
 			chunk->size += malloc_chunkSize(next);
 		}
