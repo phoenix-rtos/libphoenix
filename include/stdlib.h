@@ -229,8 +229,21 @@ extern long random(void);
 extern void srandom(unsigned int seed);
 
 
-/* make unique filename */
+/* Create a uniquely named file */
+extern int mkostemps(char *template, int suffixlen, int flags);
+
+
+extern int mkstemps(char *template, int suffixlen);
+
+
+extern int mkostemp(char *template, int flags);
+
+
 extern int mkstemp(char *template);
+
+
+/* Create a unique directory */
+extern char *mkdtemp(char *template);
 
 
 /* register a funtion to run at process termination */
