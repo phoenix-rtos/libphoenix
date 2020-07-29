@@ -26,6 +26,7 @@
 enum {	dtDir = 0,
 		dtFile,
 		dtDev,
+		dtSymlink,
 		dtUnknown
 };
 
