@@ -56,12 +56,6 @@ int fchown(int fd, uid_t owner, gid_t group)
 }
 
 
-char *mkdtemp(char *template)
-{
-	return NULL;
-}
-
-
 int setgid(gid_t gid)
 {
 	return 0;
