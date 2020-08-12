@@ -10,15 +10,13 @@
 
 b_log "Building phoenix-rtos-kernel"
 
-KERNEL_MAKECMDGOALS="install-headers"
+KERNEL_MAKECMDGOALS=
+#"install-headers"
 if [ "X$CLEAN" == "Xclean" ]; then
 	KERNEL_MAKECMDGOALS="$CLEAN $KERNEL_MAKECMDGOALS"
 fi
 
-(cd phoenix-rtos-kernel/src && make $MAKEFLAGS $KERNEL_MAKECMDGOALS all)
-
-
-cp -a phoenix-rtos-kernel/phoenix-riscv64-spike.elf _build
+(cd phoenix-rtos-kernel && make $MAKEFLAGS $KERNEL_MAKECMDGOALS all)
 
 b_log "Building libphoenix"
 (cd libphoenix && make $MAKEFLAGS $CLEAN all install)

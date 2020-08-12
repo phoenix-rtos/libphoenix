@@ -15,14 +15,14 @@ MKDEPFLAGS = $(CFLAGS)
 
 CC = $(CROSS)gcc
 
-CFLAGS += -Wall -Wstrict-prototypes -I$(SRCDIR) -nostartfiles -nostdlib\
-	-fomit-frame-pointer -ffreestanding -mcmodel=medany
+CFLAGS += -O2 -Wall -Wstrict-prototypes -I$(SRCDIR) -nostartfiles -nostdlib\
+	-fomit-frame-pointer -ffreestanding -mcmodel=medany -fno-builtin
 
 AR = $(CROSS)ar
 ARFLAGS = -r
 
 LD = $(CROSS)ld
-LDFLAGS =
+LDFLAGS = -nostdlib
 GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 PHOENIXLIB := $(shell $(CC) $(CFLAGS) -print-file-name=libphoenix.a)
 LDLIBS := $(PHOENIXLIB) $(GCCLIB) 
@@ -32,3 +32,4 @@ OBJDUMP = $(CROSS)objdump
 
 STRIP = $(CROSS)strip
 
+VADDR_KERNEL_INIT = 0x0000003fc0000000

@@ -26,6 +26,8 @@ ifeq ($(TARGET_FAMILY), armv7m7)
 		-ffreestanding -mno-unaligned-access\
 		-fpic -fpie -msingle-pic-base -mno-pic-data-is-text-relative -DNOMMU
 
+	VADDR_KERNEL_INIT = 0x0
+
 else ifeq ($(TARGET_FAMILY), armv7m4)
 
 	CFLAGS += -Wall -Wstrict-prototypes -g -I$(SRCDIR) -nostartfiles -nostdlib\
@@ -33,11 +35,15 @@ else ifeq ($(TARGET_FAMILY), armv7m4)
 		-fpic -fpie -msingle-pic-base -mno-pic-data-is-text-relative -DNOMMU -fstack-usage\
 		-mcpu=cortex-m4
 
+	VADDR_KERNEL_INIT = 0x0
+
 else ifeq ($(TARGET_FAMILY), armv7m3)
 	CFLAGS += -Wall -Wstrict-prototypes -g -I$(SRCDIR) -nostartfiles -nostdlib\
 		-mthumb -fomit-frame-pointer -ffreestanding -mno-unaligned-access\
 		-fpic -fpie -msingle-pic-base -mno-pic-data-is-text-relative -DNOMMU -fstack-usage\
 		-mcpu=cortex-m3
+
+	VADDR_KERNEL_INIT = 0x0
 endif
 
 CFLAGS += -fdata-sections -ffunction-sections

@@ -33,3 +33,5 @@ OBJDUMP = $(CROSS)objdump
 STRIP = $(CROSS)strip
 
 ARCHMAKE = arch/ia32/Makefile
+
+VADDR_KERNEL_INIT=0xc0110000

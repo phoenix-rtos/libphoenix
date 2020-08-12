@@ -31,3 +31,6 @@ OBJDUMP = $(CROSS)objdump
 STRIP = $(CROSS)strip
 
 ARCHMAKE = arch/arm-imx/Makefile
+
+
+VADDR_KERNEL_INIT = 0xc0000000
