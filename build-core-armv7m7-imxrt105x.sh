@@ -1,0 +1,1 @@
+build-core-armv7m7-imxrt106x.sh
