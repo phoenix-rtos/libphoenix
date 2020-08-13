@@ -62,12 +62,14 @@ else
 	$(error Incorrect TARGET.)
 endif
 
+
+LDFLAGS = -z max-page-size=0x10 --gc-sections -q
+
 ifeq ($(KERNEL), 1)
 	CFLAGS += -DRAM_SIZE=$(RAM_SIZE) $(KERNEL_TARGET_DEFINE)
-	TEXT=
 else
 	CFLAGS += -fpic -fpie -msingle-pic-base -mno-pic-data-is-text-relative
-	TEXT=.text=0
+	LDFLAGS += -e _start --section-start .text=0 -Tbss=20000000
 endif
 
 
@@ -77,7 +79,7 @@ AR = $(CROSS)ar
 ARFLAGS = -r
 
 LD = $(CROSS)ld
-LDFLAGS = -nostdlib -e _start --section-start $(TEXT) -Tbss=20000000 -z max-page-size=0x10 --gc-sections -q
+
 GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 PHOENIXLIB := $(shell $(CC) $(CFLAGS) -print-file-name=libphoenix.a)
 LDLIBS := $(PHOENIXLIB) $(GCCLIB)
