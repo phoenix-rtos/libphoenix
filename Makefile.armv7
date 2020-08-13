@@ -23,28 +23,53 @@ ifeq ($(TARGET_FAMILY), armv7m7)
 	#FIXME: -mfpu=fpv5-d16 does not work with current toolchain
 	CFLAGS += -Wall -Wstrict-prototypes -g -I$(SRCDIR) -nostartfiles -nostdlib\
 		-mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -mthumb -fomit-frame-pointer\
-		-ffreestanding -mno-unaligned-access\
-		-fpic -fpie -msingle-pic-base -mno-pic-data-is-text-relative -DNOMMU
-
-	VADDR_KERNEL_INIT = 0x0
+		-ffreestanding -mno-unaligned-access -DNOMMU
 
 else ifeq ($(TARGET_FAMILY), armv7m4)
 
 	CFLAGS += -Wall -Wstrict-prototypes -g -I$(SRCDIR) -nostartfiles -nostdlib\
 		-mthumb -fomit-frame-pointer -ffreestanding -mno-unaligned-access\
-		-fpic -fpie -msingle-pic-base -mno-pic-data-is-text-relative -DNOMMU -fstack-usage\
-		-mcpu=cortex-m4
-
-	VADDR_KERNEL_INIT = 0x0
+		-DNOMMU -fstack-usage -mcpu=cortex-m4
 
 else ifeq ($(TARGET_FAMILY), armv7m3)
 	CFLAGS += -Wall -Wstrict-prototypes -g -I$(SRCDIR) -nostartfiles -nostdlib\
 		-mthumb -fomit-frame-pointer -ffreestanding -mno-unaligned-access\
-		-fpic -fpie -msingle-pic-base -mno-pic-data-is-text-relative -DNOMMU -fstack-usage\
-		-mcpu=cortex-m3
-
-	VADDR_KERNEL_INIT = 0x0
+		-DNOMMU -fstack-usage -mcpu=cortex-m3
 endif
+
+ifeq ($(TARGET_SUBFAMILY), stm32l152xd)
+	RAM_SIZE=48
+	VADDR_KERNEL_INIT=0x08000000
+	KERNEL_TARGET_DEFINE=-DCPU_STM32L1
+else ifeq ($(TARGET_SUBFAMILY), stm32l152xe)
+	RAM_SIZE=80
+	VADDR_KERNEL_INIT=0x08000000
+	KERNEL_TARGET_DEFINE=-DCPU_STM32L1
+else ifeq ($(TARGET_SUBFAMILY), stm32l4x6)
+	RAM_SIZE=320
+	VADDR_KERNEL_INIT=0x08000000
+	KERNEL_TARGET_DEFINE=-DCPU_STM32L4
+else ifeq ($(TARGET_SUBFAMILY), imxrt105x)
+	RAM_SIZE=128
+	VADDR_KERNEL_INIT=0
+else ifeq ($(TARGET_SUBFAMILY), imxrt106x)
+	RAM_SIZE=256
+	VADDR_KERNEL_INIT=0
+else ifeq ($(TARGET_SUBFAMILY), imxrt117x)
+	RAM_SIZE=256
+	VADDR_KERNEL_INIT=0
+else
+	$(error Incorrect TARGET.)
+endif
+
+ifeq ($(KERNEL), 1)
+	CFLAGS += -DRAM_SIZE=$(RAM_SIZE) $(KERNEL_TARGET_DEFINE)
+	TEXT=
+else
+	CFLAGS += -fpic -fpie -msingle-pic-base -mno-pic-data-is-text-relative
+	TEXT=.text=0
+endif
+
 
 CFLAGS += -fdata-sections -ffunction-sections
 
@@ -52,7 +77,7 @@ AR = $(CROSS)ar
 ARFLAGS = -r
 
 LD = $(CROSS)ld
-LDFLAGS = -nostdlib -e _start --section-start .text=0 -Tbss=20000000 -z max-page-size=0x10 --gc-sections -q
+LDFLAGS = -nostdlib -e _start --section-start $(TEXT) -Tbss=20000000 -z max-page-size=0x10 --gc-sections -q
 GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 PHOENIXLIB := $(shell $(CC) $(CFLAGS) -print-file-name=libphoenix.a)
 LDLIBS := $(PHOENIXLIB) $(GCCLIB)
