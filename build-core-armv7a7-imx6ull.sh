@@ -13,9 +13,7 @@ set -e
 
 b_log "Building phoenix-rtos-kernel"
 KERNEL_MAKECMDGOALS="install-headers"
-(cd phoenix-rtos-kernel/src/ && make $MAKEFLAGS $CLEAN $KERNEL_MAKECMDGOALS all)
-cp -a phoenix-rtos-kernel/phoenix-armv7a7-imx6ull.elf _build
-cp -a phoenix-rtos-kernel/phoenix-armv7a7-imx6ull.img _build
+(cd phoenix-rtos-kernel && make $MAKEFLAGS $CLEAN $KERNEL_MAKECMDGOALS all)
 
 b_log "Building libphoenix"
 (cd libphoenix && make $MAKEFLAGS $CLEAN all install)

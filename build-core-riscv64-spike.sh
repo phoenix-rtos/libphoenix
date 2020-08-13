@@ -10,8 +10,7 @@
 
 b_log "Building phoenix-rtos-kernel"
 
-KERNEL_MAKECMDGOALS=
-#"install-headers"
+KERNEL_MAKECMDGOALS="install-headers"
 if [ "X$CLEAN" == "Xclean" ]; then
 	KERNEL_MAKECMDGOALS="$CLEAN $KERNEL_MAKECMDGOALS"
 fi
