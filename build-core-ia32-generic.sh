@@ -21,7 +21,7 @@ b_log "Building libphoenix"
 b_log "Building phoenix-rtos-filesystems"
 (cd phoenix-rtos-filesystems && make $MAKEFLAGS $CLEAN all)
 b_install "$PREFIX_PROG_STRIPPED/dummyfs" /sbin
-b_install "$PREFIX_PROG_STRIPPED/ext2" /sbin
+#b_install "$PREFIX_PROG_STRIPPED/ext2" /sbin
 
 b_log "Building phoenix-rtos-devices"
 (cd phoenix-rtos-devices && make $MAKEFLAGS $CLEAN all)
