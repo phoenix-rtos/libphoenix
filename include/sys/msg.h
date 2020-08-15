@@ -40,9 +40,9 @@ extern int msgSend(uint32_t port, msg_t *m);
 
 extern int msgPulse(uint32_t port, msg_t *m);
 
-extern int msgRecv(uint32_t port, msg_t *m, unsigned int *rid);
+extern int msgRecv(uint32_t port, msg_t *m, unsigned long int *rid);
 
-extern int msgRespond(uint32_t port, msg_t *m, unsigned int rid);
+extern int msgRespond(uint32_t port, msg_t *m, unsigned long int rid);
 
 
 #endif
