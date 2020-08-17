@@ -21,6 +21,7 @@
 #define __ARCH_STDINT <arch/riscv64/stdint.h>
 #define __ARCH_LIMITS <arch/riscv64/limits.h>
 #define __ARCH_SYS_TYPES <arch/riscv64/types.h>
+#define __ARCH_SYS_IO <arch/riscv64/io.h>
 
 #define __MEMCPY
 #define __MEMSET
