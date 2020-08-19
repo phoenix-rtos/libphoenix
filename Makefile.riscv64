@@ -16,7 +16,7 @@ MKDEPFLAGS = $(CFLAGS)
 CC = $(CROSS)gcc
 
 CFLAGS += -O2 -Wall -Wstrict-prototypes -I$(SRCDIR) -nostartfiles -nostdlib\
-	-fomit-frame-pointer -ffreestanding -mcmodel=medany -fno-builtin
+	-fomit-frame-pointer -ffreestanding -mcmodel=medany -fno-builtin -DTARGET_RISCV64
 
 AR = $(CROSS)ar
 ARFLAGS = -r
