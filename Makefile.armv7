@@ -66,7 +66,7 @@ endif
 LDFLAGS = -z max-page-size=0x10 --gc-sections -q
 
 ifeq ($(KERNEL), 1)
-	CFLAGS += -DRAM_SIZE=$(RAM_SIZE) $(KERNEL_TARGET_DEFINE)
+	CFLAGS += -DRAM_SIZE=$(RAM_SIZE) $(KERNEL_TARGET_DEFINE) -ffixed-r9
 	LDFLAGS += -Tbss=20000000 -Tdata=20000000
 else
 	CFLAGS += -fpic -fpie -msingle-pic-base -mno-pic-data-is-text-relative
