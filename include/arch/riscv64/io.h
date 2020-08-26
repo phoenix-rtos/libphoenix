@@ -20,4 +20,17 @@ extern void sbi_putchar(int c);
 
 extern int sbi_getchar(void);
 
+static inline unsigned char inb(void *addr)
+{
+	unsigned char b;
+	b = *((char*)addr);
+	return b;
+}
+
+
+static inline void outb(void *addr, unsigned char b)
+{
+	*((char*)addr) = b;
+}
+
 #endif
