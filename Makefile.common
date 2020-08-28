@@ -91,7 +91,9 @@ PREFIX_PROG_STRIPPED ?= $(PREFIX_BUILD)/prog.stripped/
 
 # add include path for auto-generated files
 #CFLAGS += -I"$(BUILD_DIR)/$(CURR_SUFFIX)"
-CFLAGS += -I$(PREFIX_H)
+ifneq ($(KERNEL), 1)
+	CFLAGS += -I$(PREFIX_H)
+endif
 
 ARCH =  $(SIL)@mkdir -p $(@D); \
 	(printf "AR  %-24s\n" "$(@F)"); \

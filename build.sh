@@ -29,7 +29,7 @@ PREFIX_H="$PREFIX_BUILD/include/"
 PREFIX_ROOTFS="$PREFIX_FS/root/"
 PREFIX_ROOTSKEL="$(pwd)/_fs//root-skel/"
 
-CFLAGS="${CFLAGS} -I${PREFIX_H} -Dphoenix"
+CFLAGS="${CFLAGS} -Dphoenix"
 LDFLAGS="$LDFLAGS -L$PREFIX_A"
 CC=${CROSS}gcc
 AS=${CROSS}as
