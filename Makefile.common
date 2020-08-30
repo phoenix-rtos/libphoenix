@@ -46,7 +46,8 @@ endif
 
 #RISCV64
 TARGETS_RISCV64 += \
-	riscv64-spike
+	riscv64-spike \
+	riscv64-virt
 
 TARGETS += $(TARGETS_RISCV64)
 ifneq (,$(filter $(TARGETS_RISCV64),$(TARGET_FAMILY)-$(TARGET_SUBFAMILY)))
