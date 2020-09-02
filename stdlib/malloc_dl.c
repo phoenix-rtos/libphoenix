@@ -247,7 +247,7 @@ static void _malloc_chunkRemove(chunk_t *chunk)
 
 static inline int malloc_chunkCanSplit(chunk_t *chunk, size_t size)
 {
-	return (malloc_chunkSize(chunk) >= size + CHUNK_MIN_SIZE);
+	return (size >= CHUNK_OVERHEAD) && (malloc_chunkSize(chunk) >= size + CHUNK_MIN_SIZE);
 }
 
 
