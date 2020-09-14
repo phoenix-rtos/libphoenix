@@ -26,7 +26,8 @@ b_install "$PREFIX_PROG_STRIPPED/dummyfs" /sbin
 b_log "Building phoenix-rtos-devices"
 (cd phoenix-rtos-devices && make $MAKEFLAGS $CLEAN all)
 b_install "$PREFIX_PROG_STRIPPED/pc-tty" /sbin
-b_install "$PREFIX_PROG_STRIPPED/pc-uart" /sbin
+#b_install "$PREFIX_PROG_STRIPPED/pc-uart" /sbin
+b_install "$PREFIX_PROG_STRIPPED/uart16550" /sbin
 b_install "$PREFIX_PROG_STRIPPED/pc-ata" /sbin
 
 b_log "Building psh"
