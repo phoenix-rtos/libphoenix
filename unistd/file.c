@@ -71,8 +71,15 @@ int link(const char *path1, const char *path2)
 {
 	char *canonical1, *canonical2;
 	int err;
+
 	canonical1 = canonicalize_file_name(path1);
 	canonical2 = canonicalize_file_name(path2);
+	if ((canonical1 == NULL) || (canonical2 == NULL)) {
+		free(canonical1);
+		free(canonical2);
+		return SET_ERRNO(-ENOMEM);
+	}
+
 	err = sys_link(canonical1, canonical2);
 	free(canonical1);
 	free(canonical2);
@@ -85,7 +92,12 @@ int unlink(const char *path)
 {
 	char *canonical;
 	int err;
+
 	canonical = canonicalize_file_name(path);
+	if (canonical == NULL) {
+		return SET_ERRNO(-ENOMEM);
+	}
+
 	err = sys_unlink(canonical);
 	free(canonical);
 	return SET_ERRNO(err);
@@ -105,6 +117,9 @@ int open(const char *filename, int oflag, ...)
 	va_end(ap);
 
 	canonical = canonicalize_file_name(filename);
+	if (canonical == NULL) {
+		return SET_ERRNO(-ENOMEM);
+	}
 
 	do
 		err = sys_open(canonical, oflag, mode);
@@ -121,6 +136,10 @@ int mkfifo(const char *filename, mode_t mode)
 	char *canonical;
 
 	canonical = canonicalize_file_name(filename);
+	if (canonical == NULL) {
+		return SET_ERRNO(-ENOMEM);
+	}
+
 	while ((err = sys_mkfifo(canonical, mode)) == -EINTR)
 		;
 	free(canonical);
@@ -141,7 +160,15 @@ int symlink(const char *path1, const char *path2)
 		return -EINVAL;
 
 	canonical1 = canonicalize_file_name(path2);
+	if (canonical1 == NULL) {
+		return -ENOMEM;
+	}
+
 	canonical2 = strdup(canonical1);
+	if (canonical2 == NULL) {
+		free(canonical1);
+		return -ENOMEM;
+	}
 
 	dir_name = dirname(canonical1);
 
@@ -192,6 +219,9 @@ int access(const char *path, int amode)
 		return 0;
 
 	char *canonical_name = canonicalize_file_name(path);
+	if (canonical_name == NULL) {
+		return SET_ERRNO(-ENOMEM);
+	}
 
 	// NOTE: for now checking only if file exists
 	if (lookup(canonical_name, &oid, &dev) < 0) {
@@ -231,7 +261,7 @@ int create_dev(oid_t *oid, const char *path)
 				 * Fall back to portRegister. */
 				if (*path != '/') {
 					/* Move point to /dev */
-					if ((tpathalloc = malloc(strlen(path) + 5)) == NULL)
+					if ((tpathalloc = malloc(strlen(path) + 6)) == NULL)
 						return -ENOMEM;
 					strcpy(tpathalloc, "/dev/");
 					strcpy(tpathalloc + 5, path);
