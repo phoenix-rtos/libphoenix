@@ -125,7 +125,7 @@ char *canonicalize_file_name(const char *path)
 	int cwdlen;
 	int pathlen;
 
-	if (path == NULL)
+	if ((path == NULL) || (*path == '\0'))
 		return NULL;
 
 	pathlen = strlen(path);
@@ -205,6 +205,12 @@ DIR *opendir(const char *dirname)
 	char *canonical_name = canonicalize_file_name(dirname);
 	DIR *s = calloc(1, sizeof(DIR));
 
+	if ((canonical_name == NULL) || (s == NULL)) {
+		free(canonical_name);
+		free(s);
+		return NULL; /* ENOMEM */
+	}
+
 	if (!dirname[0] || (lookup((char *)canonical_name, NULL, &s->oid) < 0)) {
 		free(canonical_name);
 		free(s);
@@ -257,20 +263,18 @@ DIR *opendir(const char *dirname)
 int closedir(DIR *dirp)
 {
 	msg_t msg = { 0 };
+	int ret = 0;
 
 	msg.type = mtClose;
 	memcpy(&msg.i.openclose.oid, &dirp->oid, sizeof(oid_t));
 
-	if (msgSend(dirp->oid.port, &msg) < 0)
-		return -1; /* EIO */
-
-	if (msg.o.io.err < 0)
-		return -1;
+	if ((msgSend(dirp->oid.port, &msg) < 0) || (msg.o.io.err < 0))
+		ret = -1;
 
 	free(dirp->dirent);
 	free(dirp);
 
-	return 0;
+	return ret;
 }
 
 
@@ -284,7 +288,8 @@ ssize_t readlink(const char *path, char *buf, size_t bufsiz)
 	if (path == NULL)
 		return -EINVAL;
 
-	canonical = canonicalize_file_name(path);
+	if ((canonical = canonicalize_file_name(path)) == NULL)
+		return -ENOMEM;
 
 	if ((ret = lookup(canonical, NULL, &oid)) < 0) {
 		free(canonical);
