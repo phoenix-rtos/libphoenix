@@ -66,7 +66,7 @@ include termios/Makefile
 include time/Makefile
 include unistd/Makefile
 
-include test/Makefile
+#include test/Makefile
 
 $(PREFIX_A)libphoenix.a: $(OBJS)
 	$(ARCH)
