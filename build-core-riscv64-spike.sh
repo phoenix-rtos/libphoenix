@@ -33,6 +33,10 @@ b_log "Building psh"
 (cd phoenix-rtos-utils && make $MAKEFLAGS $CLEAN all)
 b_install "$PREFIX_PROG_STRIPPED/psh" /bin
 
+b_log "Building phoenix-rtos-tests"
+(cd phoenix-rtos-tests && make $MAKEFLAGS $CLEAN all)
+b_install "$PREFIX_PROG_STRIPPED/test_msg" /bin
+
 #b_log "Building phoenix-rtos-lwip"
 #(cd phoenix-rtos-lwip && make $MAKEFLAGS $CLEAN all)
 #b_install "$PREFIX_PROG_STRIPPED/lwip" /sbin
