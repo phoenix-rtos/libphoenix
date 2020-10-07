@@ -23,3 +23,6 @@ b_log "Building phoenix-rtos-devices"
 
 b_log "Building phoenix-rtos-filesystems"
 (cd phoenix-rtos-filesystems && make $MAKEFLAGS $CLEAN all)
+
+b_log "Building coreutils"
+(cd phoenix-rtos-utils && make $MAKEFLAGS $CLEAN all)
