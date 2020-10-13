@@ -16,7 +16,7 @@ CC = $(CROSS)gcc
 ifeq ($(DEBUG), 1)
 	CFLAGS += -Og
 else
-	CFLAGS += -O2 -DNDEBUG -DWATCHDOG
+	CFLAGS += -O2 -DNDEBUG #-DWATCHDOG
 endif
 
 ifeq ($(TARGET_FAMILY), armv7m7)
