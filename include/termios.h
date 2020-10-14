@@ -214,6 +214,10 @@ pid_t tcgetpgrp(int fd);
 
 pid_t tcgetsid(int fd);
 
+
+void cfmakeraw(struct termios *termios_p);
+
+
 static inline speed_t cfgetispeed(const struct termios *termios_p)
 {
 	return termios_p->c_ispeed;
