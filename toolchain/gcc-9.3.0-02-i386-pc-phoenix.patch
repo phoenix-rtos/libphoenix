@@ -12,7 +12,7 @@ diff -Naur gcc-9.3.0-orig/fixincludes/mkfixinc.sh gcc-9.3.0/fixincludes/mkfixinc
 diff -Naur gcc-9.3.0-orig/gcc/config.gcc gcc-9.3.0/gcc/config.gcc
 --- gcc-9.3.0-orig/gcc/config.gcc	2020-03-12 12:07:21.000000000 +0100
 +++ gcc-9.3.0/gcc/config.gcc	2020-03-18 19:25:57.937836171 +0100
-@@ -1635,6 +1637,9 @@
+@@ -1637,6 +1639,9 @@
  i[34567]86-*-elf*)
  	tm_file="${tm_file} i386/unix.h i386/att.h dbxelf.h elfos.h newlib-stdint.h i386/i386elf.h"
  	;;

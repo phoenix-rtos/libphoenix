@@ -11,7 +11,7 @@ log() {
 
 if [ -z "$1" ]; then
     echo "No toolchain target provided! Abort."
-    echo "officially supported targets: arm-phoenix i386-pc-phoenix riscv64-phoenix-elf"
+    echo "officially supported targets: arm-phoenix i386-pc-phoenix riscv64-phoenix"
     exit 1
 fi
 
