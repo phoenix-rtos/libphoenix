@@ -1,0 +1,46 @@
+diff -Naur --exclude '*build*' --exclude '*gmp*' --exclude '*mpfr*' --exclude '*isl*' --exclude '*mpc*' gcc-9.3.0-orig/gcc/config/riscv/phoenix.h gcc-9.3.0/gcc/config/riscv/phoenix.h
+--- gcc-9.3.0-orig/gcc/config/riscv/phoenix.h	1970-01-01 01:00:00.000000000 +0100
++++ gcc-9.3.0/gcc/config/riscv/phoenix.h	2020-10-19 13:41:30.150476780 +0200
+@@ -0,0 +1,21 @@
++/* Target macros for riscv*-elf targets.
++   Copyright (C) 1994-2019 Free Software Foundation, Inc.
++
++This file is part of GCC.
++
++GCC is free software; you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation; either version 3, or (at your option)
++any later version.
++
++GCC is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with GCC; see the file COPYING3.  If not see
++<http://www.gnu.org/licenses/>.  */
++
++/* Phoenix-RTOS does not provide libgloss, link remove if from default libs - see riscv/elf.h */
++#undef  LIB_SPEC
+diff -Naur --exclude '*build*' --exclude '*gmp*' --exclude '*mpfr*' --exclude '*isl*' --exclude '*mpc*' gcc-9.3.0-orig/gcc/config.gcc gcc-9.3.0/gcc/config.gcc
+--- gcc-9.3.0-orig/gcc/config.gcc	2020-10-19 13:24:43.512413024 +0200
++++ gcc-9.3.0/gcc/config.gcc	2020-10-19 13:41:49.274895804 +0200
+@@ -2218,13 +2218,16 @@
+ 	# automatically detect that GAS supports it, yet we require it.
+ 	gcc_cv_initfini_array=yes
+ 	;;
+-riscv*-*-elf* | riscv*-*-rtems*)
++riscv*-*-elf* | riscv*-*-rtems* | riscv*-*-phoenix*)
+ 	tm_file="elfos.h newlib-stdint.h ${tm_file} riscv/elf.h"
+ 	case ${target} in
+ 	*-*-rtems*)
+ 	  tm_file="${tm_file} rtems.h riscv/rtems.h"
+ 	  tmake_file="${tmake_file} riscv/t-rtems"
+ 	  ;;
++	*-*-phoenix*)
++	  tm_file="${tm_file} phoenix.h riscv/phoenix.h"
++	  ;;
+ 	*)
+ 	  case "x${enable_multilib}" in
+ 	  xno) ;;
