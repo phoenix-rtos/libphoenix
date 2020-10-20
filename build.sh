@@ -95,6 +95,7 @@ fi
 #
 mkdir -p "$PREFIX_BUILD"
 mkdir -p "$PREFIX_BUILD_HOST"
+mkdir -p "$PREFIX_BOOT"
 if declare -f "b_prepare" > /dev/null; then
 	b_prepare
 fi
