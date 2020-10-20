@@ -80,6 +80,17 @@ for i in "$@"; do
 done
 
 #
+# Clean if requested
+#
+if [ -n "$CLEAN" ]; then
+	b_log "Cleaning build dir"
+    rm -rf "$PREFIX_BUILD" "$PREFIX_BUILD_HOST"
+    rm -rf "$PREFIX_FS"
+    #FIXME: this should also remove unpacked sources in 'ports' (the easiest option is to move them to _boot)
+    #TODO: remove per-component CLEAN var dependency
+fi
+
+#
 # Prepare
 #
 mkdir -p "$PREFIX_BUILD"
@@ -95,9 +106,6 @@ git submodule status --recursive >> "${PREFIX_BUILD}/git-version"
 #
 if [ "${B_FS}" = "y" ] && [ -d  "${PREFIX_ROOTSKEL}" ]; then
 	b_log "Preparing filesystem"
-	if [ "$CLEAN" = "clean" ]; then
-		rm -fr "$PREFIX_FS/root/"*
-	fi
 
 	mkdir -p "${PREFIX_ROOTFS}"
 	cp -a "${PREFIX_ROOTSKEL}/." "${PREFIX_ROOTFS}"
