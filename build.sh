@@ -84,10 +84,10 @@ done
 #
 if [ -n "$CLEAN" ]; then
 	b_log "Cleaning build dir"
-    rm -rf "$PREFIX_BUILD" "$PREFIX_BUILD_HOST"
-    rm -rf "$PREFIX_FS"
-    #FIXME: this should also remove unpacked sources in 'ports' (the easiest option is to move them to _boot)
-    #TODO: remove per-component CLEAN var dependency
+	rm -rf "$PREFIX_BUILD" "$PREFIX_BUILD_HOST"
+	rm -rf "$PREFIX_FS"
+	#FIXME: this should also remove unpacked sources in 'ports' (the easiest option is to move them to _boot)
+	#TODO: remove per-component CLEAN var dependency
 fi
 
 #
