@@ -71,11 +71,9 @@ for i in "$@"; do
 		project)
 			B_PROJECT="y";;
 		image)
-			B_IMAGE="y"
-			shift;;
+			B_IMAGE="y";;
 		all)
-			B_FS="y"; B_CORE="y"; B_PORTS="y"; B_PROJECT="y"; B_IMAGE="y";
-			shift;;
+			B_FS="y"; B_CORE="y"; B_PORTS="y"; B_PROJECT="y"; B_IMAGE="y";;
 	esac;
 done
 
