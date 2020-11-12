@@ -19,7 +19,7 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 
-typedef char cc_t;
+typedef unsigned cc_t;
 typedef int speed_t;
 typedef int tcflag_t;
 
