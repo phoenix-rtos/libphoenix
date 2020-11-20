@@ -74,6 +74,9 @@ endif
 # Common rules
 #
 
+# reset compilation flags
+CFLAGS :=
+
 TOPDIR := $(CURDIR)
 PREFIX_BUILD ?= ../_build/$(TARGET)
 PREFIX_BUILD := $(abspath $(PREFIX_BUILD))

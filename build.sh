@@ -118,7 +118,7 @@ fi
 # Build core part
 #
 if [ "${B_CORE}" = "y" ]; then
-	"./phoenix-rtos-build/build-core-${TARGET_SUBFAMILY}.sh"
+	"./phoenix-rtos-build/build-core-${TARGET_FAMILY}-${TARGET_SUBFAMILY}.sh"
 fi
 
 #
