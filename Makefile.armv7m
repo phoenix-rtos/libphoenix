@@ -73,7 +73,6 @@ ifeq ($(KERNEL), 1)
 	LDFLAGS += -Tbss=20000000 -Tdata=20000000
 else
 	CFLAGS += -fpic -fpie -msingle-pic-base -mno-pic-data-is-text-relative
-	LDFLAGS += -e _start --section-start .text=0 -Tbss=20000000
 endif
 
 
