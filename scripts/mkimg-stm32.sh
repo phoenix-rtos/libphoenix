@@ -75,7 +75,7 @@ for arg in "$@"; do
 	cp $app tmp.elf
 	${CROSS}strip $STRIP_OPT tmp.elf
 	echo "${CROSS}strip $STRIP_OPT tmp.elf"
-	SIZE=$(stat -c "%s" tmp.elf)
+	SIZE=$(wc -c < tmp.elf)
 	rm -f tmp.elf
 	END=$(($OFFSET + $SIZE))
 	reverse $END >> syspage.hex #end
@@ -115,7 +115,7 @@ for arg in "$@"; do
 	ELFOFFS=$(($(readelf -l $app | awk '/LOAD/ && /R E/ { print $2 }')))
 	printf "add-symbol-file %s 0x%08x\n" $(realpath $app) $((OFFSET + $FLASH_START + $ELFOFFS)) >> $GDB_SYM_FILE
 	dd if=tmp.elf of=$OUTPUT bs=1 seek=$OFFSET 2>/dev/null
-	OFFSET=$((($OFFSET + $(stat -c "%s" tmp.elf) + $SIZE_PAGE - 1)&$PAGE_MASK))
+	OFFSET=$((($OFFSET + $(wc -c < tmp.elf) + $SIZE_PAGE - 1)&$PAGE_MASK))
 	rm -f tmp.elf
 done
 
