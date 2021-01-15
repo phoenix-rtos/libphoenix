@@ -24,6 +24,7 @@
 /* Predefined oids */
 #define OID_NULL         NULL
 #define OID_PHYSMEM      (void *)-1
+#define OID_CONTIGUOUS   (void *)-2
 
 
 #define MAP_ANON	MAP_ANONYMOUS
