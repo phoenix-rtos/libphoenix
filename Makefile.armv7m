@@ -20,9 +20,8 @@ else
 endif
 
 ifeq ($(TARGET_FAMILY), armv7m7)
-	#FIXME: -mfpu=fpv5-d16 does not work with current toolchain
 	CFLAGS += -Wall -Wstrict-prototypes -g -I$(SRCDIR) -nostartfiles -nostdlib\
-		-mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -mthumb -fomit-frame-pointer\
+		-mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16 -mthumb -fomit-frame-pointer\
 		-ffreestanding -mno-unaligned-access -DNOMMU
 
 else ifeq ($(TARGET_FAMILY), armv7m4)
