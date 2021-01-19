@@ -1,0 +1,38 @@
+#
+# Common Makefile for host
+#
+# Copyright 2018-2021 Phoenix Systems
+#
+# %LICENSE%
+#
+
+CROSS ?=
+
+MKDEP = $(CROSS)gcc -MM
+MKDEPFLAGS = $(CFLAGS)
+
+CC = $(CROSS)gcc
+
+ifeq ($(DEBUG), 1)
+	CFLAGS += -Og
+else
+	CFLAGS += -O2 -DNDEBUG
+endif
+
+CFLAGS += -Wall -Wstrict-prototypes -g -fomit-frame-pointer
+
+AR = $(CROSS)ar
+ARFLAGS = -r
+
+LD = $(CROSS)gcc
+LDFLAGS += -Wl,--gc-sections
+
+OBJCOPY = $(CROSS)objcopy
+OBJDUMP = $(CROSS)objdump
+STRIP = $(CROSS)strip
+
+# Sanitizers
+ifneq ($(NOSAN), 1)
+CFLAGS += -fsanitize=address,undefined
+LDFLAGS += -fsanitize=address,undefined
+endif

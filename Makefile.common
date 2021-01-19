@@ -54,9 +54,14 @@ ifneq (,$(filter $(TARGETS_RISCV64),$(TARGET_FAMILY)-$(TARGET_SUBFAMILY)))
 	TARGET_SUFF ?= riscv64
 endif
 
+TARGETS += host-pc
+ifeq ($(TARGET_FAMILY), host)
+	TARGET_SUFF ?= host
+endif
+
 # Check target
 ifeq (,$(filter $(TARGETS),$(TARGET_FAMILY)-$(TARGET_SUBFAMILY)))
-$(error Incorrect TARGET. Available targets: $(TARGETS))
+$(error Incorrect TARGET $(TARGET_FAMILY)-$(TARGET_SUBFAMILY). Available targets: $(TARGETS))
 endif
 
 #

@@ -43,7 +43,7 @@ b_install "$PREFIX_PROG_STRIPPED"/psd /sbin
 #b_install "$PREFIX_PROG_STRIPPED/posixsrv" /bin
 
 b_log "Building hostutils"
-(cd phoenix-rtos-hostutils/ && make $MAKEFLAGS $CLEAN all)
+(cd phoenix-rtos-hostutils/ && make -f Makefile.old $MAKEFLAGS $CLEAN all)
 mkdir -p "$PREFIX_BOOT"
 cp "$PREFIX_BUILD_HOST/prog.stripped/phoenixd" "$PREFIX_BOOT"
 cp "$PREFIX_BUILD_HOST/prog.stripped/psu" "$PREFIX_BOOT"

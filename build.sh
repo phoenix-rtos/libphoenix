@@ -16,7 +16,7 @@ set -e
 TOPDIR="$(pwd)"
 
 PREFIX_BUILD="$(pwd)/_build/$TARGET"
-PREFIX_BUILD_HOST="$(pwd)/_build/host"
+PREFIX_BUILD_HOST="$(pwd)/_build/host-pc"
 PREFIX_FS="$(pwd)/_fs/$TARGET"
 PREFIX_BOOT="$(pwd)/_boot"
 
