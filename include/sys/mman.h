@@ -21,16 +21,8 @@
 #include <phoenix/mman.h>
 
 
-/* Predefined oids */
-#define OID_NULL         NULL
-#define OID_PHYSMEM      (void *)-1
-#define OID_CONTIGUOUS   (void *)-2
-
-
-#define MAP_ANON	MAP_ANONYMOUS
-
-
-#define MAP_FAILED     (void *)-1
+#define MAP_ANON   MAP_ANONYMOUS
+#define MAP_FAILED (void *)-1
 
 
 extern void mmdump(void);
