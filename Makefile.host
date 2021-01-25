@@ -1,0 +1,42 @@
+#
+# Makefile for minimal libphoenix prepared for host
+#
+# Copyright 2018-2021 Phoenix Systems
+#
+# %LICENSE%
+#
+
+SIL ?= @
+MAKEFLAGS += --no-print-directory
+
+TARGET ?= host-pc
+
+include ../phoenix-rtos-build/Makefile.common
+include ../phoenix-rtos-build/Makefile.$(TARGET_SUFF)
+
+# establish sysroot
+LIBNAME := libphoenix.a
+
+CFLAGS += -Iinclude -fno-builtin-malloc
+
+HEADERS := sys/rb.h
+HEADERS := $(patsubst %,$(PREFIX_H)%,$(HEADERS))
+OBJS := sys/rb.o
+OBJS := $(patsubst %,$(PREFIX_O)%,$(OBJS))
+
+
+all: $(PREFIX_A)$(LIBNAME) $(HEADERS)
+
+$(PREFIX_A)$(LIBNAME): $(OBJS)
+	$(ARCH)
+
+$(PREFIX_H)%.h: include/%.h
+	$(HEADER)
+
+.PHONY: clean
+clean:
+	@echo "rm -rf $(BUILD_DIR)"
+
+ifneq ($(filter clean,$(MAKECMDGOALS)),)
+	$(shell rm -rf $(BUILD_DIR))
+endif
