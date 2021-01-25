@@ -14,7 +14,6 @@
  */
 
 #include <sys/rb.h>
-#include <errno.h>
 #include <string.h>
 
 
