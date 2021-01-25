@@ -72,7 +72,7 @@ int strcasecmp(const char *s1, const char *s2)
 
 #ifndef __STRNCASECMP
 #define __STRNCASECMP
-int strncasecmp(const char *s1, const char *s2, int n)
+int strncasecmp(const char *s1, const char *s2, size_t n)
 {
 	const char *p;
 	unsigned int k;
