@@ -127,13 +127,13 @@ extern const struct in6_addr in6addr_loopback;
 
 /* IPv4 mapped address */
 #define IN6_IS_ADDR_V4MAPPED(a) \
-		(((a)->s6_addr32[0] == 0 && (a)->s6_addr32[1] && \
+		(((a)->s6_addr32[0] == 0 && (a)->s6_addr32[1] == 0 && \
 		  (a)->s6_addr32[2] == 0xffff0000))
 
 /* IPv4-compatible address */
 #define IN6_IS_ADDR_V4COMPAT(a) \
 	(((a)->s6_addr32[0] == 0 && (a)->s6_addr32[1] == 0 && \
-	  (a)->s6_addr32[2] == 0 && (a)->s6_addr32[3] != 0x01000000 \
+	  (a)->s6_addr32[2] == 0 && (a)->s6_addr32[3] != 0x01000000 && \
 	  (a)->s6_addr32[3] != 0))
 
 /* Multicast node-local address */
