@@ -47,6 +47,7 @@
 
 
 #define	FIONREAD		_IOR('f', 127, int)
+#define	FIONBIO			_IOW('f', 126, unsigned long)
 
 
 int ioctl(int fd, unsigned long cmd, ... );
