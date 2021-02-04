@@ -5,8 +5,8 @@
  *
  * sys/sicjet.c
  *
- * Copyright 2018 Phoenix Systems
- * Author: Michał Mirosław
+ * Copyright 2018, 2021 Phoenix Systems
+ * Author: Michał Mirosław, Maciej Purski
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -26,6 +26,7 @@
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <ifaddrs.h>
 
 WRAP_ERRNO_DEF(int, accept, (int socket, struct sockaddr *address, socklen_t *address_len), (socket, address, address_len))
 WRAP_ERRNO_DEF(int, accept4, (int socket, struct sockaddr *address, socklen_t *address_len, int flags), (socket, address, address_len, flags))
@@ -434,4 +435,123 @@ int socketpair(int domain, int type, int protocol, int socket_vector[2])
 	}
 
 	return 0;
+}
+
+
+int getifaddrs(struct ifaddrs **ifap)
+{
+	struct ifaddrs *ifa;
+	msg_t msg = { 0 };
+	size_t bufsz, namesz, addrsz;
+	char *p;
+	sockport_resp_t *smo = (sockport_resp_t *)msg.o.raw;
+	void *tmp;
+
+	msg.type = sockmGetIfAddrs;
+	msg.o.size = 256;
+
+	for (;;) {
+		tmp = realloc(msg.o.data, msg.o.size);
+		if (!tmp) {
+			free(msg.o.data);
+			return EAI_MEMORY;
+		}
+		msg.o.data = tmp;
+
+		if (socksrvcall(&msg) < 0) {
+			free(msg.o.data);
+			return EAI_SYSTEM;
+		}
+
+		if (smo->ret != EAI_OVERFLOW)
+			break;
+
+		if (msg.o.size < smo->sys.buflen)
+			msg.o.size = smo->sys.buflen;
+		else
+			msg.o.size *= 2;
+	}
+
+	bufsz = smo->sys.buflen;
+	if (smo->ret || bufsz > msg.o.size) {
+		free(msg.o.data);
+		if (smo->ret == EAI_SYSTEM)
+			(void)SET_ERRNO(-smo->sys.err);
+		return smo->ret;
+	}
+
+	*ifap = msg.o.data;
+
+	for (ifa = msg.o.data; ifa; ifa = ifa->ifa_next) {
+		if (bufsz < (uintptr_t)ifa - (uintptr_t)msg.o.data + sizeof(*ifa))
+			goto out_overflow;
+
+		if (ifa->ifa_addr) {
+			if (bufsz < (uintptr_t)ifa->ifa_addr + sizeof(sa_family_t))
+				goto out_overflow;
+
+			/* First byte of sa_family field contains addr len */
+			addrsz = *(uint8_t *)((uintptr_t)msg.o.data + (uintptr_t)ifa->ifa_addr);
+			if (bufsz < (uintptr_t)ifa->ifa_addr + addrsz)
+				goto out_overflow;
+
+			ifa->ifa_addr = msg.o.data + (uintptr_t)ifa->ifa_addr;
+			/* This shift converts lwip sa_family field format to libphoenix */
+			ifa->ifa_addr->sa_family >>= 8;
+		}
+
+		if (ifa->ifa_dstaddr) {
+			if (bufsz < (uintptr_t)ifa->ifa_dstaddr + sizeof(sa_family_t))
+				goto out_overflow;
+
+			addrsz = *(uint8_t *)(msg.o.data + (uintptr_t)ifa->ifa_dstaddr);
+			if (bufsz < (uintptr_t)ifa->ifa_dstaddr + addrsz)
+				goto out_overflow;
+
+			ifa->ifa_dstaddr = msg.o.data + (uintptr_t)ifa->ifa_dstaddr;
+			ifa->ifa_dstaddr->sa_family >>= 8;
+		}
+
+		if (ifa->ifa_netmask) {
+			if (bufsz < (uintptr_t)ifa->ifa_netmask + sizeof(sa_family_t))
+				goto out_overflow;
+
+			addrsz = *(uint8_t *)(msg.o.data + (uintptr_t)ifa->ifa_netmask);
+			if (bufsz < (uintptr_t)ifa->ifa_netmask + addrsz)
+				goto out_overflow;
+
+			ifa->ifa_netmask = msg.o.data + (uintptr_t)ifa->ifa_netmask;
+			ifa->ifa_netmask->sa_family >>= 8;
+		}
+
+		if (ifa->ifa_name) {
+			if (bufsz <= (uintptr_t)ifa->ifa_name)
+				goto out_overflow;
+
+			p = msg.o.data + (uintptr_t) ifa->ifa_name;
+			namesz = strnlen(p, bufsz - (uintptr_t)ifa->ifa_name);
+			if (bufsz < (uintptr_t)ifa->ifa_name + namesz)
+				goto out_overflow;
+
+			ifa->ifa_name = p;
+		}
+
+		if (ifa->ifa_next) {
+			if (bufsz < (uintptr_t)ifa->ifa_next)
+				goto out_overflow;
+			ifa->ifa_next = msg.o.data + (uintptr_t)ifa->ifa_next;
+		}
+	}
+
+	return 0;
+out_overflow:
+	free(msg.o.data);
+	(void)SET_ERRNO(EPROTO);
+	return EAI_SYSTEM;
+}
+
+
+void freeifaddrs(struct ifaddrs *ifa)
+{
+	free(ifa);
 }
