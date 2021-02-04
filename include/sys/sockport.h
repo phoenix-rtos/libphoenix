@@ -27,7 +27,7 @@ enum {
 	sockmConnect, sockmBind, sockmListen, sockmAccept,
 	sockmSend, sockmRecv, sockmGetSockName, sockmGetPeerName,
 	sockmGetFl, sockmSetFl, sockmGetOpt, sockmSetOpt,
-	sockmGetNameInfo, sockmGetAddrInfo,
+	sockmGetNameInfo, sockmGetAddrInfo, sockmGetIfAddrs,
 };
 
 enum { MAX_SOCKNAME_LEN = sizeof(((msg_t *)0)->o.raw) - 2 * sizeof(size_t) };
