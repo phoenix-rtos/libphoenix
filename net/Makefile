@@ -5,4 +5,4 @@
 # Author: Marek Białowąs, Pawel Pisarczyk
 #
 
-OBJS += $(addprefix $(PREFIX_O)net/, if_nametoindex.o inet.o inet_addr.o inet_aton.o inet_ntoa.o inet_ntop.o inet_pton.o)
+OBJS += $(addprefix $(PREFIX_O)net/, if_indextoname.o if_nametoindex.o inet.o inet_addr.o inet_aton.o inet_ntoa.o inet_ntop.o inet_pton.o)
