@@ -13,9 +13,14 @@ MKDEPFLAGS = $(CFLAGS)
 
 CC = $(CROSS)gcc
 
+
+cpu=cortex-$(shell printf $(TARGET_FAMILY) | tail -c 2)
+
 CFLAGS += -Os -Wall -Wstrict-prototypes -g\
-	-mcpu=cortex-a7 -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard -mthumb\
-	-fomit-frame-pointer -mno-unaligned-access -fdata-sections -ffunction-sections
+		-mcpu=$(cpu) -mtune=$(cpu) -mfpu=neon-vfpv4 -mfloat-abi=hard -mthumb\
+		-fomit-frame-pointer -mno-unaligned-access -fdata-sections -ffunction-sections
+
+VADDR_KERNEL_INIT = 0xc0000000
 
 AR = $(CROSS)ar
 ARFLAGS = -r
