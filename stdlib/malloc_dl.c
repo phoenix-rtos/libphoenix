@@ -437,9 +437,9 @@ void *malloc(size_t size)
 void *calloc(size_t nitems, size_t size)
 {
 	void *ptr;
-	uint64_t allocSize = nitems * size;
+	uint64_t allocSize = (uint64_t)nitems * size;
 
-	if (allocSize > UINT_MAX)
+	if (allocSize > (uint64_t)UINT_MAX)
 		return NULL;
 
 	if ((ptr = malloc((size_t) allocSize)) == NULL)
