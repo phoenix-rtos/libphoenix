@@ -14,7 +14,7 @@ MKDEPFLAGS = $(CFLAGS)
 CC = $(CROSS)gcc
 
 
-cpu=cortex-$(shell printf $(TARGET_FAMILY) | tail -c 2)
+cpu := cortex-$(subst armv7,,$(TARGET_FAMILY))
 
 CFLAGS += -Os -Wall -Wstrict-prototypes -g\
 		-mcpu=$(cpu) -mtune=$(cpu) -mfpu=neon-vfpv4 -mfloat-abi=hard -mthumb\
