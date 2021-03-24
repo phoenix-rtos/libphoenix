@@ -169,8 +169,8 @@ extern const struct in6_addr in6addr_loopback;
 	  (a)->s6_addr32[3] == (b)->s6_addr32[3]))
 
 enum {
-	IP_TOS,
-	IP_TTL,
+	IP_TOS = 1,
+	IP_TTL = 2,
 	IP_MULTICAST_TTL = 5,
 	IP_MULTICAST_IF = 6
 };
