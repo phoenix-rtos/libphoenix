@@ -117,6 +117,10 @@ HEADER = $(SIL)mkdir -p $(@D); \
 	(printf "HEADER %-24s\n" "$<"); \
 	cp -pR "$<" "$@"
 
+INSTALL_FS = $(SIL)printf "INSTALL %s\n" "$(@:$(PREFIX_ROOTFS)%=%)"; \
+     mkdir -p "$(@D)"; \
+     install -m 755 "$<" "$(@D)"
+
 $(PREFIX_O)%.o: %.c
 	@mkdir -p $(@D)
 	$(SIL)(printf "CC  %-24s\n" "$<")

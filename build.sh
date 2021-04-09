@@ -47,7 +47,7 @@ export TARGET TARGET_FAMILY TOPDIR PREFIX_BUILD PREFIX_BUILD_HOST\
 #
 if [ $# -lt 1 ]; then
 	echo "Build options should be specified!"
-	echo "Usage: build.sh [clean] [all] [fs] [core] [ports] [project] [image]";
+	echo "Usage: build.sh [clean] [all] [fs] [core] [test] [ports] [project] [image]";
 	exit 1;
 fi
 
@@ -56,6 +56,7 @@ B_CORE="n"
 B_PORTS="n"
 B_PROJECT="n"
 B_IMAGE="n"
+B_TEST="n"
 
 for i in "$@"; do
 	case "$i"
@@ -66,6 +67,8 @@ for i in "$@"; do
 			B_FS="y";;
 		core)
 			B_CORE="y";;
+		test)
+			B_TEST="y";;
 		ports)
 			B_PORTS="y";;
 		project)
@@ -119,6 +122,13 @@ fi
 #
 if [ "${B_CORE}" = "y" ]; then
 	"./phoenix-rtos-build/build-core-${TARGET_FAMILY}-${TARGET_SUBFAMILY}.sh"
+fi
+
+#
+# Build test part
+#
+if [ "${B_TEST}" = "y" ]; then
+	b_build_test
 fi
 
 #
