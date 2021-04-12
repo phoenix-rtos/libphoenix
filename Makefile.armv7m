@@ -49,29 +49,28 @@ else ifeq ($(TARGET_SUBFAMILY), stm32l4x6)
 	VADDR_KERNEL_INIT=8000000
 	KERNEL_TARGET_DEFINE=-DCPU_STM32L4X6 -DNOMMU
 else ifeq ($(TARGET_SUBFAMILY), imxrt105x)
-	RAM_SIZE=128
 	VADDR_KERNEL_INIT=0
-	KERNEL_TARGET_DEFINE=-DCPU_IMXRT105X -DNOMMU 
+	KERNEL_TARGET_DEFINE=-DCPU_IMXRT105X -DNOMMU
 else ifeq ($(TARGET_SUBFAMILY), imxrt106x)
-	RAM_SIZE=256
 	VADDR_KERNEL_INIT=0
-	KERNEL_TARGET_DEFINE=-DCPU_IMXRT106X -DNOMMU 
+	KERNEL_TARGET_DEFINE=-DCPU_IMXRT106X -DNOMMU
 else ifeq ($(TARGET_SUBFAMILY), imxrt117x)
-	RAM_SIZE=256
 	VADDR_KERNEL_INIT=0
-	KERNEL_TARGET_DEFINE=-DCPU_IMXRT117X -DNOMMU 
+	KERNEL_TARGET_DEFINE=-DCPU_IMXRT117X -DNOMMU
 else
 	$(error Incorrect TARGET.)
 endif
 
 
-LDFLAGS = -z max-page-size=0x10 --gc-sections -q
+LDFLAGS := -z max-page-size=0x10 --gc-sections
 
 ifeq ($(KERNEL), 1)
 	CFLAGS += -DRAM_SIZE=$(RAM_SIZE) $(KERNEL_TARGET_DEFINE) -ffixed-r9
 	LDFLAGS += -Tbss=20000000 -Tdata=20000000
 else
 	CFLAGS += -fpic -fpie -msingle-pic-base -mno-pic-data-is-text-relative
+	# output .rel.* sections to make ELF position-independent
+	LDFLAGS += -q
 endif
 
 
@@ -88,4 +87,6 @@ LDLIBS := $(PHOENIXLIB) $(GCCLIB)
 
 OBJCOPY = $(CROSS)objcopy
 OBJDUMP = $(CROSS)objdump
+
+#TODO: provide --strip-unneeded only if it is necessary
 STRIP = $(CROSS)strip
