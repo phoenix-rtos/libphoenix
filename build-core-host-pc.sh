@@ -19,3 +19,6 @@ b_log "Building phoenix-rtos-filesystems"
 
 b_log "Building phoenix-rtos-devices"
 (cd phoenix-rtos-devices && make $MAKEFLAGS $CLEAN all)
+
+b_log "Building phoenix-rtos-tests"
+(cd phoenix-rtos-tests && make $MAKEFLAGS $CLEAN all)
