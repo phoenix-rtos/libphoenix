@@ -45,9 +45,9 @@ b_log "phoenix-rtos-lwip"
 (cd phoenix-rtos-lwip && make $MAKEFLAGS $CLEAN all)
 b_install "$PREFIX_PROG_STRIPPED/lwip" /sbin
 
-#b_log "Building posixsrv"
-#(cd phoenix-rtos-posixsrv && make $MAKEFLAGS $CLEAN all)
-#b_install "$PREFIX_PROG_STRIPPED/posixsrv" /bin
+b_log "Building posixsrv"
+(cd phoenix-rtos-posixsrv && make $MAKEFLAGS $CLEAN all)
+b_install "$PREFIX_PROG_STRIPPED/posixsrv" /bin
 
 b_log "Building hostutils"
 (cd phoenix-rtos-hostutils/ && make -f Makefile.old $MAKEFLAGS $CLEAN all)
