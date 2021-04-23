@@ -15,10 +15,18 @@
 
 #include <sys/reboot.h>
 #include <sys/platform.h>
-#include <errno.h>
+#include <phoenix/arch/imxrt.h>
 
 
 int reboot(int magic)
 {
-	return -EINVAL;
+	platformctl_t pctl = {
+		.action = pctl_set,
+		.type = pctl_reboot,
+		.reboot = {
+			.magic = magic
+		}
+	};
+
+	return platformctl(&pctl);
 }
