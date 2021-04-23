@@ -41,9 +41,9 @@ b_install $PREFIX_PROG_STRIPPED/psh /bin
 b_install $PREFIX_PROG_STRIPPED/psd /sbin
 b_install $PREFIX_PROG_STRIPPED/psd-old /sbin
 
-#b_log "phoenix-rtos-lwip"
-#(cd phoenix-rtos-lwip && make $MAKEFLAGS $CLEAN all)
-#b_install "$PREFIX_PROG_STRIPPED/lwip" /sbin
+b_log "phoenix-rtos-lwip"
+(cd phoenix-rtos-lwip && make $MAKEFLAGS $CLEAN all)
+b_install "$PREFIX_PROG_STRIPPED/lwip" /sbin
 
 #b_log "Building posixsrv"
 #(cd phoenix-rtos-posixsrv && make $MAKEFLAGS $CLEAN all)
