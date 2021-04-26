@@ -51,6 +51,7 @@ include err/Makefile
 include errno/Makefile
 include locale/Makefile
 include math/Makefile
+include misc/Makefile
 include net/Makefile
 include netinet/Makefile
 include posix/Makefile
