@@ -22,7 +22,9 @@ extern void _malloc_init(void);
 extern int _env_init(void);
 extern void _signals_init(void);
 extern void _errno_init(void);
+extern void _init_array(void);
 extern int main(int argc, char **argv);
+
 
 char **environ;
 const char *argv_progname;
@@ -38,6 +40,7 @@ void _startc(int argc, char **argv, char **env)
 	_env_init();
 	_signals_init();
 	_file_init();
+	_init_array();
 
 	exit(main(argc, argv));
 }
