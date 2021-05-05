@@ -103,7 +103,7 @@ static void rotate_right(char **dest, char **src)
 
 int getopt_long(int argc, char * const argv[], const char *optstring, const struct option *longopts, int *longindex)
 {
-	char *opt, *name;
+	char *name, *opt = NULL;
 	int skipped, resumed;
 	int i, colon, ret;
 
