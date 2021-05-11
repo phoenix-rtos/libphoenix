@@ -8,9 +8,6 @@
 
 CROSS ?= arm-phoenix-
 
-MKDEP = $(CROSS)gcc -MM
-MKDEPFLAGS = $(CFLAGS)
-
 CC = $(CROSS)gcc
 
 
@@ -34,8 +31,5 @@ LDLIBS := $(PHOENIXLIB) $(GCCLIB)
 OBJCOPY = $(CROSS)objcopy
 OBJDUMP = $(CROSS)objdump
 STRIP = $(CROSS)strip
-
-ARCHMAKE = arch/arm-imx/Makefile
-
 
 VADDR_KERNEL_INIT = 0xc0000000

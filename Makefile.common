@@ -6,81 +6,19 @@
 # %LICENSE%
 #
 
-#
-# Check TARGET and set building options
-#
+# set SIL to "" for verbose output
+SIL ?= @
 
+# function - returns the directory of the current Makefile
+my-dir = $(dir $(lastword $(MAKEFILE_LIST)))
+MAKES_PATH := $(abspath $(call my-dir))/makes
+
+#
+# setup basic variables
+#
 TARGET_FAMILY ?= $(firstword $(subst -, ,$(TARGET)-))
 TARGET_SUBFAMILY ?= $(word 2,$(subst -, ,$(TARGET)-))
 
-# ARM Cortex Mx
-TARGETS_ARMCORTEXM = \
-	armv7m3-stm32l152xd \
-	armv7m3-stm32l152xe \
-	armv7m4-stm32l4x6 \
-	armv7m7-imxrt105x \
-	armv7m7-imxrt106x \
-	armv7m7-imxrt117x
-
-TARGETS = $(TARGETS_ARMCORTEXM)
-ifneq (,$(filter $(TARGETS_ARMCORTEXM),$(TARGET_FAMILY)-$(TARGET_SUBFAMILY)))
-	TARGET_SUFF ?= armv7m
-endif
-
-# ARM Cortex Ax
-TARGETS_ARMCORTEXA = \
-	armv7a7-imx6ull \
-	armv7a9-zynq7000
-
-TARGETS += $(TARGETS_ARMCORTEXA)
-ifneq (,$(filter $(TARGETS_ARMCORTEXA),$(TARGET_FAMILY)-$(TARGET_SUBFAMILY)))
-	TARGET_SUFF ?= armv7a
-endif
-
-# IA32
-TARGETS_IA32 += ia32-generic
-
-TARGETS += $(TARGETS_IA32)
-ifneq (,$(filter $(TARGETS_IA32),$(TARGET_FAMILY)-$(TARGET_SUBFAMILY)))
-	TARGET_SUFF ?= ia32
-endif
-
-#RISCV64
-TARGETS_RISCV64 += \
-	riscv64-spike \
-	riscv64-virt
-
-TARGETS += $(TARGETS_RISCV64)
-ifneq (,$(filter $(TARGETS_RISCV64),$(TARGET_FAMILY)-$(TARGET_SUBFAMILY)))
-	TARGET_SUFF ?= riscv64
-endif
-
-TARGETS += host-pc
-ifeq ($(TARGET_FAMILY), host)
-	TARGET_SUFF ?= host
-endif
-
-# Check target
-ifeq (,$(filter $(TARGETS),$(TARGET_FAMILY)-$(TARGET_SUBFAMILY)))
-$(error Incorrect TARGET $(TARGET_FAMILY)-$(TARGET_SUBFAMILY). Available targets: $(TARGETS))
-endif
-
-#
-# Establish sed tool
-#
-
-UNAME_S := $(shell uname -s)
-ifeq ($(UNAME_S),Darwin)
-	SED += gsed
-else
-	SED = sed
-endif
-
-#
-# Common rules
-#
-
-# reset compilation flags
 CFLAGS :=
 
 TOPDIR := $(CURDIR)
@@ -99,10 +37,24 @@ PREFIX_H ?= $(PREFIX_BUILD)/include/
 PREFIX_PROG ?= $(PREFIX_BUILD)/prog/
 PREFIX_PROG_STRIPPED ?= $(PREFIX_BUILD)/prog.stripped/
 
-# add include path for auto-generated files
-#CFLAGS += -I"$(BUILD_DIR)/$(CURR_SUFFIX)"
+
+# Check TARGET and set building options
+include $(MAKES_PATH)/check-target.mk
+
+# setup tools
+include $(MAKES_PATH)/setup-tools.mk
+
+# provide template files' paths to external makes
+binary.mk := $(MAKES_PATH)/binary.mk
+static-lib.mk := $(MAKES_PATH)/static-lib.mk
+
+
+#
+# Common rules
+#
+
 ifneq ($(KERNEL), 1)
-	CFLAGS += -I$(PREFIX_H)
+  CFLAGS += -I$(PREFIX_H)
 endif
 
 ARCH =  $(SIL)@mkdir -p $(@D); \
@@ -112,7 +64,7 @@ ARCH =  $(SIL)@mkdir -p $(@D); \
 LINK =  $(SIL)mkdir -p $(@D); \
 	(printf "LD  %-24s\n" "$(@F)"); \
 	$(LD) $(LDFLAGS) -o "$@"  $^ $(LDLIBS)
-	
+
 HEADER = $(SIL)mkdir -p $(@D); \
 	(printf "HEADER %-24s\n" "$<"); \
 	cp -pR "$<" "$@"
@@ -123,16 +75,16 @@ INSTALL_FS = $(SIL)printf "INSTALL %s\n" "$(@:$(PREFIX_ROOTFS)%=%)"; \
 
 $(PREFIX_O)%.o: %.c
 	@mkdir -p $(@D)
-	$(SIL)(printf "CC  %-24s\n" "$<")
-	$(SIL)$(CC) -c $(CFLAGS) "$<" -o "$@"
+	@(printf "CC  %-24s\n" "$<")
+	$(SIL)$(CC) -c $(CFLAGS) "$(abspath $<)" -o "$@"
 	$(SIL)$(CC) -M  -MD -MP -MF $(PREFIX_O)$*.c.d -MT "$@" $(CFLAGS) $<
 
 $(PREFIX_O)%.o: %.S
 	@mkdir -p $(@D)
-	$(SIL)(printf "ASM %-24s\n" "$<")
+	@(printf "ASM %-24s\n" "$<")
 	$(SIL)$(CC) -c $(CFLAGS) "$<" -o "$@"
 	$(SIL)$(CC) -M  -MD -MP -MF $(PREFIX_O)$*.S.d -MT "$@" $(CFLAGS) $<
-	
+
 $(PREFIX_PROG_STRIPPED)%: $(PREFIX_PROG)%
 	@mkdir -p $(@D)
 	@(printf "STR %-24s\n" "$(@F)")

@@ -8,9 +8,6 @@
 
 CROSS ?=
 
-MKDEP = $(CROSS)gcc -MM
-MKDEPFLAGS = $(CFLAGS)
-
 CC = $(CROSS)gcc
 
 ifeq ($(DEBUG), 1)
