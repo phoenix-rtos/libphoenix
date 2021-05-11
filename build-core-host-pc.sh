@@ -12,13 +12,14 @@
 set -e
 
 b_log "Building libphoenix"
-(cd libphoenix && make -f Makefile.host $MAKEFLAGS $CLEAN all)
+make -C "libphoenix" -f Makefile.host all install
 
 b_log "Building phoenix-rtos-filesystems"
-(cd phoenix-rtos-filesystems && make $MAKEFLAGS $CLEAN all)
+make -C "phoenix-rtos-filesystems" all
 
 b_log "Building phoenix-rtos-devices"
-(cd phoenix-rtos-devices && make $MAKEFLAGS $CLEAN all)
+make -C "phoenix-rtos-devices" all
 
+#FIXME: tests should not always be built as a part of CORE
 b_log "Building phoenix-rtos-tests"
-(cd phoenix-rtos-tests && make $MAKEFLAGS $CLEAN all)
+make -C "phoenix-rtos-tests" all

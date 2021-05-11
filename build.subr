@@ -13,7 +13,7 @@ b_install() {
 	dir="$2"
 
 	if ! [ -f "$bin" ]; then
-		echo -e "\033[0;34m$bin binary does not exist \033[0m"
+		echo -e "\033[0;31m$bin binary does not exist \033[0m"
 		exit 1
 	fi
 

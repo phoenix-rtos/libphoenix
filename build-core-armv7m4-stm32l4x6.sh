@@ -13,16 +13,16 @@ set -e
 
 b_log "Building phoenix-rtos-kernel"
 KERNEL_MAKECMDGOALS="install-headers"
-(cd phoenix-rtos-kernel && make $MAKEFLAGS $CLEAN $KERNEL_MAKECMDGOALS all)
+make -C "phoenix-rtos-kernel" $KERNEL_MAKECMDGOALS all
 
 b_log "Building libphoenix"
-(cd libphoenix && make $MAKEFLAGS $CLEAN all install)
+make -C "libphoenix" all install
 
 b_log "Building phoenix-rtos-devices"
-(cd phoenix-rtos-devices && make $MAKEFLAGS $CLEAN all)
+make -C "phoenix-rtos-devices" all
 
 b_log "Building phoenix-rtos-filesystems"
-(cd phoenix-rtos-filesystems && make $MAKEFLAGS $CLEAN all)
+make -C "phoenix-rtos-filesystems" all
 
 b_log "Building coreutils"
-(cd phoenix-rtos-utils && make $MAKEFLAGS $CLEAN all)
+make -C "phoenix-rtos-utils" all
