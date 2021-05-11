@@ -12,7 +12,7 @@
 set -e
 
 b_log "Building libphoenix"
-make -C "libphoenix" -f Makefile.host all install
+make -C "libphoenix" -f Makefile.host all
 
 b_log "Building phoenix-rtos-filesystems"
 make -C "phoenix-rtos-filesystems" all
