@@ -11,7 +11,7 @@
 # - LOCAL_CFLAGS  - additional CFLAGS for current component compilation
 #
 
-### FIXME: should be available in phoenix-rtos-build for usage in all projects
+
 
 # directory with current Makefile - relative to the repository root
 CLIENT_MAKES := $(filter-out $(binary.mk) $(static-lib.mk) %.c.d,$(MAKEFILE_LIST))
@@ -60,6 +60,9 @@ $(NAME): $(NAME)-headers $(LIBNAME)
 $(NAME)-clean:
 	@echo "cleaning $(NAME)"
 	@rm -rf $(OBJS.$(NAME)) $(DEPS.$(NAME)) $(INSTALLED_HEADERS.$(NAME)) $(PREFIX_A)$(NAME).a
+
+# no installation for static libs
+$(NAME)-install: ;
 
 
 # necessary for NAME variable to be correctly set in recepies

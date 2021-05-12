@@ -19,27 +19,23 @@ b_log "Building libphoenix"
 make -C "libphoenix" all install
 
 b_log "Building phoenix-rtos-filesystems"
-make -C "phoenix-rtos-filesystems" all
-b_install "$PREFIX_PROG_STRIPPED/dummyfs" /sbin
+make -C "phoenix-rtos-filesystems" all install
 
 b_log "Building phoenix-rtos-devices"
-make -C "phoenix-rtos-devices" all
+make -C "phoenix-rtos-devices" all install
 
 b_log "Building phoenix-rtos-usb"
-make -C "phoenix-rtos-usb" all
+make -C "phoenix-rtos-usb" all install
 
 b_log "Building coreutils"
-make -C "phoenix-rtos-utils" all
-b_install "$PREFIX_PROG_STRIPPED"/psh /bin
-b_install "$PREFIX_PROG_STRIPPED"/psd /sbin
+make -C "phoenix-rtos-utils" all install
 
 #b_log "phoenix-rtos-lwip"
 #make -C "phoenix-rtos-lwip" all
 #b_install "$PREFIX_PROG_STRIPPED/lwip" /sbin
 
 #b_log "Building posixsrv"
-#make -C "phoenix-rtos-posixsrv" all
-#b_install "$PREFIX_PROG_STRIPPED/posixsrv" /bin
+#make -C "phoenix-rtos-posixsrv" all install
 
 # FIXME: compile host tools using host-pc target?
 b_log "Building hostutils"

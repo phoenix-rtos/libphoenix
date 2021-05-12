@@ -8,6 +8,9 @@
 # Author: Kaja Swat, Aleksander Kaminski, Pawel Pisarczyk, Lukasz Kosinski
 #
 
+# fail immediately if any of the commands fails
+set -e
+
 b_log "Building phoenix-rtos-kernel"
 
 KERNEL_MAKECMDGOALS="install-headers"
@@ -18,16 +21,13 @@ b_log "Building libphoenix"
 make -C "libphoenix" all install
 
 b_log "Building phoenix-rtos-filesystems"
-make -C "phoenix-rtos-filesystems" all
-b_install "$PREFIX_PROG_STRIPPED/dummyfs" /sbin
+make -C "phoenix-rtos-filesystems" all install
 
 b_log "Building phoenix-rtos-devices"
-make -C "phoenix-rtos-devices" all
-b_install "$PREFIX_PROG_STRIPPED/spike-tty" /sbin
+make -C "phoenix-rtos-devices" all install
 
 b_log "Building coreutils"
-make -C "phoenix-rtos-utils" all
-b_install "$PREFIX_PROG_STRIPPED/psh" /bin
+make -C "phoenix-rtos-utils" all install
 
 #FIXME: tests should not always be built as a part of CORE
 b_log "Building phoenix-rtos-tests"

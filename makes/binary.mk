@@ -10,8 +10,8 @@
 # - LIBS - names of the static libs to link the binary against (without .a suffix)
 # - LOCAL_CFLAGS  - additional CFLAGS for current component compilation
 # - LOCAL_LDFLAGS - additional LDFLAGS for current component linking
+# - LOCAL_INSTALL_PATH - custom rootfs dir for the binary to be installed (if not provided - DEFAULT_INSTALL_PATH)
 
-### FIXME: should be available in phoenix-rtos-build for usage in all projects
 
 # directory with current Makefile - relative to the repository root
 CLIENT_MAKES := $(filter-out $(binary.mk) $(static-lib.mk) %.c.d,$(MAKEFILE_LIST))
@@ -59,6 +59,12 @@ $(NAME)-clean: $(patsubst %,%-clean,$(DEPS))
 	@echo "cleaning $(NAME)"
 	@rm -rf $(OBJS.$(NAME)) $(DEPS.$(NAME)) $(PREFIX_PROG)$(NAME) $(PREFIX_PROG_STRIPPED)$(NAME) $(INSTALLED_HEADERS.$(NAME))
 
+# install into the root filesystem
+LOCAL_INSTALL_PATH := $(or $(LOCAL_INSTALL_PATH),$(DEFAULT_INSTALL_PATH))
+
+$(NAME)-install: $(PREFIX_ROOTFS)$(LOCAL_INSTALL_PATH)/$(NAME)
+$(PREFIX_ROOTFS)$(LOCAL_INSTALL_PATH)/$(NAME): $(PREFIX_PROG_STRIPPED)$(NAME)
+	$(INSTALL_FS)
 
 # necessary for NAME variable to be correctly set in recepies
 $(NAME) $(NAME)-clean: NAME:=$(NAME)
@@ -75,7 +81,4 @@ HEADERS :=
 LIBS :=
 LOCAL_CFLAGS :=
 LOCAL_LDFLAGS :=
-
-# TODO: install into the root filesystem
-#$(NAME)-install: $(PREFIX_PROG_STRIPPED)$(NAME)
-#	@echo "TODO: install"
+LOCAL_INSTALL_PATH :=

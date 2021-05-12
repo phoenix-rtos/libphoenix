@@ -15,7 +15,6 @@ b_log "Building phoenix-rtos-kernel"
 KERNEL_MAKECMDGOALS="install-headers"
 make -C "phoenix-rtos-kernel" $KERNEL_MAKECMDGOALS all
 
-
 b_log "Building libphoenix"
 make -C "libphoenix" all install
 

@@ -19,20 +19,13 @@ b_log "Building libphoenix"
 make -C "libphoenix" all install
 
 b_log "Building phoenix-rtos-filesystems"
-make -C "phoenix-rtos-filesystems" all
-b_install "$PREFIX_PROG_STRIPPED/dummyfs" /sbin
-#b_install "$PREFIX_PROG_STRIPPED/ext2" /sbin
+make -C "phoenix-rtos-filesystems" all install
 
 b_log "Building phoenix-rtos-devices"
-make -C "phoenix-rtos-devices" all
-b_install "$PREFIX_PROG_STRIPPED/pc-tty" /sbin
-#b_install "$PREFIX_PROG_STRIPPED/pc-uart" /sbin
-b_install "$PREFIX_PROG_STRIPPED/uart16550" /sbin
-b_install "$PREFIX_PROG_STRIPPED/pc-ata" /sbin
+make -C "phoenix-rtos-devices" all install
 
 b_log "Building coreutils"
-make -C "phoenix-rtos-utils" all
-b_install "$PREFIX_PROG_STRIPPED/psh" /bin
+make -C "phoenix-rtos-utils" all install
 
 #FIXME: tests should not always be built as a part of CORE
 b_log "Building phoenix-rtos-tests"
@@ -44,5 +37,4 @@ b_install "$PREFIX_PROG_STRIPPED/test_msg" /bin
 #b_install "$PREFIX_PROG_STRIPPED/lwip" /sbin
 
 b_log "Building posixsrv"
-make -C "phoenix-rtos-posixsrv" all
-b_install "$PREFIX_PROG_STRIPPED/posixsrv" /bin
+make -C "phoenix-rtos-posixsrv" all install
