@@ -140,6 +140,9 @@ CODE facilitynames[] = {
 void openlog(const char *ident, int option, int facility);
 
 
+int setlogmask(int maskpri);
+
+
 void syslog(int priority, const char *format, ...);
 
 
