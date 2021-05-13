@@ -23,6 +23,7 @@ ARFLAGS = -r
 
 LD = $(CROSS)gcc
 LDFLAGS += -Wl,--gc-sections
+LDFLAGS_PREFIX := -Wl,
 
 OBJCOPY = $(CROSS)objcopy
 OBJDUMP = $(CROSS)objdump

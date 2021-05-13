@@ -63,9 +63,12 @@ ARCH =  $(SIL)@mkdir -p $(@D); \
 	(printf "AR  %-24s\n" "$(@F)"); \
 	$(AR) $(ARFLAGS) $@ $^ 2>/dev/null
 
-LINK =  $(SIL)mkdir -p $(@D); \
+LDFLAGS_PREFIX :=
+# --whole-archive is needed for linker to always find constructors in .a files
+LINK = $(SIL)mkdir -p $(@D); \
 	(printf "LD  %-24s\n" "$(@F)"); \
-	$(LD) $(LDFLAGS) -o "$@"  $^ $(LDLIBS)
+	$(LD) $(LDFLAGS) -o "$@"  $(LDFLAGS_PREFIX)--whole-archive $^ $(LDFLAGS_PREFIX)--no-whole-archive $(LDLIBS)
+
 
 HEADER = $(SIL)mkdir -p $(@D); \
 	(printf "HEADER %-24s\n" "$<"); \

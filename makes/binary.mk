@@ -49,7 +49,8 @@ $(PREFIX_H)%.h: $(LOCAL_DIR)%.h
 
 # rule for linking binary
 # NOTE: if applied globally, we could remove the $(LINK) variable and put explicit commands here
-$(PREFIX_PROG)$(NAME): $(OBJS.$(NAME)) $(RESOLVED_LIBS) $(PHOENIXLIB)
+# NOTE: disabled $(PHOENIXLIB) direct dependency until it can be removed from $(LIBS)
+$(PREFIX_PROG)$(NAME): $(OBJS.$(NAME)) $(RESOLVED_LIBS) # $(PHOENIXLIB)
 	$(LINK)
 
 # create component phony targets
