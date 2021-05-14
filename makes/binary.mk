@@ -14,8 +14,9 @@
 
 
 # directory with current Makefile - relative to the repository root
-CLIENT_MAKES := $(filter-out $(binary.mk) $(static-lib.mk) %.c.d,$(MAKEFILE_LIST))
-LOCAL_DIR := $(dir $(lastword $(CLIENT_MAKES)))
+# filter-out all Makefiles outside of TOPDIR
+CLIENT_MAKES := $(filter $(TOPDIR)/%,$(abspath $(MAKEFILE_LIST)))
+LOCAL_DIR := $(patsubst $(TOPDIR)/%,%,$(dir $(lastword $(CLIENT_MAKES))))
 
 SRCS += $(addprefix $(LOCAL_DIR), $(LOCAL_SRCS))
 HEADERS += $(addprefix $(LOCAL_DIR), $(LOCAL_HEADERS))
@@ -39,6 +40,9 @@ DEPS.$(NAME) := $(patsubst %.c,$(PREFIX_O)%.c.d,$(SRCS))
 
 # rule for installing headers
 INSTALLED_HEADERS.$(NAME) := $(patsubst $(LOCAL_DIR)%.h, $(PREFIX_H)%.h, $(HEADERS))
+ifneq ($(filter-out $(PREFIX_H)%, $(INSTALLED_HEADERS.$(NAME))),)
+  $(error $(NAME): Installing headers outside of PREFIX_H, check Your makefile: $(INSTALLED_HEADERS.$(NAME)))
+endif
 
 $(PREFIX_H)%.h: $(LOCAL_DIR)%.h
 	$(HEADER)
@@ -62,7 +66,7 @@ $(NAME)-clean: $(patsubst %,%-clean,$(DEPS))
 # install into the root filesystem
 LOCAL_INSTALL_PATH := $(or $(LOCAL_INSTALL_PATH),$(DEFAULT_INSTALL_PATH))
 
-$(NAME)-install: $(PREFIX_ROOTFS)$(LOCAL_INSTALL_PATH)/$(NAME)
+$(NAME)-install: $(NAME) $(PREFIX_ROOTFS)$(LOCAL_INSTALL_PATH)/$(NAME)
 $(PREFIX_ROOTFS)$(LOCAL_INSTALL_PATH)/$(NAME): $(PREFIX_PROG_STRIPPED)$(NAME)
 	$(INSTALL_FS)
 
