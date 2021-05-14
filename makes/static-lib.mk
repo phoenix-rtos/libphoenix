@@ -68,9 +68,10 @@ $(NAME)-clean:
 # no installation for static libs
 $(NAME)-install: $(NAME) ;
 
-
 # necessary for NAME variable to be correctly set in recepies
 $(NAME) $(NAME)-clean: NAME:=$(NAME)
+
+ALL_COMPONENTS += $(NAME)
 
 # cleaning vars to avoid strange errors
 NAME :=

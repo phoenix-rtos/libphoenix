@@ -74,6 +74,8 @@ $(PREFIX_ROOTFS)$(LOCAL_INSTALL_PATH)/$(NAME): $(PREFIX_PROG_STRIPPED)$(NAME)
 # necessary for NAME variable to be correctly set in recepies
 $(NAME) $(NAME)-clean: NAME:=$(NAME)
 
+ALL_COMPONENTS += $(NAME)
+
 # cleaning vars to avoid strange errors
 NAME :=
 LOCAL_SRCS :=

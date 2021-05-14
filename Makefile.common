@@ -36,6 +36,7 @@ PREFIX_A ?= $(PREFIX_BUILD)/lib/
 PREFIX_H ?= $(PREFIX_BUILD)/include/
 PREFIX_PROG ?= $(PREFIX_BUILD)/prog/
 PREFIX_PROG_STRIPPED ?= $(PREFIX_BUILD)/prog.stripped/
+ALL_COMPONENTS :=
 
 
 # Check TARGET and set building options
