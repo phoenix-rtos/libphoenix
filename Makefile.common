@@ -45,6 +45,9 @@ include $(MAKES_PATH)/check-target.mk
 # setup tools
 include $(MAKES_PATH)/setup-tools.mk
 
+# add utility functions
+include $(MAKES_PATH)/funcs.mk
+
 # provide template files' paths to external makes
 binary.mk := $(MAKES_PATH)/binary.mk
 static-lib.mk := $(MAKES_PATH)/static-lib.mk
