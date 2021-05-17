@@ -57,5 +57,4 @@ ifeq (,$(filter $(TARGETS),$(TARGET_FAMILY)-$(TARGET_SUBFAMILY)))
   $(error Incorrect TARGET $(TARGET_FAMILY)-$(TARGET_SUBFAMILY). Available targets: $(TARGETS))
 endif
 
-# TODO: uncomment when all submodules would be moved to the new build system
-#include $(MAKES_PATH)/../Makefile.$(TARGET_SUFF)
+include $(MAKES_PATH)/../Makefile.$(TARGET_SUFF)

@@ -29,18 +29,22 @@ PREFIX_H="$PREFIX_BUILD/include/"
 PREFIX_ROOTFS="$PREFIX_FS/root/"
 PREFIX_ROOTSKEL="$(pwd)/_fs//root-skel/"
 
-LDFLAGS="$LDFLAGS -L$PREFIX_A"
 CC=${CROSS}gcc
 AS=${CROSS}as
 LD=${CROSS}ld
 AR=${CROSS}ar
+
+
+# FIXME: WIP: this will not yet work as some ports need LDFLAGS in "gcc format" (-Wl)
+EXPORT_CFLAGS="$(make -f phoenix-rtos-build/Makefile.common export-cflags)"
+EXPORT_LDFLAGS="$(make -f phoenix-rtos-build/Makefile.common export-ldflags)"
 
 MAKEFLAGS="--no-print-directory -j 9"
 
 export TARGET TARGET_FAMILY TARGET_SUBFAMILY TARGET_PROJECT TOPDIR PREFIX_BUILD\
 	PREFIX_BUILD_HOST PREFIX_FS PREFIX_BOOT PREFIX_PROG PREFIX_PROG_STRIPPED PREFIX_A\
 	PREFIX_H PREFIX_ROOTFS PREFIX_ROOTSKEL CROSS CFLAGS LDFLAGS CC LD\
-	AR AS CLEAN MAKEFLAGS DEVICE_FLAGS
+	AR AS CLEAN MAKEFLAGS DEVICE_FLAGS EXPORT_CFLAGS EXPORT_LDFLAGS
 
 #
 # Parse command line
@@ -88,7 +92,6 @@ if [ -n "$CLEAN" ]; then
 	rm -rf "$PREFIX_BUILD" "$PREFIX_BUILD_HOST"
 	rm -rf "$PREFIX_FS"
 	#FIXME: this should also remove unpacked sources in 'ports' (the easiest option is to move them to _boot)
-	#TODO: remove per-component CLEAN var dependency
 fi
 
 #

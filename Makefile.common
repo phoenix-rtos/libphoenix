@@ -19,7 +19,9 @@ MAKES_PATH := $(abspath $(call my-dir))/makes
 TARGET_FAMILY ?= $(firstword $(subst -, ,$(TARGET)-))
 TARGET_SUBFAMILY ?= $(word 2,$(subst -, ,$(TARGET)-))
 
+# reset env variables
 CFLAGS :=
+LDFLAGS :=
 
 TOPDIR := $(CURDIR)
 PREFIX_BUILD ?= ../_build/$(TARGET)
@@ -64,9 +66,29 @@ $(info cleaning targets, make parallelism disabled)
 .NOTPARALLEL:
 endif
 
+# generic CFLAGS/LDFLAGS
+LDFLAGS += -L$(PREFIX_A)
+
 ifneq ($(KERNEL), 1)
   CFLAGS += -I$(PREFIX_H)
 endif
+
+#
+# Generic rules
+#
+.PHONY: help export-cflags export-ldflags
+
+export-cflags:
+	@echo $(CFLAGS)
+
+export-ldflags:
+	@echo $(LDFLAGS)
+
+
+#
+# Predefined and pattern rules
+#
+
 
 ARCH =  $(SIL)@mkdir -p $(@D); \
 	(printf "AR  %-24s\n" "$(@F)"); \
