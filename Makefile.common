@@ -22,6 +22,7 @@ TARGET_SUBFAMILY ?= $(word 2,$(subst -, ,$(TARGET)-))
 # reset env variables
 CFLAGS :=
 LDFLAGS :=
+LDFLAGS_PREFIX :=
 
 TOPDIR := $(CURDIR)
 PREFIX_BUILD ?= ../_build/$(TARGET)
@@ -109,7 +110,6 @@ ARCH =  $(SIL)@mkdir -p $(@D); \
 	(printf "AR  %-24s\n" "$(@F)"); \
 	$(AR) $(ARFLAGS) $@ $^ 2>/dev/null
 
-LDFLAGS_PREFIX :=
 # --whole-archive is needed for linker to always find constructors in .a files
 LINK = $(SIL)mkdir -p $(@D); \
 	(printf "LD  %-24s\n" "$(@F)"); \
