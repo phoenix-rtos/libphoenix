@@ -38,6 +38,9 @@ PREFIX_PROG ?= $(PREFIX_BUILD)/prog/
 PREFIX_PROG_STRIPPED ?= $(PREFIX_BUILD)/prog.stripped/
 ALL_COMPONENTS :=
 
+# default rootfs prefixes
+PREFIX_FS ?= $(abspath $(CURDIR)/../_fs/$(TARGET))
+PREFIX_ROOTFS ?= $(PREFIX_FS)/root/
 
 # Check TARGET and set building options
 include $(MAKES_PATH)/check-target.mk
