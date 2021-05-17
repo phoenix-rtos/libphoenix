@@ -19,7 +19,7 @@ AR = $(CROSS)ar
 ARFLAGS = -r
 
 LD = $(CROSS)ld
-LDFLAGS = -m elf_i386
+LDFLAGS := --gc-sections
 GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 PHOENIXLIB := $(shell $(CC) $(CFLAGS) -print-file-name=libphoenix.a)
 LDLIBS := $(PHOENIXLIB) $(GCCLIB)
