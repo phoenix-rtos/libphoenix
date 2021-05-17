@@ -60,7 +60,7 @@ $(NAME)-headers: $(INSTALLED_HEADERS.$(NAME))
 
 $(NAME): $(NAME)-headers $(PREFIX_PROG_STRIPPED)$(NAME)
 
-$(NAME)-clean: $(patsubst %,%-clean,$(DEPS))
+$(NAME)-clean:
 	@echo "cleaning $(NAME)"
 	@rm -rf $(OBJS.$(NAME)) $(DEPS.$(NAME)) $(PREFIX_PROG)$(NAME) $(PREFIX_PROG_STRIPPED)$(NAME) $(INSTALLED_HEADERS.$(NAME))
 
