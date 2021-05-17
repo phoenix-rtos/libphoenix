@@ -32,4 +32,3 @@ make -C "phoenix-rtos-utils" all install
 #FIXME: tests should not always be built as a part of CORE
 b_log "Building phoenix-rtos-tests"
 make -C "phoenix-rtos-tests" all
-b_install "$PREFIX_PROG_STRIPPED/test_msg" /bin
