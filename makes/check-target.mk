@@ -52,9 +52,22 @@ ifeq ($(TARGET_FAMILY), host)
   TARGET_SUFF ?= host
 endif
 
+SPACE :=
+SPACE +=
+define LF
+
+
+endef
+
 # Check target
 ifeq (,$(filter $(TARGETS),$(TARGET_FAMILY)-$(TARGET_SUBFAMILY)))
-  $(error Incorrect TARGET $(TARGET_FAMILY)-$(TARGET_SUBFAMILY). Available targets: $(TARGETS))
+  ifeq (,$(TARGET))
+    MESSAGE := Empty TARGET
+  else
+    MESSAGE := Incorrect TARGET $(TARGET_FAMILY)-$(TARGET_SUBFAMILY)
+  endif
+
+  $(error $(MESSAGE)$(LF)Available targets:$(LF)$(subst $(SPACE),$(LF),$(sort $(TARGETS))$(LF)))
 endif
 
 include $(MAKES_PATH)/../Makefile.$(TARGET_SUFF)
