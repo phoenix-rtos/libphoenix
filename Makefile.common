@@ -88,13 +88,15 @@ export-ldflags:
 help:
 	$(info DEFAULT_COMPONENTS := $(DEFAULT_COMPONENTS))
 	$(info ALL_COMPONENTS := $(ALL_COMPONENTS))
-	@echo "\navailable generic make targets:"
+	@echo
+	@echo "available generic make targets:"
 	@echo "  all             build DEFAULT_COMPONENTS"
 	@echo "  install         install DEFAULT_COMPONENTS into PREFIX_ROOTFS"
 	@echo "  clean           clean ALL_COMPONENTS"
 	@echo "  export-cflags   outputs contents of CFLAGS variable"
 	@echo "  export-ldflags  outputs contents of LDFLAGS variable"
-	@echo "\navailable per-target make targets:"
+	@echo
+	@echo "available per-target make targets:"
 	@echo "  <target>          build <target>"
 	@echo "  <target>-install  install <target> into PREFIX_ROOTFS"
 	@echo "  <target>-clean    clean <target>"
