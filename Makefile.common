@@ -55,9 +55,11 @@ static-lib.mk := $(MAKES_PATH)/static-lib.mk
 # default path for the programs to be installed in rootfs
 DEFAULT_INSTALL_PATH := /bin
 
-#
-# Common rules
-#
+# do not clean and build in parallel
+ifneq ($(filter %clean,$(MAKECMDGOALS)),)
+$(info cleaning targets, make parallelism disabled)
+.NOTPARALLEL:
+endif
 
 ifneq ($(KERNEL), 1)
   CFLAGS += -I$(PREFIX_H)
