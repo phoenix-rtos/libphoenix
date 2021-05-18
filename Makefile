@@ -42,7 +42,7 @@ CFLAGS += -Iinclude -fno-builtin-malloc
 OBJS = $(PREFIX_O)_startc.o
 
 
-all: $(PREFIX_A)libphoenix.a headers
+all: $(PREFIX_A)libphoenix.a
 
 
 include arch/$(TARGET_SUFF)/Makefile
@@ -74,14 +74,9 @@ $(PREFIX_A)libphoenix.a: $(OBJS)
 
 
 SRCHEADERS := $(shell find include -name \*.h)
-headers: $(SRCHEADERS) $(PREFIX_A)libphoenix.a
-	@echo "HEADERS $(PREFIX_H)*"; \
-	mkdir -p "$(PREFIX_H)"; \
-	cp -a include/* "$(PREFIX_H)";
-
 
 #HEADERS := $(patsubst include/%,$(HEADERS_INSTALL_DIR)%,$(SRCHEADERS))
-install: $(PREFIX_A)libphoenix.a headers
+install: $(PREFIX_A)libphoenix.a $(SRCHEADERS)
 	@echo INSTALL "$(LIBC_INSTALL_DIR)/*"; \
 	mkdir -p "$(LIBC_INSTALL_DIR)"; \
 	cp -a "$<" "$(LIBC_INSTALL_DIR)"; \
