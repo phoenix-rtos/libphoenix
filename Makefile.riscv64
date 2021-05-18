@@ -12,14 +12,15 @@ CROSS ?= riscv64-phoenix-
 
 CC = $(CROSS)gcc
 
-CFLAGS += -O2 -Wall -Wstrict-prototypes -I$(SRCDIR) -nostartfiles -nostdlib\
-	-fomit-frame-pointer -ffreestanding -mcmodel=medany -fno-builtin -DTARGET_RISCV64
+# FIXME: -ffunction-sections and -fdata-sections are missing
+CFLAGS += -O2 -Wall -Wstrict-prototypes\
+	-fomit-frame-pointer -mcmodel=medany -fno-builtin -DTARGET_RISCV64
 
 AR = $(CROSS)ar
 ARFLAGS = -r
 
 LD = $(CROSS)ld
-LDFLAGS = -nostdlib
+LDFLAGS :=
 GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 PHOENIXLIB := $(shell $(CC) $(CFLAGS) -print-file-name=libphoenix.a)
 LDLIBS := $(PHOENIXLIB) $(GCCLIB)

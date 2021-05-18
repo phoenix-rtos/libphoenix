@@ -10,9 +10,9 @@ CROSS ?= i386-pc-phoenix-
 
 CC = $(CROSS)gcc
 
-CFLAGS += -O2 -g -Wall -Wstrict-prototypes -nostartfiles -nostdlib\
+CFLAGS += -O2 -g -Wall -Wstrict-prototypes\
 	-m32 -march=i586 -mtune=generic -mno-mmx -mno-sse -fno-pic -fno-pie\
-	-fomit-frame-pointer -fno-strength-reduce -fno-builtin-malloc\
+	-fomit-frame-pointer -fno-builtin-malloc\
 	-fdata-sections -ffunction-sections
 
 AR = $(CROSS)ar

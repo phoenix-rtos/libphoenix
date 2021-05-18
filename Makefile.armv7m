@@ -8,29 +8,26 @@
 
 CROSS ?= arm-phoenix-
 
-CC = $(CROSS)gcc
+CC := $(CROSS)gcc
 
+# common Cortex-M CFLAGS
 ifeq ($(DEBUG), 1)
-	CFLAGS += -Og
+  CFLAGS += -Og
 else
-	CFLAGS += -O2 -DNDEBUG #-DWATCHDOG
+  CFLAGS += -O2 -DNDEBUG #-DWATCHDOG
 endif
 
+CFLAGS += -Wall -Wstrict-prototypes -g -I$(SRCDIR)
+CFLAGS += mthumb -fomit-frame-pointer -mno-unaligned-access
+CFLAGS += -DNOMMU
+CFLAGS += -fdata-sections -ffunction-sections
+
 ifeq ($(TARGET_FAMILY), armv7m7)
-	CFLAGS += -Wall -Wstrict-prototypes -g -I$(SRCDIR) -nostartfiles -nostdlib\
-		-mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16 -mthumb -fomit-frame-pointer\
-		-ffreestanding -mno-unaligned-access -DNOMMU
-
+  CFLAGS += -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16
 else ifeq ($(TARGET_FAMILY), armv7m4)
-
-	CFLAGS += -Wall -Wstrict-prototypes -g -I$(SRCDIR) -nostartfiles -nostdlib\
-		-mthumb -fomit-frame-pointer -ffreestanding -mno-unaligned-access\
-		-DNOMMU -fstack-usage -mcpu=cortex-m4
-
+  CFLAGS += -mcpu=cortex-m4 -fstack-usage
 else ifeq ($(TARGET_FAMILY), armv7m3)
-	CFLAGS += -Wall -Wstrict-prototypes -g -I$(SRCDIR) -nostartfiles -nostdlib\
-		-mthumb -fomit-frame-pointer -ffreestanding -mno-unaligned-access\
-		-DNOMMU -fstack-usage -mcpu=cortex-m3
+  CFLAGS += -mcpu=cortex-m3 -fstack-usage
 endif
 
 ifeq ($(TARGET_SUBFAMILY), stm32l152xd)
@@ -62,16 +59,15 @@ endif
 LDFLAGS := -z max-page-size=0x10 --gc-sections
 
 ifeq ($(KERNEL), 1)
-	CFLAGS += -DRAM_SIZE=$(RAM_SIZE) $(KERNEL_TARGET_DEFINE) -ffixed-r9
-	LDFLAGS += -Tbss=20000000 -Tdata=20000000
+  CFLAGS += -DRAM_SIZE=$(RAM_SIZE) $(KERNEL_TARGET_DEFINE) -ffixed-r9
+  LDFLAGS += -Tbss=20000000 -Tdata=20000000
 else
-	CFLAGS += -fpic -fpie -msingle-pic-base -mno-pic-data-is-text-relative
+  CFLAGS += -fpic -fpie -msingle-pic-base -mno-pic-data-is-text-relative
 	# output .rel.* sections to make ELF position-independent
-	LDFLAGS += -q
+  LDFLAGS += -q
 endif
 
 
-CFLAGS += -fdata-sections -ffunction-sections
 
 AR = $(CROSS)ar
 ARFLAGS = -r
