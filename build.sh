@@ -39,12 +39,12 @@ MAKEFLAGS="--no-print-directory -j 9"
 export TARGET TARGET_FAMILY TARGET_SUBFAMILY TARGET_PROJECT TOPDIR PREFIX_BUILD\
 	PREFIX_BUILD_HOST PREFIX_FS PREFIX_BOOT PREFIX_PROG PREFIX_PROG_STRIPPED PREFIX_A\
 	PREFIX_H PREFIX_ROOTFS PREFIX_ROOTSKEL CROSS CFLAGS LDFLAGS CC LD\
-	AR AS CLEAN MAKEFLAGS DEVICE_FLAGS EXPORT_CFLAGS EXPORT_LDFLAGS
+	AR AS CLEAN MAKEFLAGS DEVICE_FLAGS
 
 # export flags for ports - call make only after all necessary env variables are already set
 EXPORT_CFLAGS="$(make -f phoenix-rtos-build/Makefile.common export-cflags)"
-# export only generic flags "-z xxx" and "-Lxxx"
-EXPORT_LDFLAGS="$(make -f phoenix-rtos-build/Makefile.common export-ldflags | grep -E -o "(\-z [^ ]+)|(\-L[^ ]+)" | xargs)"
+# export only generic flags: "-z xxx", "-Lxxx", "-q"
+EXPORT_LDFLAGS="$(make -f phoenix-rtos-build/Makefile.common export-ldflags | grep -E -o "(\-z [^ ]+)|(\-L[^ ]+)|(\-q)" | xargs)"
 
 export EXPORT_CFLAGS EXPORT_LDFLAGS
 
