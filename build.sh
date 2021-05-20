@@ -27,7 +27,7 @@ PREFIX_A="$PREFIX_BUILD/lib/"
 PREFIX_H="$PREFIX_BUILD/include/"
 
 PREFIX_ROOTFS="$PREFIX_FS/root/"
-PREFIX_ROOTSKEL="$(pwd)/_fs//root-skel/"
+: "${PREFIX_ROOTSKEL:="$(pwd)/_fs/root-skel/"}"
 
 CC=${CROSS}gcc
 AS=${CROSS}as
