@@ -30,4 +30,7 @@ struct option {
 enum { no_argument = 0, required_argument, optional_argument };
 
 
+extern int getopt_long(int argc, char * const argv[], const char *optstring, const struct option *longopts, int *longindex);
+
+
 #endif
