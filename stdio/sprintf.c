@@ -18,6 +18,12 @@
 #include "format.h"
 
 
+typedef struct _vsprintf_ctx_t {
+	char *buff;
+	size_t n;
+} vsprintf_ctx_t;
+
+
 typedef struct _vsnprintf_ctx_t {
 	char *buff;
 	size_t n;
@@ -25,21 +31,28 @@ typedef struct _vsnprintf_ctx_t {
 } vsnprintf_ctx_t;
 
 
+static void vsprintf_feed(void *context, char c)
+{
+	vsprintf_ctx_t* ctx = (vsprintf_ctx_t *)context;
+
+	ctx->buff[ctx->n++] = c;
+}
+
+
 static void vsnprintf_feed(void *context, char c)
 {
 	vsnprintf_ctx_t* ctx = (vsnprintf_ctx_t *)context;
 
-	if (ctx->max_len == 0 || ctx->n + 1 < ctx->max_len) {
-		ctx->buff[ctx->n++] = c;
-
-		if (ctx->max_len && ctx->n + 1 == ctx->max_len)
-			ctx->buff[ctx->n] = '\0';
-
-	} else {
-		/* Count anyway to return the number of characters that would have been
-		 * written if buffer had been sufficiently large */
-		ctx->n++;
+	if ((ctx->n + 1) < ctx->max_len) {
+		ctx->buff[ctx->n] = c;
 	}
+	else if ((ctx->n + 1) == ctx->max_len) {
+		ctx->buff[ctx->n] = '\0';
+	}
+
+	/* Count anyway to return the number of characters that would have been
+	 * written if buffer had been sufficiently large */
+	ctx->n++;
 }
 
 
@@ -71,14 +84,13 @@ int snprintf(char *str, size_t n, const char *format, ...)
 
 int vsprintf(char *str, const char *format, va_list arg)
 {
-	vsnprintf_ctx_t ctx;
+	vsprintf_ctx_t ctx;
 
 	ctx.buff = str;
 	ctx.n = 0;
-	ctx.max_len = 0;
 
-	format_parse(&ctx, vsnprintf_feed, format, arg);
-	vsnprintf_feed(&ctx, '\0');
+	format_parse(&ctx, vsprintf_feed, format, arg);
+	vsprintf_feed(&ctx, '\0');
 
 	return ctx.n - 1;
 }
@@ -87,12 +99,6 @@ int vsprintf(char *str, const char *format, va_list arg)
 int vsnprintf(char *str, size_t n, const char *format, va_list arg)
 {
 	vsnprintf_ctx_t ctx;
-
-	if (n == 0) return 0;
-	if (n == 1) {
-		str[0] = '\0';
-		return 0;
-	}
 
 	ctx.buff = str;
 	ctx.n = 0;
