@@ -17,7 +17,7 @@
 #define _LIBPHOENIX_SYS_DEBUG_H_
 
 
-extern void debug(char *s);
+extern void debug(const char *s);
 
 
 #endif
