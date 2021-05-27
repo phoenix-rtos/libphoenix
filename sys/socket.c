@@ -555,3 +555,16 @@ void freeifaddrs(struct ifaddrs *ifa)
 {
 	free(ifa);
 }
+
+const char *hstrerror(int err)
+{
+	switch (err) {
+		case RESOLVED_OK: return "SUCCESS";
+		case HOST_NOT_FOUND: return "Host not found";
+		case TRY_AGAIN: return "Try again later";
+		case NO_RECOVERY: return "A nonrecoverable name server error occurred";
+		case NO_DATA: return "The requested name is valid but does not have an IP address.";
+	}
+
+	return "Unknown error";
+}
