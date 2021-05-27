@@ -99,8 +99,9 @@ struct servent {
 };
 
 
+/* FIXME: not thread-safe */
 extern int h_errno;
-
+extern const char *hstrerror(int err);
 
 struct servent *getservbyname(const char *name, const char *proto);
 struct servent *getservbyport(int port, const char *proto);
