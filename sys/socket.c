@@ -17,6 +17,7 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/file.h>
+#include <sys/debug.h>
 #include <errno.h>
 #include <netdb.h>
 #include <poll.h>
@@ -159,24 +160,32 @@ ssize_t recvmsg(int socket, struct msghdr *msg, int flags)
 
 struct servent *getservbyname(const char *name, const char *proto)
 {
+	debug(__func__);
+	debug(" : not implemented\n");
 	return NULL;
 }
 
 
 struct servent *getservbyport(int port, const char *proto)
 {
+	debug(__func__);
+	debug(" : not implemented\n");
 	return NULL;
 }
 
 
 struct hostent *gethostbyname(const char *name)
 {
+	debug(__func__);
+	debug(" : not implemented\n");
 	return NULL;
 }
 
 
 struct hostent *gethostbyaddr(const void *addr, socklen_t len, int type)
 {
+	debug(__func__);
+	debug(" : not implemented\n");
 	return NULL;
 }
 
