@@ -210,7 +210,7 @@ int execlp(const char *file, const char *arg, ...)
 	if (argv == NULL)
 		return -ENOMEM;
 
-	err = execve(file, argv, NULL);
+	err = execve(file, argv, environ);
 	free(argv);
 	return err;
 }
