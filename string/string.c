@@ -310,15 +310,6 @@ char *strrchr(const char *s, int c)
 #endif
 
 
-char *strsignal(int signum)
-{
-	switch (signum) {
-	default:
-		return "strsignal not implemented";
-	}
-}
-
-
 char *strstr(const char *s1, const char *s2)
 {
 	const char *p1, *p2;

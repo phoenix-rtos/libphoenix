@@ -35,4 +35,4 @@ ERR_EXTRACT := $(SED) -En -e '/^\s*\#\s*define\s+E\w+\s+[[:digit:]]+/{s/^[^d]*de
 $(PREFIX_O)string/strerror.o: $(patsubst %,string/%,$(INCS))
 
 
-OBJS += $(addprefix $(PREFIX_O)string/, string.o strdup.o strerror.o)
+OBJS += $(addprefix $(PREFIX_O)string/, string.o strdup.o strerror.o strsignal.o)
