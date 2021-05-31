@@ -38,17 +38,17 @@ int chdir(const char *path)
 	char *canonical;
 
 	if ((canonical = canonicalize_file_name(path)) == NULL)
-		return -ENOMEM;
+		return SET_ERRNO(-ENOMEM);
 
 	if (stat(canonical, &s) < 0 || !S_ISDIR(s.st_mode)) {
 		free(canonical);
-		return -1;
+		return SET_ERRNO(-ENOENT);
 	}
 
 	len = strlen(canonical) + 1;
 	if ((dir_common.cwd = realloc(dir_common.cwd, len)) == NULL) {
 		free(canonical);
-		return -1; /* ENOMEM */
+		return SET_ERRNO(-ENOMEM);
 	}
 
 	setenv("PWD", canonical, 1);
@@ -133,7 +133,7 @@ char *canonicalize_file_name(const char *path)
 	if (*path != '/') {
 		cwdlen = getcwd_len();
 		if (cwdlen < 0)
-			return  NULL; /* ENOMEM */
+			return NULL; /* ENOMEM */
 
 		bufsiz = cwdlen + pathlen + 3;
 		if ((buf = getcwd(NULL, bufsiz)) == NULL)
