@@ -18,6 +18,7 @@
 #include <stddef.h>
 #include <string.h>
 
+#include <sys/debug.h>
 
 struct {
 	char *next_token;
@@ -448,5 +449,7 @@ int strverscmp(const char *s1, const char *s2)
 
 char *strncat(char *s1, const char *s2i, size_t num)
 {
+	debug(__func__);
+	debug(" : not implemented\n");
 	return 0;
 }
