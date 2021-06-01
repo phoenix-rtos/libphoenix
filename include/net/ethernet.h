@@ -27,6 +27,7 @@
 #define ETH_FCS_LEN			4			/* Octets in the FCS */
 
 /* Ethernet protocol ID's */
+#define ETHERTYPE_ALL		0x0003		/* Every packet (be careful!!!) */
 #define	ETHERTYPE_PUP		0x0200          /* Xerox PUP */
 #define ETHERTYPE_SPRITE	0x0500		/* Sprite */
 #define	ETHERTYPE_IP		0x0800		/* IP */
