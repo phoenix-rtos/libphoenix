@@ -152,6 +152,9 @@ extern char *strchr(const char *str, int z);
 extern char *strdup(const char *s1);
 
 
+extern char *strndup(const char *s, size_t n);
+
+
 extern int strverscmp(const char *s1, const char *s2);
 
 
