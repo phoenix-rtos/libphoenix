@@ -29,3 +29,20 @@ char *strdup(const char *s1)
 
 	return result;
 }
+
+char *strndup(const char *s, size_t n)
+{
+	int len;
+	char *result;
+
+	len = strlen(s);
+	if (len > n)
+		len = n;
+	result = malloc(len + 1);
+	if (result) {
+		memcpy(result, s, len);
+		result[len] = '\0';
+	}
+
+	return result;
+}
