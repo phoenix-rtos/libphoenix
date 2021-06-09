@@ -83,7 +83,7 @@ for i in "$@"; do
 		image)
 			B_IMAGE="y";;
 		all)
-			B_FS="y"; B_CORE="y"; B_PORTS="y"; B_PROJECT="y"; B_IMAGE="y";;
+			B_FS="y"; B_CORE="y"; B_TEST="y"; B_PORTS="y"; B_PROJECT="y"; B_IMAGE="y";;
 	esac;
 done
 
