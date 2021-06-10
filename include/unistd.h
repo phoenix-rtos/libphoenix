@@ -42,6 +42,7 @@ enum {
 
 enum {
 	_SC_OPEN_MAX,
+	_SC_IOV_MAX
 };
 
 

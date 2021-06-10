@@ -21,7 +21,9 @@
 #ifdef __ARCH_LIMITS
 #include __ARCH_LIMITS
 #else
-#error "Required header limits.h is not defined for current architectue!"
+#error "Required header limits.h is not defined for current architecture!"
 #endif
+
+#include <sys/syslimits.h>
 
 #endif
