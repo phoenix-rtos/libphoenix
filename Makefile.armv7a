@@ -25,8 +25,10 @@ ARFLAGS = -r
 LD = $(CROSS)ld
 LDFLAGS = -z max-page-size=0x1000 --gc-sections
 GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
+CRTBEGIN := $(shell $(CC) $(CFLAGS) -print-file-name=crtbegin.o)
+CRTEND := $(shell $(CC) $(CFLAGS) -print-file-name=crtend.o)
 PHOENIXLIB := $(shell $(CC) $(CFLAGS) -print-file-name=libphoenix.a)
-LDLIBS := $(PHOENIXLIB) $(GCCLIB)
+LDLIBS := $(PHOENIXLIB) $(GCCLIB) $(CRTBEGIN) $(CRTEND)
 
 OBJCOPY = $(CROSS)objcopy
 OBJDUMP = $(CROSS)objdump
