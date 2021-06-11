@@ -17,8 +17,8 @@ else
   CFLAGS += -O2 -DNDEBUG #-DWATCHDOG
 endif
 
-CFLAGS += -Wall -Wstrict-prototypes -g -I$(SRCDIR)
-CFLAGS += mthumb -fomit-frame-pointer -mno-unaligned-access
+CFLAGS += -Wall -Wstrict-prototypes -g
+CFLAGS += -mthumb -fomit-frame-pointer -mno-unaligned-access
 CFLAGS += -DNOMMU
 CFLAGS += -fdata-sections -ffunction-sections
 
