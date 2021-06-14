@@ -18,5 +18,8 @@ make -C "phoenix-rtos-kernel" $KERNEL_MAKECMDGOALS all
 b_log "Building libphoenix"
 make -C "libphoenix" all install
 
+b_log "Building phoenix-rtos-corelibs"
+make -C "phoenix-rtos-corelibs" all install
+
 b_log "Building plo"
 make -C "plo" all
