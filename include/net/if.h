@@ -36,8 +36,9 @@
 #define	IFF_SLAVE		    IFF_LINK1	/* UNUSED but needed by ifconfig */
 #define	IFF_DYNAMIC			0x8000		/* The addresses are lost when the interface goes down */
 
-#define IFHWADDRLEN         6
-#define	IFNAMSIZ            16
+#define IFHWADDRLEN 6
+#define IFNAMSIZ    16
+#define IF_NAMESIZE IFNAMSIZ /* POSIX compliant alias */
 
 struct ifmap {
     unsigned long mem_start;
