@@ -99,6 +99,13 @@ struct servent {
 };
 
 
+struct protoent {
+	char *p_name;
+	char **p_aliases;
+	int p_proto;
+};
+
+
 /* FIXME: not thread-safe */
 extern int h_errno;
 extern const char *hstrerror(int err);
@@ -119,5 +126,10 @@ int getaddrinfo(const char *node, const char *service,
 void freeaddrinfo(struct addrinfo *res);
 const char *gai_strerror(int errcode);
 
+
+extern struct protoent *getprotobyname(const char *name);
+
+
+extern struct protoent *getprotobynumber(int proto);
 
 #endif
