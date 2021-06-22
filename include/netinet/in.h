@@ -172,7 +172,8 @@ enum {
 	IP_TOS = 1,
 	IP_TTL = 2,
 	IP_MULTICAST_TTL = 5,
-	IP_MULTICAST_IF = 6
+	IP_MULTICAST_IF = 6,
+	IP_IPSEC_POLICY = 16 /* Set/get security policy */
 };
 
 enum {
