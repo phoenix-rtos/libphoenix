@@ -26,7 +26,11 @@ int utimes(const char *filename, const struct timeval times[2])
 {
 	char *canonical;
 	int err;
-	canonical = canonicalize_file_name(filename);
+
+	/* TODO: should we resolve last symlink here ? */
+	if ((canonical = resolve_path(filename, NULL, 1, 0)) == NULL)
+		return -1; /* errno set by resolve_path */
+
 	err = sys_utimes(canonical, times);
 	free(canonical);
 	return SET_ERRNO(err);
