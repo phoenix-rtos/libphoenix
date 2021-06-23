@@ -30,10 +30,6 @@ make -C "phoenix-rtos-devices" all install
 b_log "Building coreutils"
 make -C "phoenix-rtos-utils" all install
 
-#FIXME: tests should not always be built as a part of CORE
-b_log "Building phoenix-rtos-tests"
-make -C "phoenix-rtos-tests" all
-
 #b_log "Building phoenix-rtos-lwip"
 #make -C "phoenix-rtos-lwip" all
 #b_install "$PREFIX_PROG_STRIPPED/lwip" /sbin

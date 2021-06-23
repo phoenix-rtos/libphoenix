@@ -19,7 +19,3 @@ make -C "phoenix-rtos-filesystems" all
 
 b_log "Building phoenix-rtos-devices"
 make -C "phoenix-rtos-devices" all
-
-#FIXME: tests should not always be built as a part of CORE
-b_log "Building phoenix-rtos-tests"
-make -C "phoenix-rtos-tests" all
