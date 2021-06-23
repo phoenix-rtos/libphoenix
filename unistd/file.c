@@ -67,22 +67,24 @@ int fstat(int fd, struct stat *buf)
 }
 
 
-int link(const char *path1, const char *path2)
+int link(const char *oldpath, const char *newpath)
 {
-	char *canonical1, *canonical2;
+	char *oldcanonical, *newcanonical;
 	int err;
 
-	canonical1 = canonicalize_file_name(path1);
-	canonical2 = canonicalize_file_name(path2);
-	if ((canonical1 == NULL) || (canonical2 == NULL)) {
-		free(canonical1);
-		free(canonical2);
-		return SET_ERRNO(-ENOMEM);
+	/* resolve_last_symlink = 0 -> we should link symlink instead of target */
+	if ((oldcanonical = resolve_path(oldpath, NULL, 0, 0)) == NULL)
+		return -1; /* errno set by resolve_path */
+
+	/* allow_missing_leaf = 1 -> we should be creating new link */
+	if ((newcanonical = resolve_path(newpath, NULL, 1, 1)) == NULL) {
+		free(oldcanonical);
+		return -1; /* errno set by resolve_path */
 	}
 
-	err = sys_link(canonical1, canonical2);
-	free(canonical1);
-	free(canonical2);
+	err = sys_link(oldcanonical, newcanonical);
+	free(oldcanonical);
+	free(newcanonical);
 
 	return SET_ERRNO(err);
 }
@@ -93,10 +95,11 @@ int unlink(const char *path)
 	char *canonical;
 	int err;
 
-	canonical = canonicalize_file_name(path);
-	if (canonical == NULL) {
-		return SET_ERRNO(-ENOMEM);
-	}
+	/* resolve_last_symlink = 0 -> we should delete symlink instead of target file */
+	canonical = resolve_path(path, NULL, 0, 0);
+
+	if (canonical == NULL)
+		return -1; /* errno set by resolve_path */
 
 	err = sys_unlink(canonical);
 	free(canonical);
@@ -116,10 +119,10 @@ int open(const char *filename, int oflag, ...)
 	mode = va_arg(ap, mode_t);
 	va_end(ap);
 
-	canonical = canonicalize_file_name(filename);
-	if (canonical == NULL) {
-		return SET_ERRNO(-ENOMEM);
-	}
+	/* allow_missing_leaf = 1 -> open() may be creating a file */
+	canonical = resolve_path(filename, NULL, 1, 1);
+	if (canonical == NULL)
+		return -1; /* errno set by resolve_path */
 
 	do
 		err = sys_open(canonical, oflag, mode);
@@ -135,10 +138,10 @@ int mkfifo(const char *filename, mode_t mode)
 	int err;
 	char *canonical;
 
-	canonical = canonicalize_file_name(filename);
-	if (canonical == NULL) {
-		return SET_ERRNO(-ENOMEM);
-	}
+	/* allow_missing_leaf = 1 -> we will be creating a file */
+	canonical = resolve_path(filename, NULL, 1, 1);
+	if (canonical == NULL)
+		return -1; /* errno set by resolve_path */
 
 	while ((err = sys_mkfifo(canonical, mode)) == -EINTR)
 		;
@@ -147,67 +150,54 @@ int mkfifo(const char *filename, mode_t mode)
 }
 
 
-int symlink(const char *path1, const char *path2)
+int symlink(const char *target, const char *linkpath)
 {
 	oid_t dir;
-	char *canonical1, *canonical2;
+	char *canonical_linkpath;
 	char *dir_name, *name;
 	msg_t msg;
 	int len1, len2;
 	int ret;
 
-	if (path1 == NULL || path2 == NULL)
+	if (target == NULL || linkpath == NULL)
 		return -EINVAL;
 
-	canonical1 = canonicalize_file_name(path2);
-	if (canonical1 == NULL) {
-		return -ENOMEM;
-	}
+	/* allow_missing_leaf = 1 -> we will be creating a file */
+	canonical_linkpath = resolve_path(linkpath, NULL, 1, 1);
+	if (canonical_linkpath == NULL)
+		return -1; /* errno set by resolve_path */
 
-	canonical2 = strdup(canonical1);
-	if (canonical2 == NULL) {
-		free(canonical1);
-		return -ENOMEM;
-	}
-
-	dir_name = dirname(canonical1);
+	splitname(canonical_linkpath, &name, &dir_name);
 
 	if ((ret = lookup(dir_name, NULL, &dir)) < 0) {
-		free(canonical1);
-		free(canonical2);
-		return ret;
+		free(canonical_linkpath);
+		return SET_ERRNO(ret);
 	}
-
-	free(canonical1);
-	name = basename(canonical2);
 
 	memset(&msg, 0, sizeof(msg_t));
 	msg.type = mtCreate;
 
 	memcpy(&msg.i.create.dir, &dir, sizeof(oid_t));
 	msg.i.create.type = otSymlink;
-	msg.i.create.mode = S_IFLNK | DEFFILEMODE;
+	/* POSIX: symlink file permissions are undefined, use sane default */
+	msg.i.create.mode = S_IFLNK | 0777;
 
-	len1  = strlen(name);
-	len2  = strlen(path1);
+	len1 = strlen(name);
+	len2 = strlen(target);
 
 	msg.i.size = len1 + len2 + 2;
 	msg.i.data = malloc(msg.i.size);
 	memset(msg.i.data, 0, msg.i.size);
 
 	memcpy(msg.i.data, name, len1);
-	memcpy(msg.i.data + len1 + 1, path1, len2);
+	memcpy(msg.i.data + len1 + 1, target, len2);
 
-	if ((ret = msgSend(dir.port, &msg)) != EOK) {
-		free(canonical2);
-		free(msg.i.data);
-		return ret;
-	}
+	ret = msgSend(dir.port, &msg);
 
-	free(canonical2);
+	free(canonical_linkpath);
 	free(msg.i.data);
 
-	return msg.o.create.err;
+	return ret != EOK ? SET_ERRNO(-EIO) : SET_ERRNO(msg.o.create.err);
 }
 
 
@@ -218,9 +208,9 @@ int access(const char *path, int amode)
 	if (amode == W_OK)
 		return 0;
 
-	char *canonical_name = canonicalize_file_name(path);
+	char *canonical_name = resolve_path(path, NULL, 1, 0);
 	if (canonical_name == NULL) {
-		return SET_ERRNO(-ENOMEM);
+		return -1; /* errno set by resolve_path */
 	}
 
 	// NOTE: for now checking only if file exists
@@ -254,7 +244,7 @@ int create_dev(oid_t *oid, const char *path)
 		if (++retry > 3 || nodevfs) {
 			nodevfs = 1;
 			/* fallback */
-			mkdir("/dev", 0666);
+			mkdir("/dev", 0777);
 
 			if (lookup("/dev", NULL, &odir) < 0) {
 				/* Looks like we don't have a filesystem.
@@ -268,10 +258,15 @@ int create_dev(oid_t *oid, const char *path)
 					tpath = tpathalloc;
 				}
 
+				/* TODO: not needed, we may assume it will always be canonical? */
+#if 0
 				if ((canonical_path = canonicalize_file_name(tpath)) == NULL) {
 					free(tpathalloc);
 					return -1;
 				}
+#else
+				canonical_path = strdup(tpath);
+#endif
 
 				err = portRegister(oid->port, canonical_path, oid);
 				free(canonical_path);
@@ -290,8 +285,15 @@ int create_dev(oid_t *oid, const char *path)
 	if (!strncmp("/dev", path, 4))
 		path += 4;
 
+#if 0
+	/* TODO: invalid usage of canonicalize_file_name() - non-existing file
+	 * do we need normalize_path() here or can we assume developers are sane? */
+
 	if ((canonical_path = canonicalize_file_name(path)) == NULL)
 		return -1;
+#else
+	canonical_path = strdup(path);
+#endif
 
 	splitname(canonical_path, &name, &dir);
 

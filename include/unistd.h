@@ -151,10 +151,12 @@ extern int dup2(int fildes, int fildes2);
 extern void _exit(int status);
 
 
-extern int symlink(const char *path1, const char *path2);
+/* Creates a symbolic link named linkpath which contains the string target. If linkpath exists, it will not be overwritten. */
+extern int symlink(const char *target, const char *linkpath);
 
 
-extern int link(const char *path1, const char *path2);
+/* Creates a new link (also known as a hard link) to an existing file. If newpath exists, it will not be overwritten. */
+extern int link(const char *oldpath, const char *newpath);
 
 
 extern int unlink(const char *pathname);

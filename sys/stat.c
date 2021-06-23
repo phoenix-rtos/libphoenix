@@ -24,20 +24,16 @@
 
 #include "posix/utils.h"
 
-
-int stat(const char *path, struct stat *buf)
+/* path needs to be canonical */
+static int _stat_abs(const char *path, struct stat *buf)
 {
 	oid_t oid, dev;
 	msg_t msg = {0};
-	char *canonical_name = canonicalize_file_name(path);
 
-	if (lookup(canonical_name, &oid, &dev) < 0) {
-		free(canonical_name);
+	if (lookup(path, &oid, &dev) < 0) {
 		errno = ENOENT;
 		return -1;
 	}
-
-	free(canonical_name);
 
 	memset(buf, 0, sizeof(struct stat));
 
@@ -84,6 +80,21 @@ int stat(const char *path, struct stat *buf)
 	return EOK;
 }
 
+int stat(const char *path, struct stat *buf)
+{
+	char *canonical;
+	int ret;
+
+	if ((canonical = resolve_path(path, NULL, 1, 0)) == NULL)
+		return -1; /* errno set by resolve_path */
+
+	ret = _stat_abs(canonical, buf);
+
+	free(canonical);
+	return ret;
+}
+
+
 
 mode_t umask(mode_t cmask)
 {
@@ -93,7 +104,17 @@ mode_t umask(mode_t cmask)
 
 int lstat(const char *path, struct stat *buf)
 {
-	return stat(path, buf);
+	char *canonical;
+	int ret;
+
+	/* resolve_last_symlink = 0 -> stat on a symlink */
+	if ((canonical = resolve_path(path, NULL, 0, 0)) == NULL)
+		return -1; /* errno set by resolve_path */
+
+	ret = _stat_abs(canonical, buf);
+
+	free(canonical);
+	return ret;
 }
 
 
@@ -110,9 +131,13 @@ int mkdir(const char *path, mode_t mode)
 	char *canonical_name, *name, *parent;
 
 	if (path == NULL)
-		return -ENOENT;
+		return SET_ERRNO(-EINVAL);
 
-	canonical_name = canonicalize_file_name(path);
+	/* allow_missing_leaf = 1 -> we will be creating a dir */
+	canonical_name = resolve_path(path, NULL, 1, 1);
+	if (canonical_name == NULL)
+		return -1; /* errno set by resolve_path */
+
 	name = strrchr(canonical_name, '/');
 
 	if (name == canonical_name) {
@@ -126,7 +151,7 @@ int mkdir(const char *path, mode_t mode)
 
 	if (lookup(parent, NULL, &dir) < EOK) {
 		free(canonical_name);
-		return -ENOENT;
+		return SET_ERRNO(-ENOENT);
 	}
 
 	msg.type = mtCreate;
@@ -138,12 +163,11 @@ int mkdir(const char *path, mode_t mode)
 
 	if (msgSend(dir.port, &msg) < 0) {
 		free(canonical_name);
-		return -ENOMEM;
+		return SET_ERRNO(-ENOMEM); /* -EIO ? */
 	}
 
 	free(canonical_name);
-	SET_ERRNO(msg.o.create.err);
-	return msg.o.create.err;
+	return SET_ERRNO(msg.o.create.err);
 }
 
 
@@ -154,10 +178,15 @@ int chmod(const char *path, mode_t mode)
 {
 	char *canonical;
 	int err;
-	canonical = canonicalize_file_name(path);
+
+	/* POSIX: symlinks are to be followed here */
+	canonical = resolve_path(path, NULL, 1, 0);
+	if (canonical == NULL)
+		return -1; /* errno set by resolve_path */
+
 	err = sys_chmod(canonical, mode);
 	free(canonical);
-	return err;
+	return SET_ERRNO(err);
 }
 
 
@@ -179,6 +208,8 @@ int mknod(const char *path, mode_t mode, dev_t dev)
 int rename(const char *old, const char *new)
 {
 	int err;
+
+	/* FIXME: add renaming dirs support */
 
 	if ((err = link(old, new)) < 0)
 		return err;

@@ -74,7 +74,6 @@ int execve(const char *file, char *const argv[], char *const envp[])
 	char *canonical_path;
 	char *path = getenv("PATH");
 	int filename_len = strlen(file);
-	oid_t dir;
 
 	fflush(NULL);
 
@@ -89,7 +88,9 @@ int execve(const char *file, char *const argv[], char *const envp[])
 				memcpy(exec_buffer + path_len + 1, file, filename_len);
 				exec_buffer[path_len + 1 + filename_len] = '\0';
 
-				if (lookup(exec_buffer, NULL, &dir) >= 0) {
+				/* check if file exists with symlink resolving */
+				if ((canonical_path = resolve_path(exec_buffer, NULL, 1, 0)) != NULL) {
+					free(canonical_path);
 					file = exec_buffer;
 					break;
 				}
@@ -130,8 +131,8 @@ int execve(const char *file, char *const argv[], char *const envp[])
 		argv = sb_args;
 	}
 
-	if ((canonical_path = canonicalize_file_name(file)) == NULL)
-		return SET_ERRNO(-ENOMEM);
+	if ((canonical_path = resolve_path(file, NULL, 1, 0)) == NULL)
+		return -1; /* errno set by resolve_path */
 
 	err = exec(canonical_path, argv, envp);
 	free(canonical_path);

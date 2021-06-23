@@ -42,13 +42,18 @@ int chdir(const char *path)
 	int len;
 	char *canonical;
 
-	if ((canonical = canonicalize_file_name(path)) == NULL)
-		return SET_ERRNO(-ENOMEM);
+	if ((canonical = resolve_path(path, NULL, 1, 0)) == NULL)
+		return -1; /* errno set by resolve_path */
 
 	if (stat(canonical, &s) < 0 || !S_ISDIR(s.st_mode)) {
 		free(canonical);
 		return SET_ERRNO(-ENOENT);
 	}
+
+	/* TODO:
+	 * - chdir should symlinks resolved (this is correct)
+	 * - PWD should have symlinks unresolved (TODO) and should be maintained by shell, not by libc
+	 */
 
 	len = strlen(canonical) + 1;
 	if ((dir_common.cwd = realloc(dir_common.cwd, len)) == NULL) {
@@ -342,18 +347,19 @@ struct dirent *readdir(DIR *s)
 DIR *opendir(const char *dirname)
 {
 	msg_t msg = { 0 };
-	char *canonical_name = canonicalize_file_name(dirname);
+	char *canonical_name = resolve_path(dirname, NULL, 1, 0);
 	DIR *s = calloc(1, sizeof(DIR));
 
 	if ((canonical_name == NULL) || (s == NULL)) {
 		free(canonical_name);
 		free(s);
-		return NULL; /* ENOMEM */
+		return NULL; /* errno set by resolve_path */
 	}
 
-	if (!dirname[0] || (lookup((char *)canonical_name, NULL, &s->oid) < 0)) {
+	if (!dirname[0] || (lookup(canonical_name, NULL, &s->oid) < 0)) {
 		free(canonical_name);
 		free(s);
+		errno = ENOENT;
 		return NULL; /* ENOENT */
 	}
 
@@ -487,17 +493,14 @@ int rmdir(const char *path)
 	msg_t msg = { 0 };
 	char *canonical_name, *dirname, *name;
 
-	if (path == NULL)
-		return -1;
-
-	if ((canonical_name = canonicalize_file_name(path)) == NULL)
-		return -1;
+	if ((canonical_name = resolve_path(path, NULL, 1, 0)) == NULL)
+		return -1; /* errno set by resolve_path */
 
 	splitname(canonical_name, &name, &dirname);
 
 	if (lookup(dirname, NULL, &dir)) {
 		free(canonical_name);
-		return -1;
+		return SET_ERRNO(-ENOENT);
 	}
 
 	msg.type = mtUnlink;
@@ -507,13 +510,13 @@ int rmdir(const char *path)
 
 	if (msgSend(dir.port, &msg) != EOK) {
 		free(canonical_name);
-		return -1;
+		return SET_ERRNO(-EIO);
 	}
 
 	free(canonical_name);
 
 	if (msg.o.io.err < 0)
-		return -1;
+		return SET_ERRNO(msg.o.io.err);
 
 	return 0;
 }
