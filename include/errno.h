@@ -22,6 +22,7 @@
 /* Linux/x86-compatible numbers for easier debugging */
 
 #define ENOTEMPTY       39
+#define ELOOP           40
 #define EUNATCH         49
 #define ENODATA         61
 #define ENONET          64
