@@ -18,6 +18,8 @@
 #include <dirent.h>
 #include <stdio.h>
 #include <errno.h>
+#include <limits.h>
+#include <assert.h>
 #include <string.h>
 #include <libgen.h>
 #include <sys/msg.h>
@@ -29,6 +31,9 @@
 static struct {
 	char *cwd;
 } dir_common;
+
+static ssize_t _readlink_abs(const char *path, char *buf, size_t bufsiz);
+static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, int allow_missing_leaf);
 
 
 int chdir(const char *path)
@@ -117,50 +122,185 @@ char *getcwd(char *buf, size_t size)
 }
 
 
-/* TODO: resolve links, handle '//', '.' and '..' */
 char *canonicalize_file_name(const char *path)
 {
-	char *buf;
-	int bufsiz;
-	int cwdlen;
-	int pathlen;
+	return realpath(path, NULL);
+}
 
-	if ((path == NULL) || (*path == '\0'))
+
+/* resolves absolute paths (with symlinks)
+ * buffers pointed by path and result need to be at least PATH_MAX in size
+ * path might be rewritten as a part of the path resolving */
+static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, int allow_missing_leaf)
+{
+	char *p = path + 1; /* skip first '/' */
+	char *r = result;
+	char *slash;
+	char *const res_end = result + PATH_MAX;
+	int is_leaf = 0;
+	int symlinkcnt = 0;
+
+	assert(path && path[0] == '/');
+
+	*r++ = '/';
+
+	while (!is_leaf) {
+		slash = strchrnul(p, '/');
+		if (*slash == 0) {
+			is_leaf = 1; /* last path node */
+		}
+		else {
+			char *rem = slash;
+			while (*rem++ == '/')
+				;
+			if (*rem == 0)
+				is_leaf = 1; /* trailing '/' */
+
+			*slash = 0;
+		}
+
+		/* check for '.' and '..' */
+		if (p[0] == 0) { /* multiple '/' */
+			r -= 1;
+		}
+		else if (p[0] == '.' && p[1] == 0) { /* '.' dir */
+			r -= 1;
+		}
+		else if (p[0] == '.' && p[1] == '.' && p[2] == 0) { /* '..' dir */
+			r -= 1;
+			while (r > result && *--r != '/')
+				;
+		}
+		else { /* 'normal' path node */
+			char tmp_buf[PATH_MAX];
+			ssize_t symlink_len;
+
+			/* check for buffer overflows */
+			if (r + (slash - p + 1) > res_end)
+				return SET_ERRNO(-ENAMETOOLONG);
+
+			memcpy(r, p, (slash - p + 1));
+
+			if (is_leaf && !resolve_last_symlink) {
+				r += slash - p; /* commit node path */
+
+				/* WARN: slight inconsistency: we're not checking if the path actually exists in this case (TODO?) */
+			}
+			/* (hackish) save some messsaging by not calling lstat, but directly readlink() and checking error code */
+			else if ((symlink_len = _readlink_abs(result, tmp_buf, sizeof(tmp_buf) - 1)) < 0) { /* reserve space for \0 */
+
+				if ((errno == EINVAL) || ((errno == ENOENT) && is_leaf && allow_missing_leaf)) { /* not a link or non-esixting leaf */
+					r += slash - p;
+				}
+				else {
+					/* errno set by _readlink_abs */
+					return -1;
+				}
+			}
+			else {
+				if (++symlinkcnt > SYMLOOP_MAX)
+					return SET_ERRNO(-ELOOP);
+
+				if (!is_leaf) { /* append remaining original path suffix */
+					*slash = '/';
+					int rempath_len = strlen(slash);
+					if (symlink_len + rempath_len + 1 >= PATH_MAX) {
+						return SET_ERRNO(-ENAMETOOLONG);
+					}
+					memcpy(tmp_buf + symlink_len, slash, rempath_len + 1);
+					symlink_len += rempath_len;
+				}
+
+				/* reuse full path buffer */
+				memcpy(path, tmp_buf, symlink_len);
+				path[symlink_len] = 0;
+				p = path;
+
+				if (tmp_buf[0] == '/') { /* ABS symlink - reset result to '/' */
+					r = result + 1;
+				}
+				/* else: relative symlink - keep current result */
+
+				/* keep parsing resolved symlink */
+				is_leaf = 0;
+				continue;
+			}
+		}
+
+		if (!is_leaf) {
+			*r++ = '/';
+			p = slash + 1;
+		}
+	}
+
+	/* guard against corner cases */
+	if (r == result)
+		*r++ = '/';
+
+	*r = 0;
+	return r - result;
+}
+
+
+/* Resolving path to absolute paths with '.', '..' and symlinks support. Additional params to satisfy multiple libc use cases.
+ *   resolved_path: if NULL, will be allocated by malloc()
+ *   allow_missing_leaf: don't return ENOENT if last path node is not existing
+ *   resolve_last_symlink: if 0 return final symlink path instead of symlink destination
+ * NOTE: stack usage: ~(2 * PATH_MAX)
+ */
+char *resolve_path(const char *path, char *resolved_path, int resolve_last_symlink, int allow_missing_leaf)
+{
+
+	char *alloc_resolved_path = NULL; /* internally allocated path needed to be freed on error */
+	char path_copy[PATH_MAX];
+	size_t pathlen;
+	char *p = path_copy;
+
+	if (!path || !path[0]) {
+		errno = EINVAL;
 		return NULL;
+	}
 
 	pathlen = strlen(path);
-
-	if (*path != '/') {
-		cwdlen = getcwd_len();
-		if (cwdlen < 0)
-			return NULL; /* ENOMEM */
-
-		bufsiz = cwdlen + pathlen + 3;
-		if ((buf = getcwd(NULL, bufsiz)) == NULL)
+	if (path[0] != '/') {
+		if (getcwd(path_copy, PATH_MAX) == NULL) {
+			/* errno set by getcwd */
 			return NULL;
-
-		if (buf[cwdlen - 1] != '/') {
-			buf[cwdlen] = '/';
-			buf[cwdlen + 1] = 0;
 		}
-		buf = strcat(buf, path);
 
-		pathlen += cwdlen + 1;
-	}
-	else {
-		bufsiz = pathlen + 2;
-		if ((buf = malloc(bufsiz)) == NULL)
-			return NULL; /* ENOMEM */
-
-		strcpy(buf, path);
+		p = strchr(path_copy, 0);
+		*p++ = '/';
 	}
 
-	if (buf[pathlen - 1] == '/') {
-		buf[pathlen] = '.';
-		buf[pathlen + 1] = '\0';
+	if ((p - path_copy) + pathlen + 1 > PATH_MAX) {
+		errno = ENAMETOOLONG;
+		return NULL;
+	}
+	memcpy(p, path, pathlen + 1);
+
+	if (!resolved_path) {
+		if ((alloc_resolved_path = malloc(PATH_MAX)) == NULL) {
+			errno = ENOMEM;
+			return NULL;
+		}
+
+		resolved_path = alloc_resolved_path;
 	}
 
-	return buf;
+	if (_resolve_abspath(path_copy, resolved_path, resolve_last_symlink, allow_missing_leaf) < 0) {
+		/* proper errno set by resolve_path */
+		free(alloc_resolved_path);
+		return NULL;
+	}
+
+	return resolved_path;
+}
+
+
+char *realpath(const char *path, char *resolved_path)
+{
+	/* resolve_last_symlink = 1, allow_missing_leaf = 0 */
+	return resolve_path(path, resolved_path, 1, 0);
 }
 
 
@@ -278,39 +418,31 @@ int closedir(DIR *dirp)
 }
 
 
-ssize_t readlink(const char *path, char *buf, size_t bufsiz)
+/* readlink without path resolution, to be used internally */
+/* WARN: POSIX compliance: does not append '\0' */
+static ssize_t _readlink_abs(const char *path, char *buf, size_t bufsiz)
 {
 	int ret;
-	char *canonical;
-	msg_t msg;
+	msg_t msg = { 0 };
 	oid_t oid;
 
-	if (path == NULL)
-		return -EINVAL;
+	assert(path && path[0] == '/');
 
-	if ((canonical = canonicalize_file_name(path)) == NULL)
-		return -ENOMEM;
+	if ((ret = lookup(path, NULL, &oid)) < 0)
+		return SET_ERRNO(ret);
 
-	if ((ret = lookup(canonical, NULL, &oid)) < 0) {
-		free(canonical);
-		return ret;
-	}
-
-	memset(&msg, 0, sizeof(msg_t));
 	msg.type = mtGetAttr;
-
 	memcpy(&msg.i.attr.oid, &oid, sizeof(oid_t));
 	msg.i.attr.type = atMode;
 
-	if ((ret = msgSend(oid.port, &msg)) != EOK) {
-		free(canonical);
-		return ret;
-	}
+	if ((ret = msgSend(oid.port, &msg)) != EOK)
+		return SET_ERRNO(ret);
 
-	if (!S_ISLNK(msg.o.attr.val)) {
-		free(canonical);
-		return -EINVAL;
-	}
+	if (msg.o.attr.err != EOK)
+		return SET_ERRNO(msg.o.attr.err);
+
+	if (!S_ISLNK(msg.o.attr.val))
+		return SET_ERRNO(-EINVAL);
 
 	memset(&msg, 0, sizeof(msg_t));
 	msg.type = mtRead;
@@ -320,13 +452,32 @@ ssize_t readlink(const char *path, char *buf, size_t bufsiz)
 	msg.o.size = bufsiz;
 	msg.o.data = buf;
 
-	if ((ret = msgSend(oid.port, &msg)) != EOK) {
-		free(canonical);
-		return ret;
-	}
+	if ((ret = msgSend(oid.port, &msg)) != EOK)
+		return SET_ERRNO(ret);
+
+	if (msg.o.io.err <= 0)
+		return SET_ERRNO(msg.o.io.err);
+
+	/* number of bytes written without terminating NULL byte */
+	return msg.o.io.err;
+}
+
+
+ssize_t readlink(const char *path, char *buf, size_t bufsiz)
+{
+	/* resolve_last_symlink = 0 -> read a symlink value */
+	char *canonical = resolve_path(path, NULL, 0, 0);
+	ssize_t ret;
+
+	if (canonical == NULL)
+		return -1; /* errno set by resolve_path */
+
+	ret = _readlink_abs(canonical, buf, bufsiz);
 
 	free(canonical);
-	return msg.o.io.err;
+
+	/* if error - errno set by _readlink_abs() */
+	return ret;
 }
 
 
