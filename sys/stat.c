@@ -143,6 +143,11 @@ int mkdir(const char *path, mode_t mode)
 	if (name == canonical_name) {
 		name++;
 		parent = "/";
+
+		if (*name == 0) { /* special case - "/" */
+			free(canonical_name);
+			return SET_ERRNO(-EEXIST);
+		}
 	}
 	else {
 		*(name++) = 0;
