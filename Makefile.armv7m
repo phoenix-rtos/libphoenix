@@ -75,10 +75,8 @@ ARFLAGS = -r
 LD = $(CROSS)ld
 
 GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
-CRTBEGIN := $(shell $(CC) $(CFLAGS) -print-file-name=crtbegin.o)
-CRTEND := $(shell $(CC) $(CFLAGS) -print-file-name=crtend.o)
 PHOENIXLIB := $(shell $(CC) $(CFLAGS) -print-file-name=libphoenix.a)
-LDLIBS := $(PHOENIXLIB) $(GCCLIB) $(CRTBEGIN) $(CRTEND)
+LDLIBS := $(PHOENIXLIB) $(GCCLIB)
 
 OBJCOPY = $(CROSS)objcopy
 OBJDUMP = $(CROSS)objdump
