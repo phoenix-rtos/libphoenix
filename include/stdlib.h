@@ -216,16 +216,16 @@ extern int unlockpt(int fd);
 
 
 /* Return canonicalized absolute path, to be deallocated with free() */
-char *canonicalize_file_name(const char *path);
+extern char *canonicalize_file_name(const char *path);
 
 
 /* Return the canonicalized absolute pathname, stored in resolved_path (up to PATH_MAX bytes) */
-char *realpath(const char *path, char *resolved_path);
+extern char *realpath(const char *path, char *resolved_path);
 
 
 /* Resolve path to absolute path with '.', '..' and symlinks support. Additional params to satisfy multiple libc use cases.
- * NOTE: stack usage: ~(2 * PATH_MAX) */
-char *resolve_path(const char *path, char *resolved_path, int resolve_last_symlink, int allow_missing_leaf);
+ * NOTE: stack usage: ~PATH_MAX */
+extern char *resolve_path(const char *path, char *resolved_path, int resolve_last_symlink, int allow_missing_leaf);
 
 
 double strtod(const char *restrict nptr, char **restrict endptr);

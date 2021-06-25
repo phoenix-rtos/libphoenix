@@ -251,18 +251,22 @@ static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, 
  *   resolved_path: if NULL, will be allocated by malloc()
  *   allow_missing_leaf: don't return ENOENT if last path node is not existing
  *   resolve_last_symlink: if 0 return final symlink path instead of symlink destination
- * NOTE: stack usage: ~(2 * PATH_MAX)
+ * NOTE: stack usage: ~PATH_MAX
  */
 char *resolve_path(const char *path, char *resolved_path, int resolve_last_symlink, int allow_missing_leaf)
 {
 
 	char *alloc_resolved_path = NULL; /* internally allocated path needed to be freed on error */
-	char path_copy[PATH_MAX];
+	char *path_copy, *p;
 	size_t pathlen;
-	char *p = path_copy;
 
 	if (!path || !path[0]) {
 		errno = EINVAL;
+		return NULL;
+	}
+
+	if ((p = path_copy = malloc(PATH_MAX)) == NULL) {
+		errno = ENOMEM;
 		return NULL;
 	}
 
@@ -270,6 +274,7 @@ char *resolve_path(const char *path, char *resolved_path, int resolve_last_symli
 	if (path[0] != '/') {
 		if (getcwd(path_copy, PATH_MAX) == NULL) {
 			/* errno set by getcwd */
+			free(path_copy);
 			return NULL;
 		}
 
@@ -278,6 +283,7 @@ char *resolve_path(const char *path, char *resolved_path, int resolve_last_symli
 	}
 
 	if ((p - path_copy) + pathlen + 1 > PATH_MAX) {
+		free(path_copy);
 		errno = ENAMETOOLONG;
 		return NULL;
 	}
@@ -285,6 +291,7 @@ char *resolve_path(const char *path, char *resolved_path, int resolve_last_symli
 
 	if (!resolved_path) {
 		if ((alloc_resolved_path = malloc(PATH_MAX)) == NULL) {
+			free(path_copy);
 			errno = ENOMEM;
 			return NULL;
 		}
@@ -295,9 +302,11 @@ char *resolve_path(const char *path, char *resolved_path, int resolve_last_symli
 	if (_resolve_abspath(path_copy, resolved_path, resolve_last_symlink, allow_missing_leaf) < 0) {
 		/* proper errno set by resolve_path */
 		free(alloc_resolved_path);
+		free(path_copy);
 		return NULL;
 	}
 
+	free(path_copy);
 	return resolved_path;
 }
 
