@@ -447,9 +447,16 @@ int strverscmp(const char *s1, const char *s2)
 	return strcmp(s1, s2);
 }
 
-char *strncat(char *s1, const char *s2i, size_t num)
+
+char *strncat(char *dest, const char *src, size_t n)
 {
-	debug(__func__);
-	debug(" : not implemented\n");
-	return 0;
+	size_t len = strlen(dest);
+	size_t i;
+
+	for (i = 0; i < n && src[i] != '\0'; ++i)
+		dest[len + i] = src[i];
+
+	dest[len + i] = '\0';
+
+	return dest;
 }
