@@ -42,16 +42,21 @@ ssize_t readv(int fd, const struct iovec *iov, int iovcnt)
 	unsigned int i;
 	ssize_t n, tot_len = 0;
 
-	if (-1 == checkv(iov, iovcnt))
-		return -EINVAL;
+	if (-1 == checkv(iov, iovcnt)) {
+		errno = EINVAL;
+		return -1;
+	}
 
 	/* TODO: file locking */
 
 	for (i = 0; i < iovcnt; ++i) {
 		if (iov[i].iov_len > 0) {
 			n = read(fd, iov[i].iov_base, iov[i].iov_len);
-			if (n == -1)
+			if (n < 0) {
+				if (tot_len > 0 && (errno == EINTR || errno == EAGAIN))
+					break;
 				return -1;
+			}
 
 			tot_len += n;
 
@@ -69,16 +74,21 @@ ssize_t writev(int fd, const struct iovec *iov, int iovcnt)
 	unsigned int i;
 	ssize_t n, tot_len = 0;
 
-	if (-1 == checkv(iov, iovcnt))
-		return -EINVAL;
+	if (-1 == checkv(iov, iovcnt)) {
+		errno = EINVAL;
+		return -1;
+	}
 
 	/* TODO: file locking */
 
 	for (i = 0; i < iovcnt; ++i) {
 		if (iov[i].iov_len > 0) {
 			n = write(fd, iov[i].iov_base, iov[i].iov_len);
-			if (n == -1)
+			if (n < 0) {
+				if (tot_len > 0 && (errno == EINTR || errno == EAGAIN))
+					break;
 				return -1;
+			}
 
 			tot_len += n;
 
