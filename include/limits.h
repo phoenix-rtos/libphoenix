@@ -25,5 +25,6 @@
 #endif
 
 #include <sys/syslimits.h>
+#include <phoenix/limits.h>
 
 #endif
