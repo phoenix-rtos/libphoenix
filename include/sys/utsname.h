@@ -16,21 +16,23 @@
 #ifndef _SYS_UTSNAME_H_
 #define _SYS_UTSNAME_H_
 
+#include <limits.h>
 #include <string.h>
+#include <unistd.h>
 
 struct utsname {
-	char  sysname[16];
-	char  nodename[16];
-	char  release[16];
-	char  version[16];
-	char  machine[16];
+	char sysname[16];
+	char nodename[HOST_NAME_MAX + 1];
+	char release[16];
+	char version[16];
+	char machine[16];
 };
 
 
 static inline int uname(struct utsname *name)
 {
 	memset(name, 0, sizeof(*name));
-	return 0;
+	return gethostname(name->nodename, sizeof(name->nodename));
 }
 
 
