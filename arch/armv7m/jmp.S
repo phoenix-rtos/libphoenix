@@ -23,7 +23,7 @@
 .type _setjmp, %function
 _setjmp:
 	/* set jump address and stack pointer */
-	addw r1, pc, #((1f - . - 4) | 1) /* 4 is the size of addw instruction itself */
+	ldr r1, =(1f + 1)
 	mov r2, sp
 	/* store everythig in jmpbuf */
 	stm r0, {r1-r2, r4-r11, lr}
@@ -62,17 +62,21 @@ setjmp:
 	mov r3, r0
 	pop {r0, lr}
 	/* set jump address and stack pointer */
-	addw r1, pc, #((1f - . - 4) | 1) /* 4 is the size of addw instruction itself */
+	ldr r1, =(1f + 1)
 	mov r2, sp
 	/* store everythig in jmpbuf */
-	stm r0, {r1-r2, r4-r11, lr}
+	stmia r0!, {r1-r2, r4-r11, lr}
+	/* save signal mask */
+	str r3, [r0]
 	mov r0, #0
 	bx lr
 1:
 	/* this is where we land after the jump
 	 * r0 is now pointing to signal mask
 	 * which we want to restore */
-	push {r1, r4, lr}
+
+	 /* push r2 to align stack to 8 bytes before call */
+	push {r1-r2, r4, lr}
 	ldr r4, [r0]
 	mov r0, r4
 	mov r4, r3
@@ -80,7 +84,7 @@ setjmp:
 	bl signalMask
 	/* set return value and pop the stack */
 	mov r0, r4
-	pop {r1, r4, lr}
+	pop {r1-r2, r4, lr}
 	bx lr
 .size setjmp, .-setjmp
 
