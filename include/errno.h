@@ -28,6 +28,7 @@
 #define EPROTO          71
 #define EBADMSG         74
 #define EMSGSIZE        90
+#define EPROTOTYPE      91
 #define ENOPROTOOPT     92
 #define EOPNOTSUPP      95
 #define EPFNOSUPPORT    96
@@ -47,10 +48,9 @@
 #define EHOSTUNREACH    113
 #define EALREADY        114
 #define EINPROGRESS     115
-
 #define ENOLCK          116
 #define ENOTRECOVERABLE 131
-#define ENOTSUP			134
+#define ENOTSUP         134
 
 
 #define errno (*__errno_location())
