@@ -20,8 +20,6 @@
 #include <stdint.h>
 #include <sys/types.h>
 
-#define NAME_MAX 128
-
 /* dirent types */
 enum {	dtDir = 0,
 		dtFile,

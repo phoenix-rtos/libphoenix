@@ -3,10 +3,10 @@
  *
  * libphoenix
  *
- * Architecture dependent part of limits (arch/ia32)
+ * Architecture dependent part of limits (arch/riscv64)
  *
  * Copyright 2017-2019 Phoenix Systems
- * Author: Pawel Pisarczyk, Aleksander Kaminski, Andrzej Glowinski
+ * Author: Pawel Pisarczyk, Aleksander Kaminski, Andrzej Glowinski, Marek Bialowas
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -49,12 +49,18 @@
 
 #define SSIZE_MAX INT_MAX
 
-#define PTHREAD_STACK_MIN  256
-#define PATH_MAX           1024
-#define ARG_MAX            32000
-#define _POSIX2_RE_DUP_MAX 255
-
 #define PAGE_SIZE _PAGE_SIZE
 #define PAGESIZE  _PAGE_SIZE
+
+#define PTHREAD_STACK_MIN 256
+
+/*** POSIX-required defines ***/
+
+#define PATH_MAX    1024  /* Maximum number of bytes the implementation will store as a pathname in a user-supplied buffer of unspecified size, including the terminating null character. MIN: 256 */
+#define NAME_MAX    256   /* Maximum number of bytes in a filename (not including the terminating null of a filename string). MIN: 14 */
+#define ARG_MAX     32000 /* Maximum length of argument to the exec functions including environment data. MIN: 4096 */
+#define SYMLOOP_MAX 8     /* Maximum number of symbolic links that can be reliably traversed in the resolution of a pathname in the absence of a loop. MIN: 8 */
+
+#define _POSIX2_RE_DUP_MAX 255
 
 #endif
