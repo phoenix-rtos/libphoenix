@@ -43,9 +43,6 @@ typedef struct {
 } popen_FILE;
 
 
-static FILE stdin_file  = {0, 0};
-static FILE stdout_file = {1, 0};
-static FILE stderr_file = {2, 0};
 FILE *stdin, *stdout, *stderr;
 
 
@@ -1009,9 +1006,13 @@ int pclose(FILE *file)
 
 void _file_init(void)
 {
-	stdin = &stdin_file;
-	stdout = &stdout_file;
-	stderr = &stderr_file;
+	stdin = calloc(1, sizeof(FILE));
+	stdout = calloc(1, sizeof(FILE));
+	stderr = calloc(1, sizeof(FILE));
+
+	stdin->fd = 0;
+	stdout->fd = 1;
+	stderr->fd = 2;
 
 	stdin->buffer = buffAlloc(BUFSIZ);
 	stdout->buffer = buffAlloc(BUFSIZ);
