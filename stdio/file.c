@@ -210,22 +210,30 @@ FILE *fdopen(int fd, const char *mode)
 	int m, fdm;
 	FILE *f;
 
-	if (mode == NULL)
+	if (mode == NULL) {
+		errno = EINVAL;
+		return NULL;
+	}
+
+	if ((m = string2mode(mode)) < 0) {
+		errno = EINVAL;
+		return NULL;
+	}
+
+	if ((fdm = fcntl(fd, F_GETFL)) < 0)
 		return NULL;
 
-	if ((m = string2mode(mode)) < 0)
+	/* POSIX: check if mode argument is allowed by the file access mode of the FD (not necessarily exactly the same) */
+	fdm &= 0x7;
+	if ((fdm != O_RDWR) && (fdm != (m & 0x7))) {
+		errno = EINVAL;
 		return NULL;
-
-	fdm = fcntl(fd, F_GETFL);
-
-	if (fdm != (fdm | (m & 0xf)))
-		return NULL;
+	}
 
 	if ((f = calloc(1, sizeof(FILE))) == NULL)
 		return NULL;
 
 	if ((f->buffer = buffAlloc(BUFSIZ)) == NULL) {
-		safe_close(fd);
 		free(f);
 		return NULL;
 	}
