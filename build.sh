@@ -118,7 +118,7 @@ if [ "${B_FS}" = "y" ] && [ -d  "${PREFIX_ROOTSKEL}" ]; then
 
 	mkdir -p "${PREFIX_ROOTFS}"
 	cp -a "${PREFIX_ROOTSKEL}/." "${PREFIX_ROOTFS}"
-	mkdir -p "$PREFIX_ROOTFS/"{dev,local,data,mnt,var}
+	mkdir -p "$PREFIX_ROOTFS/"{dev,local,data,mnt,tmp,var}
 
 	b_log "Saving git-version"
 	install -m 664 "${PREFIX_BUILD}/git-version" "$PREFIX_FS/root/etc"
