@@ -8,12 +8,17 @@
 
 CROSS ?= arm-phoenix-
 
-CC = $(CROSS)gcc
+CC := $(CROSS)gcc
 
+ifeq ($(DEBUG), 1)
+  CFLAGS += -Og
+else
+  CFLAGS += -O2 -DNDEBUG
+endif
 
 cpu := cortex-$(subst armv7,,$(TARGET_FAMILY))
 
-CFLAGS += -Os -Wall -Wstrict-prototypes -g\
+CFLAGS += -Wall -Wstrict-prototypes -g\
 		-mcpu=$(cpu) -mtune=$(cpu) -mfpu=neon-vfpv4 -mfloat-abi=hard -mthumb\
 		-fomit-frame-pointer -mno-unaligned-access -fdata-sections -ffunction-sections
 
