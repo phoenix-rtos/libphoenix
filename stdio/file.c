@@ -473,12 +473,12 @@ size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 
 int fgetc_unlocked(FILE *stream)
 {
-	unsigned char c;
+	unsigned char cc;
 
-	if (fread_unlocked(&c, 1, 1, stream) != 1)
+	if (fread_unlocked(&cc, 1, 1, stream) != 1)
 		return EOF;
 
-	return c;
+	return cc;
 }
 
 
@@ -494,7 +494,8 @@ int fgetc(FILE *stream)
 
 int fputc_unlocked(int c, FILE *stream)
 {
-	if (fwrite_unlocked(&c, 1, 1, stream) != 1)
+	unsigned char cc = c;
+	if (fwrite_unlocked(&cc, 1, 1, stream) != 1)
 		return EOF;
 
 	return c;
@@ -655,8 +656,10 @@ int getc(FILE *stream)
 
 int putc_unlocked(int c, FILE *stream)
 {
-	char cc = c;
-	fwrite_unlocked(&cc, 1, 1, stream);
+	unsigned char cc = c;
+	if (fwrite_unlocked(&cc, 1, 1, stream) != 1)
+		return EOF;
+
 	return c;
 }
 
@@ -673,8 +676,10 @@ int putc(int c, FILE *stream)
 
 int putchar_unlocked(int c)
 {
-	char cc = c;
-	fwrite_unlocked(&cc, 1, 1, stdout);
+	unsigned char cc = c;
+	if (fwrite_unlocked(&cc, 1, 1, stdout) != 1)
+		return EOF;
+
 	return c;
 }
 
