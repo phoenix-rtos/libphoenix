@@ -31,11 +31,11 @@
 #include <unistd.h>
 
 
-#define F_EOF (1 << 0)
+#define F_EOF     (1 << 0)
 #define F_WRITING (1 << 1)
-#define F_LINE (1 << 2)
-#define F_ERROR (1 << 3)
-#define F_USRBUF (1 << 4)
+#define F_LINE    (1 << 2)
+#define F_ERROR   (1 << 3)
+#define F_USRBUF  (1 << 4)
 
 typedef struct {
 	FILE file; /* Must be the first member */
@@ -59,11 +59,12 @@ static int string2mode(const char *mode)
 		else if (mode[next_char] == '+')
 			return O_RDWR;
 		else if (mode[next_char] == 'c')
-		/* glibc extension - ignored */
+			/* glibc extension - ignored */
 			return O_RDONLY;
 		else
 			return -1;
-	} else if (mode[0] == 'w') {
+	}
+	else if (mode[0] == 'w') {
 		if (mode[next_char] == 'b')
 			next_char += 1;
 
@@ -73,7 +74,8 @@ static int string2mode(const char *mode)
 			return O_RDWR | O_CREAT | O_TRUNC;
 		else
 			return -1;
-	} else if (mode[0] == 'a') {
+	}
+	else if (mode[0] == 'a') {
 		if (mode[next_char] == 'b')
 			next_char += 1;
 
@@ -127,7 +129,8 @@ static void file_free(FILE *file)
 static ssize_t safe_read(int fd, void *buf, size_t size)
 {
 	int err;
-	while ((err = read(fd, buf, size)) < 0 && errno == EINTR);
+	while ((err = read(fd, buf, size)) < 0 && errno == EINTR)
+		;
 	return err;
 }
 
@@ -135,7 +138,8 @@ static ssize_t safe_read(int fd, void *buf, size_t size)
 static ssize_t safe_write(int fd, const void *buf, size_t size)
 {
 	int err;
-	while ((err = write(fd, buf, size)) < 0 && errno == EINTR);
+	while ((err = write(fd, buf, size)) < 0 && errno == EINTR)
+		;
 	return err;
 }
 
@@ -143,7 +147,8 @@ static ssize_t safe_write(int fd, const void *buf, size_t size)
 static int safe_open(const char *path, int oflag, mode_t mode)
 {
 	int err;
-	while ((err = open(path, oflag, mode)) < 0 && errno == EINTR);
+	while ((err = open(path, oflag, mode)) < 0 && errno == EINTR)
+		;
 	return err;
 }
 
@@ -151,10 +156,10 @@ static int safe_open(const char *path, int oflag, mode_t mode)
 static int safe_close(int fd)
 {
 	int err;
-	while ((err = close(fd)) < 0 && errno == EINTR);
+	while ((err = close(fd)) < 0 && errno == EINTR)
+		;
 	return err;
 }
-
 
 
 int fclose(FILE *file)
@@ -165,7 +170,8 @@ int fclose(FILE *file)
 		return -EINVAL;
 
 	fflush(file);
-	while ((err = safe_close(file->fd)) < 0 && errno == EINTR);
+	while ((err = safe_close(file->fd)) < 0 && errno == EINTR)
+		;
 	file_free(file);
 
 	return err;
@@ -833,10 +839,10 @@ ssize_t getline(char **lineptr, size_t *n, FILE *stream)
 	}
 
 	if (linesz == 0)
-		return -1; // EOF
+		return -1;  // EOF
 
 	if (!nl)
-	   linesz++;
+		linesz++;
 
 	if (*lineptr == NULL)
 		*lineptr = malloc(linesz);
@@ -980,7 +986,7 @@ FILE *popen(const char *command, const char *mode)
 
 	return &pf->file;
 
-	failed:
+failed:
 
 	if (pf->file.lock)
 		resourceDestroy(pf->file.lock);
@@ -995,7 +1001,7 @@ FILE *popen(const char *command, const char *mode)
 
 int pclose(FILE *file)
 {
-	popen_FILE *pf = (popen_FILE *) file;
+	popen_FILE *pf = (popen_FILE *)file;
 	int stat;
 	pid_t pid = pf->pid;
 
