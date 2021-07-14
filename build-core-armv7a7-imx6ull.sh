@@ -19,6 +19,7 @@ b_log "Building libphoenix"
 make -C "libphoenix" all install
 
 b_log "Building phoenix-rtos-filesystems"
+make -C "phoenix-rtos-devices"  libflashdrv-imx6ull-headers
 make -C "phoenix-rtos-filesystems" all install
 
 b_log "Building phoenix-rtos-devices"
