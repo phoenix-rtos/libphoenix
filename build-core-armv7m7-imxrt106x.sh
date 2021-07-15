@@ -30,9 +30,8 @@ make -C "phoenix-rtos-usb" all install
 b_log "Building coreutils"
 make -C "phoenix-rtos-utils" all install
 
-#b_log "phoenix-rtos-lwip"
-#make -C "phoenix-rtos-lwip" all
-#b_install "$PREFIX_PROG_STRIPPED/lwip" /sbin
+b_log "phoenix-rtos-lwip"
+make -C "phoenix-rtos-lwip" all install
 
 #b_log "Building posixsrv"
 #make -C "phoenix-rtos-posixsrv" all install
