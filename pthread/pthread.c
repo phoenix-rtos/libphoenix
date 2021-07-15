@@ -33,6 +33,7 @@ typedef struct pthread_ctx {
 	struct pthread_ctx *next;
 	struct pthread_ctx *prev;
 	int detached;
+	struct __errno_t e;
 } pthread_ctx;
 
 
@@ -51,6 +52,8 @@ static const pthread_attr_t pthread_attr_default = {
 static void start_point(void *args)
 {
 	pthread_ctx *ctx = (pthread_ctx *)args;
+
+	_errno_new(&ctx->e);
 
 	ctx->retval = (void *)(ctx->start_routine(ctx->arg));
 
@@ -150,6 +153,8 @@ int pthread_join(pthread_t thread, void **value_ptr)
 
 	if (value_ptr != NULL)
 		*value_ptr = ctx->retval;
+
+	_errno_remove(&ctx->e);
 
 	LIST_REMOVE(&pthread_list, ctx);
 	free(ctx);
