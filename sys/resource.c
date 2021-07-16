@@ -19,11 +19,18 @@
 
 int setpriority(int which, id_t who, int prio)
 {
-	return SET_ERRNO(priority(min(max(prio + 4, 0), 7)));
+	int ret = priority(min(max(prio + 4, 0), 7));
+	return SET_ERRNO(ret < 0 ? ret : 0);
 }
 
 
 int getpriority(int which, id_t who)
 {
-	return priority(-1) - 4;
+	int ret = priority(-1);
+	if (ret < 0) {
+		errno = -ret;
+		return -1;
+	}
+	else
+		return (ret - 4);
 }
