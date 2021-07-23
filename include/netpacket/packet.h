@@ -26,4 +26,11 @@ struct sockaddr_ll {
 	unsigned char sll_addr[8];
 };
 
+#define PACKET_HOST      0
+#define PACKET_BROADCAST 1
+#define PACKET_MULTICAST 2
+#define PACKET_OTHERHOST 3
+#define PACKET_OUTGOING  4
+#define PACKET_LOOPBACK  5
+
 #endif
