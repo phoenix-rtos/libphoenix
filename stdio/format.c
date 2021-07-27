@@ -602,6 +602,13 @@ void format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 		if (fmt == 0)
 			break;
 
+		if (fmt == 'j') {
+			fmt = *format++;
+			flags |= FLAG_64BIT;
+		}
+		if (fmt == 0)
+			break;
+
 		uint64_t number = 0;
 		switch (fmt) {
 			case 's':
