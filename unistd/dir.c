@@ -156,8 +156,8 @@ static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, 
 		}
 		else {
 			char *rem = slash;
-			while (*rem++ == '/')
-				;
+			while (*rem == '/')
+				rem++;
 			if (*rem == 0)
 				is_leaf = 1; /* trailing '/' */
 
