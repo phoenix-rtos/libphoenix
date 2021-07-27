@@ -104,15 +104,20 @@ int clock_gettime(clockid_t clk_id, struct timespec *tp)
 {
 	time_t now, offs;
 
-	if (tp == NULL)
-		return -EINVAL;
+	if (tp == NULL) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	if (clk_id != CLOCK_REALTIME && clk_id != CLOCK_MONOTONIC && clk_id != CLOCK_MONOTONIC_RAW) {
+		errno = EINVAL;
+		return -1;
+	}
 
 	gettime(&now, &offs);
 
 	if (clk_id == CLOCK_REALTIME)
 		now += offs;
-	else if (clk_id != CLOCK_MONOTONIC && clk_id != CLOCK_MONOTONIC_RAW)
-		return -EINVAL;
 
 	tp->tv_sec = now / (1000 * 1000);
 	now -= tp->tv_sec * 1000 * 1000;
