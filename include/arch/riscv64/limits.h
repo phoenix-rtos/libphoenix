@@ -47,7 +47,7 @@
 #define LLONG_MAX      LONG_LONG_MAX
 #define ULLONG_MAX     ULONG_LONG_MAX
 
-#define SSIZE_MAX INT_MAX
+#define SSIZE_MAX LONG_MAX
 
 #define PAGE_SIZE _PAGE_SIZE
 #define PAGESIZE  _PAGE_SIZE

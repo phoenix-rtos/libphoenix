@@ -38,13 +38,13 @@ typedef int16_t int_fast16_t;
 typedef int32_t int_fast32_t;
 typedef int64_t int_fast64_t;
 
-#define UINT64_C(c) c ## ULL
+#define UINT64_C(c) c ## UL
 
 /* Define other fixed types along with defines/macros */
 
 #define _USE_STANDARD_TYPES_STDINT
 
-#define SIZE_MAX UINT32_MAX
+#define SIZE_MAX UINT64_MAX
 
 typedef uint64_t uintmax_t;
 typedef int64_t intmax_t;
@@ -56,9 +56,9 @@ typedef int64_t intmax_t;
 typedef uint64_t uintptr_t;
 typedef int64_t intptr_t;
 
-#define INTPTR_MIN INT32_MIN
-#define INTPTR_MAX INT32_MAX
-#define UINTPTR_MAX UINT32_MAX
+#define INTPTR_MIN INT64_MIN
+#define INTPTR_MAX INT64_MAX
+#define UINTPTR_MAX UINT64_MAX
 
 #define _PRI_8 ""
 #define _PRI_16 ""
