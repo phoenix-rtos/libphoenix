@@ -114,21 +114,26 @@ struct cmsghdr {
 };
 
 
-#define CMSG_ALIGN(x) (((x) + _Alignof(struct cmsghdr) - 1) & ~_Alignof(struct cmsghdr))
-#define CMSG_SPACE(x) (CMSG_ALIGN(x) + sizeof(struct cmsghdr))
-#define CMSG_LEN(x) (x)
-#define CMSG_DATA(x) ((unsigned char *)((x) + 1))
+/* FIXME: _Alignof is available since C11 */
+#define CMSG_ALIGN(n) (((n) + _Alignof(struct cmsghdr) - 1) & ~(_Alignof(struct cmsghdr) - 1))
+#define CMSG_SPACE(n) (CMSG_ALIGN(sizeof(struct cmsghdr)) + CMSG_ALIGN(n))
+#define CMSG_LEN(n)   (CMSG_ALIGN(sizeof(struct cmsghdr)) + (n))
+#define CMSG_DATA(c)  ((unsigned char *)((struct cmsghdr *)(c) + 1))
 
-static inline struct cmsghdr *CMSG_FIRSTHDR(struct msghdr *m)
-{
-	return m->msg_controllen ? m->msg_control : NULL;
-}
+#define CMSG_FIRSTHDR(m) \
+	({ \
+		struct msghdr *_m = (struct msghdr *)(m); \
+		_m->msg_controllen < sizeof(struct cmsghdr) ? (struct cmsghdr *)NULL : (struct cmsghdr *)_m->msg_control; \
+	})
 
-static inline struct cmsghdr *CMSG_NXTHDR(struct msghdr *m, struct cmsghdr *c)
-{
-	c = (void *)c + CMSG_SPACE(c->cmsg_len);
-	return (void *)c < m->msg_control + m->msg_controllen ? c : NULL;
-}
+#define CMSG_NXTHDR(m, c) \
+	({ \
+		struct msghdr *_m = (struct msghdr *)(m); \
+		struct cmsghdr *_c = (struct cmsghdr *)(c); \
+		char *n = (char *)_c + CMSG_SPACE(_c->cmsg_len); \
+		char *e = (char *)_m->msg_control + _m->msg_controllen; \
+		(n > e ? (struct cmsghdr *)NULL : (struct cmsghdr *)n); \
+	})
 
 
 int socket(int domain, int type, int protocol);
@@ -145,8 +150,6 @@ ssize_t recvfrom(int socket, void *message, size_t length, int flags, struct soc
 ssize_t recvmsg(int socket, struct msghdr *msg, int flags) __attribute__((warning("recvmsg() is not fully supported")));
 int getpeername(int socket, struct sockaddr *address, socklen_t *address_len);
 int getsockname(int socket, struct sockaddr *address, socklen_t *address_len);
-int __sock_getfl(int socket);
-int __sock_setfl(int socket, int val);
 int getsockopt(int socket, int level, int optname, void *optval, socklen_t *optlen);
 int setsockopt(int socket, int level, int optname, const void *optval, socklen_t optlen);
 int shutdown(int socket, int how);
