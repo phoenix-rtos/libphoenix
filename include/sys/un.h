@@ -20,6 +20,9 @@
 #include <sys/socket.h>
 
 
+#define SUN_LEN(addr) ((socklen_t)(((struct sockaddr_un *)0)->sun_path) + strlen((addr)->sun_path))
+
+
 struct sockaddr_un {
 	sa_family_t sun_family;
 	char        sun_path[108];
