@@ -16,7 +16,7 @@ else
 	CFLAGS += -O2 -DNDEBUG
 endif
 
-CFLAGS += -Wall -Wstrict-prototypes -g -fomit-frame-pointer
+CFLAGS += -Wall -Wstrict-prototypes -g -fomit-frame-pointer -ffunction-sections -fdata-sections
 
 AR = $(CROSS)ar
 ARFLAGS = -r
