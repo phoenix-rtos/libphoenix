@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <libgen.h>
+#include <signal.h>
 #include <sys/msg.h>
 #include <sys/file.h>
 #include <sys/types.h>
@@ -35,11 +36,12 @@ extern int sys_open(const char *filename, int oflag, ...);
 extern int sys_mkfifo(const char *filename, mode_t mode);
 extern int sys_link(const char *path1, const char *path2);
 extern int sys_unlink(const char *path);
+extern int sys_write(int fildes, const void *buf, size_t nbyte);
 extern int sys_pipe(int fildes[2]);
 extern int sys_fstat(int fd, struct stat *buf);
 
 WRAP_ERRNO_DEF(int, read, (int fildes, void *buf, size_t nbyte), (fildes, buf, nbyte))
-WRAP_ERRNO_DEF(int, write, (int fildes, const void *buf, size_t nbyte), (fildes, buf, nbyte))
+// WRAP_ERRNO_DEF(int, write, (int fildes, const void *buf, size_t nbyte), (fildes, buf, nbyte))
 WRAP_ERRNO_DEF(int, close, (int fildes), (fildes))
 WRAP_ERRNO_DEF(int, ftruncate, (int fildes, off_t length), (fildes, length))
 WRAP_ERRNO_DEF(off_t, lseek, (int fildes, off_t offset, int whence), (fildes, offset, whence))
@@ -47,6 +49,17 @@ WRAP_ERRNO_DEF(int, dup, (int fildes), (fildes))
 WRAP_ERRNO_DEF(int, dup2, (int fildes, int fildes2), (fildes, fildes2))
 // WRAP_ERRNO_DEF(int, pipe, (int fildes[2]), (fildes))
 // WRAP_ERRNO_DEF(int, fstat, (int fd, struct stat *buf), (fd, buf))
+
+
+int write(int fildes, const void *buf, size_t nbyte)
+{
+	int err;
+
+	if ((err = sys_write(fildes, buf, nbyte)) == -EPIPE)
+		raise(SIGPIPE);
+
+	return SET_ERRNO(err);
+}
 
 
 int pipe(int fildes[2])
