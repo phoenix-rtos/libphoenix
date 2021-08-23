@@ -3,10 +3,10 @@
  *
  * libphoenix
  *
- * sys/sicjet.c
+ * sys/socket.c
  *
  * Copyright 2018, 2021 Phoenix Systems
- * Author: Michał Mirosław, Maciej Purski
+ * Author: Michał Mirosław, Maciej Purski, Ziemowit Leszczynski
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -40,6 +40,7 @@ WRAP_ERRNO_DEF(int, listen, (int socket, int backlog), (socket, backlog))
 WRAP_ERRNO_DEF(ssize_t, recvfrom, (int socket, void *message, size_t length, int flags, struct sockaddr *src_addr, socklen_t *src_len), (socket, message, length, flags, src_addr, src_len))
 WRAP_ERRNO_DEF(ssize_t, sendto, (int socket, const void *message, size_t length, int flags, const struct sockaddr *dest_addr, socklen_t dest_len), (socket, message, length, flags, dest_addr, dest_len))
 WRAP_ERRNO_DEF(int, socket, (int domain, int type, int protocol), (domain, type, protocol))
+WRAP_ERRNO_DEF(int, socketpair, (int domain, int type, int protocol, int *sv), (domain, type, protocol, sv))
 WRAP_ERRNO_DEF(int, shutdown, (int socket, int how), (socket, how))
 WRAP_ERRNO_DEF(int, setsockopt, (int socket, int level, int optname, const void *optval, socklen_t optlen), (socket, level, optname, optval, optlen))
 
@@ -370,80 +371,6 @@ out_overflow:
 void freeaddrinfo(struct addrinfo *res)
 {
 	free(res);
-}
-
-
-int socketpair(int domain, int type, int protocol, int socket_vector[2])
-{
-	int sfd;
-	int flags;
-	int err;
-	struct sockaddr_in serv = { 0 };
-	socklen_t socklen;
-	/* we don't have nonblocking connections on unix sockets
-	 * so we immitate it with inet sockets connected through loopback device */
-	sfd = socket(AF_INET, type, protocol);
-	if (sfd < 0)
-		return sfd;
-
-	flags = fcntl(sfd, F_GETFL);
-	err = fcntl(sfd, F_SETFL, flags | O_NONBLOCK);
-
-	if (err < 0) {
-		close(sfd);
-		return err;
-	}
-
-	serv.sin_family = AF_INET;
-	serv.sin_port = 0;
-	serv.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-	socklen = sizeof(serv);
-
-	if ((err = bind(sfd, (struct sockaddr *)&serv, socklen)) || (err = listen(sfd, 2))) {
-		close(sfd);
-		return err;
-	}
-
-	socket_vector[0] = socket(domain, type, protocol);
-	if (socket_vector[0] < 0) {
-		close(sfd);
-		return socket_vector[0];
-	}
-
-	flags = fcntl(socket_vector[0], F_GETFL);
-	err = fcntl(socket_vector[0], F_SETFL, flags | O_NONBLOCK);
-
-	if (err < 0) {
-		close(sfd);
-		close(socket_vector[0]);
-		return err;
-	}
-
-	if ((err = connect(socket_vector[0], (struct sockaddr *)&serv, socklen)) != EINPROGRESS) {
-		close(sfd);
-		close(socket_vector[0]);
-		return err;
-	}
-
-	/* TODO: check for accidental connection from another process */
-	socket_vector[1] = accept(sfd, (struct sockaddr *)&serv, &socklen);
-	if (socket_vector[0] < 0) {
-		close(sfd);
-		close(socket_vector[0]);
-		return socket_vector[1];
-	}
-
-	close(sfd);
-	flags = fcntl(socket_vector[0], F_GETFL);
-	err = fcntl(socket_vector[0], F_SETFL, flags | O_NONBLOCK);
-
-	if (err < 0) {
-		close(socket_vector[0]);
-		close(socket_vector[1]);
-		return err;
-	}
-
-	return 0;
 }
 
 
