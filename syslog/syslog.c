@@ -1,25 +1,24 @@
 /*
  * Phoenix-RTOS
  *
- * Operating system kernel
+ * libphoenix
  *
- * POSIX-compatibility module, syslog interface
+ * syslog/syslog.c
  *
- * Copyright 2018 Phoenix Systems
- * Author: Jan Sikorski
+ * Copyright 2018, 2021 Phoenix Systems
+ * Author: Jan Sikorski, Ziemowit Leszczynski
  *
  * This file is part of Phoenix-RTOS.
  *
  * %LICENSE%
  */
 
-#include <sys/minmax.h>
-#include <stdarg.h>
-#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include <fcntl.h>
+#include <sys/minmax.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 #include <syslog.h>
 
 
@@ -32,13 +31,16 @@
 #endif
 
 static struct {
-	const char* ident;
+	const char *ident;
 
 	int open;
 	int logfd;
 	int logmask;
 	int logopt;
 	int facility;
+
+	struct sockaddr_un addr;
+	socklen_t addrlen;
 
 	char buf[MAX_LOG_SIZE];
 } syslog_common;
@@ -58,13 +60,17 @@ void openlog(const char *ident, int logopt, int facility)
 {
 	if (ident != NULL) {
 		syslog_common.ident = ident;
-	} else {
+	}
+	else {
 		syslog_common.ident = argv_progname;
 	}
 
 	if (logopt & LOG_NDELAY) {
 		if (!syslog_common.open) {
-			syslog_common.logfd = open(PATH_LOG, O_WRONLY | O_NONBLOCK);
+			syslog_common.addr.sun_family = AF_UNIX;
+			strncpy(syslog_common.addr.sun_path, PATH_LOG, sizeof(syslog_common.addr.sun_path));
+			syslog_common.addrlen = SUN_LEN(&syslog_common.addr);
+			syslog_common.logfd = socket(AF_UNIX, SOCK_DGRAM | SOCK_NONBLOCK, 0);
 			syslog_common.open = syslog_common.logfd != -1;
 		}
 	}
@@ -111,7 +117,7 @@ void vsyslog(int priority, const char *format, va_list ap)
 	syslog_common.buf[len] = '\0';
 
 	if (syslog_common.open)
-		write(syslog_common.logfd, syslog_common.buf, len + 1);
+		sendto(syslog_common.logfd, syslog_common.buf, len + 1, 0, (struct sockaddr *)&syslog_common.addr, syslog_common.addrlen);
 
 	/* output to stderr if logging device is not available */
 	if (syslog_common.logopt & LOG_PERROR || !syslog_common.open) {
