@@ -1,0 +1,20 @@
+diff -Naur gcc-9.3.0-orig/libgcc/config/arm/t-phoenix gcc-9.3.0/libgcc/config/arm/t-phoenix
+--- gcc-9.3.0-orig/libgcc/config/arm/t-phoenix	1970-01-01 01:00:00.000000000 +0100
++++ gcc-9.3.0/libgcc/config/arm/t-phoenix	2021-08-23 13:40:28.290478307 +0200
+@@ -0,0 +1,5 @@
++# PhoenixRTOS uses relocatable ELFs on NOMMU platforms
++# if this is ARM Cortex-M subvariant -> build crtstuff with PIC
++ifneq ($(findstring -m,$(filter -march=arm%, $(CC)))),)
++  CRTSTUFF_T_CFLAGS = $(PICFLAG)
++endif
+diff -Naur gcc-9.3.0-orig/libgcc/config.host gcc-9.3.0/libgcc/config.host
+--- gcc-9.3.0-orig/libgcc/config.host	2020-03-12 12:07:23.000000000 +0100
++++ gcc-9.3.0/libgcc/config.host	2021-07-23 10:19:14.900201201 +0200
+@@ -454,6 +454,7 @@
+ arm*-*-phoenix*)
+ 	tmake_file="t-hardfp t-softfp arm/t-arm arm/t-elf arm/t-softfp arm/t-phoenix"
+ 	tmake_file="${tmake_file} arm/t-bpabi"
++	tmake_file="${tmake_file} t-crtstuff-pic t-libgcc-pic"
+ 	tm_file="$tm_file arm/bpabi-lib.h"
+ 	extra_parts="crtbegin.o crtend.o crti.o crtn.o"
+ 	unwind_header=config/arm/unwind-arm.h
