@@ -18,6 +18,7 @@
 #include <sys/stat.h>
 #include <sys/file.h>
 #include <sys/debug.h>
+#include <sys/minmax.h>
 #include <errno.h>
 #include <netdb.h>
 #include <poll.h>
@@ -28,6 +29,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <ifaddrs.h>
+#include <limits.h>
 
 WRAP_ERRNO_DEF(int, accept, (int socket, struct sockaddr *address, socklen_t *address_len), (socket, address, address_len))
 WRAP_ERRNO_DEF(int, accept4, (int socket, struct sockaddr *address, socklen_t *address_len, int flags), (socket, address, address_len, flags))
@@ -44,6 +46,10 @@ WRAP_ERRNO_DEF(int, socketpair, (int domain, int type, int protocol, int *sv), (
 WRAP_ERRNO_DEF(int, shutdown, (int socket, int how), (socket, how))
 WRAP_ERRNO_DEF(int, setsockopt, (int socket, int level, int optname, const void *optval, socklen_t optlen), (socket, level, optname, optval, optlen))
 
+/* NOTE: msg.iov_len > 1 is not yet supported */
+extern ssize_t sys_recvmsg(int socket, struct msghdr *msg, int flags);
+/* NOTE: msg.iov_len > 1 is not yet supported */
+extern ssize_t sys_sendmsg(int socket, const struct msghdr *msg, int flags);
 
 int h_errno;
 
@@ -66,98 +72,149 @@ ssize_t send(int socket, const void *message, size_t length, int flags)
 }
 
 
-static size_t iov_total_len(const struct iovec *iov, size_t n)
-{
-	size_t sz = 0;
-
-	while (n--)
-		sz += (iov++)->iov_len;
-
-	return sz;
-}
-
-
-// FIXME: no scatter-gather support in kernel
-ssize_t sendmsg(int socket, const struct msghdr *msg, int flags)
-{
-	ssize_t ret;
-	size_t sz = 0, i;
-	void *buf = NULL;
-
-	if (msg->msg_controllen)
-		return SET_ERRNO(-ENOSYS);	// FIXME: pass ancillary data
-
-	sz = iov_total_len(msg->msg_iov, msg->msg_iovlen);
-	if (msg->msg_iovlen <= 1 || !sz) {
-		if (msg->msg_iovlen) {
-			buf = msg->msg_iov->iov_base;
-			sz = msg->msg_iov->iov_len;
-		}
-		return sendto(socket, buf, sz, flags, msg->msg_name, msg->msg_namelen);
-	}
-
-	buf = malloc(sz);
-	if (!buf)
-		return SET_ERRNO(-ENOMEM);
-
-	for (sz = 0, i = 0; i < msg->msg_iovlen; ++i) {
-		memcpy(buf + sz, msg->msg_iov[i].iov_base, msg->msg_iov[i].iov_len);
-		sz += msg->msg_iov[i].iov_len;
-	}
-
-	ret = sendto(socket, buf, sz, flags, msg->msg_name, msg->msg_namelen);
-
-	free(buf);
-
-	return ret;
-}
-
-
 ssize_t recv(int socket, void *message, size_t length, int flags)
 {
 	return recvfrom(socket, message, length, flags, NULL, 0);
 }
 
 
-// FIXME: no scatter-gather support in kernel
+static inline ssize_t iov_total_len(const struct iovec *iov, size_t iovcnt)
+{
+	ssize_t tot_len = 0;
+	ssize_t max_len = SSIZE_MAX;
+
+	if (iovcnt > IOV_MAX)
+		return -EMSGSIZE;
+
+	while (iovcnt--) {
+		if (iov->iov_len > max_len)
+			return -EINVAL;
+		tot_len += iov->iov_len;
+		max_len -= iov->iov_len;
+		++iov;
+	}
+
+	return tot_len;
+}
+
+
+static inline void copy_from_iov(char *buf, const struct iovec *iov, size_t iovcnt)
+{
+	while (iovcnt--) {
+		memcpy(buf, iov->iov_base, iov->iov_len);
+		buf += iov->iov_len;
+		++iov;
+	}
+}
+
+
+static inline void copy_to_iov(const char *buf, const struct iovec *iov, size_t iovcnt, ssize_t len)
+{
+	while (iovcnt-- && len > 0) {
+		size_t n = min(iov->iov_len, len);
+		memcpy(iov->iov_base, buf, n);
+		buf += n;
+		len -= n;
+		++iov;
+	}
+}
+
+
+ssize_t sendmsg(int socket, const struct msghdr *msg, int flags)
+{
+	ssize_t len = iov_total_len(msg->msg_iov, msg->msg_iovlen);
+
+	if (len >= 0) {
+		if (msg->msg_iovlen <= 1) {
+			len = sys_sendmsg(socket, msg, flags);
+		}
+		else { /* copy data from scatter-gather buffers to a temporary buffer */
+			struct iovec _iov = {
+				.iov_len = len
+			};
+			struct msghdr _msg = {
+				.msg_name = msg->msg_name,
+				.msg_namelen = msg->msg_namelen,
+				.msg_iov = &_iov,
+				.msg_iovlen = 1,
+				.msg_control = msg->msg_control,
+				.msg_controllen = msg->msg_controllen,
+				.msg_flags = msg->msg_flags
+			};
+
+			if (len <= 64) {
+				char buf[64]; /* small buffer optimization */
+
+				_iov.iov_base = buf;
+				copy_from_iov(buf, msg->msg_iov, msg->msg_iovlen);
+				len = sys_sendmsg(socket, &_msg, flags);
+			}
+			else {
+				void *buf;
+
+				buf = malloc(len);
+				if (!buf)
+					return SET_ERRNO(-ENOMEM);
+
+				_iov.iov_base = buf;
+				copy_from_iov(buf, msg->msg_iov, msg->msg_iovlen);
+				len = sys_sendmsg(socket, &_msg, flags);
+				free(buf);
+			}
+		}
+	}
+
+	return SET_ERRNO(len);
+}
+
+
 ssize_t recvmsg(int socket, struct msghdr *msg, int flags)
 {
-	ssize_t ret;
-	size_t sz = 0, i;
-	void *buf = NULL;
+	ssize_t len = iov_total_len(msg->msg_iov, msg->msg_iovlen);
 
-	msg->msg_controllen = 0;	// FIXME: pass ancillary data
-	msg->msg_flags = 0;
-
-	sz = iov_total_len(msg->msg_iov, msg->msg_iovlen);
-	if (msg->msg_iovlen <= 1 || !sz) {
-		if (msg->msg_iovlen) {
-			buf = msg->msg_iov->iov_base;
-			sz = msg->msg_iov->iov_len;
+	if (len >= 0) {
+		if (msg->msg_iovlen <= 1) {
+			len = sys_recvmsg(socket, msg, flags);
 		}
-		return recvfrom(socket, buf, sz, flags, msg->msg_name, &msg->msg_namelen);
+		else { /* copy data from a temporary buffer to scatter-gather buffers */
+			struct iovec _iov = {
+				.iov_len = len
+			};
+			struct msghdr _msg = {
+				.msg_name = msg->msg_name,
+				.msg_namelen = msg->msg_namelen,
+				.msg_iov = &_iov,
+				.msg_iovlen = 1,
+				.msg_control = msg->msg_control,
+				.msg_controllen = msg->msg_controllen,
+				.msg_flags = msg->msg_flags
+			};
+
+			if (len <= 64) {
+				char buf[64]; /* small buffer optimization */
+
+				_iov.iov_base = buf;
+				len = sys_recvmsg(socket, &_msg, flags);
+				copy_to_iov(buf, msg->msg_iov, msg->msg_iovlen, len);
+			}
+			else {
+				void *buf;
+
+				buf = malloc(len);
+				if (!buf)
+					return SET_ERRNO(-ENOMEM);
+
+				_iov.iov_base = buf;
+				len = sys_recvmsg(socket, &_msg, flags);
+				copy_to_iov(buf, msg->msg_iov, msg->msg_iovlen, len);
+				free(buf);
+			}
+		}
 	}
 
-	buf = malloc(sz);
-	if (!buf)
-		return SET_ERRNO(-ENOMEM);
-
-	ret = recvfrom(socket, buf, sz, flags, msg->msg_name, &msg->msg_namelen);
-
-	if (ret > 0) {
-		for (sz = 0, i = 0; i < msg->msg_iovlen && sz < ret; ++i) {
-			size_t left = ret - sz;
-			if (left > msg->msg_iov[i].iov_len)
-				left = msg->msg_iov[i].iov_len;
-			memcpy(msg->msg_iov[i].iov_base, buf + sz, left);
-			sz += left;
-		}
-	}
-
-	free(buf);
-
-	return ret;
+	return SET_ERRNO(len);
 }
+
 
 struct servent *getservbyname(const char *name, const char *proto)
 {
@@ -192,8 +249,8 @@ struct hostent *gethostbyaddr(const void *addr, socklen_t len, int type)
 
 
 int getnameinfo(const struct sockaddr *addr, socklen_t addrlen,
-                char *host, socklen_t hostlen,
-                char *serv, socklen_t servlen, int flags)
+	char *host, socklen_t hostlen,
+	char *serv, socklen_t servlen, int flags)
 {
 	msg_t msg = { 0 };
 	sockport_msg_t *smi = (void *)msg.i.raw;
@@ -238,7 +295,8 @@ int getnameinfo(const struct sockaddr *addr, socklen_t addrlen,
 			if (hostlen < smo->nameinfo.hostlen) {
 				smo->ret = EAI_OVERFLOW;
 				memcpy(host, buf, hostlen);
-			} else
+			}
+			else
 				memcpy(host, buf, smo->nameinfo.hostlen);
 		}
 
@@ -246,7 +304,8 @@ int getnameinfo(const struct sockaddr *addr, socklen_t addrlen,
 			if (servlen < smo->nameinfo.servlen) {
 				smo->ret = EAI_OVERFLOW;
 				memcpy(serv, buf + hostlen, servlen);
-			} else
+			}
+			else
 				memcpy(serv, buf + hostlen, smo->nameinfo.servlen);
 		}
 	}
@@ -260,8 +319,8 @@ int getnameinfo(const struct sockaddr *addr, socklen_t addrlen,
 
 
 int getaddrinfo(const char *node, const char *service,
-                const struct addrinfo *hints,
-                struct addrinfo **res)
+	const struct addrinfo *hints,
+	struct addrinfo **res)
 {
 	struct addrinfo *ai;
 	msg_t msg = { 0 };
@@ -464,7 +523,7 @@ int getifaddrs(struct ifaddrs **ifap)
 			if (bufsz <= (uintptr_t)ifa->ifa_name)
 				goto out_overflow;
 
-			p = msg.o.data + (uintptr_t) ifa->ifa_name;
+			p = msg.o.data + (uintptr_t)ifa->ifa_name;
 			namesz = strnlen(p, bufsz - (uintptr_t)ifa->ifa_name);
 			if (bufsz < (uintptr_t)ifa->ifa_name + namesz)
 				goto out_overflow;
