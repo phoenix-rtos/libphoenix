@@ -31,13 +31,13 @@ struct sadb_msg {
 	uint16_t sadb_msg_reserved;
 	uint32_t sadb_msg_seq;
 	uint32_t sadb_msg_pid;
-};
+} __attribute__((packed));
 
 
 struct sadb_ext {
 	uint16_t sadb_ext_len;
 	uint16_t sadb_ext_type;
-};
+} __attribute__((packed));
 
 
 struct sadb_sa {
@@ -49,7 +49,7 @@ struct sadb_sa {
 	uint8_t sadb_sa_auth;
 	uint8_t sadb_sa_encrypt;
 	uint32_t sadb_sa_flags;
-};
+} __attribute__((packed));
 
 
 struct sadb_lifetime {
@@ -59,7 +59,7 @@ struct sadb_lifetime {
 	uint64_t sadb_lifetime_bytes;
 	uint64_t sadb_lifetime_addtime;
 	uint64_t sadb_lifetime_usetime;
-};
+} __attribute__((packed));
 
 
 struct sadb_address {
@@ -68,7 +68,7 @@ struct sadb_address {
 	uint8_t sadb_address_proto;
 	uint8_t sadb_address_prefixlen;
 	uint16_t sadb_address_reserved;
-};
+} __attribute__((packed));
 
 
 struct sadb_key {
@@ -76,7 +76,7 @@ struct sadb_key {
 	uint16_t sadb_key_exttype;
 	uint16_t sadb_key_bits;
 	uint16_t sadb_key_reserved;
-};
+} __attribute__((packed));
 
 
 struct sadb_ident {
@@ -85,7 +85,7 @@ struct sadb_ident {
 	uint16_t sadb_ident_type;
 	uint16_t sadb_ident_reserved;
 	uint64_t sadb_ident_id;
-};
+} __attribute__((packed));
 
 
 struct sadb_sens {
@@ -97,7 +97,7 @@ struct sadb_sens {
 	uint8_t sadb_sens_integ_level;
 	uint8_t sadb_sens_integ_len;
 	uint32_t sadb_sens_reserved;
-};
+} __attribute__((packed));
 
 
 struct sadb_prop {
@@ -105,14 +105,14 @@ struct sadb_prop {
 	uint16_t sadb_prop_exttype;
 	uint8_t sadb_prop_replay;
 	uint8_t sadb_prop_reserved[3];
-};
+} __attribute__((packed));
 
 
 struct sadb_supported {
 	uint16_t sadb_supported_len;
 	uint16_t sadb_supported_exttype;
 	uint32_t sadb_supported_reserved;
-};
+} __attribute__((packed));
 
 
 struct sadb_alg {
@@ -121,7 +121,7 @@ struct sadb_alg {
 	uint16_t sadb_alg_minbits;
 	uint16_t sadb_alg_maxbits;
 	uint16_t sadb_alg_reserved;
-};
+} __attribute__((packed));
 
 
 struct sadb_spirange {
@@ -130,14 +130,14 @@ struct sadb_spirange {
 	uint32_t sadb_spirange_min;
 	uint32_t sadb_spirange_max;
 	uint32_t sadb_spirange_reserved;
-};
+} __attribute__((packed));
 
 
 struct sadb_x_kmprivate {
 	uint16_t sadb_x_kmprivate_len;
 	uint16_t sadb_x_kmprivate_exttype;
 	uint32_t sadb_x_kmprivate_reserved;
-};
+} __attribute__((packed));
 
 
 struct sadb_x_sa2 {
@@ -148,7 +148,7 @@ struct sadb_x_sa2 {
 	uint16_t sadb_x_sa2_reserved2;
 	uint32_t sadb_x_sa2_sequence;
 	uint32_t sadb_x_sa2_reqid;
-};
+} __attribute__((packed));
 
 
 struct sadb_x_policy {
@@ -159,7 +159,7 @@ struct sadb_x_policy {
 	uint8_t sadb_x_policy_reserved;
 	uint32_t sadb_x_policy_id;
 	uint32_t sadb_x_policy_reserved2;
-};
+} __attribute__((packed));
 
 
 struct sadb_x_ipsecrequest {
@@ -168,7 +168,7 @@ struct sadb_x_ipsecrequest {
 	uint8_t sadb_x_ipsecrequest_mode;
 	uint8_t sadb_x_ipsecrequest_level;
 	uint16_t sadb_x_ipsecrequest_reqid;
-};
+} __attribute__((packed));
 
 
 struct sadb_x_nat_t_type {
@@ -176,7 +176,7 @@ struct sadb_x_nat_t_type {
 	uint16_t sadb_x_nat_t_type_exttype;
 	uint8_t sadb_x_nat_t_type_type;
 	uint8_t sadb_x_nat_t_type_reserved[3];
-};
+} __attribute__((packed));
 
 
 struct sadb_x_nat_t_port {
@@ -184,7 +184,7 @@ struct sadb_x_nat_t_port {
 	uint16_t sadb_x_nat_t_port_exttype;
 	uint16_t sadb_x_nat_t_port_port;
 	uint16_t sadb_x_nat_t_port_reserved;
-};
+} __attribute__((packed));
 
 
 struct sadb_x_nat_t_frag {
@@ -192,7 +192,7 @@ struct sadb_x_nat_t_frag {
 	uint16_t sadb_x_nat_t_frag_exttype;
 	uint16_t sadb_x_nat_t_frag_fraglen;
 	uint16_t sadb_x_nat_t_frag_reserved;
-};
+} __attribute__((packed));
 
 
 /* Message types */
