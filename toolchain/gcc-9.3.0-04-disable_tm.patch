@@ -1,7 +1,7 @@
-diff --git a/gcc-9.3.0/gcc/config/phoenix.h b/gcc-9.3.0-phoenix/gcc/config/phoenix.h
+diff --git gcc-9.3.0-orig/gcc/config/phoenix.h gcc-9.3.0/gcc/config/phoenix.h
 index c1aad95..1985dde 100644
---- a/gcc-9.3.0/gcc/config/phoenix.h
-+++ b/gcc-9.3.0-phoenix/gcc/config/phoenix.h
+--- gcc-9.3.0-orig/gcc/config/phoenix.h
++++ gcc-9.3.0/gcc/config/phoenix.h
 @@ -31,3 +31,5 @@ along with GCC; see the file COPYING3.  If not see
  /* This will prevent selecting 'unsigned long int' instead of 'unsigned int' as 'uint32_t' in stdint-newlib.h. */
  #undef STDINT_LONG32
