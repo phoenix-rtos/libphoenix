@@ -51,6 +51,7 @@ GCC=gcc-9.3.0
 TARGET="$1"
 BUILD_ROOT="$2"
 TOOLCHAIN_PREFIX="${BUILD_ROOT}/${TARGET}"
+SYSROOT="${TOOLCHAIN_PREFIX}/${TARGET}"
 MAKEFLAGS="-j9 -s"
 export MAKEFLAGS
 
@@ -87,7 +88,7 @@ build_binutils() {
     pushd "${BINUTILS}/build" > /dev/null
 
     ../configure --target="${TARGET}" --prefix="${TOOLCHAIN_PREFIX}" \
-                 --with-sysroot="${TOOLCHAIN_PREFIX}/${TARGET}" --enable-lto
+                 --with-sysroot="${SYSROOT}" --enable-lto
     make
 
     log "installing binutils"
@@ -122,7 +123,7 @@ build_gcc_stage1() {
 
     # stage1 compiler (gcc only)
     ../configure --target="${TARGET}" --prefix="${TOOLCHAIN_PREFIX}" \
-                 --with-sysroot="${TOOLCHAIN_PREFIX}/${TARGET}" \
+                 --with-sysroot="${SYSROOT}" \
                  --enable-languages=c,c++ --with-newlib \
                  --with-headers=yes \
                  --disable-tls \
@@ -143,6 +144,12 @@ build_libc() {
     OLDPATH="$PATH"
     PATH="$TOOLCHAIN_PREFIX/bin":$PATH
     export PATH
+
+    # standard library headers should be installed in $SYSROOT/include
+    # for fixincludes to work the headers need to be in $SYSROOT/usr/include, for libgcc compilation in $SYSROOT/include
+    # create symlink for this stage (arm-none-eabi-gcc does the same - see https://github.com/xpack-dev-tools/arm-gcc-original-scripts/blob/master/build-toolchain.sh)
+    # FIXME: keep the symlink for now until install dir changes in libphoenix and kernel would be well-propagated
+    ln -sf . "${SYSROOT}/usr"
 
     log "installing kernel headers"
     make -C "$SCRIPT_DIR/../../phoenix-rtos-kernel" TARGET="$PHOENIX_TARGET" install-headers
@@ -168,13 +175,10 @@ build_gcc_stage2() {
     log "installing GCC (stage2)"
     make install-gcc install-target-libgcc
 
-    # TODO: build libstdc++ -> for now it fails because of libphoenix headers
-    # (no compilation possible with no flags - #error "unsupported architecture")
-    # also: not sure if we shouldn't install libphoenix headers in ${sysroot}/include instead of ${sysroot}/usr/include:
-    # - this path is hardcoded while building libstdc++ using stage1 compiler
-    # - newlib headers in arm-none-eabi-gcc are installed that way
-    # reference: https://github.com/xpack-dev-tools/arm-gcc-original-scripts/blob/master/build-toolchain.sh
+    # TODO: build libstdc++ -> for now it fails because of libphoenix missing features
 
+    # FIXME: keep the symlink for now until install dir changes in libphoenix and kernel would be well-propagated
+    #rm -r "${SYSROOT:?}/usr"
     popd > /dev/null
 }
 
