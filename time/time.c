@@ -375,6 +375,9 @@ size_t strftime(char *restrict s, size_t maxsize, const char *restrict format, c
 			case 'Y':
 				res = snprintf(s + size, maxsize - size, "%u", 1900 + timeptr->tm_year);
 				break;
+			case 'y':
+				res = snprintf(s + size, maxsize - size, "%02u", timeptr->tm_year % 100);
+				break;
 			case 'Z':
 				c++;
 				continue;
