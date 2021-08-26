@@ -345,7 +345,7 @@ size_t strftime(char *restrict s, size_t maxsize, const char *restrict format, c
 						1900 + timeptr->tm_year);
 				break;
 			case 'd':
-				res = snprintf(s + size, maxsize - size, "%u", timeptr->tm_mday);
+				res = snprintf(s + size, maxsize - size, "%02u", timeptr->tm_mday);
 				break;
 			case 'e':
 				res = snprintf(s + size, maxsize - size, "%2u", timeptr->tm_mday);
@@ -354,13 +354,13 @@ size_t strftime(char *restrict s, size_t maxsize, const char *restrict format, c
 				res = snprintf(s + size, maxsize - size, "%02u", timeptr->tm_hour);
 				break;
 			case 'j':
-				res = snprintf(s + size, maxsize - size, "%u", timeptr->tm_yday + 1);
+				res = snprintf(s + size, maxsize - size, "%03u", timeptr->tm_yday + 1);
 				break;
 			case 'M':
 				res = snprintf(s + size, maxsize - size, "%02u", timeptr->tm_min);
 				break;
 			case 'm':
-				res = snprintf(s + size, maxsize - size, "%u", timeptr->tm_mon < 12 ? timeptr->tm_mon + 1 : 13);
+				res = snprintf(s + size, maxsize - size, "%02u", timeptr->tm_mon < 12 ? timeptr->tm_mon + 1 : 13);
 				break;
 			case 'S':
 				res = snprintf(s + size, maxsize - size, "%02u", timeptr->tm_sec);
