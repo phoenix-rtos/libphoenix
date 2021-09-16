@@ -226,6 +226,33 @@ char *strncpy(char *dest, const char *src, size_t n)
 #endif
 
 
+size_t strlcpy(char *dest, const char *src, size_t size)
+{
+	size_t i = 0;
+
+	if (size > 0) {
+		for (i = 0; i < (size - 1); i++)
+			if ((dest[i] = src[i]) == '\0')
+				break;
+		dest[size - 1] = '\0';
+	}
+	while (src[i] != '\0')
+		i++;
+
+	return i;
+}
+
+
+size_t strlcat(char *dest, const char *src, size_t size)
+{
+	size_t i = 0;
+
+	while (dest[i] != '\0' && i < size)
+		i++;
+	return i + strlcpy(&dest[i], src, size - i);
+}
+
+
 #ifndef __STPCPY
 #define __STPCPY
 char *stpcpy(char *dest, const char *src)

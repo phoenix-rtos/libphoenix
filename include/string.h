@@ -101,6 +101,14 @@ extern size_t strcspn(const char *str1, const char *str2);
 extern char *strerror(int errnum);
 
 
+/* Copy src to string dst of size siz and null terminates */
+extern size_t strlcpy(char *dest, const char *src, size_t size);
+
+
+/* concatenate at most (size) characters from source to dest and null terminates */
+extern size_t strlcat(char *dest, const char *src, size_t size);
+
+
 /* Computes the length of the string str up to but not including the terminating null character. */
 extern size_t strlen(const char *str);
 
