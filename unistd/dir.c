@@ -36,6 +36,17 @@ static ssize_t _readlink_abs(const char *path, char *buf, size_t bufsiz);
 static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, int allow_missing_leaf);
 
 
+/* stop-gap for waitpid POSIX incompatibilty (spurious SIGCHLD delivered during other syscalls) */
+static int safe_lookup(const char *name, oid_t *file, oid_t *dev)
+{
+	int err;
+	while ((err = lookup(name, file, dev)) == -EINTR)
+		;
+
+	return err;
+}
+
+
 int chdir(const char *path)
 {
 	struct stat s;
@@ -365,7 +376,7 @@ DIR *opendir(const char *dirname)
 		return NULL; /* errno set by resolve_path */
 	}
 
-	if (!dirname[0] || (lookup(canonical_name, NULL, &s->oid) < 0)) {
+	if (!dirname[0] || (safe_lookup(canonical_name, NULL, &s->oid) < 0)) {
 		free(canonical_name);
 		free(s);
 		errno = ENOENT;
@@ -443,7 +454,7 @@ static ssize_t _readlink_abs(const char *path, char *buf, size_t bufsiz)
 
 	assert(path && path[0] == '/');
 
-	if ((ret = lookup(path, NULL, &oid)) < 0)
+	if ((ret = safe_lookup(path, NULL, &oid)) < 0)
 		return SET_ERRNO(ret);
 
 	msg.type = mtGetAttr;
@@ -507,7 +518,7 @@ int rmdir(const char *path)
 
 	splitname(canonical_name, &name, &dirname);
 
-	if (lookup(dirname, NULL, &dir)) {
+	if (safe_lookup(dirname, NULL, &dir)) {
 		free(canonical_name);
 		return SET_ERRNO(-ENOENT);
 	}
