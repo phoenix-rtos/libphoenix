@@ -114,16 +114,15 @@ struct cmsghdr {
 };
 
 
-/* FIXME: _Alignof is available since C11 */
-#define CMSG_ALIGN(n) (((n) + _Alignof(struct cmsghdr) - 1) & ~(_Alignof(struct cmsghdr) - 1))
-#define CMSG_SPACE(n) (CMSG_ALIGN(sizeof(struct cmsghdr)) + CMSG_ALIGN(n))
-#define CMSG_LEN(n)   (CMSG_ALIGN(sizeof(struct cmsghdr)) + (n))
+#define CMSG_ALIGN(n) (((n) + sizeof(socklen_t) - 1) & ~(sizeof(socklen_t) - 1))
+#define CMSG_SPACE(n) (sizeof(struct cmsghdr) + CMSG_ALIGN(n))
+#define CMSG_LEN(n)   (sizeof(struct cmsghdr) + (n))
 #define CMSG_DATA(c)  ((unsigned char *)((struct cmsghdr *)(c) + 1))
 
 #define CMSG_FIRSTHDR(m) \
 	({ \
 		struct msghdr *_m = (struct msghdr *)(m); \
-		_m->msg_controllen < sizeof(struct cmsghdr) ? (struct cmsghdr *)NULL : (struct cmsghdr *)_m->msg_control; \
+		_m->msg_controllen < sizeof(struct cmsghdr) ? NULL : (struct cmsghdr *)_m->msg_control; \
 	})
 
 #define CMSG_NXTHDR(m, c) \
@@ -132,7 +131,7 @@ struct cmsghdr {
 		struct cmsghdr *_c = (struct cmsghdr *)(c); \
 		char *n = (char *)_c + CMSG_SPACE(_c->cmsg_len); \
 		char *e = (char *)_m->msg_control + _m->msg_controllen; \
-		(n > e ? (struct cmsghdr *)NULL : (struct cmsghdr *)n); \
+		(n > e ? NULL : (struct cmsghdr *)n); \
 	})
 
 
