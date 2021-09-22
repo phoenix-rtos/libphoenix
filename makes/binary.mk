@@ -44,7 +44,7 @@ ifneq ($(filter-out $(PREFIX_H)%, $(INSTALLED_HEADERS.$(NAME))),)
   $(error $(NAME): Installing headers outside of PREFIX_H, check Your makefile: $(INSTALLED_HEADERS.$(NAME)))
 endif
 
-$(PREFIX_H)%.h: $(LOCAL_DIR)%.h
+$(INSTALLED_HEADERS.$(NAME)): $(PREFIX_H)%.h: $(LOCAL_DIR)%.h
 	$(HEADER)
 
 # rule for linking binary
