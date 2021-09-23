@@ -138,11 +138,35 @@ extern double trunc(double x);
 /* Miscellaneous */
 
 
+/* checks if x is infinity */
+#define isinf(x) __builtin_isinf(x)
+
+
+/* checks if x is finite */
+#define isfinite(x) __builtin_isfinite(x)
+
+
+/* checks if x is an illegal number */
+#define isnan(x) __builtin_isnan(x)
+
+
 /* Returns the absolute value of x: |x|. */
 extern double fabs(double x);
 
 
+/* Returns sign of the value or 0 if value is 0 */
+extern int signbit(double x);
+
+
+/* Returns the x signed with the sign of y */
+extern double copysign(double x, double y);
+
+
 /* C99 extensions */
+typedef float float_t;
+typedef double double_t;
+
+
 #define cosf(x) cos(x)
 #define sinf(x) sin(x)
 #define tanf(x) tan(x)
