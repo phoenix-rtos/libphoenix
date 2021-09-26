@@ -184,9 +184,11 @@ build_gcc_stage2() {
 
 strip_binaries() {
     log "stripping binaries"
-    for bin in "$TOOLCHAIN_PREFIX"/bin/*; do
-        strip "$bin"
-    done
+    if [ "$(uname)" = "Darwin" ]; then
+        find "$TOOLCHAIN_PREFIX" -type f -perm +111 -exec strip {} + || true
+    else
+        find "$TOOLCHAIN_PREFIX" -type f -perm /111 -exec strip {} + || true
+    fi
 
     # NOTE: we could also strip target libraries, but let's leave debug sections for ease of development
 }
