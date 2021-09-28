@@ -18,7 +18,7 @@
 #include "common.h"
 
 
-double modf(double x, double* intpart)
+double modf(double x, double *intpart)
 {
 	conv_t *conv = (conv_t *)&x;
 	double tmp = x;
@@ -27,10 +27,10 @@ double modf(double x, double* intpart)
 
 	if (exp > 52) {
 		*intpart = x;
-		return conv->i.sign? -0.0 : 0.0;
+		return conv->i.sign ? -0.0 : 0.0;
 	}
 	else if (exp < 0) {
-		*intpart = conv->i.sign? -0.0 : 0.0;
+		*intpart = conv->i.sign ? -0.0 : 0.0;
 		return x;
 	}
 
@@ -52,7 +52,7 @@ double modf(double x, double* intpart)
 	return x;
 }
 
-float modff(float x, float* intpart)
+float modff(float x, float *intpart)
 {
 	double ret, tmp;
 
@@ -149,5 +149,5 @@ int signbit(double x)
 
 double copysign(double x, double y)
 {
-	return y == 0.0 ? fabs(x) : fabs(x)*y/fabs(y);
+	return y == 0.0 ? fabs(x) : fabs(x) * y / fabs(y);
 }
