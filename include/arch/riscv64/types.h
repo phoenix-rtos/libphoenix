@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * Architecture dependent part of types (arch/ia32)
+ * Architecture dependent part of types (arch/riscv64)
  *
  * Copyright 2019 Phoenix Systems
  * Author: Andrzej Glowinski
@@ -17,7 +17,7 @@
 #define _LIBPHOENIX_ARCH_RISCV64_TYPES_H_
 
 typedef unsigned long addr_t;
-typedef long offs_t;
+typedef long long offs_t;
 
 typedef int ssize_t;
 typedef unsigned long long time_t;
