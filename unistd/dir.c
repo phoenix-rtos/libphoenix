@@ -266,7 +266,6 @@ static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, 
  */
 char *resolve_path(const char *path, char *resolved_path, int resolve_last_symlink, int allow_missing_leaf)
 {
-
 	char *alloc_resolved_path = NULL; /* internally allocated path needed to be freed on error */
 	char *path_copy, *p;
 	size_t pathlen;
@@ -392,7 +391,7 @@ DIR *opendir(const char *dirname)
 	msg.i.attr.type = atType;
 	memcpy(&msg.i.attr.oid, &s->oid, sizeof(oid_t));
 
-	if (msgSend(s->oid.port, &msg) < 0) {
+	if ((msgSend(s->oid.port, &msg) < 0) || (msg.o.attr.err < 0)) {
 		free(s);
 		errno = EIO;
 		return NULL; /* EIO */

@@ -554,7 +554,7 @@ int fflush_unlocked(FILE *stream)
 		}
 	}
 	else {
-		lseek(stream->fd, stream->bufpos - stream->bufeof, SEEK_CUR);
+		lseek(stream->fd, (off_t)stream->bufpos - stream->bufeof, SEEK_CUR);
 		stream->bufpos = stream->bufeof = stream->bufsz;
 	}
 
@@ -872,6 +872,7 @@ ssize_t getline(char **lineptr, size_t *n, FILE *stream)
 	return linesz - 1;
 }
 
+
 int feof_unlocked(FILE *stream)
 {
 	return !!(stream->flags & F_EOF);
@@ -886,6 +887,7 @@ int feof(FILE *stream)
 	mutexUnlock(stream->lock);
 	return ret;
 }
+
 
 int setvbuf(FILE *stream, char *buffer, int mode, size_t size)
 {
@@ -930,6 +932,7 @@ int setvbuf(FILE *stream, char *buffer, int mode, size_t size)
 	mutexUnlock(stream->lock);
 	return 0;
 }
+
 
 void setbuf(FILE *stream, char *buf)
 {

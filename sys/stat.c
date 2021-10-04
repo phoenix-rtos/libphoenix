@@ -24,16 +24,16 @@
 
 #include "posix/utils.h"
 
+
 /* path needs to be canonical */
 static int _stat_abs(const char *path, struct stat *buf)
 {
 	oid_t oid, dev;
 	msg_t msg = {0};
+	int err;
 
-	if (lookup(path, &oid, &dev) < 0) {
-		errno = ENOENT;
-		return -1;
-	}
+	if (lookup(path, &oid, &dev) < 0)
+		return -ENOENT;
 
 	memset(buf, 0, sizeof(struct stat));
 
@@ -43,42 +43,50 @@ static int _stat_abs(const char *path, struct stat *buf)
 
 	msg.type = mtGetAttr;
 	msg.i.attr.oid = oid;
-	msg.i.attr.val = 0;
 
 	msg.i.attr.type = atMTime;
-	if (!msgSend(oid.port, &msg))
-		buf->st_mtime = msg.o.attr.val;
+	if (((err = msgSend(oid.port, &msg)) < 0) || ((err = msg.o.attr.err) < 0))
+		return err;
+	buf->st_mtime = msg.o.attr.val;
 
 	msg.i.attr.type = atATime;
-	if (!msgSend(oid.port, &msg))
-		buf->st_atime = msg.o.attr.val;
+	if (((err = msgSend(oid.port, &msg)) < 0) || ((err = msg.o.attr.err) < 0))
+		return err;
+	buf->st_atime = msg.o.attr.val;
 
 	msg.i.attr.type = atCTime;
-	if (!msgSend(oid.port, &msg))
-		buf->st_ctime = msg.o.attr.val;
+	if (((err = msgSend(oid.port, &msg)) < 0) || ((err = msg.o.attr.err) < 0))
+		return err;
+	buf->st_ctime = msg.o.attr.val;
 
 	msg.i.attr.type = atLinks;
-	if (!msgSend(oid.port, &msg))
-		buf->st_nlink = msg.o.attr.val;
+	if (((err = msgSend(oid.port, &msg)) < 0) || ((err = msg.o.attr.err) < 0))
+		return err;
+	buf->st_nlink = msg.o.attr.val;
 
 	msg.i.attr.type = atMode;
-	if (!msgSend(oid.port, &msg))
-		buf->st_mode = msg.o.attr.val;
+	if (((err = msgSend(oid.port, &msg)) < 0) || ((err = msg.o.attr.err) < 0))
+		return err;
+	buf->st_mode = msg.o.attr.val;
 
 	msg.i.attr.type = atUid;
-	if (!msgSend(oid.port, &msg))
-		buf->st_uid = msg.o.attr.val;
+	if (((err = msgSend(oid.port, &msg)) < 0) || ((err = msg.o.attr.err) < 0))
+		return err;
+	buf->st_uid = msg.o.attr.val;
 
 	msg.i.attr.type = atGid;
-	if (!msgSend(oid.port, &msg))
-		buf->st_gid = msg.o.attr.val;
+	if (((err = msgSend(oid.port, &msg)) < 0) || ((err = msg.o.attr.err) < 0))
+		return err;
+	buf->st_gid = msg.o.attr.val;
 
 	msg.i.attr.type = atSize;
-	if (!msgSend(oid.port, &msg))
-		buf->st_size = msg.o.attr.val;
+	if (((err = msgSend(oid.port, &msg)) < 0) || ((err = msg.o.attr.err) < 0))
+		return err;
+	buf->st_size = msg.o.attr.val;
 
 	return EOK;
 }
+
 
 int stat(const char *path, struct stat *buf)
 {
@@ -91,9 +99,8 @@ int stat(const char *path, struct stat *buf)
 	ret = _stat_abs(canonical, buf);
 
 	free(canonical);
-	return ret;
+	return SET_ERRNO(ret);
 }
-
 
 
 mode_t umask(mode_t cmask)
@@ -114,7 +121,7 @@ int lstat(const char *path, struct stat *buf)
 	ret = _stat_abs(canonical, buf);
 
 	free(canonical);
-	return ret;
+	return SET_ERRNO(ret);
 }
 
 

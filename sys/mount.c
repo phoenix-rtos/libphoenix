@@ -66,7 +66,7 @@ int mount(const char *source, const char *target, const char *fstype, long mode,
 	msg.i.data = &doid;
 	msg.i.size = sizeof(oid_t);
 
-	if ((err = msgSend(toid.port, &msg)) < 0)
+	if (((err = msgSend(toid.port, &msg)) < 0) || ((err = msg.o.attr.err) < 0))
 		return err;
 
 	return EOK;

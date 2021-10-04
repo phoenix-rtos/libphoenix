@@ -38,8 +38,8 @@ extern int sys_unlink(const char *path);
 extern int sys_pipe(int fildes[2]);
 extern int sys_fstat(int fd, struct stat *buf);
 
-WRAP_ERRNO_DEF(int, read, (int fildes, void *buf, size_t nbyte), (fildes, buf, nbyte))
-WRAP_ERRNO_DEF(int, write, (int fildes, const void *buf, size_t nbyte), (fildes, buf, nbyte))
+WRAP_ERRNO_DEF(ssize_t, read, (int fildes, void *buf, size_t nbyte), (fildes, buf, nbyte))
+WRAP_ERRNO_DEF(ssize_t, write, (int fildes, const void *buf, size_t nbyte), (fildes, buf, nbyte))
 WRAP_ERRNO_DEF(int, close, (int fildes), (fildes))
 WRAP_ERRNO_DEF(int, ftruncate, (int fildes, off_t length), (fildes, length))
 WRAP_ERRNO_DEF(off_t, lseek, (int fildes, off_t offset, int whence), (fildes, offset, whence))
