@@ -53,7 +53,7 @@ static int mktemp(char *template, int suffixlen)
 
 	close(fd);
 
-	if (lookup(template, NULL, &oid) == EOK)
+	if (lookup(template, &oid, NULL) == EOK)
 		return -EEXIST;
 
 	return EOK;
