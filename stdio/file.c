@@ -1076,7 +1076,7 @@ FILE *tmpfile(void)
 {
 	oid_t oid;
 
-	while (lookup("/dev/posix/tmpfile", NULL, &oid) < 0) {
+	while (lookup("/dev/posix/tmpfile", &oid, NULL) < 0) {
 		if (errno != EINTR)
 			return NULL;
 	}
