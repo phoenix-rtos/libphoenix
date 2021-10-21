@@ -22,6 +22,8 @@
 #    output: plo-armv7a9-zynq7000.img - contains boot layout at the beginning
 #
 
+set -e
+
 PATH_IMG=$1
 PATH_OUTPUT=$2
 ADDR_ENTRY=$3
@@ -108,9 +110,9 @@ reverse() {
 }
 
 
-reverse_rpt() {
-	for (( j=0; j<$2; ++j )); do
-		reverse "$1"
+repeat() {
+	for ((i=0; i<$2; ++i)); do
+		printf "%s" "$1"
 	done
 }
 
@@ -133,37 +135,35 @@ checksum() {
 
 make_boot_layout() {
 	local filename="boot_layout"
+	local z8="00000000"
+	local f8="ffffffff"
 
 	# Save layout to the hex file. Empty spaces between headers should be filled with 0xff.
 	{
 		# Boot Header
-		reverse_rpt 0xeafffffe 8    # Dummy ARM Vector Table
+		repeat "$(reverse 0xeafffffe)" 8  # Dummy ARM Vector Table
 		reverse "${BOOT_HEADER[@]}"
 		checksum "${BOOT_HEADER[@]}"
-		reverse_rpt 0x00000000 19   # User defined fields
+		repeat "$z8" 19                 # User defined fields
 		reverse "$OFFS_DEVH"
 		reverse "$OFFS_PARTH"
 
 		# Register Initialization Table
-		for (( j=0; j<256; ++j)); do
-			reverse 0xffffffff
-			reverse 0x00000000
-		done
-		reverse_rpt 0xffffffff $(((OFFS_DEVH - 256 * 4 * 2 - 0xa0) / 4 ))
+		repeat "$f8$z8" 256
+		repeat "$f8" $(((OFFS_DEVH - 256 * 4 * 2 - 0xa0) / 4 ))
 
 		# Device Image Header Table
 		reverse "${DEV_TABLE[@]}"
-		reverse_rpt 0xffffffff $(((OFFS_IMGH - (OFFS_DEVH + ${#DEV_TABLE[@]} * 4)) / 4))
+		repeat "$f8" $(((OFFS_IMGH - (OFFS_DEVH + ${#DEV_TABLE[@]} * 4)) / 4))
 
 		# Image Header
 		reverse "${IMG_HEADER[@]}"
-		reverse_rpt 0xffffffff $(((OFFS_PARTH - (OFFS_IMGH + ${#IMG_HEADER[@]} * 4)) / 4))
+		repeat "$f8" $(((OFFS_PARTH - (OFFS_IMGH + ${#IMG_HEADER[@]} * 4)) / 4))
 
 		# Partition Header
 		reverse "${PARTITION_HEADER[@]}"
 		checksum "${PARTITION_HEADER[@]}"
-		reverse_rpt 0xffffffff $(((OFFS_IMG - (OFFS_PARTH + (${#PARTITION_HEADER[@]} + 1) * 4)) / 4))
-
+		repeat "$f8" $(((OFFS_IMG - (OFFS_PARTH + (${#PARTITION_HEADER[@]} + 1) * 4)) / 4))
 	} > "${filename}.hex"
 
 	xxd -r -p "${filename}.hex" > "${filename}.bin"
