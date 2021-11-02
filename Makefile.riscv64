@@ -12,8 +12,14 @@ CROSS ?= riscv64-phoenix-
 
 CC = $(CROSS)gcc
 
+ifeq ($(DEBUG), 1)
+  CFLAGS += -Og
+else
+  CFLAGS += -O2 -DNDEBUG
+endif
+
 # FIXME: -ffunction-sections and -fdata-sections are missing
-CFLAGS += -O2 -Wall -Wstrict-prototypes\
+CFLAGS += -Wall -Wstrict-prototypes\
 	-fomit-frame-pointer -mcmodel=medany -fno-builtin -DTARGET_RISCV64
 
 AR = $(CROSS)ar
