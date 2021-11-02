@@ -35,7 +35,7 @@ typedef int dev_t;
 typedef int ino_t;
 typedef int nlink_t;
 typedef int blksize_t;
-typedef int blkcnt_t;
+typedef long long blkcnt_t;
 typedef long long off64_t;
 typedef off64_t off_t;
 
