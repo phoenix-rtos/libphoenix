@@ -167,7 +167,7 @@ double atan(double x)
 		return 0.0;
 
 	if (x > 1.0)
-		return M_PI_2 * s - atan(1.0 / x);
+		return (M_PI_2 - atan(1.0 / x)) * s;
 
 	for (i = 0, res = 0.0; i < sizeof(atan_wi) / sizeof(atan_wi[0]); ++i) {
 		a = h * atan_xi[i] + h;
