@@ -21,11 +21,11 @@ make -C "libphoenix" all install
 b_log "Building phoenix-rtos-corelibs"
 make -C "phoenix-rtos-corelibs" all install
 
-b_log "Building phoenix-rtos-devices"
-make -C "phoenix-rtos-devices" all
-
 b_log "Building phoenix-rtos-filesystems"
 make -C "phoenix-rtos-filesystems" all
+
+b_log "Building phoenix-rtos-devices"
+make -C "phoenix-rtos-devices" all
 
 b_log "Building coreutils"
 make -C "phoenix-rtos-utils" all
