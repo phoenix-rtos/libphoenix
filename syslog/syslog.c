@@ -95,6 +95,7 @@ int setlogmask(int maskpri)
 void vsyslog(int priority, const char *format, va_list ap)
 {
 	int cnt, prefix_size;
+	ssize_t err;
 
 	if ((1 << LOG_PRI(priority)) & syslog_common.logmask)
 		return;
@@ -117,10 +118,10 @@ void vsyslog(int priority, const char *format, va_list ap)
 	syslog_common.buf[len] = '\0';
 
 	if (syslog_common.open)
-		sendto(syslog_common.logfd, syslog_common.buf, len + 1, 0, (struct sockaddr *)&syslog_common.addr, syslog_common.addrlen);
+		err = sendto(syslog_common.logfd, syslog_common.buf, len + 1, 0, (struct sockaddr *)&syslog_common.addr, syslog_common.addrlen);
 
 	/* output to stderr if logging device is not available */
-	if (syslog_common.logopt & LOG_PERROR || !syslog_common.open) {
+	if (syslog_common.logopt & LOG_PERROR || !syslog_common.open || err < 0) {
 		if (syslog_common.buf[len - 1] != '\n')
 			syslog_common.buf[len] = '\n';
 		write(STDERR_FILENO, syslog_common.buf + prefix_size, len - prefix_size + 1);
