@@ -26,21 +26,24 @@
 
 #ifdef _USE_STANDARD_TYPES_STDINT
 
-#define INT64_MAX 0x7fffffffffffffffLL
-#define INT64_MIN 0x8000000000000000LL
-#define UINT64_MAX 0xffffffffffffffffLL
+/* The following sections refer to ISO/IEC 9899:1999 */
 
-#define INT32_MAX ((int32_t)0x7fffffff)
-#define INT32_MIN ((int32_t)0x80000000)
-#define UINT32_MAX 0xffffffff
+/* 7.18.2.1 Limits of exact-width integer types */
 
-#define INT16_MAX ((int16_t)0x7fff)
+#define INT8_MIN  ((int8_t)0x80)
 #define INT16_MIN ((int16_t)0x8000)
-#define UINT16_MAX 0xffff
+#define INT32_MIN ((int32_t)0x80000000)
+#define INT64_MIN 0x8000000000000000LL
 
-#define INT8_MAX ((int8_t)0x7f)
-#define INT8_MIN ((int8_t)0x80)
-#define UINT8_MAX 0xff
+#define INT8_MAX  ((int8_t)0x7f)
+#define INT16_MAX ((int16_t)0x7fff)
+#define INT32_MAX ((int32_t)0x7fffffff)
+#define INT64_MAX 0x7fffffffffffffffLL
+
+#define UINT8_MAX  0xff
+#define UINT16_MAX 0xffff
+#define UINT32_MAX 0xffffffff
+#define UINT64_MAX 0xffffffffffffffffLL
 
 #endif
 
