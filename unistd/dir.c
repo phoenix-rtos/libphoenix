@@ -375,7 +375,7 @@ DIR *opendir(const char *dirname)
 		return NULL; /* errno set by resolve_path */
 	}
 
-	if (!dirname[0] || (safe_lookup(canonical_name, &s->oid, NULL) < 0)) {
+	if (!dirname[0] || (safe_lookup(canonical_name, NULL, &s->oid) < 0)) {
 		free(canonical_name);
 		free(s);
 		errno = ENOENT;
@@ -453,7 +453,7 @@ static ssize_t _readlink_abs(const char *path, char *buf, size_t bufsiz)
 
 	assert(path && path[0] == '/');
 
-	if ((ret = safe_lookup(path, &oid, NULL)) < 0)
+	if ((ret = safe_lookup(path, NULL, &oid)) < 0)
 		return SET_ERRNO(ret);
 
 	msg.type = mtGetAttr;
@@ -517,7 +517,7 @@ int rmdir(const char *path)
 
 	splitname(canonical_name, &name, &dirname);
 
-	if (safe_lookup(dirname, &dir, NULL)) {
+	if (safe_lookup(dirname, NULL, &dir)) {
 		free(canonical_name);
 		return SET_ERRNO(-ENOENT);
 	}
