@@ -169,7 +169,7 @@ int symlink(const char *target, const char *linkpath)
 
 	splitname(canonical_linkpath, &name, &dir_name);
 
-	if ((ret = lookup(dir_name, &dir, NULL)) < 0) {
+	if ((ret = lookup(dir_name, NULL, &dir)) < 0) {
 		free(canonical_linkpath);
 		return SET_ERRNO(ret);
 	}
