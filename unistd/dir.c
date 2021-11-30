@@ -375,7 +375,7 @@ DIR *opendir(const char *dirname)
 		return NULL; /* errno set by resolve_path */
 	}
 
-	if (!dirname[0] || (safe_lookup(canonical_name, &s->oid, NULL) < 0)) {
+	if (!dirname[0] || (safe_lookup(canonical_name, NULL, &s->oid) < 0)) {
 		free(canonical_name);
 		free(s);
 		errno = ENOENT;
@@ -517,10 +517,12 @@ int rmdir(const char *path)
 
 	splitname(canonical_name, &name, &dirname);
 
-	if (safe_lookup(dirname, &dir, NULL)) {
+	if (safe_lookup(dirname, NULL, &dir)) {
 		free(canonical_name);
 		return SET_ERRNO(-ENOENT);
 	}
+
+	/* TODO: add proper mount point handling */
 
 	msg.type = mtUnlink;
 	memcpy(&msg.i.ln.dir, &dir, sizeof(dir));
