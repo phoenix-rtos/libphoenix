@@ -1074,12 +1074,16 @@ void funlockfile(FILE *file)
 
 FILE *tmpfile(void)
 {
-	oid_t oid;
+	oid_t oid, dev;
 
-	while (lookup("/dev/posix/tmpfile", &oid, NULL) < 0) {
+	while (lookup("/dev/posix/tmpfile", &oid, &dev) < 0) {
 		if (errno != EINTR)
 			return NULL;
 	}
+
+	/* Make sure it's a device (created by posixsrv) */
+	if (oid.port == dev.port)
+		return NULL;
 
 	return fopen("/dev/posix/tmpfile", "w+");
 }
