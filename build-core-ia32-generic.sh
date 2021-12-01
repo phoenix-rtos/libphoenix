@@ -30,9 +30,11 @@ make -C "phoenix-rtos-devices" all install
 b_log "Building coreutils"
 make -C "phoenix-rtos-utils" all install
 
-#b_log "Building phoenix-rtos-lwip"
-#make -C "phoenix-rtos-lwip" all
-#b_install "$PREFIX_PROG_STRIPPED/lwip" /sbin
+if [ "$CORE_NETWORKING_DISABLE" != "y" ]; then
+	b_log "Building phoenix-rtos-lwip"
+	make -C "phoenix-rtos-lwip" all
+	b_install "$PREFIX_PROG_STRIPPED/lwip" /sbin
+fi
 
 b_log "Building posixsrv"
 make -C "phoenix-rtos-posixsrv" all install
