@@ -508,28 +508,37 @@ ssize_t readlink(const char *path, char *buf, size_t bufsiz)
 
 int rmdir(const char *path)
 {
-	oid_t dir;
 	msg_t msg = { 0 };
+	oid_t dir, dev;
 	char *canonical_name, *dirname, *name;
 
 	if ((canonical_name = resolve_path(path, NULL, 1, 0)) == NULL)
 		return -1; /* errno set by resolve_path */
 
-	splitname(canonical_name, &name, &dirname);
-
-	if (safe_lookup(dirname, &dir, NULL)) {
+	if (safe_lookup(canonical_name, &dir, &dev)) {
 		free(canonical_name);
 		return SET_ERRNO(-ENOENT);
 	}
 
-	/* TODO: add proper mount point handling */
+	/* Don't remove active mount point */
+	if (dir.port != dev.port) {
+		free(canonical_name);
+		return SET_ERRNO(-EBUSY);
+	}
+
+	splitname(canonical_name, &name, &dirname);
+
+	if (safe_lookup(dirname, NULL, &dev)) {
+		free(canonical_name);
+		return SET_ERRNO(-ENOENT);
+	}
 
 	msg.type = mtUnlink;
-	memcpy(&msg.i.ln.dir, &dir, sizeof(dir));
+	memcpy(&msg.i.ln.dir, &dev, sizeof(dev));
 	msg.i.data = name;
 	msg.i.size = strlen(name) + 1;
 
-	if (msgSend(dir.port, &msg) != EOK) {
+	if (msgSend(dev.port, &msg) != EOK) {
 		free(canonical_name);
 		return SET_ERRNO(-EIO);
 	}
