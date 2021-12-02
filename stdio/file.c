@@ -80,7 +80,7 @@ static int string2mode(const char *mode)
 			next_char += 1;
 
 		if (mode[next_char] == '\0')
-			return O_APPEND | O_CREAT;
+			return O_WRONLY | O_CREAT | O_APPEND;
 		else if (mode[next_char] == '+')
 			return O_RDWR | O_CREAT | O_APPEND;
 		else
