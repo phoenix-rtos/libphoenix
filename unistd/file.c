@@ -110,6 +110,7 @@ int unlink(const char *path)
 int open(const char *filename, int oflag, ...)
 {
 	va_list ap;
+	struct stat st;
 	mode_t mode = 0;
 	int err;
 	char *canonical;
@@ -118,6 +119,16 @@ int open(const char *filename, int oflag, ...)
 	va_start(ap, oflag);
 	mode = va_arg(ap, mode_t);
 	va_end(ap);
+
+	if (oflag & (O_WRONLY | O_RDWR)) {
+		if ((err = stat(filename, &st)) < 0) {
+			if (errno != ENOENT)
+				return err;
+		}
+		else if (S_ISDIR(st.st_mode)) {
+			return SET_ERRNO(-EISDIR);
+		}
+	}
 
 	/* allow_missing_leaf = 1 -> open() may be creating a file */
 	canonical = resolve_path(filename, NULL, 1, 1);
