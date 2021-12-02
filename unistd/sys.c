@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
+#include <limits.h>
 #include <stdarg.h>
 
 
@@ -73,6 +74,7 @@ int execve(const char *file, char *const argv[], char *const envp[])
 	char *interp = exec_buffer, *end, **sb_args = NULL;
 	char *canonical_path;
 	char *path = getenv("PATH");
+	char filepath_buffer[PATH_MAX];
 	int filename_len = strlen(file);
 
 	fflush(NULL);
@@ -82,16 +84,16 @@ int execve(const char *file, char *const argv[], char *const envp[])
 			char* delim = strchrnul(path, ':');
 
 			int path_len = delim - path;
-			if (path_len + 1 + filename_len + 1 <= sizeof(exec_buffer)) {
-				memcpy(exec_buffer, path, path_len);
-				exec_buffer[path_len] = '/';
-				memcpy(exec_buffer + path_len + 1, file, filename_len);
-				exec_buffer[path_len + 1 + filename_len] = '\0';
+			if (path_len + 1 + filename_len + 1 <= sizeof(filepath_buffer)) {
+				memcpy(filepath_buffer, path, path_len);
+				filepath_buffer[path_len] = '/';
+				memcpy(filepath_buffer + path_len + 1, file, filename_len);
+				filepath_buffer[path_len + 1 + filename_len] = '\0';
 
 				/* check if file exists with symlink resolving */
-				if ((canonical_path = resolve_path(exec_buffer, NULL, 1, 0)) != NULL) {
+				if ((canonical_path = resolve_path(filepath_buffer, NULL, 1, 0)) != NULL) {
 					free(canonical_path);
-					file = exec_buffer;
+					file = filepath_buffer;
 					break;
 				}
 			}
@@ -113,6 +115,7 @@ int execve(const char *file, char *const argv[], char *const envp[])
 		end = interp;
 		while (*end && !isspace(*end)) ++end;
 		*end = 0;
+		/* TODO: support shebang params */
 
 		while (argv[noargs++] != NULL) ;
 
@@ -125,6 +128,7 @@ int execve(const char *file, char *const argv[], char *const envp[])
 			sb_args[noargs + 1] = argv[noargs];
 
 		sb_args[0] = interp;
+		sb_args[1] = (char *)file; /* replace first argument in case it was found in path */
 
 		close(fd);
 		file = interp;
@@ -149,7 +153,6 @@ int execvp(const char *file, char *const argv[])
 
 int execvpe(const char *file, char *const argv[], char *const envp[])
 {
-	/* FIXME: search for file in env PATH */
 	return execve(file, argv, envp);
 }
 
@@ -201,8 +204,6 @@ int execlp(const char *file, const char *arg, ...)
 	va_list args;
 	char **argv;
 	int err;
-
-	/* FIXME: search for file in env PATH */
 
 	va_start(args, arg);
 	argv = argv_gather(arg, args);
