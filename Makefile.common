@@ -70,6 +70,9 @@ endif
 # generic CFLAGS/LDFLAGS
 LDFLAGS += -L$(PREFIX_A)
 
+# remove local dev path from macros
+CFLAGS += -fmacro-prefix-map=$(dir $(TOPDIR))=
+
 ifneq ($(KERNEL), 1)
   CFLAGS += -I$(PREFIX_H)
 endif
