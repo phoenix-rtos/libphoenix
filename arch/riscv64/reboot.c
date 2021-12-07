@@ -22,3 +22,9 @@ int reboot(int magic)
 {
 	return -EINVAL;
 }
+
+
+int reboot_reason(uint32_t *val)
+{
+	return -EINVAL;
+}

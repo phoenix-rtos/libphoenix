@@ -16,6 +16,8 @@
 #ifndef _LIBPHOENIX_SYS_REBOOT_H_
 #define _LIBPHOENIX_SYS_REBOOT_H_
 
+#include <stdint.h>
+
 #define RB_HALT_SYSTEM 0
 #define RB_AUTOBOOT 1
 
@@ -23,5 +25,8 @@
 
 extern int reboot(int magic);
 
+
+/* Get platform-specific reboot reason (32-bit flag vector) */
+extern int reboot_reason(uint32_t *val);
 
 #endif

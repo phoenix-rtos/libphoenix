@@ -30,3 +30,19 @@ int reboot(int magic)
 
 	return platformctl(&pctl);
 }
+
+
+int reboot_reason(uint32_t *val)
+{
+	platformctl_t pctl = {
+		.action = pctl_get,
+		.type = pctl_reboot,
+	};
+
+	*val = 0;
+	if (platformctl(&pctl) < 0)
+		return -1;
+
+	*val = pctl.reboot.reason;
+	return 0;
+}
