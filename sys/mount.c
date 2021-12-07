@@ -27,21 +27,41 @@ int mount(const char *source, const char *target, const char *fstype, long mode,
 	struct stat buf;
 	oid_t toid, soid, doid, *doidp;
 	msg_t msg = {0};
+	char *source_abspath, *target_abspath;
 	int err;
 
 	mount_msg_t *mnt = (mount_msg_t *)msg.i.raw;
 
-	if (lookup(target, NULL, &toid) < EOK)
-		return -ENOENT;
+	if ((target_abspath = resolve_path(target, NULL, 1, 0)) == NULL)
+		return -1; /* errno set by resolve_path */
 
-	if (lookup(source, NULL, &soid) < EOK)
-		return -ENOENT;
+	if ((source_abspath = resolve_path(source, NULL, 1, 0)) == NULL) {
+		free(target_abspath);
+		return -1; /* errno set by resolve_path */
+	}
 
-	if ((err = stat(target, &buf)))
+	if (lookup(target_abspath, NULL, &toid) < 0) {
+		free(target_abspath);
+		free(source_abspath);
+		return SET_ERRNO(-ENOENT);
+	}
+
+	if (lookup(source_abspath, NULL, &soid) < 0) {
+		free(target_abspath);
+		free(source_abspath);
+		return SET_ERRNO(-ENOENT);
+	}
+
+	err = stat(target_abspath, &buf);
+
+	free(target_abspath);
+	free(source_abspath);
+
+	if (err < 0)
 		return err;
 
 	if (!S_ISDIR(buf.st_mode))
-		return -ENOTDIR;
+		return SET_ERRNO(-ENOTDIR);
 
 	msg.type = mtMount;
 	mnt->id = soid.id;
@@ -52,8 +72,8 @@ int mount(const char *source, const char *target, const char *fstype, long mode,
 	msg.i.size = data != NULL ? strlen(data) : 0;
 	msg.i.data = data;
 
-	if ((err = msgSend(soid.port, &msg)) < 0)
-		return err;
+	if (msgSend(soid.port, &msg) < 0)
+		return SET_ERRNO(-EIO);
 
 	doidp = (oid_t *)msg.o.raw;
 	doid = *doidp;
@@ -66,8 +86,8 @@ int mount(const char *source, const char *target, const char *fstype, long mode,
 	msg.i.data = &doid;
 	msg.i.size = sizeof(oid_t);
 
-	if (((err = msgSend(toid.port, &msg)) < 0) || ((err = msg.o.attr.err) < 0))
-		return err;
+	if (msgSend(toid.port, &msg) < 0)
+		return SET_ERRNO(-EIO); /* FIXME: rollback partial mount */
 
-	return EOK;
+	return SET_ERRNO(msg.o.attr.err);
 }
