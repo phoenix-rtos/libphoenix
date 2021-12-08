@@ -13,8 +13,8 @@
  * %LICENSE%
  */
 
-#ifndef _SYS_UTSNAME_H_
-#define _SYS_UTSNAME_H_
+#ifndef _LIBPHOENIX_SYS_UTSNAME_H_
+#define _LIBPHOENIX_SYS_UTSNAME_H_
 
 #include <limits.h>
 #include <string.h>

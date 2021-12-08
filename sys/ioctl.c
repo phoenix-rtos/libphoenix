@@ -14,23 +14,22 @@
  */
 
 #include <arch.h>
-
+#include <stdlib.h>
+#include <string.h>
+#include <sys/minmax.h>
+#include <sys/socket.h>
+#include <net/if.h>
+#include <netinet/in.h>
+#include <sys/sockios.h>
 #include <sys/ioctl.h>
 #include <phoenix/ioctl.h>
-#include <sys/minmax.h>
-#include <string.h>
-
-/* SIOCGIFCONF handling */
-#include <sys/socket.h>
-#include <sys/sockios.h>
-#include <net/if.h>
-#include <stdlib.h>
 
 
 const void * ioctl_unpack(const msg_t *msg, unsigned long *request, id_t *id)
 {
 	return ioctl_unpackEx(msg, request, id, NULL);
 }
+
 
 const void * ioctl_unpackEx(const msg_t *msg, unsigned long *request, id_t *id, void** response_buf)
 {
@@ -88,11 +87,13 @@ const void * ioctl_unpackEx(const msg_t *msg, unsigned long *request, id_t *id, 
 	return data;
 }
 
+
 pid_t ioctl_getSenderPid(const msg_t *msg)
 {
 	ioctl_in_t *ioctl = (ioctl_in_t *)msg->i.raw;
 	return (pid_t) ioctl->pid;
 }
+
 
 void ioctl_setResponse(msg_t *msg, unsigned long request, int err, const void *data)
 {
@@ -111,6 +112,7 @@ void ioctl_setResponse(msg_t *msg, unsigned long request, int err, const void *d
 		memcpy(dst, data, size);
 	}
 }
+
 
 void ioctl_setResponseErr(msg_t *msg, unsigned long request, int err)
 {

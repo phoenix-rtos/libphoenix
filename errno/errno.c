@@ -19,6 +19,7 @@
 
 static int errno_global;
 
+
 struct {
 	rbtree_t tree;
 	handle_t lock;

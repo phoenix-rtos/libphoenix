@@ -13,35 +13,35 @@
  * %LICENSE%
  */
 
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
 #include <ctype.h>
-#include <string.h>
 #include <limits.h>
 #include <stdarg.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 
-#define	LONG		0x01	/* l: long or double */
-#define	SHORT		0x04	/* h: short */
-#define	SUPPRESS	0x08	/* *: suppress assignment */
-#define	POINTER		0x10	/* p: void * (as hex) */
-#define	NOSKIP		0x20	/* [ or c: do not skip blanks */
-#define	LONGLONG	0x400	/* ll: long long (+ deprecated q: quad) */
-#define	SHORTSHORT	0x4000	/* hh: char */
-#define	UNSIGNED	0x8000	/* %[oupxX] conversions */
+#define LONG       0x0001 /* l: long or double */
+#define SHORT      0x0004 /* h: short */
+#define SUPPRESS   0x0008 /* *: suppress assignment */
+#define POINTER    0x0010 /* p: void * (as hex) */
+#define NOSKIP     0x0020 /* [ or c: do not skip blanks */
+#define LONGLONG   0x0400 /* ll: long long (+ deprecated q: quad) */
+#define SHORTSHORT 0x4000 /* hh: char */
+#define UNSIGNED   0x8000 /* %[oupxX] conversions */
 
 
-#define	SIGNOK		0x40	/* +/- is (still) legal */
-#define	NDIGITS		0x80	/* no digits detected */
-#define	PFXOK		0x100	/* 0x prefix is (still) legal */
-#define	NZDIGITS	0x200	/* no zero digits detected */
+#define SIGNOK   0x0040 /* +/- is (still) legal */
+#define NDIGITS  0x0080 /* no digits detected */
+#define PFXOK    0x0100 /* 0x prefix is (still) legal */
+#define NZDIGITS 0x0200 /* no zero digits detected */
 
 
-#define	CT_CHAR		0	/* %c conversion */
-#define	CT_CCL		1	/* %[...] conversion */
-#define	CT_STRING	2	/* %s conversion */
-#define	CT_INT		3	/* %[dioupxX] conversion */
+#define CT_CHAR   0 /* %c conversion */
+#define CT_CCL    1 /* %[...] conversion */
+#define CT_STRING 2 /* %s conversion */
+#define CT_INT    3 /* %[dioupxX] conversion */
 
 
 static const unsigned char *__sccl(char *tab, const unsigned char *fmt)
@@ -531,6 +531,7 @@ int fscanf(FILE *stream, const char *format, ...)
 	free(ccltab);
 	return ret;
 }
+
 
 int sscanf(const char *str, const char *format, ...)
 {

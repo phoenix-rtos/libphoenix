@@ -117,6 +117,7 @@ double strtod(const char *restrict nptr, char **restrict endptr)
 	return isnum ? res : 0;
 }
 
+
 double atof(const char *str)
 {
 	return strtod(str, NULL);

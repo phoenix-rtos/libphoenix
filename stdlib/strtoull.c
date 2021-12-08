@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * strtoull, strtolll
+ * strtoull, strtoll
  *
  * Copyright 2017 Phoenix Systems
  * Author: Adrian Kepka
@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <limits.h>
+
 
 intmax_t strtoimax(const char *nptr, char **endptr, int base)
 {
@@ -186,7 +187,3 @@ long long int strtoll(const char *nptr, char **endptr, int base)
 
 	return (acc);
 }
-
-
-
-

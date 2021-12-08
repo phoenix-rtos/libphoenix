@@ -35,6 +35,7 @@ static const char *inet_ntop4(const void *src, char *dst, socklen_t size)
 	return dst;
 }
 
+
 static const char *inet_ntop6(const void *src, char *dst, socklen_t size)
 {
 	const struct in6_addr *addr;
@@ -107,8 +108,8 @@ static const char *inet_ntop6(const void *src, char *dst, socklen_t size)
 	return dst;
 }
 
-const char *inet_ntop(int af, const void *src,
-                      char *dst, socklen_t size)
+
+const char *inet_ntop(int af, const void *src, char *dst, socklen_t size)
 {
 	if (dst == NULL || src == NULL)
 		return NULL;

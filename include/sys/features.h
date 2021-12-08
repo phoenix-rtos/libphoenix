@@ -13,8 +13,9 @@
  * %LICENSE%
  */
 
-#ifndef _SYS_FEATURES_H_
-#define _SYS_FEATURES_H_
+#ifndef _LIBPHOENIX_SYS_FEATURES_H_
+#define _LIBPHOENIX_SYS_FEATURES_H_
+
 
 #ifndef __GNUC_PREREQ
 #if defined __GNUC__ && defined __GNUC_MINOR__

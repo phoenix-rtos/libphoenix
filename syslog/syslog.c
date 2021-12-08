@@ -30,6 +30,7 @@
 #define MAX_LOG_SIZE 256
 #endif
 
+
 static struct {
 	const char *ident;
 
@@ -54,7 +55,9 @@ void closelog(void)
 	syslog_common.open = 0;
 }
 
+
 extern const char *argv_progname;
+
 
 void openlog(const char *ident, int logopt, int facility)
 {

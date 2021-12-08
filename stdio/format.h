@@ -13,8 +13,8 @@
  * %LICENSE%
  */
 
-#ifndef _LIBPHOENIX_STDIO_FORMAT_H
-#define _LIBPHOENIX_STDIO_FORMAT_H
+#ifndef _LIBPHOENIX_STDIO_FORMAT_H_
+#define _LIBPHOENIX_STDIO_FORMAT_H_
 
 #include <stdarg.h>
 

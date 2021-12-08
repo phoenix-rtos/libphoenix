@@ -16,91 +16,59 @@
 #ifndef _LIBPHOENIX_SIGNAL_H_
 #define _LIBPHOENIX_SIGNAL_H_
 
-
 #include <sys/types.h>
-#include <time.h>
-
-typedef void (*sighandler_t)(int);
-
-#define SIGHUP     1
-#define SIGINT     2
-#define SIGQUIT    3
-#define SIGILL     4
-#define SIGTRAP    5
-#define SIGABRT    6
-#define SIGIOT     SIGABRT
-#define SIGEMT     7
-#define SIGFPE     8
-#define SIGKILL    9
-#define SIGBUS    10
-#define SIGSEGV   11
-#define SIGSYS    12
-#define SIGPIPE   13
-#define SIGALRM   14
-#define SIGTERM   15
-#define SIGURG    16
-#define SIGSTOP   17
-#define SIGTSTP   18
-#define SIGCONT   19
-#define SIGCHLD   20
-#define SIGTTIN   21
-#define SIGTTOU   22
-#define SIGIO     23
-#define SIGXCPU   24
-#define SIGXFSZ   25
-#define SIGVTALRM 26
-#define SIGPROF   27
-#define SIGWINCH  28
-#define SIGINFO   29
-#define SIGUSR1   30
-#define SIGUSR2   31
-
-#define NSIG 32
-
-#define SIG_ERR ((sighandler_t)-1)
-#define SIG_DFL ((sighandler_t)-2)
-#define SIG_IGN ((sighandler_t)-3)
+#include <phoenix/posix/signal.h>
+#include <phoenix/posix/timespec.h>
 
 
-enum { SIG_BLOCK, SIG_SETMASK, SIG_UNBLOCK };
+/* Signal flags */
+#define SA_NOCLDSTOP (1 << 0) /* Do not generate SIGCHLD when children stop or stopped children continue */
+#define SA_NOCLDWAIT (1 << 1) /* Causes implementations not to create zombie processes or status information on child termination */
+#define SA_NODEFER   (1 << 2) /* Causes signal not to be automatically blocked on entry to signal handler */
+#define SA_ONSTACK   (1 << 3) /* Process is executing on an alternate signal stack */
+#define SA_RESETHAND (1 << 4) /* Causes signal dispositions to be set to SIG_DFL on entry to signal handlers */
+#define SA_RESTART   (1 << 5) /* Causes certain functions to become restartable */
+#define SA_RESTORER  (1 << 6) /* Indicates that the sa_restorer field containsthe address of a 'signal trampoline' */
+#define SA_SIGINFO   (1 << 7) /* Causes extra information to be passed to signal handlers at the time of receipt of a signal */
 
 
-#define	SA_NOCLDSTOP	1 << 0
-#define SA_NOCLDWAIT	1 << 1
-#define SA_NODEFER		1 << 2
-#define SA_ONSTACK		1 << 3
-#define	SA_RESETHAND	1 << 4
-#define	SA_RESTART		1 << 5
-#define	SA_RESTORER		1 << 6
-#define SA_SIGINFO		1 << 7
+/* Signal action */
+enum {
+	SIG_BLOCK,   /* For blocking signals */
+	SIG_UNBLOCK, /* For unblocking signals */
+	SIG_SETMASK  /* For setting signal mask */
+};
 
 
-typedef int sigset_t;
-typedef int sig_atomic_t;
+typedef int sig_atomic_t; /* Used for atomic access, even in the presence of asynchronous interrupts */
+typedef int sigset_t;     /* Used to represent sets of signals */
+
 
 
 union sigval {
-	int sival_int;
-	void *sival_ptr;
+	int sival_int;   /* Integer signal value */
+	void *sival_ptr; /* Pointer signal value */
 };
 
 
 typedef struct {
-	int si_signo;
-	int si_code;
-	pid_t si_pid;
-	uid_t si_uid;
-	void *si_addr;
-	int si_status;
-	union sigval si_value;
+	int si_signo;          /* Signal number */
+	int si_code;           /* Signal code */
+	int si_errno;          /* If non-zero, an errno value associated with this signal */
+	pid_t si_pid;          /* Sending process ID */
+	uid_t si_uid;          /* Real user ID of sending process */
+	void *si_addr;         /* Address of faulting instruction */
+	int si_status;         /* Exit value or signal */
+	long si_band;          /* Band event for SIGPOLL */
+	union sigval si_value; /* Signal value */
 } siginfo_t;
 
 
 struct sigaction {
-	void (*sa_handler) (int);
-	sigset_t sa_mask;
-	int sa_flags;
-	void (*sa_sigaction) (int, siginfo_t *, void *);
+	void (*sa_handler) (int);                        /* Pointer to a signal-catching function or SIG_IGN/SIG_DFL */
+	sigset_t sa_mask;                                /* Set of signals to be blocked during execution of the signal handling function */
+	int sa_flags;                                    /* Special flags */
+	void (*sa_sigaction) (int, siginfo_t *, void *); /* Pointer to a signal-catching function */
 };
 
 

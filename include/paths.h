@@ -13,8 +13,8 @@
  * %LICENSE%
  */
 
-#ifndef _LIBPHOENIX_PATHS_H
-#define _LIBPHOENIX_PATHS_H
+#ifndef _LIBPHOENIX_PATHS_H_
+#define _LIBPHOENIX_PATHS_H_
 
 
 #define _PATH_TTY "/dev/tty"

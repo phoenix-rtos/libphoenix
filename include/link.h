@@ -13,14 +13,14 @@
  * %LICENSE%
  */
 
-#ifndef _LIBPHOENIX_LINK_H
-#define _LIBPHOENIX_LINK_H
+#ifndef _LIBPHOENIX_LINK_H_
+#define _LIBPHOENIX_LINK_H_
 
 
 struct dl_phdr_info
 {
-	unsigned dlpi_addr;
+	unsigned int dlpi_addr;
 };
 
 
-#endif /* _LIBPHOENIX_LINK_H */
+#endif

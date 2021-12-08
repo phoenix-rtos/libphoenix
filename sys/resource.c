@@ -13,9 +13,10 @@
  * %LICENSE%
  */
 
+#include <errno.h>
 #include <sys/minmax.h>
 #include <sys/threads.h>
-#include <errno.h>
+
 
 int setpriority(int which, id_t who, int prio)
 {

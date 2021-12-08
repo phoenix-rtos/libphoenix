@@ -12,10 +12,10 @@
  * %LICENSE%
  */
 
-#include <sys/time.h>
 #include <errno.h>
-#include <sys/threads.h>
 #include <time.h>
+#include <sys/threads.h>
+#include <sys/time.h>
 #include <sys/resource.h>
 
 

@@ -3,10 +3,10 @@
  *
  * libphoenix
  *
- * reboot.c
+ * sys/reboot.c
  *
- * Copyright 2019 Phoenix Systems
- * Author: Jan Sikorski
+ * Copyright 2019, 2021 Phoenix Systems
+ * Author: Jan Sikorski, Lukasz Kosinski
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -15,7 +15,6 @@
 
 #include <sys/reboot.h>
 #include <sys/platform.h>
-#include <phoenix/arch/ia32.h>
 
 
 int reboot(int magic)

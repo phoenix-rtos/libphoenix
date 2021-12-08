@@ -13,18 +13,20 @@
  * %LICENSE%
  */
 
-#include <stdlib.h>
 #include <errno.h>
-#include <stdio.h>
-#include <string.h>
 #include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
 
-extern char **environ;
+
+#define ENV_SIZE_INCR_DIV (2)
+
 
 static size_t _size = 0; /* Total number of slots. */
-static size_t _cnt = 0; /* Number of currently used slots. */
+static size_t _cnt = 0;  /* Number of currently used slots. */
 
 /* Indicates if environ was internally allocated. */
 static unsigned _environ_allocated = 0;
@@ -32,7 +34,8 @@ static unsigned _environ_allocated = 0;
 /* Indicates if string was internally allocated. If NULL, no strings were internally allocated. */
 static unsigned *_string_allocated = NULL;
 
-#define ENV_SIZE_INCR_DIV   (2)
+
+extern char **environ;
 
 
 void _env_init(void)
@@ -44,6 +47,7 @@ void _env_init(void)
 		_size = _cnt + 1;
 	}
 }
+
 
 static char *_env_find(const char *name, size_t len, int *idx)
 {
@@ -62,6 +66,7 @@ static char *_env_find(const char *name, size_t len, int *idx)
 
 	return NULL;
 }
+
 
 static int _env_insert(int idx, char *v, unsigned allocated)
 {
@@ -138,6 +143,7 @@ static int _env_insert(int idx, char *v, unsigned allocated)
 
 	return 0;
 }
+
 
 int unsetenv(const char *name)
 {
@@ -217,6 +223,7 @@ char *getenv(const char *name)
 	return v;
 }
 
+
 int setenv(const char *name, const char *value, int overwrite)
 {
 	int idx = -1;
@@ -271,6 +278,7 @@ int setenv(const char *name, const char *value, int overwrite)
 
 	return 0;
 }
+
 
 /* TODO: Move? */
 int system(const char *command)

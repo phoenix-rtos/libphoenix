@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * net/ifaddrs.h
+ * ifaddrs.h
  *
  * Copyright 2021 Phoenix Systems
  * Author: Maciej Purski
@@ -13,20 +13,27 @@
  * %LICENSE%
  */
 
-#ifndef	_LIBPHOENIX_IFADDRS_H_
-#define	_LIBPHOENIX_IFADDRS_H_
+#ifndef _LIBPHOENIX_IFADDRS_H_
+#define _LIBPHOENIX_IFADDRS_H_
+
+#include <sys/socket.h>
+
 
 struct ifaddrs {
-	struct ifaddrs *ifa_next;
-	char *ifa_name;
-	unsigned int ifa_flags;
-	struct sockaddr *ifa_addr;
-	struct sockaddr *ifa_netmask;
-	struct sockaddr *ifa_dstaddr;
-	void *ifa_data;
+	struct ifaddrs *ifa_next;     /* Next structure */
+	char *ifa_name;               /* Network interface name */
+	unsigned int ifa_flags;       /* Flags as from SIOCGIFFLAGS ioctl */
+	struct sockaddr *ifa_addr;    /* Interface network address */
+	struct sockaddr *ifa_netmask; /* Interface network mask */
+	struct sockaddr *ifa_dstaddr; /* Point to point destination address */
+	void *ifa_data;               /* Address specific data */
 };
 
-int getifaddrs(struct ifaddrs **);
-void freeifaddrs(struct ifaddrs *);
+
+extern int getifaddrs(struct ifaddrs **);
+
+
+extern void freeifaddrs(struct ifaddrs *);
+
 
 #endif /* _LIBPHOENIX_IFADDRS_H_ */

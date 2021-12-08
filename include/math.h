@@ -16,7 +16,6 @@
 #ifndef _LIBPHOENIX_MATH_H_
 #define _LIBPHOENIX_MATH_H_
 
-
 #include <stdarg.h>
 #include <math/consts.h>
 

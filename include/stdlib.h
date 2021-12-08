@@ -16,28 +16,28 @@
 #ifndef _LIBPHOENIX_STDLIB_H_
 #define _LIBPHOENIX_STDLIB_H_
 
-#include <sys/wait.h>
-#include <stddef.h>
 #include <alloca.h>
+#include <stddef.h>
+#include <sys/wait.h>
 
-#define RAND_MAX   2147483647
 
-#define EXIT_SUCCESS 0
-#define EXIT_FAILURE 1
+#define EXIT_SUCCESS 0 /* Successful termination for exit() */
+#define EXIT_FAILURE 1 /* Unsuccessful termination for exit() */
 
-#define ATEXIT_MAX 32
+#define ATEXIT_MAX 32         /* Maximum number of functions that can be registered with atexit() */
+#define RAND_MAX   2147483647 /* Maximum value returned by rand() */
+
 
 typedef struct {
-  int quot;
-  int rem;
+	int quot; /* div() quotient */
+	int rem;  /* div() remainder */
 } div_t;
 
 
 typedef struct {
-  long int quot;
-  long int rem;
+	long quot; /* ldiv() quotient */
+	long rem;  /* ldiv() remainder */
 } ldiv_t;
-
 
 
 /* Converts the string pointed to, by the argument str to a floating-point number (type double). */
@@ -108,15 +108,15 @@ extern void _Exit(int status);
 
 
 /* Removes variable from the environment. */
-int unsetenv(const char *name);
+extern int unsetenv(const char *name);
 
 
 /* Adds or changes value of environment variable. */
-int putenv(char *string);
+extern int putenv(char *string);
 
 
 /* Removes all variables set in the environment. */
-int clearenv(void);
+extern int clearenv(void);
 
 
 /* Searches for the environment string pointed to by name and returns the associated value to the string. */
@@ -155,6 +155,7 @@ static inline long int labs(long int x)
 {
 	return x >= 0 ? x : -x;
 }
+
 
 /* Returns the absolute value of x. */
 static inline long long int llabs(long long int x)
@@ -228,7 +229,7 @@ extern char *realpath(const char *path, char *resolved_path);
 extern char *resolve_path(const char *path, char *resolved_path, int resolve_last_symlink, int allow_missing_leaf);
 
 
-double strtod(const char *restrict nptr, char **restrict endptr);
+extern double strtod(const char *restrict nptr, char **restrict endptr);
 
 
 /* random number generator */

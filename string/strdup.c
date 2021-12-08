@@ -13,8 +13,8 @@
  * %LICENSE%
  */
 
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 
 char *strdup(const char *s1)
@@ -29,6 +29,7 @@ char *strdup(const char *s1)
 
 	return result;
 }
+
 
 char *strndup(const char *s, size_t n)
 {

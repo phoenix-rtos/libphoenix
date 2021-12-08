@@ -16,6 +16,7 @@
 #ifndef _LIBPHOENIX_MATH_CONSTS_H_
 #define _LIBPHOENIX_MATH_CONSTS_H_
 
+
 /* The base of natural logarithms. */
 #define M_E 2.7182818284590452354
 

@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * unistd (POSIX routines for group operations)
+ * unistd/group.c (POSIX routines for group operations)
  *
  * Copyright 2018 Phoenix Systems
  * Author: Jan Sikorski

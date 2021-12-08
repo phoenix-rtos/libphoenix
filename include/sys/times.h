@@ -13,9 +13,8 @@
  * %LICENSE%
  */
 
-#ifndef _SYS_TIMES_H_
-#define _SYS_TIMES_H_
-
+#ifndef _LIBPHOENIX_SYS_TIMES_H_
+#define _LIBPHOENIX_SYS_TIMES_H_
 
 #include <sys/types.h>
 

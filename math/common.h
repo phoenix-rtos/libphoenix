@@ -16,6 +16,7 @@
 #ifndef _LIBPHOENIX_MATH_COMMON_H_
 #define _LIBPHOENIX_MATH_COMMON_H_
 
+#include <arch.h>
 #include <stdint.h>
 
 
@@ -25,7 +26,7 @@ typedef union {
 			uint64_t mantisa:52;
 			uint16_t exponent:11;
 			uint8_t sign:1;
-#else
+#elif __BYTE_ORDER == __BIG_ENDIAN
 			uint8_t sign:1;
 			uint16_t exponent:11;
 			uint64_t mantisa:52;

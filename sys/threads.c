@@ -13,8 +13,8 @@
  * %LICENSE%
  */
 
-#include <sys/threads.h>
 #include <errno.h>
+#include <sys/threads.h>
 
 
 int mutexLock(handle_t m)

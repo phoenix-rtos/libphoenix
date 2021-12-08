@@ -13,9 +13,9 @@
  * %LICENSE%
  */
 
-#include <sys/ioctl.h>
-#include <termios.h>
 #include <errno.h>
+#include <termios.h>
+#include <sys/ioctl.h>
 
 
 int tcgetattr(int fildes, struct termios *termios_p)
@@ -56,6 +56,7 @@ int tcsetattr(int fildes, int optional_actions, const struct termios *termios_p)
 	return ret;
 }
 
+
 int tcsendbreak(int fd, int duration)
 {
 	int ret = ioctl(fd, TCSBRK, duration);
@@ -66,6 +67,7 @@ int tcsendbreak(int fd, int duration)
 
 	return ret;
 }
+
 
 int tcflush(int fd, int queue_selector)
 {
@@ -78,6 +80,7 @@ int tcflush(int fd, int queue_selector)
 	return ret;
 }
 
+
 int tcdrain(int fd)
 {
 	int ret = ioctl(fd, TCDRAIN, 0);
@@ -89,6 +92,7 @@ int tcdrain(int fd)
 	return ret;
 }
 
+
 int tcsetpgrp(int fd, pid_t pgrp)
 {
 	int ret = ioctl(fd, TIOCSPGRP, &pgrp);
@@ -99,6 +103,7 @@ int tcsetpgrp(int fd, pid_t pgrp)
 
 	return ret;
 }
+
 
 pid_t tcgetpgrp(int fd)
 {
@@ -112,6 +117,7 @@ pid_t tcgetpgrp(int fd)
 	return p;
 }
 
+
 pid_t tcgetsid(int fd)
 {
 	pid_t p;
@@ -123,6 +129,7 @@ pid_t tcgetsid(int fd)
 
 	return p;
 }
+
 
 void cfmakeraw(struct termios *termios_p)
 {

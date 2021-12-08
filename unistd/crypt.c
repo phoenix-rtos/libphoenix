@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * unistd
+ * unistd/crypt.c
  *
  * Copyright 2018 Phoenix Systems
  * Author: Jan Sikorski, Kamil Amanowicz
@@ -14,15 +14,19 @@
  */
 
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
+
 
 static void base64_encode(unsigned char *bytes, int len, unsigned char *res);
 
+
 #define _SHA1_CRYPT_
 
+
 #ifdef _SHA1_CRYPT_
+
 
 #define S(n, X) \
 	(((X) << n) | ((X) >> (32 - (n))))
@@ -38,6 +42,7 @@ static void base64_encode(unsigned char *bytes, int len, unsigned char *res);
 #define K3 0xCA62C1D6
 
 #define SHA1_BLOCK_SZ 64
+
 
 /* sha1 encoded hash - 2(salt) + 28 + 1 (zero byte) */
 static unsigned char enc_res[31];
@@ -213,6 +218,8 @@ static unsigned char *sha1_crypt(const char *key, const char *salt)
 	free(msg);
 	return enc_res;
 }
+
+
 #endif /* _SHA1_CRYPT_ */
 
 
@@ -253,6 +260,7 @@ static void base64_encode(unsigned char *bytes, int len, unsigned char *res)
 	}
 	free(pbytes);
 }
+
 
 /* sha1 based crypt */
 char *crypt(const char *key, const char *salt)

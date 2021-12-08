@@ -363,7 +363,7 @@ static void fprintf_num(FILE *f, u64 num64, u32 flags, int min_number_len, int f
 int vfprintf(FILE *f, const char *format, va_list args)
 {
 	char fmt;
-	offs_t start = f->pos;
+	off_t start = f->pos;
 
 	for (;;) {
 		fmt = *format++;

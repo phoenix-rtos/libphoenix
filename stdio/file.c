@@ -13,22 +13,22 @@
  * %LICENSE%
  */
 
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <sys/msg.h>
+#include <arch.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
 #include <sys/file.h>
-#include <sys/stat.h>
 #include <sys/minmax.h>
 #include <sys/mman.h>
+#include <sys/msg.h>
+#include <sys/stat.h>
 #include <sys/threads.h>
-
-#include <arch.h>
-#include <stdio.h>
-#include <fcntl.h>
-#include <string.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 
 #define F_EOF     (1 << 0)
@@ -36,6 +36,7 @@
 #define F_LINE    (1 << 2)
 #define F_ERROR   (1 << 3)
 #define F_USRBUF  (1 << 4)
+
 
 typedef struct {
 	FILE file; /* Must be the first member */
@@ -824,11 +825,11 @@ ssize_t getline(char **lineptr, size_t *n, FILE *stream)
 {
 	char buff[128] = { 0 };
 	size_t linesz = 0;
-	offs_t offs;
+	off_t offs;
 	int readsz, i, nl = 0;
 	char *tmp;
 
-	offs = (offs_t)ftell(stream);
+	offs = ftell(stream);
 
 	while ((readsz = fread(buff, 1, sizeof(buff), stream)) > 0) {
 		for (i = 0; i < readsz; i++) {

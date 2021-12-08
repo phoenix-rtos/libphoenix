@@ -38,4 +38,3 @@ _signal_trampoline:
 	pop %eax
 	ret
 .size _signal_trampoline, .-_signal_trampoline
-

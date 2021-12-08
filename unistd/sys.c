@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * unistd
+ * unistd/sys.c
  *
  * Copyright 2018 Phoenix Systems
  * Author: Jan Sikorski
@@ -13,17 +13,17 @@
  * %LICENSE%
  */
 
-#include <sys/types.h>
-#include <sys/threads.h>
-#include <sys/msg.h>
-#include <unistd.h>
-#include <fcntl.h>
 #include <ctype.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/msg.h>
+#include <sys/threads.h>
+#include <sys/types.h>
 
 
 WRAP_ERRNO_DEF(int, setpgid, (pid_t pid, pid_t pgid), (pid, pgid))
@@ -33,6 +33,7 @@ WRAP_ERRNO_DEF(pid_t, getpgid, (pid_t pid), (pid))
 WRAP_ERRNO_DEF(pid_t, getpgrp, (void), ())
 
 WRAP_ERRNO_DEF(int, setsid, (void), ())
+
 
 pid_t getsid(pid_t pid)
 {
@@ -65,7 +66,9 @@ int execv(const char *path, char *const argv[])
 	return execve(path, argv, environ);
 }
 
+
 #define PATH_DELIM ':'
+
 
 int execve(const char *file, char *const argv[], char *const envp[])
 {
@@ -147,6 +150,7 @@ int execvp(const char *file, char *const argv[])
 	return execvpe(file, argv, environ);
 }
 
+
 int execvpe(const char *file, char *const argv[], char *const envp[])
 {
 	/* FIXME: search for file in env PATH */
@@ -196,6 +200,7 @@ int execl(const char *path, const char *arg, ...)
 	return err;
 }
 
+
 int execlp(const char *file, const char *arg, ...)
 {
 	va_list args;
@@ -237,7 +242,7 @@ int execle(const char *path, const char *arg, ...)
 }
 
 
-unsigned sleep(unsigned seconds)
+unsigned int sleep(unsigned int seconds)
 {
 	return usleep(seconds * 1000 * 1000);
 }

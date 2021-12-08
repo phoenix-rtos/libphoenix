@@ -13,8 +13,10 @@
  * %LICENSE%
  */
 
-#ifndef _LIBPHOENIX_PLATFORM_H_
-#define _LIBPHOENIX_PLATFORM_H_
+#ifndef _LIBPHOENIX_SYS_PLATFORM_H_
+#define _LIBPHOENIX_SYS_PLATFORM_H_
+
+#include <phoenix/pctl.h>
 
 
 extern int platformctl(void *);

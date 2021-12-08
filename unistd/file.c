@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * unistd (POSIX routines for file operations)
+ * unistd/file.c (POSIX routines for file operations)
  *
  * Copyright 2017-2018 Phoenix Systems
  * Author: Aleksander Kaminski, Pawel Pisarczyk, Kamil Amanowicz
@@ -13,22 +13,21 @@
  * %LICENSE%
  */
 
-#include <stdio.h>
-#include <fcntl.h>
-#include <poll.h>
-#include <string.h>
 #include <errno.h>
-#include <stdlib.h>
-#include <unistd.h>
+#include <fcntl.h>
 #include <libgen.h>
-#include <sys/msg.h>
-#include <sys/file.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/ioctl.h>
+#include <poll.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <termios.h>
-
-#include "posix/utils.h"
+#include <unistd.h>
+#include <sys/file.h>
+#include <sys/ioctl.h>
+#include <sys/msg.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <posix/utils.h>
 
 
 extern int sys_open(const char *filename, int oflag, ...);
@@ -37,6 +36,7 @@ extern int sys_link(const char *path1, const char *path2);
 extern int sys_unlink(const char *path);
 extern int sys_pipe(int fildes[2]);
 extern int sys_fstat(int fd, struct stat *buf);
+
 
 WRAP_ERRNO_DEF(ssize_t, read, (int fildes, void *buf, size_t nbyte), (fildes, buf, nbyte))
 WRAP_ERRNO_DEF(ssize_t, write, (int fildes, const void *buf, size_t nbyte), (fildes, buf, nbyte))

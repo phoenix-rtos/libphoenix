@@ -13,16 +13,20 @@
  * %LICENSE%
  */
 
-#ifndef ALLOCA_H
-#define ALLOCA_H
+#ifndef _LIBPHOENIX_ALLOCA_H_
+#define _LIBPHOENIX_ALLOCA_H_
+
+#include <stddef.h>
+
 
 #undef alloca
 
 extern void *alloca(size_t size);
 
 
-#ifdef  __GNUC__
-#define alloca(size)   __builtin_alloca (size)
+#ifdef __GNUC__
+#define alloca(size) __builtin_alloca (size)
 #endif
 
-#endif //ALLOCA_H
+
+#endif

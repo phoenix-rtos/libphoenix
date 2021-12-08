@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * sys/sysmacros
+ * sys/sysmacros.h
  *
  * Copyright 2018 Phoenix Systems
  * Author: Marek Białowąs
@@ -13,15 +13,20 @@
  * %LICENSE%
  */
 
-#ifndef _SYS_SYSMACROS_H_
-#define _SYS_SYSMACROS_H_
+#ifndef _LIBPHOENIX_SYS_SYSMACROS_H_
+#define _LIBPHOENIX_SYS_SYSMACROS_H_
 
 #include <sys/types.h>
 
 /* NOTE: this can/should be macros */
 
-dev_t makedev(unsigned int maj, unsigned int min);
-unsigned int major(dev_t dev);
-unsigned int minor(dev_t dev);
+extern dev_t makedev(unsigned int maj, unsigned int min);
 
-#endif //_SYS_SYSMACROS_H_
+
+extern unsigned int major(dev_t dev);
+
+
+extern unsigned int minor(dev_t dev);
+
+
+#endif

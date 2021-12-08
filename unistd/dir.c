@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * unistd (POSIX routines for directory operations)
+ * unistd/dir.c (POSIX routines for directory operations)
  *
  * Copyright 2018 Phoenix Systems
  * Author: Jan Sikorski
@@ -13,24 +13,26 @@
  * %LICENSE%
  */
 
-#include <stdlib.h>
-#include <unistd.h>
-#include <dirent.h>
-#include <stdio.h>
-#include <errno.h>
-#include <limits.h>
 #include <assert.h>
-#include <string.h>
+#include <dirent.h>
+#include <errno.h>
 #include <libgen.h>
+#include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/file.h>
 #include <sys/msg.h>
 #include <sys/stat.h>
-#include <sys/file.h>
+#include <sys/types.h>
 #include <posix/utils.h>
 
 
 static struct {
 	char *cwd;
 } dir_common;
+
 
 static ssize_t _readlink_abs(const char *path, char *buf, size_t bufsiz);
 static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, int allow_missing_leaf);
@@ -40,6 +42,7 @@ static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, 
 static int safe_lookup(const char *name, oid_t *file, oid_t *dev)
 {
 	int err;
+
 	while ((err = lookup(name, file, dev)) == -EINTR)
 		;
 

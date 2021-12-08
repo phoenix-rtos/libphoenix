@@ -17,7 +17,6 @@
 #define _LIBPHOENIX_ARCH_RISCV64_TYPES_H_
 
 typedef unsigned long addr_t;
-typedef long long offs_t;
 
 typedef int ssize_t;
 typedef unsigned long long time_t;

@@ -27,17 +27,21 @@ static const char errnames[] = {
 	#include "errno.str.inc"
 };
 
+
 static const errinfo_t errtab[] = {
 	#include "errno.tab.inc"
 };
+
 
 static const char gainames[] = {
 	#include "gaierr.str.inc"
 };
 
+
 static const errinfo_t gaitab[] = {
 	#include "gaierr.tab.inc"
 };
+
 
 // static assert: 16-bit offset
 static const char assert_errnames_size[-(sizeof(errnames) > 0xFFFF)] __attribute__((unused));

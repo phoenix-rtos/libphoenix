@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * Doubly-linked list
+ * sys/list.h
  *
  * Copyright 2017, 2018 Phoenix Systems
  * Author: Pawel Pisarczyk, Jan Sikorski, Aleksander Kaminski
@@ -17,6 +17,7 @@
 #define _LIBPHOENIX_SYS_LIST_H_
 
 #include <stddef.h>
+#include <stdint.h>
 
 
 extern void lib_listAdd(void **list, void *t, size_t next_off, size_t prev_off);

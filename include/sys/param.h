@@ -13,11 +13,11 @@
  * %LICENSE%
  */
 
-#ifndef _SYS_PARAM_H_
-#define _SYS_PARAM_H_
+#ifndef _LIBPHOENIX_SYS_PARAM_H_
+#define _LIBPHOENIX_SYS_PARAM_H_
 
-#include <sys/types.h>
 
 #define MAXPATHLEN 1024
+
 
 #endif

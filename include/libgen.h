@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * libgen
+ * libgen.h
  *
  * Copyright 2018 Phoenix Systems
  * Author: Marek Białowąs
@@ -13,12 +13,15 @@
  * %LICENSE%
  */
 
-#ifndef _LIBGEN_H_
-#define _LIBGEN_H_
+#ifndef _LIBPHOENIX_LIBGEN_H_
+#define _LIBPHOENIX_LIBGEN_H_
 
-char *dirname(char *path);
 
-char *basename(char *path);
+extern char *dirname(char *path);
 
-#endif //_LIBGEN_H_
+
+extern char *basename(char *path);
+
+
+#endif
 

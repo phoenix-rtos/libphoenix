@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * interface to posixsrv's events
+ * POSIX server events
  *
  * Copyright 2018 Phoenix Systems
  * Author: Jan Sikorski
@@ -13,9 +13,9 @@
  * %LICENSE%
  */
 
-#include <sys/msg.h>
-#include <sys/events.h>
 #include <errno.h>
+#include <sys/events.h>
+#include <sys/msg.h>
 
 
 static struct {

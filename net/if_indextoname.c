@@ -13,11 +13,12 @@
  * %LICENSE%
  */
 
-#include <unistd.h>
 #include <string.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
+#include <unistd.h>
 #include <net/if.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+
 
 char *if_indextoname(unsigned int ifindex, char *ifname)
 {

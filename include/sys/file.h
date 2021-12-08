@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * sys/fs
+ * sys/file.h
  *
  * Copyright 2017-2018 Phoenix Systems
  * Author: Aleksander Kaminski, Pawel Pisarczyk
@@ -17,31 +17,16 @@
 #define _LIBPHOENIX_SYS_FILE_H_
 
 #include <sys/types.h>
+#include <phoenix/posix/file.h>
 
 
-enum { otDir = 0, otFile, otDev, otSymlink, otUnknown };
+extern int fileAdd(unsigned int *h, oid_t *oid, unsigned int mode);
 
 
-enum { atMode = 0, atUid, atGid, atSize, atType, atPort, atPollStatus, atEventMask, atCTime, atMTime, atATime, atLinks, atDev };
+extern int fileSet(unsigned int h, char flags, oid_t *oid, off_t offs, unsigned int mode);
 
 
-enum { mtMount = 0xf50, mtUmount, mtSync };
-
-
-typedef struct {
-	long id;
-	unsigned mode;
-	char fstype[16];
-} mount_msg_t;
-
-
-extern int fileAdd(unsigned int *h, oid_t *oid, unsigned mode);
-
-
-extern int fileSet(unsigned int h, char flags, oid_t *oid, offs_t offs, unsigned mode);
-
-
-extern int fileGet(unsigned int h, char flags, oid_t *oid, offs_t *offs, unsigned *mode);
+extern int fileGet(unsigned int h, char flags, oid_t *oid, off_t *offs, unsigned int *mode);
 
 
 extern int fileRemove(unsigned int h);

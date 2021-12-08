@@ -13,23 +13,25 @@
  * %LICENSE%
  */
 
-#include <sys/sockport.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <sys/file.h>
-#include <sys/debug.h>
-#include <sys/minmax.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <ifaddrs.h>
+#include <limits.h>
 #include <netdb.h>
 #include <poll.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <fcntl.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
-#include <ifaddrs.h>
-#include <limits.h>
+#include <netinet/in.h>
+#include <sys/debug.h>
+#include <sys/file.h>
+#include <sys/minmax.h>
+#include <sys/msg.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <phoenix/posix/sockport.h>
+
 
 WRAP_ERRNO_DEF(int, accept, (int socket, struct sockaddr *address, socklen_t *address_len), (socket, address, address_len))
 WRAP_ERRNO_DEF(int, accept4, (int socket, struct sockaddr *address, socklen_t *address_len, int flags), (socket, address, address_len, flags))
@@ -46,12 +48,17 @@ WRAP_ERRNO_DEF(int, socketpair, (int domain, int type, int protocol, int *sv), (
 WRAP_ERRNO_DEF(int, shutdown, (int socket, int how), (socket, how))
 WRAP_ERRNO_DEF(int, setsockopt, (int socket, int level, int optname, const void *optval, socklen_t optlen), (socket, level, optname, optval, optlen))
 
+
 /* NOTE: msg.iov_len > 1 is not yet supported */
 extern ssize_t sys_recvmsg(int socket, struct msghdr *msg, int flags);
+
+
 /* NOTE: msg.iov_len > 1 is not yet supported */
 extern ssize_t sys_sendmsg(int socket, const struct msghdr *msg, int flags);
 
+
 int h_errno;
+
 
 static int socksrvcall(msg_t *msg)
 {
@@ -550,6 +557,7 @@ void freeifaddrs(struct ifaddrs *ifa)
 {
 	free(ifa);
 }
+
 
 const char *hstrerror(int err)
 {

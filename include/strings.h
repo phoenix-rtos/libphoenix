@@ -16,7 +16,6 @@
 #ifndef _LIBPHOENIX_STRINGS_H_
 #define _LIBPHOENIX_STRINGS_H_
 
-
 #include <stddef.h>
 
 

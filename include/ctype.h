@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * ctypes.h
+ * ctype.h
  *
  * Copyright 2017 Phoenix Systems
  * Author: Pawel Pisarczyk
@@ -13,8 +13,8 @@
  * %LICENSE%
  */
 
-#ifndef _LIBPHOENIX_CTYPES_H_
-#define _LIBPHOENIX_CTYPES_H_
+#ifndef _LIBPHOENIX_CTYPE_H_
+#define _LIBPHOENIX_CTYPE_H_
 
 
 /* This function checks whether the passed character is alphanumeric. */

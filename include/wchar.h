@@ -16,11 +16,15 @@
 #ifndef _LIBPHOENIX_WCHAR_H_
 #define _LIBPHOENIX_WCHAR_H_
 
+#include <stdarg.h>
 #include <stddef.h>
-
-#define WEOF ((wchar_t)-1)
-
-typedef int wint_t;
+#include <stdio.h>
 
 
-#endif /* _LIBPHOENIX_WCHAR_H_ */
+#define WEOF ((wchar_t)-1) /* Constant expression of type wint_t that is returned by several WP functions to indicate end of file */
+
+
+typedef int wint_t; /* Should store any valid value of wchar_t or WEOF */
+
+
+#endif

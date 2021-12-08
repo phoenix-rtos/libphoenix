@@ -14,23 +14,26 @@
  */
 
 #include <sys/list.h>
-#include <stdint.h>
+
+
+#define NODE(t, off) (*(void **)((uintptr_t)t + off))
 
 
 void lib_listAdd(void **list, void *t, size_t noff, size_t poff)
 {
 	if (t == NULL)
 		return;
+
 	if (*list == NULL) {
-		*((uintptr_t *)(t + noff)) = (uintptr_t)t;
-		*((uintptr_t *)(t + poff)) = (uintptr_t)t;
+		NODE(t, poff) = t;
+		NODE(t, noff) = t;
 		*list = t;
 	}
 	else {
-		*((uintptr_t *)(t + poff)) = *((uintptr_t *)(*list + poff));
-		*((uintptr_t *)((void *)*((uintptr_t *)(*list + poff)) + noff)) = (uintptr_t)t;
-		*((uintptr_t *)(t + noff)) = *((uintptr_t *)list);
-		*((uintptr_t *)(*list + poff)) = (uintptr_t)t;
+		NODE(t, poff) = NODE(*list, poff);
+		NODE(NODE(*list, poff), noff) = t;
+		NODE(t, noff) = *list;
+		NODE(*list, poff) = t;
 	}
 }
 
@@ -39,15 +42,18 @@ void lib_listRemove(void **list, void *t, size_t noff, size_t poff)
 {
 	if (t == NULL)
 		return;
-	if (*((uintptr_t *)(t + noff)) == (uintptr_t)t && *((uintptr_t *)(t + poff)) == (uintptr_t)t) {
+
+	if ((NODE(t, poff) == t) && (NODE(t, noff) == t)) {
 		*list = NULL;
 	}
 	else {
-		*((uintptr_t *)((void *)(*((uintptr_t *)(t + poff))) + noff)) = *((uintptr_t *)(t + noff));
-		*((uintptr_t *)((void *)(*((uintptr_t *)(t + noff))) + poff)) = *((uintptr_t *)(t + poff));
+		NODE(NODE(t, poff), noff) = NODE(t, noff);
+		NODE(NODE(t, noff), poff) = NODE(t, poff);
+
 		if (t == *list)
-			*list = (void *)*((uintptr_t *)(t + noff));
+			*list = NODE(t, noff);
 	}
-	*((uintptr_t *)(t + noff)) = (uintptr_t)NULL;
-	*((uintptr_t *)(t + poff)) = (uintptr_t)NULL;
+
+	NODE(t, noff) = NULL;
+	NODE(t, poff) = NULL;
 }

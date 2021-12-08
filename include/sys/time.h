@@ -13,8 +13,8 @@
  * %LICENSE%
  */
 
-#ifndef _SYS_TIME_H_
-#define _SYS_TIME_H_
+#ifndef _LIBPHOENIX_SYS_TIME_H_
+#define _LIBPHOENIX_SYS_TIME_H_
 
 #include <sys/select.h>
 #include <sys/types.h>
@@ -56,5 +56,6 @@ extern int timerisset(struct timeval *tvp);
 
 #define timercmp(a, b, CMP) \
 	((a.tv_sec == b.tv_sec && a.tv_usec CMP b.tv_usec) || a.tv_sec CMP b.tv_sec)
+
 
 #endif

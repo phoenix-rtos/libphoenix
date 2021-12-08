@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * unistd (POSIX routines for user operations)
+ * unistd/sysconf.c (POSIX routines for user operations)
  *
  * Copyright 2018 Phoenix Systems
  * Author: Michał Mirosław

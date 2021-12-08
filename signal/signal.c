@@ -13,14 +13,14 @@
  * %LICENSE%
  */
 
-#include <signal.h>
-#include <sys/threads.h>
-#include <phoenix/signal.h>
-#include <unistd.h>
 #include <errno.h>
+#include <signal.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
+#include <unistd.h>
+#include <sys/threads.h>
+#include <phoenix/signal.h>
 
 
 extern int sys_tkill(int pid, int tid, int signal);

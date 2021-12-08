@@ -12,10 +12,9 @@
  *
  * %LICENSE%
  */
+
 #include "locale.h"
 
 char *_PathLocale;
 
-const struct lconv _fixed_locale = {
-	"."
-};
+const struct lconv _fixed_locale = { "." };

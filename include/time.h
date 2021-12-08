@@ -16,34 +16,30 @@
 #ifndef _LIBPHOENIX_TIME_H_
 #define _LIBPHOENIX_TIME_H_
 
-#define SECS_TO_USECS_T(secs) (1000000ULL * (secs))
-#define MSECS_TO_USECS_T(msecs) (1000ULL * (msecs))
-
+#include <signal.h>
 #include <sys/types.h>
+#include <phoenix/posix/timespec.h>
 
 
 #define CLOCKS_PER_SEC 1000000
+
+#define SECS_TO_USECS_T(secs)   (1000000ULL * (secs))
+#define MSECS_TO_USECS_T(msecs) (1000ULL * (msecs))
 
 
 enum { CLOCK_MONOTONIC = 0, CLOCK_MONOTONIC_RAW, CLOCK_REALTIME };
 
 
 struct tm {
-	int tm_sec;
-	int tm_min;
-	int tm_hour;
-	int tm_mday;
-	int tm_mon;
-	int tm_year;
-	int tm_wday;
-	int tm_yday;
-	int tm_isdst;
-};
-
-
-struct timespec {
-	time_t tv_sec;
-	long tv_nsec;
+	int tm_sec;   /* Seconds [0, 60] */
+	int tm_min;   /* Minutes [0, 59] */
+	int tm_hour;  /* Hours [0, 23] */
+	int tm_mday;  /* Day of month [1, 31] */
+	int tm_mon;   /* Month of year [0, 11] */
+	int tm_year;  /* Years since 1900 */
+	int tm_wday;  /* Day of week [0, 6] (Sunday = 0) */
+	int tm_yday;  /* Day of year [0, 365] */
+	int tm_isdst; /* Daylight savings flag */
 };
 
 
@@ -111,5 +107,6 @@ extern char *strptime(const char *restrict buf, const char *restrict format, str
 
 
 extern int nanosleep(const struct timespec *req, struct timespec *rem);
+
 
 #endif

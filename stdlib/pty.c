@@ -1,3 +1,18 @@
+/*
+ * Phoenix-RTOS
+ *
+ * libphoenix
+ *
+ * pty.c
+ *
+ * Copyright 2018, 2020 Phoenix Systems
+ * Author: Kamil Amanowicz, Lukasz Kosinski
+ *
+ * This file is part of Phoenix-RTOS.
+ *
+ * %LICENSE%
+ */
+
 #include <stdlib.h>
 #include <string.h>
 #include <sys/msg.h>

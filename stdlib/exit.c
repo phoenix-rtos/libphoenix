@@ -13,8 +13,9 @@
  * %LICENSE%
  */
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+
 
 extern void _atexit_call(void);
 extern void _fini_array(void);

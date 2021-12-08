@@ -14,6 +14,7 @@
  */
 
 #define __ASSEMBLY__
+
 #include <phoenix/syscalls.h>
 
 .text

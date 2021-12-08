@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * unistd: gethostname(), sethostname()
+ * unistd/hostname.c
  *
  * Copyright 2021 Phoenix Systems
  * Author: Ziemowit Leszczynski
@@ -13,8 +13,9 @@
  * %LICENSE%
  */
 
-#include <unistd.h>
 #include <errno.h>
+#include <unistd.h>
+#include <sys/types.h>
 
 
 WRAP_ERRNO_DEF(int, gethostname, (char *name, size_t namelen), (name, namelen))

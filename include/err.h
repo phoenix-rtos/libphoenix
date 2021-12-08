@@ -30,4 +30,4 @@ extern void verr(int status, const char *fmt, va_list va) __attribute__ ((noretu
 extern void verrx(int status, const char *fmt, va_list va) __attribute__ ((noreturn, format(printf, 2, 0)));
 
 
-#endif /* _LIBPHOENIX_ERR_H_ */
+#endif

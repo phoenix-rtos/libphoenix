@@ -13,18 +13,20 @@
  * %LICENSE%
  */
 
-#ifndef _SYS_TIMEX_H_
-#define _SYS_TIMEX_H_
+#ifndef _LIBPHOENIX_SYS_TIMEX_H_
+#define _LIBPHOENIX_SYS_TIMEX_H_
 
 #include <sys/time.h>
 
-#define ADJ_OFFSET		0x1
-#define ADJ_STATUS		0x2
-#define ADJ_TIMECONST	0x4
 
-#define STA_PLL			0x1
-#define STA_INS			0x2
-#define STA_DEL			0x4
+#define ADJ_OFFSET    0x1
+#define ADJ_STATUS    0x2
+#define ADJ_TIMECONST 0x4
+
+#define STA_PLL 0x1
+#define STA_INS 0x2
+#define STA_DEL 0x4
+
 
 struct timex {
 	int modes;

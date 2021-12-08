@@ -13,12 +13,12 @@
  * %LICENSE%
  */
 
-#include <sys/minmax.h>
-#include "format.h"
-#include <sys/minmax.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include <sys/minmax.h>
+
+#include "format.h"
 
 
 #define FLAG_SIGNED        0x1
@@ -59,11 +59,13 @@ union float_u32
 	uint32_t u;
 };
 
+
 union double_u64
 {
 	double d;
 	uint64_t u;
 };
+
 
 static inline double format_doubleFromU64(uint64_t ui)
 {
@@ -73,6 +75,7 @@ static inline double format_doubleFromU64(uint64_t ui)
 	return u.d;
 }
 
+
 static inline uint64_t format_u64FromDouble(double d)
 {
 	union double_u64 u;
@@ -80,6 +83,7 @@ static inline uint64_t format_u64FromDouble(double d)
 	u.d = d;
 	return u.u;
 }
+
 
 static inline float format_floatFromU32(uint32_t ui)
 {

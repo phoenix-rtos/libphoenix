@@ -18,6 +18,7 @@
 
 unsigned int __randseed;
 
+
 int rand_r (unsigned int *seed)
 {
 	unsigned int next = *seed;

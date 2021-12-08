@@ -13,12 +13,13 @@
  * %LICENSE%
  */
 
-#include <stdlib.h>
 #include <errno.h>
 #include <limits.h>
+#include <stdlib.h>
 #include <sys/list.h>
-#include <sys/mman.h>
 #include <sys/minmax.h>
+#include <sys/mman.h>
+#include <sys/types.h>
 #include <pthread.h>
 
 
@@ -78,8 +79,7 @@ static pthread_ctx *find_pthread(handle_t id)
 }
 
 
-int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
-	void *(*start_routine)(void *), void *arg)
+int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_routine)(void *), void *arg)
 {
 	const pthread_attr_t *attrs = &pthread_attr_default;
 
@@ -261,24 +261,19 @@ int pthread_attr_getstacksize(const pthread_attr_t *attr, size_t *stacksize)
 }
 
 
-int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr,
-	size_t stacksize)
+int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr, size_t stacksize)
 {
-	return pthread_attr_setstackaddr(attr, stackaddr) |
-		pthread_attr_setstacksize(attr, stacksize);
+	return pthread_attr_setstackaddr(attr, stackaddr) | pthread_attr_setstacksize(attr, stacksize);
 }
 
 
-int pthread_attr_getstack(const pthread_attr_t *attr, void **stackaddr,
-	size_t *stacksize)
+int pthread_attr_getstack(const pthread_attr_t *attr, void **stackaddr, size_t *stacksize)
 {
-	return pthread_attr_getstackaddr(attr, stackaddr) |
-		pthread_attr_getstacksize(attr, stacksize);
+	return pthread_attr_getstackaddr(attr, stackaddr) | pthread_attr_getstacksize(attr, stacksize);
 }
 
 
-int pthread_attr_setschedparam(pthread_attr_t *attr,
-	const struct sched_param *param)
+int pthread_attr_setschedparam(pthread_attr_t *attr, const struct sched_param *param)
 {
 	if (attr == NULL)
 		return -EINVAL;
@@ -293,8 +288,7 @@ int pthread_attr_setschedparam(pthread_attr_t *attr,
 }
 
 
-int pthread_attr_getschedparam(const pthread_attr_t *attr,
-	struct sched_param *param)
+int pthread_attr_getschedparam(const pthread_attr_t *attr, struct sched_param *param)
 {
 	if (attr == NULL)
 		return -EINVAL;
@@ -334,8 +328,8 @@ int pthread_attr_setscope(pthread_attr_t *attr, int contentionscope)
 	return EOK;
 }
 
-int pthread_attr_getscope(const pthread_attr_t *attr,
-	int *contentionscope)
+
+int pthread_attr_getscope(const pthread_attr_t *attr, int *contentionscope)
 {
 	if (attr == NULL)
 		return -EINVAL;
@@ -346,8 +340,7 @@ int pthread_attr_getscope(const pthread_attr_t *attr,
 
 int pthread_attr_setdetachstate(pthread_attr_t *attr, int detachstate)
 {
-	if (detachstate != PTHREAD_CREATE_DETACHED ||
-			detachstate != PTHREAD_CREATE_JOINABLE)
+	if (detachstate != PTHREAD_CREATE_DETACHED || detachstate != PTHREAD_CREATE_JOINABLE)
 		return -EINVAL;
 
 	attr->detached = detachstate;
@@ -356,8 +349,7 @@ int pthread_attr_setdetachstate(pthread_attr_t *attr, int detachstate)
 }
 
 
-int pthread_attr_getdetachstate(const pthread_attr_t *attr,
-	int *detachstate)
+int pthread_attr_getdetachstate(const pthread_attr_t *attr, int *detachstate)
 {
 	if (attr == NULL)
 		return -EINVAL;
@@ -368,23 +360,19 @@ int pthread_attr_getdetachstate(const pthread_attr_t *attr,
 }
 
 
-int pthread_attr_getinheritsched(const pthread_attr_t *restrict attr,
-	int *restrict inheritsched);
+int pthread_attr_getinheritsched(const pthread_attr_t *restrict attr, int *restrict inheritsched);
 
 
-int pthread_attr_setinheritsched(pthread_attr_t *attr,
-	int inheritsched);
+int pthread_attr_setinheritsched(pthread_attr_t *attr, int inheritsched);
 
 
 int pthread_setschedprio(pthread_t thread, int prio);
 
 
-int pthread_getschedparam(pthread_t thread, int *policy,
-	struct sched_param *restrict param);
+int pthread_getschedparam(pthread_t thread, int *policy, struct sched_param *restrict param);
 
 
-int pthread_setschedparam(pthread_t thread, int policy,
-	const struct sched_param *param);
+int pthread_setschedparam(pthread_t thread, int policy, const struct sched_param *param);
 
 
 int pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr)
@@ -438,6 +426,7 @@ int sched_get_priority_max(int policy)
 
 	return -EINVAL;
 }
+
 
 int sched_get_priority_min(int policy)
 {

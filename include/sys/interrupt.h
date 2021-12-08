@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * sys/interrupt
+ * sys/interrupt.h
  *
  * Copyright 2017 Phoenix Systems
  * Author: Aleksander Kaminski
@@ -16,7 +16,10 @@
 #ifndef _LIBPHOENIX_SYS_INTERRUPT_H_
 #define _LIBPHOENIX_SYS_INTERRUPT_H_
 
-extern int interrupt(unsigned int n, int (*f)(unsigned int, void *), void *arg, unsigned int cond, unsigned int *handle);
+#include <sys/types.h>
+
+
+extern int interrupt(unsigned int n, int (*f)(unsigned int, void *), void *arg, handle_t cond, handle_t *handle);
 
 
 #endif

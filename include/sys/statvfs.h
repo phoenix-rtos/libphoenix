@@ -13,8 +13,8 @@
  * %LICENSE%
  */
 
-#ifndef _LIBPHOENIX_SYS_STATVFS_H
-#define _LIBPHOENIX_SYS_STATVFS_H
+#ifndef _LIBPHOENIX_SYS_STATVFS_H_
+#define _LIBPHOENIX_SYS_STATVFS_H_
 
 
 struct statfs
@@ -27,4 +27,4 @@ struct statvfs
 };
 
 
-#endif /* _LIBPHOENIX_SYS_STATVFS_H */
+#endif

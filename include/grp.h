@@ -20,23 +20,23 @@
 
 
 struct group {
-	char   *gr_name;
-	gid_t   gr_gid;
-	char  **gr_mem;
-	char   *gr_passwd;
+	char *gr_name;   /* Group name */
+	gid_t gr_gid;    /* Group ID */
+	char **gr_mem;   /* Group member names */
+	char *gr_passwd; /* Group password */
 };
 
 
-int initgroups(const char *user, gid_t group);
+extern int initgroups(const char *user, gid_t group);
 
 
-struct group *getgrnam(const char *name);
+extern struct group *getgrnam(const char *name);
 
 
-struct group *getgrgid(gid_t gid);
+extern struct group *getgrgid(gid_t gid);
 
 
-int setgroups(size_t size, const gid_t *list);
+extern int setgroups(size_t size, const gid_t *list);
 
 
 #endif

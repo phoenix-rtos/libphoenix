@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * unistd: alarm()
+ * unistd/alarm.c
  *
  * Copyright 2018 Phoenix Systems
  * Author: Jan Sikorski, Michał Mirosław
@@ -13,13 +13,13 @@
  * %LICENSE%
  */
 
-#include <stdio.h>
-#include <unistd.h>
 #include <errno.h>
 #include <signal.h>
+#include <stdio.h>
+#include <unistd.h>
 #include <sys/threads.h>
-#include <sys/wait.h>
 #include <sys/time.h>
+#include <sys/wait.h>
 
 
 static struct {

@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * sched
+ * sched.h
  *
  * Copyright 2019 Phoenix Systems
  * Author: Marcin Baran
@@ -18,8 +18,9 @@
 
 #include <errno.h>
 
-#define SCHED_FIFO 0
-#define SCHED_RR 1
+
+#define SCHED_FIFO  0
+#define SCHED_RR    1
 #define SCHED_OTHER 2
 
 

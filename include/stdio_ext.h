@@ -16,7 +16,6 @@
 #ifndef _LIBPHOENIX_STDIO_EXT_H_
 #define _LIBPHOENIX_STDIO_EXT_H_
 
-
 #include <stdio.h>
 
 

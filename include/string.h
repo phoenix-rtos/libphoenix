@@ -17,10 +17,6 @@
 #define _LIBPHOENIX_STRING_H_
 
 #include <stddef.h>
-#include <stdint.h>
-
-/* Included for compability reason */
-#include <strings.h>
 
 
 /*
@@ -28,6 +24,7 @@
  * pointed to, by the argument str.
  */
 extern void *memchr(const void *str, int c, size_t n);
+
 
 /* Searches backward from the end of the n bytes pointed to by s instead of forward from the beginning. */
 extern void *memrchr(const void *s, int c, size_t n);
@@ -174,5 +171,6 @@ __attribute__((always_inline)) static inline void bzero(void *p, size_t sz)
 
 
 extern int strcasecmp(const char *str1, const char *str2);
+
 
 #endif

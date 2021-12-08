@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * unistd getopt
+ * unistd/getopt.c
  *
  * Copyright 2018, 2020 Phoenix Systems
  * Author: Jan Sikorski, Krystian Wasik, Lukasz Kosinski
@@ -13,10 +13,10 @@
  * %LICENSE%
  */
 
-#include <unistd.h>
 #include <getopt.h>
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
+#include <unistd.h>
 
 
 char *optarg;

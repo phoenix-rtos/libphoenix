@@ -13,43 +13,39 @@
  * %LICENSE%
  */
 
-#ifndef _SYS_SELECT_H_
-#define _SYS_SELECT_H_
+#ifndef _LIBPHOENIX_SYS_SELECT_H_
+#define _LIBPHOENIX_SYS_SELECT_H_
 
+#include <limits.h>
+#include <signal.h>
 #include <time.h>
-#include <stdint.h>
+#include <phoenix/posix/timeval.h>
 
 
-struct timeval {
-	time_t tv_sec;
-	suseconds_t tv_usec;
-};
+/* The fd_set structure member array type */
+typedef long __fd_mask;
 
 
-#ifndef FD_SETSIZE
-#define FD_SETSIZE 1024
-#endif
-
-#define __NFDBITS (8 * (int)sizeof(uint32_t))
+#define FD_SETSIZE 1024                          /* Maximum number of file descriptors in the fd_set structure */
+#define __NFDBITS (CHAR_BIT * sizeof(__fd_mask)) /* Number of bits per file descriptor in the fd_set structure */
 
 
-typedef struct fd_set_t_
-{
-	uint32_t fds_bits[(FD_SETSIZE + 31) / 32];
+typedef struct {
+	__fd_mask fds_bits[(FD_SETSIZE + __NFDBITS - 1) / __NFDBITS];
 } fd_set;
 
 
-#define __FD_OP(i, s, op) ((s)->fds_bits[(i) / __NFDBITS] op (1u << ((i) % __NFDBITS)))
+#define __FD_OP(n, s, op) ((s)->fds_bits[(n) / __NFDBITS] op ((__fd_mask)1 << ((n) % __NFDBITS)))
 
-#define FD_ZERO(s) \
-do { \
-	uint32_t i; \
+#define FD_ZERO(s) ({ \
+	size_t i; \
 	for (i = 0; i < sizeof((s)->fds_bits) / sizeof((s)->fds_bits[0]); ++i) \
 		(s)->fds_bits[i] = 0; \
-} while (0);
-#define FD_SET(i, s) __FD_OP(i, s, |=)
-#define FD_CLR(i, s) __FD_OP(i, s, &= ~)
-#define FD_ISSET(i, s) !!__FD_OP(i, s, &)
+})
+
+#define FD_CLR(n, s)   __FD_OP(n, s, &= ~)
+#define FD_ISSET(n, s) __FD_OP(n, s, &)
+#define FD_SET(n, s)   __FD_OP(n, s, |=)
 
 
 int select(int nfds, fd_set *rd, fd_set *wr, fd_set *ex, struct timeval *timeout);

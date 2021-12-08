@@ -23,8 +23,8 @@
 #include __ARCH_INTTYPES
 #endif
 
-#ifdef _USE_STANDARD_TYPES_STDINT
 
+#ifdef _USE_STANDARD_TYPES_STDINT
 #define PRId8 _PRI_8 "d"
 #define PRIu8 _PRI_8 "u"
 #define PRIx8 _PRI_8 "x"
@@ -52,12 +52,13 @@
 #define PRIX64 _PRI_64 "X"
 #define PRIi64 _PRI_64 "i"
 #define PRIo64 _PRI_64 "o"
-
 #endif
+
 
 extern intmax_t strtoimax(const char *nptr, char **endptr, int base);
 
 
 extern uintmax_t strtoumax(const char *nptr, char **endptr, int base);
+
 
 #endif

@@ -20,57 +20,27 @@
 #include <stddef.h>
 #include <stdarg.h>
 #include <sys/types.h>
+#include <phoenix/posix/stdio.h>
 
+
+/* Standard input/output buffers size */
 #ifndef NOMMU
 #define BUFSIZ _PAGE_SIZE
 #else
 #define BUFSIZ 16
 #endif
 
-#define EOF (-1)
-#define FILENAME_MAX 128
+#define _IOFBF 0x2000 /* Input/output fully buffered */
+#define _IOLBF 0x4000 /* Input/output line buffered */
+#define _IONBF 0x8000 /* Input/output unbuffered */
 
-#define _IOFBF 0x2000
-#define _IOLBF 0x4000
-#define _IONBF 0x8000
-
-#ifndef SEEK_SET
-#define SEEK_SET 0
-#endif
-
-#ifndef SEEK_CUR
-#define SEEK_CUR 1
-#endif
-
-#ifndef SEEK_END
-#define SEEK_END 2
-#endif
-
-typedef offs_t fpos_t;
+#define EOF (-1) /* End of file returned value */
 
 
-typedef struct _FILE {
-	int fd;
-	unsigned flags;
-
-	int mode;
-	size_t bufeof;
-	size_t bufpos;
-	size_t bufsz;
-	char *buffer;
-	handle_t lock;
-} FILE;
+typedef off_t fpos_t; /* Used to specify unique position within a file */
 
 
-typedef struct _DIR {
-	oid_t oid;
-	size_t pos;
-	struct dirent *dirent;
-} DIR;
-
-
-typedef struct _IO_cookie_io_functions
-{
+typedef struct {
 	void *read;
 	void *write;
 	void *seek;
@@ -78,11 +48,26 @@ typedef struct _IO_cookie_io_functions
 } cookie_io_functions_t;
 
 
+typedef struct {
+	int fd;             /* File descriptor */
+	int mode;           /* File mode */
+	unsigned int flags; /* File flags */
+
+	size_t bufeof; /* File buffer EOF position */
+	size_t bufpos; /* File buffer position */
+	size_t bufsz;  /* File buffer size */
+	char *buffer;  /* File buffer */
+	handle_t lock; /* File mutex */
+} FILE;
+
+
 extern FILE *stderr, *stdin, *stdout;
+
 
 #define stderr stderr
 #define stdin stdin
 #define stdout stdout
+
 
 /* Closes the stream. All buffers are flushed. */
 extern int fclose(FILE *file);

@@ -13,38 +13,28 @@
  * %LICENSE%
  */
 
-#ifndef _LIBPHOENIX_IA32_IO_H_
-#define _LIBPHOENIX_IA32_IO_H_
+#ifndef _LIBPHOENIX_ARCH_IA32_IO_H_
+#define _LIBPHOENIX_ARCH_IA32_IO_H_
 
 
 static inline unsigned char inb(void *addr)
 {
 	unsigned char b;
 
-	__asm__ volatile
-	(" \
-		movl %1, %%edx; \
-		inb %%dx, %%al; \
-		movb %%al, %0;" \
-	:"=b" (b) \
-	:"g" (addr) \
-	:"edx", "eax");
+	__asm__ volatile(
+		"inb %1, %0; "
+	: "=a" (b)
+	: "Nd" (addr));
+
 	return b;
 }
 
 
 static inline void outb(void *addr, unsigned char b)
 {
-	__asm__ volatile
-	(" \
-		movl %0, %%edx; \
-		movb %1, %%al; \
-		outb %%al, %%dx"
-	:
-	:"g" (addr), "b" (b)
-	:"eax", "edx");
-
-	return;
+	__asm__ volatile(
+		"outb %0, %1; "
+	:: "a" (b), "Nd" (addr));
 }
 
 
@@ -52,14 +42,10 @@ static inline unsigned short inw(void *addr)
 {
 	unsigned short w;
 
-	__asm__ volatile
-	(" \
-		movl %1, %%edx; \
-		inw %%dx, %%ax; \
-		movw %%ax, %0;" \
-	:"=g" (w) \
-	:"g" (addr) \
-	:"edx", "eax");
+	__asm__ volatile(
+		"inw %1, %0; "
+	: "=a" (w)
+	: "Nd" (addr));
 
 	return w;
 }
@@ -67,16 +53,9 @@ static inline unsigned short inw(void *addr)
 
 static inline void outw(void *addr, unsigned short w)
 {
-	__asm__ volatile
-	(" \
-		movl %0, %%edx; \
-		movw %1, %%ax; \
-		outw %%ax, %%dx"
-		:
-		:"g" (addr), "g" (w)
-		:"eax", "edx");
-
-	return;
+	__asm__ volatile(
+		"outw %0, %1; "
+	:: "a" (w), "Nd" (addr));
 }
 
 
@@ -84,14 +63,10 @@ static inline unsigned int inl(void *addr)
 {
 	unsigned int l;
 
-	__asm__ volatile
-	(" \
-		movl %1, %%edx; \
-		inl %%dx, %%eax; \
-		movl %%eax, %0;" \
-		:"=g" (l) \
-		:"g" (addr) \
-		:"eax", "edx", "memory");
+	__asm__ volatile(
+		"inl %1, %0; "
+	: "=a" (l)
+	: "Nd" (addr));
 
 	return l;
 }
@@ -99,16 +74,9 @@ static inline unsigned int inl(void *addr)
 
 static inline void outl(void *addr, unsigned int l)
 {
-	__asm__ volatile
-	(" \
-		movl %0, %%edx; \
-		movl %1, %%eax; \
-		outl %%eax, %%dx"
-		:
-		:"g" (addr), "g" (l)
-		:"eax", "edx");
-
-	return;
+	__asm__ volatile(
+		"outl %0, %1; "
+	:: "a" (l), "Nd" (addr));
 }
 
 

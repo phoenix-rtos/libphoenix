@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * Architecture dependent part of stdint (arch/ia32)
+ * Architecture dependent integer types
  *
  * Copyright 2019 Phoenix Systems
  * Author: Andrzej Glowinski
@@ -15,6 +15,7 @@
 
 #ifndef _LIBPHOENIX_ARCH_IA32_STDINT_H_
 #define _LIBPHOENIX_ARCH_IA32_STDINT_H_
+
 
 typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
@@ -50,5 +51,6 @@ typedef int32_t intptr_t;
 #define _PRI_16 ""
 #define _PRI_32 ""
 #define _PRI_64 "ll"
+
 
 #endif

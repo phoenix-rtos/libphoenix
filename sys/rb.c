@@ -13,8 +13,8 @@
  * %LICENSE%
  */
 
-#include <sys/rb.h>
 #include <string.h>
+#include <sys/rb.h>
 
 
 void lib_rbInit(rbtree_t *tree, rbcomp_t compare, rbaugment_t augment)

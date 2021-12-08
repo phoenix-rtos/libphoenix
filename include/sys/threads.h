@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * sys/threads
+ * sys/threads.h
  *
  * Copyright 2017, 2018 Phoenix Systems
  * Author: Pawel Pisarczyk, Aleksander Kaminski
@@ -16,11 +16,12 @@
 #ifndef _LIBPHOENIX_SYS_THREADS_H_
 #define _LIBPHOENIX_SYS_THREADS_H_
 
-#include <sys/types.h>
-#include <sys/rb.h>
 #include <stddef.h>
+#include <sys/rb.h>
+#include <sys/types.h>
 #include <phoenix/sysinfo.h>
 #include <phoenix/signal.h>
+
 
 typedef struct {
 	handle_t mutex;
@@ -42,7 +43,7 @@ extern void _errno_new(struct __errno_t *e);
 extern void _errno_remove(struct __errno_t *e);
 
 
-extern int perf_start(unsigned pid);
+extern int perf_start(unsigned int pid);
 
 
 extern int perf_read(void *buffer, size_t bufsz);
@@ -130,7 +131,7 @@ extern int condBroadcast(handle_t h);
 extern int resourceDestroy(handle_t h);
 
 
-extern int signalHandle(void (*handler)(void), unsigned mask, unsigned mmask);
+extern int signalHandle(void (*handler)(void), unsigned int mask, unsigned int mmask);
 
 
 extern int signalPost(int pid, int tid, int signal);
@@ -139,8 +140,10 @@ extern int signalPost(int pid, int tid, int signal);
 extern int signalReturn(int signal);
 
 
-extern unsigned int signalMask(unsigned mask, unsigned mmask);
+extern unsigned int signalMask(unsigned int mask, unsigned int mmask);
 
-extern int signalSuspend(unsigned mask);
+
+extern int signalSuspend(unsigned int mask);
+
 
 #endif

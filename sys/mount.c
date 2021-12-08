@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * sys/mount
+ * sys/mount.c
  *
  * Copyright 2018 Phoenix Systems
  * Author: Kamil Amanowicz
@@ -13,13 +13,13 @@
  * %LICENSE%
  */
 
-#include <stdlib.h>
 #include <errno.h>
-#include <unistd.h>
+#include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
+#include <unistd.h>
 #include <sys/file.h>
 #include <sys/msg.h>
+#include <sys/stat.h>
 
 
 int mount(const char *source, const char *target, const char *fstype, long mode, char *data)

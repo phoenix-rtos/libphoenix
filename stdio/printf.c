@@ -13,10 +13,12 @@
  * %LICENSE%
  */
 
-#include "stdio.h"
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/debug.h>
+
 #include "format.h"
-#include "sys/debug.h"
-#include "unistd.h"
+
 
 typedef struct _printf_ctx_t {
 	size_t n;

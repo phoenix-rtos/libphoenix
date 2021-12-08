@@ -20,8 +20,7 @@
 
 #ifdef __ARCH_SYS_IO
 #include __ARCH_SYS_IO
-#else
-#error "sys/io.h is not defined for current architectue!"
 #endif
+
 
 #endif

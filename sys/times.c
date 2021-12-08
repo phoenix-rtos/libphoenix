@@ -13,8 +13,8 @@
  * %LICENSE%
  */
 
-#include <sys/types.h>
 #include <sys/times.h>
+#include <sys/types.h>
 
 
 clock_t times(struct tms *buffer)

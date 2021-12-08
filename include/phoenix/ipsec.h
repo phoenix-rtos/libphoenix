@@ -52,4 +52,5 @@ enum {
 	IPSEC_LEVEL_UNIQUE
 };
 
-#endif /* _LIBPHOENIX_PHOENIX_IPSEC_H_ */
+
+#endif

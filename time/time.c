@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * time
+ * time.c
  *
  * Copyright 2017 Phoenix Systems
  * Author: Andrzej Asztemborski
@@ -13,13 +13,13 @@
  * %LICENSE%
  */
 
-#include <sys/time.h>
-#include <time.h>
+#include <ctype.h>
 #include <errno.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
-#include <stdio.h>
+#include <time.h>
+#include <sys/time.h>
 
 
 char *tzname[2];
@@ -415,6 +415,7 @@ clock_t clock(void)
 {
 	return (clock_t)-1;
 }
+
 
 char *strptime(const char *restrict buf, const char *restrict format, struct tm *restrict tm)
 {

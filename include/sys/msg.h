@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * sys/msg
+ * sys/msg.h
  *
  * Copyright 2017 Phoenix Systems
  * Author: Pawel Pisarczyk
@@ -13,36 +13,37 @@
  * %LICENSE%
  */
 
-#ifndef _LIBPHOENIX_MSG_H_
-#define _LIBPHOENIX_MSG_H_
+#ifndef _LIBPHOENIX_SYS_MSG_H_
+#define _LIBPHOENIX_SYS_MSG_H_
 
-#include <stddef.h>
 #include <sys/types.h>
 #include <phoenix/msg.h>
 
 
 /* Port management */
+extern int portCreate(unsigned int *port);
 
 
-extern int portCreate(uint32_t *port);
+extern void portDestroy(unsigned int port);
 
-extern void portDestroy(uint32_t port);
 
-extern int portRegister(uint32_t port, const char *name, oid_t *oid);
+extern int portRegister(unsigned int port, const char *name, oid_t *oid);
+
 
 extern int lookup(const char *name, oid_t *file, oid_t *dev);
 
 
 /* Message passing */
+extern int msgSend(unsigned int port, msg_t *m);
 
 
-extern int msgSend(uint32_t port, msg_t *m);
+extern int msgPulse(unsigned int port, msg_t *m);
 
-extern int msgPulse(uint32_t port, msg_t *m);
 
-extern int msgRecv(uint32_t port, msg_t *m, unsigned long int *rid);
+extern int msgRecv(unsigned int port, msg_t *m, unsigned long int *rid);
 
-extern int msgRespond(uint32_t port, msg_t *m, unsigned long int rid);
+
+extern int msgRespond(unsigned int port, msg_t *m, unsigned long int rid);
 
 
 #endif

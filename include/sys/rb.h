@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * sys/rb - red, black tree implementation
+ * sys/rb.h - red-black tree
  *
  * Copyright 2017 Phoenix Systems
  * Author: Jakub Sejdak
@@ -13,16 +13,15 @@
  * %LICENSE%
  */
 
-#ifndef _LIBPHOENIX_LIB_RB_H_
-#define _LIBPHOENIX_LIB_RB_H_
+#ifndef _LIBPHOENIX_SYS_RB_H_
+#define _LIBPHOENIX_SYS_RB_H_
 
+#include <stdint.h>
 #include <stdio.h>
 
 
-#define lib_treeof(type, node_field, node) ({					\
-	long _off = (long) &(((type *) 0)->node_field);				\
-	void *tmpnode = (node);					\
-	(type *) ((tmpnode == NULL) ? NULL : (tmpnode - _off));	\
+#define lib_treeof(type, node_field, node) ({ \
+	(type *)((node == NULL) ? NULL : (void *)((uintptr_t)node - (uintptr_t)&(((type *)0)->node_field))); \
 })
 
 

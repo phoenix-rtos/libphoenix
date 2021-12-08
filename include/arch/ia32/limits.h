@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * Architecture dependent part of limits (arch/ia32)
+ * Architecture dependent limits
  *
  * Copyright 2017-2019 Phoenix Systems
  * Author: Pawel Pisarczyk, Aleksander Kaminski, Andrzej Glowinski, Marek Bialowas
@@ -16,7 +16,6 @@
 #ifndef _LIBPHOENIX_ARCH_IA32_LIMITS_H_
 #define _LIBPHOENIX_ARCH_IA32_LIMITS_H_
 
-#include "arch.h"
 
 #define SCHAR_MIN -128
 #define SCHAR_MAX 127
@@ -49,9 +48,6 @@
 
 #define SSIZE_MAX INT_MAX
 
-#define PAGE_SIZE _PAGE_SIZE
-#define PAGESIZE  _PAGE_SIZE
-
 #define PTHREAD_STACK_MIN 256
 
 /*** POSIX-required defines ***/
@@ -62,5 +58,6 @@
 #define SYMLOOP_MAX 8     /* Maximum number of symbolic links that can be reliably traversed in the resolution of a pathname in the absence of a loop. MIN: 8 */
 
 #define _POSIX2_RE_DUP_MAX 255
+
 
 #endif

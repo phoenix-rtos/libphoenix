@@ -13,11 +13,11 @@
  * %LICENSE%
  */
 
-#include <sys/time.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <sys/time.h>
+#include <posix/utils.h>
 
-#include "posix/utils.h"
 
 extern int sys_utimes(const char *filename, const struct timeval times[2]);
 
@@ -86,6 +86,7 @@ int lutimes(const char *filename, const struct timeval tv[2])
 {
 	return 0;
 }
+
 
 int timerisset(struct timeval *tvp)
 {

@@ -17,7 +17,6 @@
 #define _LIBPHOENIX_ARCH_ARMV7_TYPES_H_
 
 typedef unsigned int addr_t;
-typedef long long offs_t;
 
 typedef int ssize_t;
 typedef unsigned long long time_t;

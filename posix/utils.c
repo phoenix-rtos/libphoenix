@@ -15,6 +15,7 @@
 
 #include <string.h>
 
+
 void splitname(char *path, char **base, char **dir)
 {
 	char *slash;

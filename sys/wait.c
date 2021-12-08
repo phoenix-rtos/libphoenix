@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * sys/wait
+ * sys/wait.c
  *
  * Copyright 2018 Phoenix Systems
  * Author: Krystian Wasik

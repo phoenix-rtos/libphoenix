@@ -13,12 +13,12 @@
  * %LICENSE%
  */
 
-#include <sys/select.h>
 #include <errno.h>
 #include <limits.h>
 #include <poll.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/select.h>
 
 
 #define SFD_ISSET(i, s) ((s) && FD_ISSET(i, s))

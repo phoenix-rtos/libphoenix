@@ -14,8 +14,8 @@
  */
 
 
-#ifndef _BYTESWAP_H
-#define _BYTESWAP_H	1
+#ifndef _LIBPHOENIX_BYTESWAP_H_
+#define _LIBPHOENIX_BYTESWAP_H_
 
 
 /* Return a value with all bytes in the 16 bit argument swapped.  */
@@ -27,4 +27,5 @@
 /* Return a value with all bytes in the 64 bit argument swapped.  */
 #define bswap_64(x) __builtin_bswap64 (x)
 
-#endif /* byteswap.h */
+
+#endif

@@ -13,9 +13,9 @@
  * %LICENSE%
  */
 
-#include <sys/file.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <sys/file.h>
 
 
 extern void _malloc_init(void);

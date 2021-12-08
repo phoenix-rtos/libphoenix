@@ -13,8 +13,8 @@
  * %LICENSE%
  */
 
-#ifndef _LIBPHOENIX_IDTREE_H_
-#define _LIBPHOENIX_IDTREE_H_
+#ifndef _LIBPHOENIX_POSIX_IDTREE_H_
+#define _LIBPHOENIX_POSIX_IDTREE_H_
 
 #include <sys/rb.h>
 
@@ -42,5 +42,6 @@ int idtree_id(idnode_t *node);
 
 
 int idtree_alloc(idtree_t *tree, idnode_t *n);
+
 
 #endif

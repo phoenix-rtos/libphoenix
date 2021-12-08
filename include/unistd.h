@@ -19,24 +19,29 @@
 
 #include <arch.h>
 #include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
 #include <sys/types.h>
 
-#define STDIN_FILENO 0
-#define STDOUT_FILENO 1
-#define STDERR_FILENO 2
 
-#define _SC_CLK_TCK 0
-#define _SC_PAGESIZE 1
+/* Standard file streams */
+#define STDIN_FILENO  0 /* File number of stdin */
+#define STDOUT_FILENO 1 /* File number of stdout */
+#define STDERR_FILENO 2 /* File number of stderr */
 
-#define SEEK_SET 0
-#define SEEK_CUR 1
-#define SEEK_END 2
 
+/* sysconf() symbolic constants */
+#define _SC_CLK_TCK   0
+#define _SC_PAGESIZE  1
+#define _SC_PAGE_SIZE _SC_PAGESIZE
+
+
+/* access() symbolic constants */
 enum {
-	F_OK = 0,
-	R_OK = 1 << 2,
-	W_OK = 1 << 1,
-	X_OK = 1 << 0,
+	F_OK = 0,      /* Test for file existence */
+	X_OK = 1 << 0, /* Test for execute (search) permission */
+	W_OK = 1 << 1, /* Test for write permission */
+	R_OK = 1 << 2  /* Test for read permission */
 };
 
 

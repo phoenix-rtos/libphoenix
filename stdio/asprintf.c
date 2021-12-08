@@ -13,8 +13,8 @@
  * %LICENSE%
  */
 
-#include "stdlib.h"
-#include "stdio.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 
 int vasprintf(char **strp, const char *fmt, va_list ap)

@@ -311,4 +311,5 @@ struct sadb_x_nat_t_frag {
 #define SADB_IDENTTYPE_USERFQDN 3
 #define SADB_IDENTTYPE_MAX      3
 
-#endif /* _LIBPHOENIX_PHOENIX_PFKEYV2_H_ */
+
+#endif

@@ -13,11 +13,11 @@
  * %LICENSE%
  */
 
-#include "err.h"
-#include "errno.h"
-#include "stdio.h"
-#include "stdlib.h"
-#include "string.h"
+#include <err.h>
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 
 extern const char *argv_progname;

@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * Password related functions
+ * unistd/pwd.c (POSIX password related routines)
  *
  * Copyright 2018, 2021 Phoenix Systems
  * Author: Jan Sikorski, Mateusz Niewiadomski
@@ -14,14 +14,16 @@
  */
 
 #include <ctype.h>
-#include <pwd.h>
-#include <limits.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <dirent.h>
+#include <limits.h>
+#include <pwd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 
 #define PASSWD_PATH "/etc/passwd"
+
 
 struct passwd pwnam;
 char pw_name[NAME_MAX];

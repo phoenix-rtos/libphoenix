@@ -13,11 +13,12 @@
  * %LICENSE%
  */
 
-#include <arpa/inet.h>
+#include <ctype.h>
 #include <errno.h>
 #include <stdlib.h>
-#include <ctype.h>
 #include <string.h>
+#include <arpa/inet.h>
+
 
 /* Accept only addresses in dotted-decimal format ddd.ddd.ddd.ddd */
 static int inet_pton4(const char *src, struct in_addr *dst)
@@ -45,6 +46,7 @@ static int inet_pton4(const char *src, struct in_addr *dst)
 
 	return 1;
 }
+
 
 /*
  * Accepts IPv6 addresses with optional contigous zeros abbreviation
@@ -130,6 +132,7 @@ static int inet_pton6(const char *src, struct in6_addr *dst)
 
 	return 1;
 }
+
 
 int inet_pton(int af, const char *src, void *dst)
 {

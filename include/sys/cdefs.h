@@ -13,8 +13,9 @@
  * %LICENSE%
  */
 
-#ifndef _LIBPHOENIX_SYS_CDEFS_H
-#define _LIBPHOENIX_SYS_CDEFS_H
+#ifndef _LIBPHOENIX_SYS_CDEFS_H_
+#define _LIBPHOENIX_SYS_CDEFS_H_
+
 
 #define __GLIBC_PREREQ(x,y) 0
 

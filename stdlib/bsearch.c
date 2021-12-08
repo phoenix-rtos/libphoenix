@@ -14,12 +14,13 @@
  *
  */
 
+#include <stdint.h>
 #include <stdlib.h>
 
 
 void *bsearch(const void *key, const void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *))
 {
-	ssize_t l = 0, r = nmemb - 1, m;
+	ssize_t m, l = 0, r = nmemb - 1;
 	int cmp;
 
 	if (nmemb == 0)
@@ -27,16 +28,15 @@ void *bsearch(const void *key, const void *base, size_t nmemb, size_t size, int 
 
 	while (l <= r) {
 		m = (l + r) / 2;
-
-		cmp = compar(key, base + m * size);
-
-		if (cmp == 0)
-			return (void *)base + m * size;
+		cmp = compar(key, (void *)((uintptr_t)base + m * size));
 
 		if (cmp > 0)
 			l = m + 1;
-		else
+		else if (cmp < 0)
 			r = m - 1;
+		else
+			return (void *)((uintptr_t)base + m * size);
 	}
+
 	return NULL;
 }

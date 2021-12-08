@@ -16,6 +16,9 @@
 #ifndef _LIBPHOENIX_NETINET_TCP_H_
 #define _LIBPHOENIX_NETINET_TCP_H_
 
-#define TCP_NODELAY 1
+
+/* TCP level options */
+#define TCP_NODELAY 0x01 /* Avoid coalescing of small segments */
+
 
 #endif

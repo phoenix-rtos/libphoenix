@@ -20,13 +20,13 @@
 
 
 struct passwd {
-	char  *pw_name;
-	uid_t  pw_uid;
-	gid_t  pw_gid;
-	char  *pw_dir;
-	char  *pw_shell;
-	char  *pw_passwd;
-	char  *pw_gecos;
+	char *pw_name;   /* User login name */
+	uid_t pw_uid;    /* User ID */
+	gid_t pw_gid;    /* Group ID */
+	char *pw_dir;    /* Initial working directory */
+	char *pw_shell;  /* Program to use as shell */
+	char *pw_passwd; /* User password */
+	char *pw_gecos;  /* User information */
 };
 
 

@@ -20,7 +20,6 @@
 
 
 /* Linux/x86-compatible numbers for easier debugging */
-
 #define ENOTEMPTY       39
 #define ELOOP           40
 #define EUNATCH         49
@@ -73,5 +72,6 @@ static inline int set_errno(int x)
 	{ \
 		return SET_ERRNO(sys_##function argnames); \
 	}
+
 
 #endif

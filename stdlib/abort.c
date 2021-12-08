@@ -12,8 +12,10 @@
  *
  * %LICENSE%
  */
-#include <stdlib.h>
+
 #include <signal.h>
+#include <stdlib.h>
+
 
 void abort(void)
 {

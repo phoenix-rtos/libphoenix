@@ -13,31 +13,31 @@
  * %LICENSE%
  */
 
-#include <sys/list.h>
-#include <sys/minmax.h>
-#include <sys/rb.h>
-#include <sys/threads.h>
-#include <sys/minmax.h>
-#include <sys/mman.h>
-#include <sys/debug.h>
-
 #include <arch.h>
+#include <limits.h>
 #include <stddef.h>
 #include <stdlib.h>
-#include <limits.h>
 #include <string.h>
 #include <sysexits.h>
 #include <unistd.h>
 
-#define CEIL(value, size)          ((((value) + (size) - 1) / (size)) * (size))
-#define FLOOR(value, size)         (((value) / (size)) * (size))
+#include <sys/debug.h>
+#include <sys/list.h>
+#include <sys/minmax.h>
+#include <sys/mman.h>
+#include <sys/rb.h>
+#include <sys/threads.h>
 
-#define CHUNK_PUSED                1
-#define CHUNK_CUSED                2
 
-#define CHUNK_OVERHEAD             CEIL(__builtin_offsetof(chunk_t, next), 8)
-#define CHUNK_MIN_SIZE             CEIL(__builtin_offsetof(chunk_t, node) + sizeof(size_t), 8)
-#define CHUNK_SMALLBIN_MAX_SIZE    (256 - CHUNK_OVERHEAD)
+#define CEIL(value, size)  ((((value) + (size) - 1) / (size)) * (size))
+#define FLOOR(value, size) (((value) / (size)) * (size))
+
+#define CHUNK_PUSED 1
+#define CHUNK_CUSED 2
+
+#define CHUNK_OVERHEAD          CEIL(__builtin_offsetof(chunk_t, next), 8)
+#define CHUNK_MIN_SIZE          CEIL(__builtin_offsetof(chunk_t, node) + sizeof(size_t), 8)
+#define CHUNK_SMALLBIN_MAX_SIZE (256 - CHUNK_OVERHEAD)
 
 
 typedef struct {

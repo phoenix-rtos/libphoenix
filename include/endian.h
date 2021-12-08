@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * endian checks and conversions
+ * endian.h
  *
  * Copyright 2017, 2018, 2020 Phoenix Systems
  * Author: Michal Miroslaw, Lukasz Kosinski
@@ -16,13 +16,10 @@
 #ifndef _LIBPHOENIX_ENDIAN_H_
 #define _LIBPHOENIX_ENDIAN_H_
 
-#include <stdint.h>
-
-
-#define __LITTLE_ENDIAN 0
-#define __BIG_ENDIAN 1
-
 #include <arch.h>
+#include <inttypes.h>
+#include <phoenix/posix/endian.h>
+
 
 #define __CPP_CONCAT1(x, y) x ## y
 #define __CPP_CONCAT(x, y) __CPP_CONCAT1(x, y)
@@ -53,4 +50,4 @@
 #define htobe64(x) (__swap_be__(64))(x)
 
 
-#endif /* _LIBPHOENIX_ENDIAN_H_ */
+#endif

@@ -13,10 +13,11 @@
  * %LICENSE%
  */
 
-#include <arpa/inet.h>
 #include <ctype.h>
-#include <netinet/in.h>
 #include <stdlib.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+
 
 int inet_aton(const char *cp, struct in_addr *inp)
 {

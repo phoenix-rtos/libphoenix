@@ -13,9 +13,10 @@
  * %LICENSE%
  */
 
-#ifndef _SYS_CONFIG_H_
-#define _SYS_CONFIG_H_
+#ifndef _LIBPHOENIX_SYS_CONFIG_H_
+#define _LIBPHOENIX_SYS_CONFIG_H_
 
 #include <sys/features.h>
+
 
 #endif

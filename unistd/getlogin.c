@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * unistd (POSIX routines for user operations)
+ * unistd/getlogin.c (POSIX routines for user operations)
  *
  * Copyright 2018 Phoenix Systems
  * Author: Kamil Amanowicz
@@ -12,6 +12,7 @@
  *
  * %LICENSE%
  */
+
 #include <unistd.h>
 
 
