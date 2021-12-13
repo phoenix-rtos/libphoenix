@@ -16,6 +16,7 @@
 #include <sys/types.h>
 #include <sys/threads.h>
 #include <sys/msg.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <ctype.h>
@@ -47,7 +48,7 @@ char exec_buffer[256];
 static int shebang(const char *path)
 {
 	int fd;
-	char sb[2] = {0, 0};
+	char sb[2] = { 0, 0 };
 
 	if ((fd = open(path, O_RDONLY)) < 0)
 		return -1;
@@ -76,6 +77,7 @@ int execve(const char *file, char *const argv[], char *const envp[])
 	char *path = getenv("PATH");
 	char filepath_buffer[PATH_MAX];
 	int filename_len = strlen(file);
+	struct stat buf;
 
 	fflush(NULL);
 
@@ -138,7 +140,13 @@ int execve(const char *file, char *const argv[], char *const envp[])
 	if ((canonical_path = resolve_path(file, NULL, 1, 0)) == NULL)
 		return -1; /* errno set by resolve_path */
 
-	err = exec(canonical_path, argv, envp);
+	/* execute only if it is regular file */
+	err = stat(canonical_path, &buf);
+	if (!err) {
+		/* TODO: check execution bit presence when native chmod is available */
+		err = (S_ISREG(buf.st_mode)) ? exec(canonical_path, argv, envp) : -EACCES;
+	}
+
 	free(canonical_path);
 	free(sb_args);
 
