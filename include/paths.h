@@ -17,7 +17,8 @@
 #define _LIBPHOENIX_PATHS_H
 
 
-#define _PATH_TTY "/dev/tty"
+#define _PATH_TTY  "/dev/tty"
+#define _PATH_KLOG "/dev/kmsg"
 
 
 #endif /* _LIBPHOENIX_PATHS_H */
