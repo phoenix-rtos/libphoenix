@@ -38,6 +38,7 @@ static struct {
 	int logmask;
 	int logopt;
 	int facility;
+	int configured;
 
 	struct sockaddr_un addr;
 	socklen_t addrlen;
@@ -75,9 +76,10 @@ void openlog(const char *ident, int logopt, int facility)
 		}
 	}
 
+	syslog_common.configured = 1;
 	syslog_common.logmask = 0;
 	syslog_common.logopt = logopt;
-	syslog_common.facility = (facility > 0) ? facility : LOG_USER;
+	syslog_common.facility = facility;
 }
 
 
@@ -101,7 +103,7 @@ void vsyslog(int priority, const char *format, va_list ap)
 		return;
 
 	if (!syslog_common.open)
-		openlog(syslog_common.ident, syslog_common.logopt | LOG_NDELAY, syslog_common.facility);
+		openlog(syslog_common.ident, syslog_common.logopt | LOG_NDELAY, syslog_common.configured ? syslog_common.facility : LOG_USER);
 
 	if (LOG_FAC(priority) == 0)
 		priority |= syslog_common.facility;
