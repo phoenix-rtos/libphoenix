@@ -33,6 +33,7 @@ CC=${CROSS}gcc
 AS=${CROSS}as
 LD=${CROSS}ld
 AR=${CROSS}ar
+OBJCPY=${CROSS}objcopy
 
 MAKEFLAGS="--no-print-directory -j 9"
 

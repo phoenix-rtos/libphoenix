@@ -32,15 +32,15 @@ endif
 
 ifeq ($(TARGET_SUBFAMILY), stm32l152xd)
 	RAM_SIZE=48
-	VADDR_KERNEL_INIT=8000000
+	VADDR_KERNEL_INIT=08012000
 	KERNEL_TARGET_DEFINE=-DCPU_STM32L152XD -DNOMMU
 else ifeq ($(TARGET_SUBFAMILY), stm32l152xe)
 	RAM_SIZE=80
-	VADDR_KERNEL_INIT=8000000
+	VADDR_KERNEL_INIT=08012000
 	KERNEL_TARGET_DEFINE=-DCPU_STM32L152XE -DNOMMU
 else ifeq ($(TARGET_SUBFAMILY), stm32l4x6)
 	RAM_SIZE=320
-	VADDR_KERNEL_INIT=8000000
+	VADDR_KERNEL_INIT=08012000
 	KERNEL_TARGET_DEFINE=-DCPU_STM32L4X6 -DNOMMU
 else ifeq ($(TARGET_SUBFAMILY), imxrt105x)
 	VADDR_KERNEL_INIT=0
@@ -61,10 +61,12 @@ LDFLAGS := -z max-page-size=0x10 --gc-sections
 ifeq ($(KERNEL), 1)
   CFLAGS += -DRAM_SIZE=$(RAM_SIZE) $(KERNEL_TARGET_DEFINE) -ffixed-r9
   LDFLAGS += -Tbss=20000000 -Tdata=20000000
+  STRIP = $(CROSS)strip
 else
   CFLAGS += -fpic -fpie -msingle-pic-base -mno-pic-data-is-text-relative
 	# output .rel.* sections to make ELF position-independent
   LDFLAGS += -q
+  STRIP = $(CROSS)strip --strip-unneeded
 endif
 
 
@@ -82,6 +84,3 @@ LDLIBS := $(PHOENIXLIB) $(GCCLIB) $(CRTBEGIN) $(CRTEND)
 
 OBJCOPY = $(CROSS)objcopy
 OBJDUMP = $(CROSS)objdump
-
-#TODO: provide --strip-unneeded only if it is necessary
-STRIP = $(CROSS)strip
