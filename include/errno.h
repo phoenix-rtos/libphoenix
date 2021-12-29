@@ -29,7 +29,6 @@
 #define EPROTO          71
 #define EBADMSG         74
 #define EMSGSIZE        90
-#define ENOPROTOOPT     92
 #define EPFNOSUPPORT    96
 #define EADDRNOTAVAIL   99
 #define ENETDOWN        100
