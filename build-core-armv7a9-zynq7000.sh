@@ -18,6 +18,9 @@ make -C "phoenix-rtos-kernel" $KERNEL_MAKECMDGOALS all
 b_log "Building libphoenix"
 make -C "libphoenix" all install
 
+b_log "Building unity"
+make -C "phoenix-rtos-tests" unity
+
 b_log "Building phoenix-rtos-filesystems"
 make -C "phoenix-rtos-filesystems" all install
 
