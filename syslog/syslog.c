@@ -97,7 +97,7 @@ int setlogmask(int maskpri)
 void vsyslog(int priority, const char *format, va_list ap)
 {
 	int cnt, prefix_size;
-	ssize_t err;
+	ssize_t err = 0;
 
 	if ((1 << LOG_PRI(priority)) & syslog_common.logmask)
 		return;
