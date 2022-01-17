@@ -39,7 +39,7 @@ static const char *inet_ntop6(const void *src, char *dst, socklen_t size)
 {
 	const struct in6_addr *addr;
 	const int n_hextets = sizeof(addr->s6_addr16) / sizeof(addr->s6_addr16[0]);
-	int i, zero_idx = -1, tmp_len, zero_len = 0, tmp_idx = -1;
+	int i, zero_idx = -1, tmp_len = 0, zero_len = 0, tmp_idx = -1;
 	char *dst_ptr = dst;
 
 	if (size < INET6_ADDRSTRLEN) {
