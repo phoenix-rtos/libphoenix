@@ -84,6 +84,16 @@ static int _stat_abs(const char *path, struct stat *buf)
 		return err;
 	buf->st_size = msg.o.attr.val;
 
+	msg.i.attr.type = atBlocks;
+	if (((err = msgSend(oid.port, &msg)) < 0) || ((err = msg.o.attr.err) < 0))
+		return err;
+	buf->st_blocks = msg.o.attr.val;
+
+	msg.i.attr.type = atIOBlock;
+	if (((err = msgSend(oid.port, &msg)) < 0) || ((err = msg.o.attr.err) < 0))
+		return err;
+	buf->st_blksize = msg.o.attr.val;
+
 	return EOK;
 }
 
