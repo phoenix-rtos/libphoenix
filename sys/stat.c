@@ -115,7 +115,9 @@ int stat(const char *path, struct stat *buf)
 
 mode_t umask(mode_t cmask)
 {
-	return -ENOSYS;
+	/* TODO: add proper umask() implementation */
+	/* Don't restrict process file mode mask for now */
+	return 0;
 }
 
 
