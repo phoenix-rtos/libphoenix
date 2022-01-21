@@ -120,9 +120,9 @@ int open(const char *filename, int oflag, ...)
 	mode = va_arg(ap, mode_t);
 	va_end(ap);
 
-	if (oflag & (O_WRONLY | O_RDWR | O_RDONLY)) {
+	if (oflag & (O_WRONLY | O_RDWR)) {
 		if ((err = stat(filename, &st)) < 0) {
-			if (errno != ENOENT || (oflag & O_RDONLY))
+			if (errno != ENOENT)
 				return err;
 		}
 		else if (S_ISDIR(st.st_mode)) {
