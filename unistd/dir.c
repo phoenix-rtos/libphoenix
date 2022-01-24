@@ -270,8 +270,13 @@ char *resolve_path(const char *path, char *resolved_path, int resolve_last_symli
 	char *path_copy, *p;
 	size_t pathlen;
 
-	if (!path || !path[0]) {
+	if (!path) {
 		errno = EINVAL;
+		return NULL;
+	}
+
+	if (!path[0]) {
+		errno = ENOENT;
 		return NULL;
 	}
 

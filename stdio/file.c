@@ -184,8 +184,10 @@ FILE *fopen(const char *filename, const char *mode)
 	FILE *f;
 	int fd;
 
-	if (filename == NULL || mode == NULL)
+	if (mode == NULL) {
+		errno = EINVAL;
 		return NULL;
+	}
 
 	if ((m = string2mode(mode)) < 0)
 		return NULL;
