@@ -50,7 +50,10 @@ static int string2mode(const char *mode)
 {
 	int next_char = 1;
 
-	if (mode[0] == 'r') {
+	if (mode == NULL) {
+		return -1;
+	}
+	else if (mode[0] == 'r') {
 		if (mode[next_char] == 'b')
 			next_char += 1;
 
@@ -184,19 +187,18 @@ FILE *fopen(const char *filename, const char *mode)
 	FILE *f;
 	int fd;
 
-	if (mode == NULL) {
+	if ((m = string2mode(mode)) < 0) {
 		errno = EINVAL;
 		return NULL;
 	}
 
-	if ((m = string2mode(mode)) < 0)
-		return NULL;
-
 	if ((fd = safe_open(filename, m, DEFFILEMODE)) < 0)
 		return NULL;
 
-	if ((f = calloc(1, sizeof(FILE))) == NULL)
+	if ((f = calloc(1, sizeof(FILE))) == NULL) {
+		safe_close(fd);
 		return NULL;
+	}
 
 	if ((f->buffer = buffAlloc(BUFSIZ)) == NULL) {
 		safe_close(fd);
@@ -217,11 +219,6 @@ FILE *fdopen(int fd, const char *mode)
 {
 	int m, fdm;
 	FILE *f;
-
-	if (mode == NULL) {
-		errno = EINVAL;
-		return NULL;
-	}
 
 	if ((m = string2mode(mode)) < 0) {
 		errno = EINVAL;
@@ -259,18 +256,15 @@ FILE *freopen(const char *pathname, const char *mode, FILE *stream)
 {
 	int m;
 
-	if (mode == NULL || stream == NULL)
+	if ((m = string2mode(mode)) < 0) {
+		errno = EINVAL;
 		return NULL;
+	}
 
 	fflush(stream);
 
 	if (pathname != NULL) {
 		safe_close(stream->fd);
-
-		if ((m = string2mode(mode)) < 0) {
-			file_free(stream);
-			return NULL;
-		}
 
 		if ((stream->fd = safe_open(pathname, m, DEFFILEMODE)) < 0) {
 			file_free(stream);
