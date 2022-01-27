@@ -56,9 +56,14 @@ int chdir(const char *path)
 	if ((canonical = resolve_path(path, NULL, 1, 0)) == NULL)
 		return -1; /* errno set by resolve_path */
 
-	if (stat(canonical, &s) < 0 || !S_ISDIR(s.st_mode)) {
+	if (stat(canonical, &s) < 0) {
 		free(canonical);
 		return SET_ERRNO(-ENOENT);
+	}
+
+	if (!S_ISDIR(s.st_mode)) {
+		free(canonical);
+		return SET_ERRNO(-ENOTDIR);
 	}
 
 	/* TODO:
