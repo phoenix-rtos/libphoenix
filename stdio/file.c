@@ -29,6 +29,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <limits.h>
 
 
 #define F_EOF     (1 << 0)
@@ -845,19 +846,14 @@ ssize_t getline(char **lineptr, size_t *n, FILE *stream)
 	if (!nl)
 		linesz++;
 
-	if (*lineptr == NULL)
-		*lineptr = malloc(linesz);
-	else if (*n < linesz) {
-		if ((tmp = realloc(*lineptr, linesz)) == NULL) {
-			free(*lineptr);
-		}
-		*lineptr = tmp;
-	}
-	if (*lineptr == NULL) {
-		return -ENOMEM;
-	}
+	if (*lineptr == NULL || *n < linesz) {
+		tmp = realloc(*lineptr, linesz);
+		if (tmp == NULL)
+			return -1; /* errno set by malloc/realloc */
 
-	*n = linesz - 1;
+		*lineptr = tmp;
+		*n = linesz;
+	}
 
 	fseek(stream, offs, SEEK_SET);
 	fread(*lineptr, 1, linesz - 1, stream);
