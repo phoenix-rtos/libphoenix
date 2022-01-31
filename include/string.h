@@ -93,6 +93,14 @@ extern char *stpcpy(char *dest, const char *src);
 extern char *strncpy(char *dest, const char *src, size_t n);
 
 
+/*  copies up to size - 1 characters from the NUL-terminated string src to dst, NUL-terminating the result */
+extern size_t strlcpy(char *dst, const char *src, size_t size);
+
+
+/* appends the NUL-terminated string src to the end of dst. It will append at most size - strlen(dst) - 1 bytes, NUL-terminating the result. */
+extern size_t strlcat(char *dst, const char *src, size_t size);
+
+
 /* Calculates the length of the initial segment of str1 which consists entirely of characters not in str2. */
 extern size_t strcspn(const char *str1, const char *str2);
 

@@ -5,8 +5,8 @@
  *
  * string/string (generic implementation of string functions)
  *
- * Copyright 2017 Phoenix Systems
- * Author: Pawel Pisarczyk
+ * Copyright 2017, 2022 Phoenix Systems
+ * Author: Pawel Pisarczyk, Mateusz Niewiadomski
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -459,4 +459,31 @@ char *strncat(char *dest, const char *src, size_t n)
 	dest[len + i] = '\0';
 
 	return dest;
+}
+
+
+size_t strlcpy(char *dst, const char *src, size_t size)
+{
+	size_t len = 0;
+
+	if (size) {
+		while (--size && *src) {
+			*(dst++) = *(src++);
+			len++;
+		}
+		*dst = '\0';
+	}
+
+	while (*(src++))
+		len++;
+	return len;
+}
+
+
+size_t strlcat(char *dst, const char *src, size_t size)
+{
+	size_t dstlen = strnlen(dst, size);
+	if (dstlen == size)
+		return size + strlen(src);
+	return dstlen + strlcpy(dst + dstlen, src, size - dstlen);
 }
