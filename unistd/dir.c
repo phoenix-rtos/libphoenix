@@ -56,9 +56,14 @@ int chdir(const char *path)
 	if ((canonical = resolve_path(path, NULL, 1, 0)) == NULL)
 		return -1; /* errno set by resolve_path */
 
-	if (stat(canonical, &s) < 0 || !S_ISDIR(s.st_mode)) {
+	if (stat(canonical, &s) < 0) {
 		free(canonical);
 		return SET_ERRNO(-ENOENT);
+	}
+
+	if (!S_ISDIR(s.st_mode)) {
+		free(canonical);
+		return SET_ERRNO(-ENOTDIR);
 	}
 
 	/* TODO:
@@ -516,9 +521,20 @@ int rmdir(const char *path)
 	msg_t msg = { 0 };
 	oid_t dir, dev;
 	char *canonical_name, *dirname, *name;
+	struct stat s;
 
 	if ((canonical_name = resolve_path(path, NULL, 1, 0)) == NULL)
 		return -1; /* errno set by resolve_path */
+
+	if (stat(canonical_name, &s) < 0) {
+		free(canonical_name);
+		return SET_ERRNO(-ENOENT);
+	}
+
+	if (!S_ISDIR(s.st_mode)) {
+		free(canonical_name);
+		return SET_ERRNO(-ENOTDIR);
+	}
 
 	if (safe_lookup(canonical_name, &dir, &dev)) {
 		free(canonical_name);
