@@ -45,9 +45,10 @@ make -C "phoenix-rtos-posixsrv" all install
 
 # FIXME: compile host tools using host-pc target?
 b_log "Building hostutils"
-make -C "phoenix-rtos-hostutils" -f Makefile.old $CLEAN all
+make -C "phoenix-rtos-hostutils" -f Makefile.old all
 cp "$PREFIX_BUILD_HOST/prog.stripped/phoenixd" "$PREFIX_BOOT"
 cp "$PREFIX_BUILD_HOST/prog.stripped/psu" "$PREFIX_BOOT"
+cp "$PREFIX_BUILD_HOST/prog.stripped/syspagen" "$PREFIX_BOOT"
 
 b_log "Building phoenix-rtos-corelibs"
 make -C "phoenix-rtos-corelibs" all
