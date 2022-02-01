@@ -38,12 +38,6 @@ char* setlocale(int category, const char* locale)
 }
 
 
-int fsync(int fd)
-{
-	return 0;
-}
-
-
 int fchmod(int fd, mode_t mode)
 {
 	return 0;
