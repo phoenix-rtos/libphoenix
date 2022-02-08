@@ -170,8 +170,13 @@ static int scanf_parse(char *ccltab, const char *inp, char const *fmt0, va_list 
 					continue;
 
 				case 'q':
+				case 'j':
 					flags |= LONGLONG;
 					continue;
+
+				case 'z':
+					if (sizeof(size_t) == sizeof(uint64_t))
+						flags |= LONGLONG;
 
 				case 'h':
 					if (flags & SHORT) {
