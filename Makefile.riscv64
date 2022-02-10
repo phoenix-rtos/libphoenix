@@ -19,7 +19,7 @@ else
 endif
 
 # FIXME: -ffunction-sections and -fdata-sections are missing
-CFLAGS += -Wall -Wstrict-prototypes\
+CFLAGS += -Wall -Wstrict-prototypes -g\
 	-fomit-frame-pointer -mcmodel=medany -fno-builtin -DTARGET_RISCV64
 
 AR = $(CROSS)ar
