@@ -32,6 +32,10 @@ make -C "phoenix-rtos-devices" all install
 b_log "Building coreutils"
 make -C "phoenix-rtos-utils" all install
 
+b_log "Building hostutils"
+make -C "phoenix-rtos-hostutils" -f Makefile.old all
+cp "$PREFIX_BUILD_HOST/prog.stripped/syspagen" "$PREFIX_BOOT"
+
 #FIXME: tests should not always be built as a part of CORE
 b_log "Building phoenix-rtos-tests"
 make -C "phoenix-rtos-tests" all
