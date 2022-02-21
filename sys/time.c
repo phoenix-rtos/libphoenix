@@ -14,12 +14,49 @@
  */
 
 #include <sys/time.h>
+#include <sys/msg.h>
+#include <sys/file.h>
 #include <errno.h>
 #include <stdlib.h>
 
 #include "posix/utils.h"
 
-extern int sys_utimes(const char *filename, const struct timeval times[2]);
+
+extern int sys_futimens(int fd, const struct timespec times[2]);
+
+
+/* path needs to be canonical */
+static int utimes_internal(const char *path, const struct timeval times[2])
+{
+	oid_t oid, dev;
+	msg_t msg = { 0 };
+	struct timeval now;
+	int err;
+
+	if (lookup(path, &oid, &dev) < 0)
+		return -ENOENT;
+
+	if (times == NULL)
+		gettimeofday(&now, NULL);
+
+	msg.type = mtSetAttr;
+	msg.i.attr.oid = oid;
+
+	msg.i.attr.type = atMTime;
+	msg.i.attr.val = times == NULL ? now.tv_sec : times[1].tv_sec;
+	err = msgSend(oid.port, &msg);
+	if ((err >= 0) && (msg.o.attr.err >= 0)) {
+		msg.i.attr.type = atATime;
+		msg.i.attr.val = times == NULL ? now.tv_sec : times[0].tv_sec;
+		err = msgSend(oid.port, &msg);
+	}
+	if (err >= 0)
+		err = msg.o.attr.err;
+	if (err < 0)
+		return err;
+
+	return EOK;
+}
 
 
 int utimes(const char *filename, const struct timeval times[2])
@@ -27,11 +64,11 @@ int utimes(const char *filename, const struct timeval times[2])
 	char *canonical;
 	int err;
 
-	/* TODO: should we resolve last symlink here ? */
 	if ((canonical = resolve_path(filename, NULL, 1, 0)) == NULL)
 		return -1; /* errno set by resolve_path */
 
-	err = sys_utimes(canonical, times);
+	err = utimes_internal(canonical, times);
+
 	free(canonical);
 	return SET_ERRNO(err);
 }
@@ -78,14 +115,42 @@ int settimeofday(const struct timeval *tv, void *tz)
 
 int futimes(int fd, const struct timeval tv[2])
 {
-	return 0;
+	struct timespec tp[2];
+	int err;
+
+	if (tv != NULL) {
+		tp[0].tv_sec = tv[0].tv_sec;
+		tp[1].tv_sec = tv[1].tv_sec;
+		tp[0].tv_nsec = tv[0].tv_usec * 1000;
+		tp[1].tv_nsec = tv[1].tv_usec * 1000;
+	}
+	else {
+		clock_gettime(CLOCK_REALTIME, &tp[0]);
+		tp[1] = tp[0];
+	}
+
+	while ((err = sys_futimens(fd, tp)) == -EINTR)
+		;
+
+	return SET_ERRNO(err);
 }
 
 
 int lutimes(const char *filename, const struct timeval tv[2])
 {
-	return 0;
+	char *canonical;
+	int err;
+
+	/* resolve_last_symlink = 0 -> utimes on a symlink */
+	if ((canonical = resolve_path(filename, NULL, 0, 0)) == NULL)
+		return -1; /* errno set by resolve_path */
+
+	err = utimes_internal(canonical, tv);
+
+	free(canonical);
+	return SET_ERRNO(err);
 }
+
 
 int timerisset(struct timeval *tvp)
 {
