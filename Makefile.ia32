@@ -10,12 +10,8 @@ CROSS ?= i386-pc-phoenix-
 
 CC := $(CROSS)gcc
 
-ifeq ($(DEBUG), 1)
-  CFLAGS += -Og
-else
-  CFLAGS += -O2 -DNDEBUG
-endif
-
+OLVL ?= -O2
+CFLAGS += $(OLVL)
 CFLAGS += -g -Wall -Wstrict-prototypes\
 	-m32 -march=i586 -mtune=generic -mno-mmx -mno-sse -fno-pic -fno-pie\
 	-fomit-frame-pointer -fno-builtin-malloc\

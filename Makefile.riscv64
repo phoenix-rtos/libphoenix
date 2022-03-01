@@ -12,12 +12,8 @@ CROSS ?= riscv64-phoenix-
 
 CC = $(CROSS)gcc
 
-ifeq ($(DEBUG), 1)
-  CFLAGS += -Og
-else
-  CFLAGS += -O2 -DNDEBUG
-endif
-
+OLVL ?= -O2
+CFLAGS += $(OLVL)
 # FIXME: -ffunction-sections and -fdata-sections are missing
 CFLAGS += -Wall -Wstrict-prototypes -g\
 	-fomit-frame-pointer -mcmodel=medany -fno-builtin -DTARGET_RISCV64

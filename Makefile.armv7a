@@ -10,11 +10,8 @@ CROSS ?= arm-phoenix-
 
 CC := $(CROSS)gcc
 
-ifeq ($(DEBUG), 1)
-  CFLAGS += -Og
-else
-  CFLAGS += -O2 -DNDEBUG
-endif
+OLVL ?= -O2
+CFLAGS += $(OLVL)
 
 cpu := cortex-$(subst armv7,,$(TARGET_FAMILY))
 

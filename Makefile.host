@@ -10,12 +10,8 @@ CROSS ?=
 
 CC = $(CROSS)gcc
 
-ifeq ($(DEBUG), 1)
-	CFLAGS += -Og
-else
-	CFLAGS += -O2 -DNDEBUG
-endif
-
+OLVL ?= -O2
+CFLAGS += $(OLVL)
 CFLAGS += -Wall -Wstrict-prototypes -g -fomit-frame-pointer -ffunction-sections -fdata-sections
 
 AR = $(CROSS)ar

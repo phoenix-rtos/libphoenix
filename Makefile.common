@@ -24,6 +24,18 @@ CFLAGS :=
 LDFLAGS :=
 LDFLAGS_PREFIX :=
 
+# specific "-Ox" flag can be set globally for project by setting OLVL variable
+ifneq ($(filter-out -O%,$(OLVL)),)
+  $(error OLVL set but does not provide optimisation flags)
+endif
+
+# for debug build always use -Og optimisation
+ifeq ($(DEBUG), 1)
+  OLVL := -Og
+else
+  CFLAGS += -DNDEBUG
+endif
+
 TOPDIR := $(CURDIR)
 PREFIX_BUILD ?= ../_build/$(TARGET)
 PREFIX_BUILD := $(abspath $(PREFIX_BUILD))

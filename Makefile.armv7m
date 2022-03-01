@@ -11,12 +11,8 @@ CROSS ?= arm-phoenix-
 CC := $(CROSS)gcc
 
 # common Cortex-M CFLAGS
-ifeq ($(DEBUG), 1)
-  CFLAGS += -Og
-else
-  CFLAGS += -O2 -DNDEBUG #-DWATCHDOG
-endif
-
+OLVL ?= -O2
+CFLAGS += $(OLVL)
 CFLAGS += -Wall -Wstrict-prototypes -g
 CFLAGS += -mthumb -fomit-frame-pointer -mno-unaligned-access
 CFLAGS += -DNOMMU
