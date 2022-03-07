@@ -183,6 +183,9 @@ extern off_t lseek(int fildes, off_t offset, int whence);
 extern int pipe(int fildes[2]);
 
 
+extern int truncate(const char *path, off_t length);
+
+
 extern int ftruncate(int fildes, off_t length);
 
 

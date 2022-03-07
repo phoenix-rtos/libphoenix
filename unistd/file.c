@@ -238,6 +238,38 @@ int access(const char *path, int amode)
 }
 
 
+int truncate(const char *path, off_t length)
+{
+	char *canonical_name;
+	msg_t msg = { 0 };
+	oid_t oid;
+
+	if (length < 0) {
+		return SET_ERRNO(-EINVAL);
+	}
+
+	canonical_name = resolve_path(path, NULL, 1, 0);
+	if (canonical_name == NULL) {
+		return -1; /* errno set by resolve_path */
+	}
+
+	if (lookup(canonical_name, &oid, NULL) < 0) {
+		free(canonical_name);
+		return SET_ERRNO(-ENOENT);
+	}
+	free(canonical_name);
+
+	msg.type = mtTruncate;
+	msg.i.io.oid = oid;
+	msg.i.io.len = length;
+	if (msgSend(oid.port, &msg) < 0) {
+		return SET_ERRNO(-EIO);
+	}
+
+	return SET_ERRNO(msg.o.io.err);
+}
+
+
 int create_dev(oid_t *oid, const char *path)
 {
 	oid_t odev, odir;
