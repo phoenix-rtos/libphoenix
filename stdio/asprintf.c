@@ -20,8 +20,9 @@
 int vasprintf(char **strp, const char *fmt, va_list ap)
 {
 	*strp = malloc(1024); /* FIXME */
-	vsprintf(*strp, fmt, ap);
-	return 0;
+	if (*strp == NULL)
+		return -1;
+	return vsprintf(*strp, fmt, ap);
 }
 
 
