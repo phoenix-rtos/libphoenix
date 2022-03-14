@@ -47,6 +47,18 @@
 #define PTHREAD_MUTEX_RECURSIVE 3
 
 
+typedef struct pthread_ctx {
+	handle_t id;
+	void *(*start_routine)(void *);
+	void *arg;
+	void *retval;
+	struct pthread_ctx *next;
+	struct pthread_ctx *prev;
+	int detached;
+	struct __errno_t e;
+} pthread_ctx;
+
+
 extern int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 	void *(*start_routine)(void *), void *arg);
 
@@ -61,6 +73,9 @@ extern pthread_t pthread_self(void);
 
 
 extern int pthread_equal(pthread_t t1, pthread_t t2);
+
+
+extern void pthread_exit(void *value_ptr);
 
 
 extern int pthread_attr_init(pthread_attr_t *attr);

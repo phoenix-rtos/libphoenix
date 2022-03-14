@@ -21,6 +21,15 @@
 #include <math/consts.h>
 
 
+#define _HUGE_ENUF  1e+300  // _HUGE_ENUF*_HUGE_ENUF must overflow
+
+#define HUGE_VALF  ((float)INFINITY)
+#define HUGE_VALL  ((long double)INFINITY)
+#define isnan(n) ((n != n) ? 1 : 0)
+#define isinf(x) __builtin_isinf(x)
+#define signbit(x) ((0 < x) - (x < 0))
+#define strtof strtod
+
 /* Trigonometric functions */
 
 

@@ -45,6 +45,8 @@
 #define UINT32_MAX 0xffffffff
 #define UINT64_MAX 0xffffffffffffffffLL
 
+// typedef unsigned char uuid_t[16];
+
 #endif
 
 #endif

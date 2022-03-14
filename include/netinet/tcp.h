@@ -17,5 +17,7 @@
 #define _LIBPHOENIX_NETINET_TCP_H_
 
 #define TCP_NODELAY 1
+#define TCP_KEEPIDLE		4	/* Start keeplives after this period */
+#define TCP_KEEPINTVL		5	/* Interval between keepalives */
 
 #endif

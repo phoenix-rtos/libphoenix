@@ -25,21 +25,6 @@
 #define CEIL(value, size)	((((value) + (size) - 1) / (size)) * (size))
 
 
-typedef struct pthread_ctx {
-	handle_t id;
-	void *(*start_routine)(void *);
-	void *arg;
-	void *retval;
-	struct pthread_ctx *next;
-	struct pthread_ctx *prev;
-	int detached;
-	struct __errno_t e;
-} pthread_ctx;
-
-
-static pthread_ctx *pthread_list = NULL;
-
-
 static const pthread_attr_t pthread_attr_default = {
 	.stackaddr = NULL,
 	.policy = SCHED_RR,
@@ -47,6 +32,9 @@ static const pthread_attr_t pthread_attr_default = {
 	.detached = PTHREAD_CREATE_JOINABLE,
 	.stacksize = CEIL(PTHREAD_STACK_MIN, PAGE_SIZE)
 };
+
+
+static pthread_ctx *pthread_list = NULL;
 
 
 static void start_point(void *args)

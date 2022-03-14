@@ -28,6 +28,9 @@
 #define AF_KEY    15
 #define AF_PACKET 17
 
+
+#define SOMAXCONN   4096
+
 #define PF_UNSPEC AF_UNSPEC
 #define PF_UNIX   AF_UNIX
 #define PF_INET   AF_INET
