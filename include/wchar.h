@@ -18,11 +18,12 @@
 
 #include <stddef.h>
 
+
 #define WEOF ((wchar_t)-1)
-#  define __THROW	__attribute__ ((__nothrow__ __LEAF))
-#  define __LEAF , __leaf__
-# define __attribute_pure__ __attribute__ ((__pure__))
-# define __nonnull(params) __attribute__ ((__nonnull__ params))
+#define __THROW	__attribute__ ((__nothrow__ __LEAF))
+#define __LEAF , __leaf__
+#define __attribute_pure__ __attribute__ ((__pure__))
+#define __nonnull(params) __attribute__ ((__nonnull__ params))
 
 typedef int wint_t;
 typedef struct
@@ -36,15 +37,19 @@ typedef struct
 } __mbstate_t;
 typedef __mbstate_t mbstate_t;
 
+extern int wcscmp(const wchar_t *ws1, const wchar_t *ws2);
+
 /* Write multibyte character representation of wide character string
    SRC to DST.  */
+
 extern size_t wcsrtombs (char *__restrict __dst,
 			 const wchar_t **__restrict __src, size_t __len,
 			 mbstate_t *__restrict __ps) __THROW;
 
 /* Compare S1 and S2.  */
-extern int wcscmp (const wchar_t *__s1, const wchar_t *__s2)
-     __THROW __attribute_pure__ __nonnull ((1, 2));
+// extern int wcscmp(const wchar_t *s1, const wchar_t *s2);
+// extern int wcscmp (const wchar_t *__s1, const wchar_t *__s2)
+//      __THROW __attribute_pure__ __nonnull ((1, 2));
 
 /* Return the number of wide characters in S.  */
 extern size_t wcslen (const wchar_t *__s) __THROW __attribute_pure__;
