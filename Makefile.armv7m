@@ -62,7 +62,7 @@ else
   CFLAGS += -fpic -fpie -msingle-pic-base -mno-pic-data-is-text-relative
 	# output .rel.* sections to make ELF position-independent
   LDFLAGS += -q
-  STRIP = $(CROSS)strip --strip-unneeded
+  STRIP = $(PREFIX_PROJECT)/phoenix-rtos-build/scripts/strip.py $(CROSS)strip --strip-unneeded -R .rel.text
 endif
 
 

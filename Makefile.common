@@ -156,4 +156,4 @@ $(PREFIX_O)%.o: %.S
 $(PREFIX_PROG_STRIPPED)%: $(PREFIX_PROG)%
 	@mkdir -p $(@D)
 	@printf "STR %-24s\n" "$(@F)"
-	$(SIL)$(STRIP) --strip-unneeded -o $@ $<
+	$(SIL)$(STRIP) -o $@ $<
