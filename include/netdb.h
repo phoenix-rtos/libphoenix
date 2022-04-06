@@ -50,16 +50,14 @@ enum {
 	NO_DATA,
 };
 
-
-enum {
-	AI_PASSIVE = 1 << 0,
-	AI_CANONNAME = 1 << 1,
-	AI_NUMERICHOST = 1 << 2,
-	AI_NUMERICSERV = 1 << 3,
-	AI_V4MAPPED = 1 << 4,
-	AI_ALL = 1 << 5,
-	AI_ADDRCONFIG = 1 << 6,
-};
+/* ifdefs in azure sdk */
+#define AI_PASSIVE (1 << 0)
+#define AI_CANONNAME (1 << 1)
+#define AI_NUMERICHOST (1 << 2)
+#define AI_NUMERICSERV (1 << 3)
+#define AI_V4MAPPED (1 << 4)
+#define AI_ALL (1 << 5)
+#define AI_ADDRCONFIG (1 << 6)
 
 
 enum {

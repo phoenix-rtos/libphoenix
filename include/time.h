@@ -21,11 +21,11 @@
 
 #include <sys/types.h>
 
-
+/* ifdefs in azure sdk */
 #define CLOCKS_PER_SEC 1000000
-
-
-enum { CLOCK_MONOTONIC = 0, CLOCK_MONOTONIC_RAW, CLOCK_REALTIME };
+#define CLOCK_MONOTONIC 0
+#define CLOCK_MONOTONIC_RAW 1
+#define CLOCK_REALTIME 2
 
 
 struct tm {
