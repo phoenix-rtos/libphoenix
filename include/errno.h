@@ -26,6 +26,7 @@
 #define EUNATCH         49
 #define ENODATA         61
 #define ENONET          64
+#define EBADFD          66
 #define EPROTO          71
 #define EBADMSG         74
 #define EMSGSIZE        90
@@ -42,6 +43,7 @@
 #define EALREADY        114
 #define EINPROGRESS     115
 #define ENOLCK          116
+#define EUCLEAN         117
 #define ENOTRECOVERABLE 131
 #define ENOTSUP         134
 
