@@ -111,8 +111,13 @@ mkdir -p "$PREFIX_PROG" "$PREFIX_PROG_STRIPPED"
 if declare -f "b_prepare" > /dev/null; then
 	b_prepare
 fi
-echo " $(git rev-parse HEAD) $(basename "$(git rev-parse --show-toplevel)") ($(git describe --always --dirty))" > "${PREFIX_BUILD}/git-version"
-git submodule status --recursive >> "${PREFIX_BUILD}/git-version"
+
+if command -v git > /dev/null && [ -a ".git" ]; then
+    echo " $(git rev-parse HEAD) $(basename "$(git rev-parse --show-toplevel)") ($(git describe --always --dirty))" > "${PREFIX_BUILD}/git-version"
+    git submodule status --recursive >> "${PREFIX_BUILD}/git-version"
+else
+    echo "not available" > "${PREFIX_BUILD}/git-version"
+fi
 
 #
 # Preparing filesystem
