@@ -18,6 +18,9 @@ make -C "phoenix-rtos-kernel" $KERNEL_MAKECMDGOALS all
 b_log "Building libphoenix"
 make -C "libphoenix" all install
 
+b_log "Building phoenix-rtos-corelibs"
+make -C "phoenix-rtos-corelibs" all install
+
 b_log "Building phoenix-rtos-filesystems"
 make -C "phoenix-rtos-devices"  libflashdrv-imx6ull-headers
 make -C "phoenix-rtos-filesystems" all install
@@ -49,6 +52,3 @@ make -C "phoenix-rtos-hostutils" -f Makefile.old all
 cp "$PREFIX_BUILD_HOST/prog.stripped/phoenixd" "$PREFIX_BOOT"
 cp "$PREFIX_BUILD_HOST/prog.stripped/psu" "$PREFIX_BOOT"
 cp "$PREFIX_BUILD_HOST/prog.stripped/syspagen" "$PREFIX_BOOT"
-
-b_log "Building phoenix-rtos-corelibs"
-make -C "phoenix-rtos-corelibs" all
