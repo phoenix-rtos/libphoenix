@@ -69,7 +69,11 @@ B_PROJECT="n"
 B_IMAGE="n"
 B_TEST="n"
 
-for i in "$@"; do
+# GA CI passes all params as quoted first param - split on ' ' if necessary
+ARGS=("$@")
+[ "$#" -eq 1 ] && read -ra ARGS <<< "$1"
+
+for i in "${ARGS[@]}"; do
 	case "$i"
 	in
 		clean)
