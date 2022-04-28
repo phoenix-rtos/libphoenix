@@ -21,6 +21,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <limits.h>
 
 #include "posix/utils.h"
 
@@ -171,6 +172,11 @@ int mkdir(const char *path, mode_t mode)
 	else {
 		*(name++) = 0;
 		parent = canonical_name;
+	}
+
+	if (strlen(name) > NAME_MAX) {
+		free(canonical_name);
+		return SET_ERRNO(-ENAMETOOLONG);
 	}
 
 	if (lookup(parent, NULL, &dir) < EOK) {
