@@ -344,7 +344,7 @@ struct dirent *readdir(DIR *s)
 	memset(&msg, 0, sizeof(msg));
 
 	if (s->dirent == NULL) {
-		if ((s->dirent = calloc(1, sizeof(struct dirent) + NAME_MAX)) == NULL)
+		if ((s->dirent = calloc(1, sizeof(struct dirent) + NAME_MAX + 1)) == NULL)
 			return NULL;
 	}
 
@@ -353,7 +353,7 @@ struct dirent *readdir(DIR *s)
 
 	memcpy(&msg.i.readdir.dir, &s->oid, sizeof(oid_t));
 	msg.o.data = s->dirent;
-	msg.o.size = sizeof(struct dirent) + NAME_MAX;
+	msg.o.size = sizeof(struct dirent) + NAME_MAX + 1;
 
 	if (msgSend(s->oid.port, &msg) < 0) {
 		free(s->dirent);
