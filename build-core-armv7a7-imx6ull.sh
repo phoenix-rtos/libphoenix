@@ -22,7 +22,6 @@ b_log "Building phoenix-rtos-corelibs"
 make -C "phoenix-rtos-corelibs" all install
 
 b_log "Building phoenix-rtos-filesystems"
-make -C "phoenix-rtos-devices"  libflashdrv-imx6ull-headers
 make -C "phoenix-rtos-filesystems" all install
 
 b_log "Building phoenix-rtos-usb"
