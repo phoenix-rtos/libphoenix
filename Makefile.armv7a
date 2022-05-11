@@ -15,8 +15,16 @@ CFLAGS += $(OLVL)
 
 cpu := cortex-$(subst armv7,,$(TARGET_FAMILY))
 
+ifeq ($(TARGET_SUBFAMILY), imx6ull)
+	CFLAGS += -mfpu=neon-vfpv4 -mfloat-abi=hard
+else ifeq ($(TARGET_SUBFAMILY), zynq7000)
+	CFLAGS += -mfpu=vfpv3 -mfloat-abi=hard
+else
+	$(error Incorrect TARGET.)
+endif
+
 CFLAGS += -Wall -Wstrict-prototypes -g\
-		-mcpu=$(cpu) -mtune=$(cpu) -mfpu=neon-vfpv4 -mfloat-abi=hard -mthumb\
+		-mcpu=$(cpu) -mtune=$(cpu) -mthumb\
 		-fomit-frame-pointer -mno-unaligned-access -fdata-sections -ffunction-sections
 
 VADDR_KERNEL_INIT = 0xc0000000
