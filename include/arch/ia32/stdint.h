@@ -142,9 +142,23 @@ typedef uint64_t uintmax_t;
 
 /* Additional definitions */
 
-#define _PRI_8  ""
-#define _PRI_16 ""
-#define _PRI_32 ""
-#define _PRI_64 "ll"
+#define _PRI_8   ""
+#define _PRI_16  ""
+#define _PRI_32  ""
+#define _PRI_64  "ll"
+#define _SCN_8   "hh"
+#define _SCN_16  "h"
+#define _SCN_32  ""
+#define _SCN_64  "ll"
+#define _PRI_PTR ""
+
+#define _SCN_LEAST8  _SCN_8
+#define _SCN_LEAST16 _SCN_16
+#define _SCN_LEAST32 _SCN_32
+#define _SCN_LEAST64 _SCN_64
+#define _SCN_FAST8   _SCN_8
+#define _SCN_FAST16  _SCN_32
+#define _SCN_FAST32  _SCN_32
+#define _SCN_FAST64  _SCN_64
 
 #endif
