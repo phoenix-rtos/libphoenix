@@ -17,9 +17,9 @@
 #include "ctype.h"
 
 
-unsigned int strtoul(char *nptr, char **endptr, int base)
+unsigned long int strtoul(char *nptr, char **endptr, int base)
 {
-	unsigned int t, v = 0;
+	unsigned long int t, v = 0;
 
 	if ((base == 16 || base == 0) && nptr[0] == '0' && (nptr[1] | 0x20) == 'x') {
 		base = 16;
@@ -34,7 +34,7 @@ unsigned int strtoul(char *nptr, char **endptr, int base)
 		if (t > 9)
 			t = (*nptr | 0x20) - 'a' + 10;
 
-		if (t >= (unsigned int)base)
+		if (t >= (unsigned long int)base)
 			break;
 
 		v = (v * base) + t;
@@ -47,9 +47,9 @@ unsigned int strtoul(char *nptr, char **endptr, int base)
 }
 
 
-int strtol(char *nptr, char **endptr, int base)
+long int strtol(char *nptr, char **endptr, int base)
 {
-	int sign = 1;
+	long int sign = 1;
 
 	if (*nptr == '-') {
 		sign = -1;
@@ -62,11 +62,11 @@ int strtol(char *nptr, char **endptr, int base)
 
 int atoi(char *str)
 {
-	return strtol(str, NULL, 10);
+	return (int)strtol(str, NULL, 10);
 }
 
 
-int atol(char *str)
+long int atol(char *str)
 {
 	return strtol(str, NULL, 10);
 }
