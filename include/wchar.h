@@ -23,4 +23,7 @@
 typedef int wint_t;
 
 
+int wcscmp(const wchar_t *ws1, const wchar_t *ws2);
+
+
 #endif /* _LIBPHOENIX_WCHAR_H_ */
