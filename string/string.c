@@ -86,6 +86,10 @@ int strncasecmp(const char *s1, const char *s2, size_t n)
 			return 1;
 	}
 
+	if (k < n && (tolower(*p) != tolower(*(s2 + k)))) {
+		return -1;
+	}
+
 	return 0;
 }
 #endif
@@ -103,6 +107,10 @@ int strncmp(const char *s1, const char *s2, size_t n)
 			return -1;
 		else if (*p > *(s2 + k))
 			return 1;
+	}
+
+	if (k < n && (*p != *(s2 + k))) {
+		return -1;
 	}
 
 	return 0;
