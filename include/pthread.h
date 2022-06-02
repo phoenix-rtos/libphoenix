@@ -63,6 +63,9 @@ extern pthread_t pthread_self(void);
 extern int pthread_equal(pthread_t t1, pthread_t t2);
 
 
+extern void pthread_exit(void *value_ptr);
+
+
 extern int pthread_attr_init(pthread_attr_t *attr);
 
 
