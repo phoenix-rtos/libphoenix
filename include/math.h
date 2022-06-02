@@ -5,8 +5,8 @@
  *
  * math.h
  *
- * Copyright 2017 Phoenix Systems
- * Author: Aleksander Kaminski
+ * Copyright 2017, 2022 Phoenix Systems
+ * Author: Aleksander Kaminski, Damian Loewnau
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -19,6 +19,10 @@
 
 #include <stdarg.h>
 #include <math/consts.h>
+
+#define isnan(x) __builtin_isnan(x)
+#define isinf(x) __builtin_isinf(x)
+#define signbit(x) __builtin_signbit(x)
 
 
 /* Trigonometric functions */
