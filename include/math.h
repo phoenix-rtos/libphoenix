@@ -20,8 +20,8 @@
 #include <stdarg.h>
 #include <math/consts.h>
 
-#define isnan(x) __builtin_isnan(x)
-#define isinf(x) __builtin_isinf(x)
+#define isnan(x)   __builtin_isnan(x)
+#define isinf(x)   __builtin_isinf(x)
 #define signbit(x) __builtin_signbit(x)
 
 
@@ -81,7 +81,7 @@ extern double exp(double x);
 /* Breaks the floating point number x into its binary significand
  * (a floating point with an absolute value between 0.5(included) and 1.0(excluded))
  * and an integral exponent for 2. */
-extern double frexp(double x, int* exp);
+extern double frexp(double x, int *exp);
 
 
 /* Returns the result of multiplying x (the significand) by 2 raised to the power of exp (the exponent). */
@@ -101,8 +101,8 @@ extern double log10(double x);
 
 
 /* Breaks x into an integral and a fractional part. */
-extern double modf(double x, double* intpart);
-extern float modff(float x, float* intpart);
+extern double modf(double x, double *intpart);
+extern float modff(float x, float *intpart);
 
 
 /* Power functions */
@@ -147,29 +147,29 @@ extern double fabs(double x);
 
 
 /* C99 extensions */
-#define cosf(x) cos(x)
-#define sinf(x) sin(x)
-#define tanf(x) tan(x)
-#define acosf(x) acos(x)
-#define asinf(x) asin(x)
-#define atanf(x) atan(x)
-#define atan2f(y, x) atan2(y, x)
-#define coshf(x) cosh(x)
-#define sinhf(x) sinh(x)
-#define tanhf(x) tanh(x)
-#define expf(x) exp(x)
-#define frexpf(x, exp) frexp(x, exp)
-#define ldexpf(x, exp) ldexp(x, exp)
-#define logf(x) log(x)
-#define log10f(x) log10(x)
+#define cosf(x)              cos(x)
+#define sinf(x)              sin(x)
+#define tanf(x)              tan(x)
+#define acosf(x)             acos(x)
+#define asinf(x)             asin(x)
+#define atanf(x)             atan(x)
+#define atan2f(y, x)         atan2(y, x)
+#define coshf(x)             cosh(x)
+#define sinhf(x)             sinh(x)
+#define tanhf(x)             tanh(x)
+#define expf(x)              exp(x)
+#define frexpf(x, exp)       frexp(x, exp)
+#define ldexpf(x, exp)       ldexp(x, exp)
+#define logf(x)              log(x)
+#define log10f(x)            log10(x)
 #define powf(base, exponent) pow(base, exponent)
-#define sqrtf(x) sqrt(x)
-#define roundf(x) round(x)
-#define ceilf(x) ceil(x)
-#define floorf(x) floor(x)
-#define fmodf(numer, denom) fmod(numer, denom)
-#define truncf(x) trunc(x)
-#define fabsf(x) fabs(x)
+#define sqrtf(x)             sqrt(x)
+#define roundf(x)            round(x)
+#define ceilf(x)             ceil(x)
+#define floorf(x)            floor(x)
+#define fmodf(numer, denom)  fmod(numer, denom)
+#define truncf(x)            trunc(x)
+#define fabsf(x)             fabs(x)
 
 
 #endif
