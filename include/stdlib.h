@@ -52,6 +52,10 @@ extern int atoi(const char *str);
 extern long int atol(const char *str);
 
 
+/* Converts the string pointed to, by the argument str to a floating-point number (type float). */
+extern float strtof(const char *str, char **endptr);
+
+
 /* Converts the string pointed to, by the argument str to a floating-point number (type double). */
 extern double strtod(const char *str, char **endptr);
 
