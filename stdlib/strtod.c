@@ -5,8 +5,8 @@
  *
  * strtod.c
  *
- * Copyright 2018 Phoenix Systems
- * Author: Kamil Amanowicz
+ * Copyright 2018, 2022 Phoenix Systems
+ * Author: Kamil Amanowicz, Damian Loewnau
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -116,6 +116,13 @@ double strtod(const char *restrict nptr, char **restrict endptr)
 
 	return isnum ? res : 0;
 }
+
+
+float strtof(const char *restrict nptr, char **restrict endptr)
+{
+	return strtod(nptr, endptr);
+}
+
 
 double atof(const char *str)
 {
