@@ -1,1 +1,0 @@
-build-core-riscv64-spike.sh

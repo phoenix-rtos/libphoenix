@@ -14,7 +14,7 @@ log() {
 declare -A TOOLCHAN_TO_PHOENIX_TARGET=(
     [arm-phoenix]="armv7a7-imx6ull"
     [i386-pc-phoenix]="ia32-generic"
-    [riscv64-phoenix]="riscv64-spike"
+    [riscv64-phoenix]="riscv64-generic"
 )
 
 if [ -z "$1" ] || [ -z "${TOOLCHAN_TO_PHOENIX_TARGET[$1]}" ]; then

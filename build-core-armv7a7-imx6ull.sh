@@ -45,7 +45,7 @@ fi
 b_log "Building posixsrv"
 make -C "phoenix-rtos-posixsrv" all install
 
-# FIXME: compile host tools using host-pc target?
+# FIXME: compile host tools using host-generic-pc target?
 b_log "Building hostutils"
 make -C "phoenix-rtos-hostutils" -f Makefile.old all
 cp "$PREFIX_BUILD_HOST/prog.stripped/phoenixd" "$PREFIX_BOOT"

@@ -38,16 +38,14 @@ ifneq (,$(filter $(TARGETS_IA32),$(TARGET_FAMILY)-$(TARGET_SUBFAMILY)))
 endif
 
 #RISCV64
-TARGETS_RISCV64 := \
-	riscv64-spike \
-	riscv64-virt
+TARGETS_RISCV64 := riscv64-generic
 
 TARGETS += $(TARGETS_RISCV64)
 ifneq (,$(filter $(TARGETS_RISCV64),$(TARGET_FAMILY)-$(TARGET_SUBFAMILY)))
   TARGET_SUFF ?= riscv64
 endif
 
-TARGETS += host-pc
+TARGETS += host-generic
 ifeq ($(TARGET_FAMILY), host)
   TARGET_SUFF ?= host
 endif
