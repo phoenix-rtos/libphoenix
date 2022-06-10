@@ -21,7 +21,7 @@ TOPDIR="$PREFIX_PROJECT"
 PREFIX_BUILD="$PREFIX_PROJECT/_build/$TARGET"
 PREFIX_BUILD_HOST="$PREFIX_PROJECT/_build/host-generic-pc"
 PREFIX_FS="$PREFIX_PROJECT/_fs/$TARGET"
-PREFIX_BOOT="$PREFIX_PROJECT/_boot"
+PREFIX_BOOT="$PREFIX_PROJECT/_boot/$TARGET"
 
 PREFIX_PROG="$PREFIX_BUILD/prog/"
 PREFIX_PROG_STRIPPED="$PREFIX_BUILD/prog.stripped/"
@@ -99,10 +99,10 @@ done
 # Clean if requested
 #
 if [ -n "$CLEAN" ]; then
-	b_log "Cleaning build dir"
+	b_log "Cleaning build dirs"
 	rm -rf "$PREFIX_BUILD" "$PREFIX_BUILD_HOST"
 	rm -rf "$PREFIX_FS"
-	#FIXME: this should also remove unpacked sources in 'ports' (the easiest option is to move them to _boot)
+	rm -rf "$PREFIX_BOOT"
 fi
 
 #
@@ -117,10 +117,10 @@ if declare -f "b_prepare" > /dev/null; then
 fi
 
 if command -v git > /dev/null && [ -a ".git" ]; then
-    echo " $(git rev-parse HEAD) $(basename "$(git rev-parse --show-toplevel)") ($(git describe --always --dirty))" > "${PREFIX_BUILD}/git-version"
-    git submodule status --recursive >> "${PREFIX_BUILD}/git-version"
+	echo " $(git rev-parse HEAD) $(basename "$(git rev-parse --show-toplevel)") ($(git describe --always --dirty))" > "${PREFIX_BUILD}/git-version"
+	git submodule status --recursive >> "${PREFIX_BUILD}/git-version"
 else
-    echo "not available" > "${PREFIX_BUILD}/git-version"
+	echo "not available" > "${PREFIX_BUILD}/git-version"
 fi
 
 #
