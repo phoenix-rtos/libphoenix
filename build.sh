@@ -10,6 +10,10 @@
 
 set -e
 
+# Colon-separated list of dirs to overlay the default rootFS.
+# It can be overwritten by build.project scripts.
+ROOTFS_OVERLAYS=""
+
 . ./phoenix-rtos-build/build.subr
 . ./build.project
 
@@ -32,6 +36,9 @@ PREFIX_H="$PREFIX_BUILD/include/"
 PREFIX_ROOTFS="$PREFIX_FS/root/"
 : "${PREFIX_ROOTSKEL:="$PREFIX_PROJECT/_fs/root-skel/"}"
 
+# Default project's overlay directory, it does not have to exist.
+ROOTFS_OVERLAYS="$PROJECT_PATH/rootfs-overlay:${ROOTFS_OVERLAYS}"
+
 CC=${CROSS}gcc
 AS=${CROSS}as
 LD=${CROSS}ld
@@ -42,8 +49,7 @@ MAKEFLAGS="--no-print-directory -j 9"
 
 export TARGET TARGET_FAMILY TARGET_SUBFAMILY TARGET_PROJECT PROJECT_PATH TOPDIR PREFIX_PROJECT PREFIX_BUILD\
 	PREFIX_BUILD_HOST PREFIX_FS PREFIX_BOOT PREFIX_PROG PREFIX_PROG_STRIPPED PREFIX_A\
-	PREFIX_H PREFIX_ROOTFS PREFIX_ROOTSKEL CROSS CFLAGS LDFLAGS CC LD\
-	AR AS CLEAN MAKEFLAGS DEVICE_FLAGS
+	PREFIX_H PREFIX_ROOTFS CROSS CFLAGS LDFLAGS CC LD AR AS CLEAN MAKEFLAGS DEVICE_FLAGS
 
 # export flags for ports - call make only after all necessary env variables are already set
 EXPORT_CFLAGS="$(make -f phoenix-rtos-build/Makefile.common export-cflags)"
@@ -131,7 +137,20 @@ if [ "${B_FS}" = "y" ] && [ -d  "${PREFIX_ROOTSKEL}" ]; then
 
 	mkdir -p "${PREFIX_ROOTFS}"
 	cp -a "${PREFIX_ROOTSKEL}/." "${PREFIX_ROOTFS}"
-	mkdir -p "$PREFIX_ROOTFS/"{dev,local,data,mnt,tmp,var}
+	mkdir -p "$PREFIX_ROOTFS/"{dev,etc,local,data,mnt,tmp,var,usr}
+
+	# ROOTFS_OVERLAYS contains colon-separated path
+	(
+		IFS=:
+		for path in $ROOTFS_OVERLAYS; do
+			if [ -d "$path" ]; then
+				echo "Applying overlay: $path"
+				cp -a "${path}/." "${PREFIX_ROOTFS}"
+			else
+				echo "Not existing rootfs overlay: $path"
+			fi
+		done
+	)
 
 	b_log "Saving git-version"
 	install -m 664 "${PREFIX_BUILD}/git-version" "$PREFIX_FS/root/etc"
