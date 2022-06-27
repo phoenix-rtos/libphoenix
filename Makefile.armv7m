@@ -21,9 +21,9 @@ CFLAGS += -fdata-sections -ffunction-sections
 ifeq ($(TARGET_FAMILY), armv7m7)
   CFLAGS += -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16
 else ifeq ($(TARGET_FAMILY), armv7m4)
-  CFLAGS += -mcpu=cortex-m4 -fstack-usage
+  CFLAGS += -mcpu=cortex-m4 -mfloat-abi=soft -fstack-usage
 else ifeq ($(TARGET_FAMILY), armv7m3)
-  CFLAGS += -mcpu=cortex-m3 -fstack-usage
+  CFLAGS += -mcpu=cortex-m3 -mfloat-abi=soft -fstack-usage
 endif
 
 ifeq ($(TARGET_SUBFAMILY), stm32l152xd)
