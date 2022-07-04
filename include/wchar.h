@@ -46,4 +46,7 @@ extern size_t wcslen(const wchar_t *ws);
 extern size_t wcstombs(char *restrict s, const wchar_t *restrict pwcs, size_t n);
 
 
+/* TODO: missing function definition */
+extern size_t wcsrtombs(char *restrict dst, const wchar_t **restrict src, size_t len, mbstate_t *restrict ps);
+
 #endif /* _LIBPHOENIX_WCHAR_H_ */
