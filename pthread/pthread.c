@@ -30,6 +30,8 @@ typedef struct pthread_ctx {
 	void *(*start_routine)(void *);
 	void *arg;
 	void *retval;
+	void *stack;
+	size_t stacksize;
 	struct pthread_ctx *next;
 	struct pthread_ctx *prev;
 	int detached;
@@ -103,6 +105,8 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 	ctx->detached = attrs->detached;
 	ctx->start_routine = start_routine;
 	ctx->arg = arg;
+	ctx->stack = stack;
+	ctx->stacksize = attrs->stacksize;
 	*thread = (pthread_t)ctx;
 
 	int err = beginthreadex(start_point, attrs->priority, stack,
@@ -157,6 +161,7 @@ int pthread_join(pthread_t thread, void **value_ptr)
 	_errno_remove(&ctx->e);
 
 	LIST_REMOVE(&pthread_list, ctx);
+	munmap(ctx->stack, ctx->stacksize);
 	free(ctx);
 
 	return EOK;
