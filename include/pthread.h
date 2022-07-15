@@ -19,6 +19,7 @@
 #include <sys/types.h>
 #include <sys/threads.h>
 #include <sched.h>
+#include <time.h>
 
 
 #define EDEADLK 38
@@ -46,6 +47,7 @@
 #define PTHREAD_MUTEX_NORMAL     2
 #define PTHREAD_MUTEX_RECURSIVE  3
 
+#define PTHREAD_COND_INITIALIZER _pthread_cond_init();
 
 
 extern int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_routine)(void *), void *arg);
@@ -143,5 +145,50 @@ extern int pthread_mutexattr_destroy(pthread_mutexattr_t *);
 
 extern int pthread_mutexattr_init(pthread_mutexattr_t *);
 
+
+extern int pthread_condattr_init(pthread_condattr_t *attr);
+
+
+extern int pthread_condattr_destroy(pthread_condattr_t *attr);
+
+
+extern int pthread_condattr_setpshared(pthread_condattr_t *attr, int pshared);
+
+
+extern int pthread_condattr_getpshared(const pthread_condattr_t *restrict attr, int *restrict pshared);
+
+
+extern int pthread_condattr_setclock(pthread_condattr_t *attr, clockid_t clock_id);
+
+
+extern int pthread_condattr_getclock(const pthread_condattr_t *restrict attr, clockid_t *restrict clock_id);
+
+
+extern int pthread_cond_init(pthread_cond_t *restrict cond, const pthread_condattr_t *restrict attr);
+
+
+extern int pthread_cond_destroy(pthread_cond_t *cond);
+
+
+extern int pthread_cond_signal(pthread_cond_t *cond);
+
+
+extern int pthread_cond_broadcast(pthread_cond_t *cond);
+
+
+extern int pthread_cond_wait(pthread_cond_t *restrict cond, pthread_mutex_t *restrict mutex);
+
+
+extern int pthread_cond_timedwait(pthread_cond_t *restrict cond,
+	pthread_mutex_t *restrict mutex,
+	const struct timespec *restrict abstime);
+
+
+static inline pthread_cond_t _pthread_cond_init(void)
+{
+	pthread_cond_t cond;
+	pthread_cond_init(&cond, NULL);
+	return cond;
+}
 
 #endif

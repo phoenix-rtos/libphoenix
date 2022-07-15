@@ -446,3 +446,143 @@ int sched_get_priority_min(int policy)
 
 	return -EINVAL;
 }
+
+
+int pthread_condattr_init(pthread_condattr_t *attr)
+{
+	attr->pshared = PTHREAD_PROCESS_PRIVATE;
+	attr->clock_id = CLOCK_MONOTONIC;
+	return EOK;
+}
+
+
+int pthread_condattr_destroy(pthread_condattr_t *attr)
+{
+	return EOK;
+}
+
+
+int pthread_condattr_setpshared(pthread_condattr_t *attr, int pshared)
+{
+	int err = EOK;
+
+	/* Only 'PTHREAD_PROCESS_PRIVATE' supported */
+	if (pshared != PTHREAD_PROCESS_PRIVATE) {
+		err = -EINVAL;
+	}
+	else {
+		attr->pshared = pshared;
+	}
+
+	return err;
+}
+
+
+int pthread_condattr_getpshared(const pthread_condattr_t *restrict attr, int *restrict pshared)
+{
+	*pshared = attr->pshared;
+	return EOK;
+}
+
+
+int pthread_condattr_setclock(pthread_condattr_t *attr, clockid_t clock_id)
+{
+	int err = EOK;
+
+	/* Only 'CLOCK_MONOTONIC' supported */
+	if (clock_id != CLOCK_MONOTONIC) {
+		err = -EINVAL;
+	}
+	else {
+		attr->clock_id = clock_id;
+	}
+
+	return err;
+}
+
+
+int pthread_condattr_getclock(const pthread_condattr_t *restrict attr, clockid_t *restrict clock_id)
+{
+	*clock_id = attr->clock_id;
+	return EOK;
+}
+
+
+int pthread_cond_init(pthread_cond_t *restrict cond, const pthread_condattr_t *restrict attr)
+{
+	return condCreate(cond);
+}
+
+
+int pthread_cond_destroy(pthread_cond_t *cond)
+{
+	return resourceDestroy(*cond);
+}
+
+
+int pthread_cond_signal(pthread_cond_t *cond)
+{
+	return condSignal(*cond);
+}
+
+
+int pthread_cond_broadcast(pthread_cond_t *cond)
+{
+	return condBroadcast(*cond);
+}
+
+
+int pthread_cond_wait(pthread_cond_t *restrict cond, pthread_mutex_t *restrict mutex)
+{
+	int err = condWait(*cond, *mutex, 0);
+
+	while (err == -EINTR) {
+		err = mutexLock(*mutex);
+		if (err == EOK) {
+			err = condWait(*cond, *mutex, 0);
+		}
+	}
+	return err;
+}
+
+
+static time_t timespec_to_us(const struct timespec *restrict time)
+{
+	return (time->tv_sec * 1000000 + time->tv_nsec / 1000);
+}
+
+
+int pthread_cond_timedwait(pthread_cond_t *restrict cond,
+	pthread_mutex_t *restrict mutex,
+	const struct timespec *restrict abstime)
+{
+	int err = EOK;
+	struct timespec now;
+	clock_gettime(CLOCK_REALTIME, &now);
+	if (now.tv_sec >= abstime->tv_sec && now.tv_nsec >= abstime->tv_nsec) {
+		err = -ETIMEDOUT;
+	}
+	else {
+		time_t now_us = timespec_to_us(&now);
+		const time_t abstime_us = timespec_to_us(abstime);
+		time_t timeout_us = abstime_us - now_us;
+		err = condWait(*cond, *mutex, timeout_us);
+
+		while (err == -EINTR) {
+			err = mutexLock(*mutex);
+			if (err == EOK) {
+				clock_gettime(CLOCK_REALTIME, &now);
+				now_us = timespec_to_us(&now);
+
+				if (now_us >= abstime_us) {
+					err = -ETIMEDOUT;
+				}
+				else {
+					timeout_us = abstime_us - now_us;
+					err = condWait(*cond, *mutex, timeout_us);
+				}
+			}
+		}
+	}
+	return err;
+}
