@@ -64,6 +64,13 @@ typedef uintptr_t pthread_t;
 typedef handle_t pthread_mutex_t;
 typedef void *pthread_mutexattr_t;
 
+typedef handle_t pthread_cond_t;
+
+typedef struct pthread_condattr_t {
+	int pshared;
+	clockid_t clock_id;
+} pthread_condattr_t;
+
 
 /* BSD legacy types permitted by POSIX */
 typedef uint8_t   u_int8_t;
