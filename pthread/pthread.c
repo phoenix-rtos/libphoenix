@@ -228,7 +228,7 @@ int pthread_attr_setstackaddr(pthread_attr_t *attr, void *stackaddr)
 }
 
 
-int pthread_attr_getstackaddr(const pthread_attr_t *attr,void **stackaddr)
+int pthread_attr_getstackaddr(const pthread_attr_t *attr, void **stackaddr)
 {
 	if (attr == NULL)
 		return -EINVAL;
