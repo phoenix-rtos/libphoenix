@@ -603,8 +603,8 @@ int pthread_attr_getdetachstate(const pthread_attr_t *attr,
 }
 
 
-int pthread_attr_getinheritsched(const pthread_attr_t *restrict attr,
-	int *restrict inheritsched);
+int pthread_attr_getinheritsched(const pthread_attr_t *__restrict attr,
+	int *__restrict inheritsched);
 
 
 int pthread_attr_setinheritsched(pthread_attr_t *attr,
@@ -615,7 +615,7 @@ int pthread_setschedprio(pthread_t thread, int prio);
 
 
 int pthread_getschedparam(pthread_t thread, int *policy,
-	struct sched_param *restrict param);
+	struct sched_param *__restrict param);
 
 
 int pthread_setschedparam(pthread_t thread, int policy,
@@ -640,7 +640,7 @@ static int pthread_mutex_lazy_init(pthread_mutex_t *mutex)
 }
 
 
-int pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr)
+int pthread_mutex_init(pthread_mutex_t *__restrict mutex, const pthread_mutexattr_t *__restrict attr)
 {
 	int err;
 
@@ -793,7 +793,7 @@ int pthread_condattr_setpshared(pthread_condattr_t *attr, int pshared)
 }
 
 
-int pthread_condattr_getpshared(const pthread_condattr_t *restrict attr, int *restrict pshared)
+int pthread_condattr_getpshared(const pthread_condattr_t *__restrict attr, int *__restrict pshared)
 {
 	*pshared = attr->pshared;
 	return 0;
@@ -816,7 +816,7 @@ int pthread_condattr_setclock(pthread_condattr_t *attr, clockid_t clock_id)
 }
 
 
-int pthread_condattr_getclock(const pthread_condattr_t *restrict attr, clockid_t *restrict clock_id)
+int pthread_condattr_getclock(const pthread_condattr_t *__restrict attr, clockid_t *__restrict clock_id)
 {
 	*clock_id = attr->clock_id;
 	return 0;
@@ -840,7 +840,8 @@ static int pthread_cond_lazy_init(pthread_cond_t *cond)
 	return err;
 }
 
-int pthread_cond_init(pthread_cond_t *restrict cond, const pthread_condattr_t *restrict attr)
+
+int pthread_cond_init(pthread_cond_t *__restrict cond, const pthread_condattr_t *__restrict attr)
 {
 	int err;
 
@@ -889,7 +890,7 @@ int pthread_cond_broadcast(pthread_cond_t *cond)
 }
 
 
-int pthread_cond_wait(pthread_cond_t *restrict cond, pthread_mutex_t *restrict mutex)
+int pthread_cond_wait(pthread_cond_t *__restrict cond, pthread_mutex_t *__restrict mutex)
 {
 	int err = pthread_cond_lazy_init(cond);
 
@@ -904,15 +905,15 @@ int pthread_cond_wait(pthread_cond_t *restrict cond, pthread_mutex_t *restrict m
 }
 
 
-static time_t timespec_to_us(const struct timespec *restrict time)
+static time_t timespec_to_us(const struct timespec *__restrict time)
 {
 	return (time->tv_sec * 1000000 + time->tv_nsec / 1000);
 }
 
 
-int pthread_cond_timedwait(pthread_cond_t *restrict cond,
-	pthread_mutex_t *restrict mutex,
-	const struct timespec *restrict abstime)
+int pthread_cond_timedwait(pthread_cond_t *__restrict cond,
+	pthread_mutex_t *__restrict mutex,
+	const struct timespec *__restrict abstime)
 {
 	int err = 0;
 	struct timespec now;

@@ -109,13 +109,13 @@ extern int clock_gettime(clockid_t clk_id, struct timespec *tp);
 extern time_t time(time_t *tp);
 
 
-extern size_t strftime(char *restrict s, size_t maxsize, const char *restrict format, const struct tm *restrict timeptr);
+extern size_t strftime(char *__restrict s, size_t maxsize, const char *__restrict format, const struct tm *__restrict timeptr);
 
 
 extern clock_t clock(void);
 
 
-extern char *strptime(const char *restrict buf, const char *restrict format, struct tm *restrict tm);
+extern char *strptime(const char *__restrict buf, const char *__restrict format, struct tm *__restrict tm);
 
 
 extern int nanosleep(const struct timespec *req, struct timespec *rem);

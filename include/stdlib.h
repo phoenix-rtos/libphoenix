@@ -63,11 +63,11 @@ extern long int atol(const char *str);
 
 
 /* Converts the string pointed to, by the argument str to a floating-point number (type float). */
-extern float strtof(const char *str, char **endptr);
+extern float strtof(const char *__restrict str, char **__restrict endptr);
 
 
 /* Converts the string pointed to, by the argument str to a floating-point number (type double). */
-extern double strtod(const char *str, char **endptr);
+double strtod(const char *__restrict str, char **__restrict endptr);
 
 
 /* Converts the string pointed to, by the argument str to a long integer (type long int). */
@@ -242,9 +242,6 @@ extern char *realpath(const char *path, char *resolved_path);
 extern char *resolve_path(const char *path, char *resolved_path, int resolve_last_symlink, int allow_missing_leaf);
 
 
-double strtod(const char *restrict nptr, char **restrict endptr);
-
-
 /* random number generator */
 extern long random(void);
 
@@ -253,20 +250,20 @@ extern void srandom(unsigned int seed);
 
 
 /* Create a uniquely named file */
-extern int mkostemps(char *template, int suffixlen, int flags);
+extern int mkostemps(char *templt, int suffixlen, int flags);
 
 
-extern int mkstemps(char *template, int suffixlen);
+extern int mkstemps(char *templt, int suffixlen);
 
 
-extern int mkostemp(char *template, int flags);
+extern int mkostemp(char *templt, int flags);
 
 
-extern int mkstemp(char *template);
+extern int mkstemp(char *templt);
 
 
 /* Create a unique directory */
-extern char *mkdtemp(char *template);
+extern char *mkdtemp(char *templt);
 
 
 /* register a funtion to run at process termination */

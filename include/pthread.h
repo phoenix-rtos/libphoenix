@@ -127,7 +127,7 @@ extern int pthread_attr_setdetachstate(pthread_attr_t *attr, int detachstate);
 extern int pthread_attr_getdetachstate(const pthread_attr_t *attr, int *detachstate);
 
 
-extern int pthread_attr_getinheritsched(const pthread_attr_t *restrict attr, int *restrict inheritsched); /* TODO */
+extern int pthread_attr_getinheritsched(const pthread_attr_t *__restrict attr, int *__restrict inheritsched); /* TODO */
 
 
 extern int pthread_attr_setinheritsched(pthread_attr_t *attr, int inheritsched); /* TODO */
@@ -136,7 +136,7 @@ extern int pthread_attr_setinheritsched(pthread_attr_t *attr, int inheritsched);
 extern int pthread_setschedprio(pthread_t thread, int prio);
 
 
-extern int pthread_getschedparam(pthread_t thread, int *policy, struct sched_param *restrict param);
+extern int pthread_getschedparam(pthread_t thread, int *policy, struct sched_param *__restrict param);
 
 
 extern int pthread_setschedparam(pthread_t thread, int policy, const struct sched_param *param);
@@ -145,7 +145,7 @@ extern int pthread_setschedparam(pthread_t thread, int policy, const struct sche
 extern int pthread_mutex_destroy(pthread_mutex_t *);
 
 
-extern int pthread_mutex_init(pthread_mutex_t *restrict, const pthread_mutexattr_t *restrict);
+extern int pthread_mutex_init(pthread_mutex_t *__restrict, const pthread_mutexattr_t *__restrict);
 
 
 extern int pthread_mutex_lock(pthread_mutex_t *);
@@ -178,16 +178,16 @@ extern int pthread_condattr_destroy(pthread_condattr_t *attr);
 extern int pthread_condattr_setpshared(pthread_condattr_t *attr, int pshared);
 
 
-extern int pthread_condattr_getpshared(const pthread_condattr_t *restrict attr, int *restrict pshared);
+extern int pthread_condattr_getpshared(const pthread_condattr_t *__restrict attr, int *__restrict pshared);
 
 
 extern int pthread_condattr_setclock(pthread_condattr_t *attr, clockid_t clock_id);
 
 
-extern int pthread_condattr_getclock(const pthread_condattr_t *restrict attr, clockid_t *restrict clock_id);
+extern int pthread_condattr_getclock(const pthread_condattr_t *__restrict attr, clockid_t *__restrict clock_id);
 
 
-extern int pthread_cond_init(pthread_cond_t *restrict cond, const pthread_condattr_t *restrict attr);
+extern int pthread_cond_init(pthread_cond_t *__restrict cond, const pthread_condattr_t *__restrict attr);
 
 
 extern int pthread_cond_destroy(pthread_cond_t *cond);
@@ -199,12 +199,12 @@ extern int pthread_cond_signal(pthread_cond_t *cond);
 extern int pthread_cond_broadcast(pthread_cond_t *cond);
 
 
-extern int pthread_cond_wait(pthread_cond_t *restrict cond, pthread_mutex_t *restrict mutex);
+extern int pthread_cond_wait(pthread_cond_t *__restrict cond, pthread_mutex_t *__restrict mutex);
 
 
-extern int pthread_cond_timedwait(pthread_cond_t *restrict cond,
-	pthread_mutex_t *restrict mutex,
-	const struct timespec *restrict abstime);
+extern int pthread_cond_timedwait(pthread_cond_t *__restrict cond,
+	pthread_mutex_t *__restrict mutex,
+	const struct timespec *__restrict abstime);
 
 
 extern int pthread_sigmask(int how, const sigset_t *__restrict__ set, sigset_t *__restrict__ oset);
