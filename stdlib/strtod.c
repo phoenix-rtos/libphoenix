@@ -19,52 +19,52 @@
 #include <math.h>
 
 
-double strtod(const char *restrict nptr, char **restrict endptr)
+double strtod(const char *__restrict str, char **__restrict endptr)
 {
 	unsigned long long integer = 0, frac = 0;
 	double res = 0, exp_val = 10;
 	int sign = 0, intsz = 0, fracsz = 0, exp = 0, exp_sign = 1;
 	int len_int = 0, len_frac = 0, overflow_int = 0, isnum = 0, i;
 
-	if (nptr == NULL)
+	if (str == NULL)
 		return 0;
 
 	/* strip leading  white spaces */
-	while (isspace(*nptr))
-		nptr++;
+	while (isspace(*str))
+		str++;
 
 	/* check the sign */
-	if (*nptr == '-') {
+	if (*str == '-') {
 		sign = 1;
-		nptr++;
-	} else if (*nptr == '+')
-		nptr++;
+		str++;
+	} else if (*str == '+')
+		str++;
 
 	/* get the integer part */
-	while (isdigit(*nptr)) {
+	while (isdigit(*str)) {
 		if (len_int < 20)
-			integer = integer * 10 + (*nptr - '0');
+			integer = integer * 10 + (*str - '0');
 		else
 			overflow_int++;
 		if (integer)
 			len_int++;
 		intsz++;
-		nptr++;
+		str++;
 	}
 
 	if (intsz)
 		isnum = 1;
 
 	/* get the fraction part */
-	if (*nptr == '.') {
-		nptr++;
-		while (isdigit(*nptr)) {
+	if (*str == '.') {
+		str++;
+		while (isdigit(*str)) {
 			if (len_frac < 20)
-				frac = frac * 10 + (*nptr - '0');
+				frac = frac * 10 + (*str - '0');
 			if (frac)
 				len_frac++;
 			fracsz++;
-			nptr++;
+			str++;
 		}
 	}
 
@@ -72,16 +72,16 @@ double strtod(const char *restrict nptr, char **restrict endptr)
 		isnum = 1;
 
 	/* get the exponent part */
-	if (*nptr == 'E' || *nptr == 'e') {
-		nptr++;
-		if (*nptr == '-') {
+	if (*str == 'E' || *str == 'e') {
+		str++;
+		if (*str == '-') {
 			exp_sign = -1;
-			nptr++;
-		} else if (*nptr == '+')
-			nptr++;
+			str++;
+		} else if (*str == '+')
+			str++;
 
-		while(isdigit(*nptr))
-			exp = exp * 10 + (*nptr++ - '0');
+		while(isdigit(*str))
+			exp = exp * 10 + (*str++ - '0');
 	}
 
 	if (exp < 0 && exp_sign == 1) {
@@ -112,15 +112,15 @@ double strtod(const char *restrict nptr, char **restrict endptr)
 		res = -res;
 
 	if (isnum && endptr != NULL)
-		*endptr = (char *)nptr;
+		*endptr = (char *)str;
 
 	return isnum ? res : 0;
 }
 
 
-float strtof(const char *restrict nptr, char **restrict endptr)
+float strtof(const char *__restrict str, char **__restrict endptr)
 {
-	return strtod(nptr, endptr);
+	return strtod(str, endptr);
 }
 
 

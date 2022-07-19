@@ -49,11 +49,11 @@ extern size_t wcslen(const wchar_t *ws);
 
 
 /* TODO: missing function definition */
-extern size_t wcstombs(char *restrict s, const wchar_t *restrict pwcs, size_t n);
+extern size_t wcstombs(char *__restrict s, const wchar_t *__restrict pwcs, size_t n);
 
 
 /* TODO: missing function definition */
-extern size_t wcsrtombs(char *restrict dst, const wchar_t **restrict src, size_t len, mbstate_t *restrict ps);
+extern size_t wcsrtombs(char *__restrict dst, const wchar_t **__restrict src, size_t len, mbstate_t *__restrict ps);
 
 
 #ifdef __cplusplus

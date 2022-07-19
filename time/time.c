@@ -307,7 +307,7 @@ time_t timegm(struct tm *tm)
 }
 
 
-size_t strftime(char *restrict s, size_t maxsize, const char *restrict format, const struct tm *restrict timeptr)
+size_t strftime(char *__restrict s, size_t maxsize, const char *__restrict format, const struct tm *__restrict timeptr)
 {
 	int res;
 	size_t size = 0;
@@ -416,7 +416,7 @@ clock_t clock(void)
 	return (clock_t)-1;
 }
 
-char *strptime(const char *restrict buf, const char *restrict format, struct tm *restrict tm)
+char *strptime(const char *__restrict buf, const char *__restrict format, struct tm *__restrict tm)
 {
 	return NULL;
 }
