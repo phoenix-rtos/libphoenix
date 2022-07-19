@@ -20,6 +20,11 @@
 #include <sys/types.h>
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 struct timezone {
 	int tz_minuteswest;
 	int tz_dsttime;
@@ -54,7 +59,13 @@ extern int lutimes(const char *filename, const struct timeval tv[2]);
 extern int timerisset(struct timeval *tvp);
 
 
+#ifdef __cplusplus
+}
+#endif
+
+
 #define timercmp(a, b, CMP) \
 	((a.tv_sec == b.tv_sec && a.tv_usec CMP b.tv_usec) || a.tv_sec CMP b.tv_sec)
 
-#endif
+
+#endif /* _SYS_TIME_H_ */

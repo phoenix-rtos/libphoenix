@@ -16,7 +16,13 @@
 #ifndef _LIBPHOENIX_ENDIAN_H_
 #define _LIBPHOENIX_ENDIAN_H_
 
+
 #include <stdint.h>
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
 #define __LITTLE_ENDIAN 0
@@ -51,6 +57,11 @@
 #define htobe16(x) (__swap_be__(16))(x)
 #define htobe32(x) (__swap_be__(32))(x)
 #define htobe64(x) (__swap_be__(64))(x)
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif /* _LIBPHOENIX_ENDIAN_H_ */

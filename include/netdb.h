@@ -16,9 +16,15 @@
 #ifndef _LIBPHOENIX_NETDB_H_
 #define _LIBPHOENIX_NETDB_H_
 
+
 #include <sys/socktypes.h>
 #include <netinet/intypes.h>
 #include <stdint.h>
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
 #define AI_PASSIVE     (1 << 0)
@@ -124,5 +130,11 @@ extern struct protoent *getprotobyname(const char *name);
 
 
 extern struct protoent *getprotobynumber(int proto);
+
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif

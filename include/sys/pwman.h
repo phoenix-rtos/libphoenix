@@ -17,7 +17,17 @@
 #define _LIBPHOENIX_SYS_PWMAN_H_
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 extern void keepidle(int s);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

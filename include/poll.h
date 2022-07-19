@@ -16,8 +16,14 @@
 #ifndef _LIBPHENIX_POLL_H_
 #define _LIBPHENIX_POLL_H_
 
+
 #include <sys/events.h>
 #include <errno.h>
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
 #define POLLIN         0x1
@@ -86,5 +92,11 @@ static inline int eventPollFromMask(unsigned short evmask)
 
 #undef EVENT_POLL_FROM_MASK
 }
+
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif

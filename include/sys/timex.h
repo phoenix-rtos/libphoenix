@@ -26,6 +26,12 @@
 #define STA_INS			0x2
 #define STA_DEL			0x4
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 struct timex {
 	int modes;
 	long offset;
@@ -54,6 +60,11 @@ static int adjtimex(struct timex *buf)
 {
 	return 0;
 };
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

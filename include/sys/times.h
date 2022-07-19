@@ -20,6 +20,11 @@
 #include <sys/types.h>
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 struct tms {
 	clock_t tms_utime;
 	clock_t tms_stime;
@@ -29,6 +34,11 @@ struct tms {
 
 
 extern clock_t times(struct tms *buffer);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

@@ -16,11 +16,17 @@
 #ifndef _LIBPHOENIX_PTHREAD_H_
 #define _LIBPHOENIX_PTHREAD_H_
 
+
 #include <sys/types.h>
 #include <sys/threads.h>
 #include <sched.h>
 #include <time.h>
 #include <signal.h>
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
 #define EDEADLK 38
@@ -234,6 +240,11 @@ extern void _pthread_atfork_parent(void);
 
 
 extern void _pthread_atfork_child(void);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

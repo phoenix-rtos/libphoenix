@@ -20,6 +20,12 @@
 #include <stdarg.h>
 #include <math/consts.h>
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 #define isnan(x)   __builtin_isnan(x)
 #define isinf(x)   __builtin_isinf(x)
 #define signbit(x) __builtin_signbit(x)
@@ -201,6 +207,11 @@ float fabsf(float x);
 #define fmodf(num, denom)    ((float)fmod(num, denom))
 #define truncf(x)            ((float)trunc(x))
 #define fabsf(x)             ((float)fabs(x))
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

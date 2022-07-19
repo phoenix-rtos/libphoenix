@@ -17,7 +17,17 @@
 #define _LIBPHOENIX_SYS_DEBUG_H_
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 extern void debug(const char *s);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

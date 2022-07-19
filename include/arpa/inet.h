@@ -20,6 +20,12 @@
 #include <netinet/in.h>
 #include <stdint.h>
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 int inet_aton(const char *cp, struct in_addr *inp);
 in_addr_t inet_addr(const char *cp);
 char *inet_ntoa(struct in_addr in);
@@ -31,5 +37,11 @@ uint16_t ntohs(uint16_t netshort);
 #define ntohl be32toh
 #define htons htobe16
 #define htonl htobe32
+
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif

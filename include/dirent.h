@@ -16,9 +16,16 @@
 #ifndef _LIBPHOENIX_DIRENT_H_
 #define _LIBPHOENIX_DIRENT_H_
 
+
 #include <stdio.h>
 #include <stdint.h>
 #include <sys/types.h>
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 /* dirent types */
 enum {	dtDir = 0,
@@ -45,6 +52,10 @@ extern DIR *opendir(const char *dirname);
 
 extern int closedir(DIR *dirp);
 
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

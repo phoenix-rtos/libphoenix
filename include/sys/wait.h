@@ -19,6 +19,11 @@
 #include <sys/types.h>
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 enum {
 	WNOHANG = 1 << 0,
 	WUNTRACED = 1 << 1,
@@ -45,6 +50,11 @@ static inline pid_t wait(int *status)
 {
 	return waitpid(-1, status, 0);
 }
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

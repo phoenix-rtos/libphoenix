@@ -19,6 +19,11 @@
 #include <sys/types.h>
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 enum { otDir = 0, otFile, otDev, otSymlink, otUnknown };
 
 
@@ -55,6 +60,11 @@ extern int fileRemove(unsigned int h);
 
 
 extern int flock(int fd, int operation);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

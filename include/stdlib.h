@@ -16,9 +16,16 @@
 #ifndef _LIBPHOENIX_STDLIB_H_
 #define _LIBPHOENIX_STDLIB_H_
 
+
 #include <sys/wait.h>
 #include <stddef.h>
 #include <alloca.h>
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 #define RAND_MAX   2147483647
 
@@ -264,6 +271,11 @@ extern char *mkdtemp(char *template);
 
 /* register a funtion to run at process termination */
 extern int atexit(void (*func)(void));
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

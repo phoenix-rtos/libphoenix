@@ -71,6 +71,11 @@
 #define SCM_RIGHTS 1
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 typedef uint16_t sa_family_t;	// match lwIP size: u8 len + u8 family
 
 
@@ -153,5 +158,11 @@ int getsockopt(int socket, int level, int optname, void *optval, socklen_t *optl
 int setsockopt(int socket, int level, int optname, const void *optval, socklen_t optlen);
 int shutdown(int socket, int how);
 int socketpair(int domain, int type, int protocol, int socket_vector[2]);
+
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif

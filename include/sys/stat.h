@@ -20,6 +20,11 @@
 #include <time.h>
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 /* File type */
 #define S_IFMT   0xf000 /* File type mask */
 #define S_IFSOCK 0xc000 /* Socket */
@@ -122,5 +127,11 @@ extern int fchmod(int fd, mode_t mode);
 
 extern int chown(const char *path, uid_t owner, gid_t group);
 extern int lchown(const char *path, uid_t owner, gid_t group);
+
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif

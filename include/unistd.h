@@ -17,9 +17,16 @@
 #ifndef _LIBPHOENIX_UNISTD_H_
 #define _LIBPHOENIX_UNISTD_H_
 
+
 #include <arch.h>
 #include <stddef.h>
 #include <sys/types.h>
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 #define STDIN_FILENO 0
 #define STDOUT_FILENO 1
@@ -250,6 +257,11 @@ extern int optind, opterr, optopt;
 
 
 extern char **__environ, **environ;
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

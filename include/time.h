@@ -16,6 +16,7 @@
 #ifndef _LIBPHOENIX_TIME_H_
 #define _LIBPHOENIX_TIME_H_
 
+
 #define SECS_TO_USECS_T(secs) (1000000ULL * (secs))
 #define MSECS_TO_USECS_T(msecs) (1000ULL * (msecs))
 
@@ -28,6 +29,11 @@
 #define CLOCK_MONOTONIC     0
 #define CLOCK_MONOTONIC_RAW 1
 #define CLOCK_REALTIME      2
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
 struct tm {
@@ -113,5 +119,11 @@ extern char *strptime(const char *restrict buf, const char *restrict format, str
 
 
 extern int nanosleep(const struct timespec *req, struct timespec *rem);
+
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif

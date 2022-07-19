@@ -16,8 +16,15 @@
 #ifndef _LIBPHOENIX_INTTYPES_H_
 #define _LIBPHOENIX_INTTYPES_H_
 
+
 #include <arch.h>
 #include <stdint.h>
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 #ifdef __ARCH_INTTYPES
 #include __ARCH_INTTYPES
@@ -131,5 +138,11 @@ extern intmax_t strtoimax(const char *nptr, char **endptr, int base);
 
 
 extern uintmax_t strtoumax(const char *nptr, char **endptr, int base);
+
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif

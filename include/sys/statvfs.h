@@ -19,6 +19,11 @@
 #include <sys/types.h>
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 /* Filesystem flags */
 #define ST_RDONLY (1 << 0) /* Read-only filesystem */
 #define ST_NOSUID (1 << 1) /* Ignore S_ISUID and S_ISGID file mode bits */
@@ -41,6 +46,11 @@ struct statvfs
 
 
 extern int statvfs(const char *path, struct statvfs *buf);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

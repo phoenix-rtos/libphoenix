@@ -17,10 +17,20 @@
 #define _LIBPHOENIX_PLATFORM_H_
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 extern int platformctl(void *);
 
 
 extern void wdgreload(void);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

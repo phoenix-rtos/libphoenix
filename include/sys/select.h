@@ -20,6 +20,11 @@
 #include <stdint.h>
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 struct timeval {
 	time_t tv_sec;
 	suseconds_t tv_usec;
@@ -53,6 +58,11 @@ do { \
 
 
 int select(int nfds, fd_set *rd, fd_set *wr, fd_set *ex, struct timeval *timeout);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

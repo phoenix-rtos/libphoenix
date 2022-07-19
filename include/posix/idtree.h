@@ -19,6 +19,11 @@
 #include <sys/rb.h>
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 typedef rbtree_t idtree_t;
 
 
@@ -42,5 +47,11 @@ int idtree_id(idnode_t *node);
 
 
 int idtree_alloc(idtree_t *tree, idnode_t *n);
+
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif

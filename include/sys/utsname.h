@@ -20,6 +20,12 @@
 #include <string.h>
 #include <unistd.h>
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 struct utsname {
 	char sysname[16];
 	char nodename[HOST_NAME_MAX + 1];
@@ -34,6 +40,11 @@ static inline int uname(struct utsname *name)
 	memset(name, 0, sizeof(*name));
 	return gethostname(name->nodename, sizeof(name->nodename));
 }
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

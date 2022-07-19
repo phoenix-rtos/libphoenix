@@ -17,6 +17,11 @@
 #define _LIBPHOENIX_SYS_MOUNT_H_
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 #define MS_MGC_VAL     0xc0ed0000u
 #define MS_RDONLY      (1 << 0)  /* Mount read-only.  */
 #define MS_NOSUID      (1 << 1)  /* Ignore suid and sgid bits.  */
@@ -39,6 +44,12 @@ extern int mount(const char *source, const char *target, const char *fstype, uns
 
 
 extern int umount(const char *target);
+
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

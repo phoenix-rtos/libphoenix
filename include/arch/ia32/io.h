@@ -17,6 +17,11 @@
 #define _LIBPHOENIX_IA32_IO_H_
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 static inline unsigned char inb(void *addr)
 {
 	unsigned char b;
@@ -110,6 +115,11 @@ static inline void outl(void *addr, unsigned int l)
 
 	return;
 }
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

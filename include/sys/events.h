@@ -20,6 +20,11 @@
 #include <sys/msg.h>
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 enum { evtDataOut = 0, evtDataIn, evtError, evtGone };
 
 
@@ -53,4 +58,10 @@ typedef struct _event_ioctl_t {
 
 extern int eventsSend(event_t *event, int count);
 
+
+#ifdef __cplusplus
+}
 #endif
+
+
+#endif /* _SYS_EVENTS_H_ */

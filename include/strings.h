@@ -20,12 +20,22 @@
 #include <stddef.h>
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 /* Compares the string pointed to, by str1 to the string pointed to by str2 case-insensitively. */
 extern int strcasecmp(const char *str1, const char *str2);
 
 
 /* Compares at most the first n bytes of str1 and str2 case-insensitively. */
 extern int strncasecmp(const char *s1, const char *s2, size_t n);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

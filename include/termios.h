@@ -16,8 +16,15 @@
 #ifndef _LIBPHOENIX_TERMIOS_H_
 #define _LIBPHOENIX_TERMIOS_H_
 
+
 #include <sys/ioctl.h>
 #include <sys/types.h>
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 typedef unsigned cc_t;
 typedef int speed_t;
@@ -249,5 +256,11 @@ static inline int cfsetspeed(struct termios *termios_p, speed_t speed)
 	termios_p->c_ispeed = speed;
 	return 0;
 }
+
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif

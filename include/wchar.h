@@ -16,7 +16,13 @@
 #ifndef _LIBPHOENIX_WCHAR_H_
 #define _LIBPHOENIX_WCHAR_H_
 
+
 #include <stddef.h>
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
 #define WEOF ((wchar_t)-1)
@@ -48,5 +54,11 @@ extern size_t wcstombs(char *restrict s, const wchar_t *restrict pwcs, size_t n)
 
 /* TODO: missing function definition */
 extern size_t wcsrtombs(char *restrict dst, const wchar_t **restrict src, size_t len, mbstate_t *restrict ps);
+
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif /* _LIBPHOENIX_WCHAR_H_ */

@@ -25,8 +25,15 @@
 #ifndef SYSLOG_H
 #define SYSLOG_H
 
+
 #include <stdarg.h>
 #include <stdlib.h>
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 #define	LOG_EMERG		0		/* System is unusable */
 #define	LOG_ALERT		1		/* Action must be taken immediately */
@@ -150,5 +157,11 @@ void vsyslog(int priority, const char *format, va_list ap);
 
 
 void closelog(void);
+
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif
