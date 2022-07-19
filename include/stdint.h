@@ -16,7 +16,9 @@
 #ifndef _LIBPHOENIX_STDINT_H_
 #define _LIBPHOENIX_STDINT_H_
 
+
 #include <arch.h>
+
 
 #ifdef __ARCH_STDINT
 #include __ARCH_STDINT
@@ -45,6 +47,7 @@
 #define UINT32_MAX 0xffffffff
 #define UINT64_MAX 0xffffffffffffffffLL
 
-#endif
+#endif /* _USE_STANDARD_TYPES_STDINT */
 
-#endif
+
+#endif /* _LIBPHOENIX_STDINT_H_ */

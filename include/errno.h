@@ -16,7 +16,13 @@
 #ifndef _LIBPHOENIX_ERRNO_H_
 #define _LIBPHOENIX_ERRNO_H_
 
+
 #include <phoenix/errno.h>
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
 /* Linux/x86-compatible numbers for easier debugging */
@@ -74,5 +80,11 @@ static inline int set_errno(int x)
 	{ \
 		return SET_ERRNO(sys_##function argnames); \
 	}
+
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif

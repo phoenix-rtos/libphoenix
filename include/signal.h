@@ -20,6 +20,12 @@
 #include <sys/types.h>
 #include <time.h>
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 typedef void (*sighandler_t)(int);
 
 #define SIGHUP     1
@@ -168,6 +174,11 @@ extern int sigwait(const sigset_t *, int *);
 
 
 extern int signalPostPosix(int pid, int tid, int signal);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

@@ -19,10 +19,20 @@
 #include <stddef.h>
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 extern void lib_listAdd(void **list, void *t, size_t next_off, size_t prev_off);
 
 
 extern void lib_listRemove(void **list, void *t, size_t next_off, size_t prev_off);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #define LIST_ADD_EX(list, t, next, prev) \

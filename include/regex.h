@@ -37,7 +37,14 @@
 #ifndef _REGEX_H_
 #define	_REGEX_H_
 
+
 #include <sys/cdefs.h>
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 /* types */
 typedef off_t regoff_t;
@@ -99,5 +106,11 @@ int	regexec(const regex_t *__restrict, const char *__restrict,
 			size_t, regmatch_t [__restrict], int);
 void	regfree(regex_t *);
 __END_DECLS
+
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif /* !_REGEX_H_ */

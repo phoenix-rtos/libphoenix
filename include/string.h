@@ -16,11 +16,18 @@
 #ifndef _LIBPHOENIX_STRING_H_
 #define _LIBPHOENIX_STRING_H_
 
+
 #include <stddef.h>
 #include <stdint.h>
 
+
 /* Included for compability reason */
 #include <strings.h>
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
 /*
@@ -182,5 +189,11 @@ __attribute__((always_inline)) static inline void bzero(void *p, size_t sz)
 
 
 extern int strcasecmp(const char *str1, const char *str2);
+
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif

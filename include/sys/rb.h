@@ -19,6 +19,11 @@
 #include <stdio.h>
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 #define lib_treeof(type, node_field, node) ({					\
 	long _off = (long) &(((type *) 0)->node_field);				\
 	void *tmpnode = (node);					\
@@ -89,6 +94,11 @@ extern rbnode_t *lib_rbFindEx(rbnode_t *root, rbnode_t *node, rbcomp_t compare);
 
 
 extern void lib_rbDump(rbnode_t *node, rbdump_t dump);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

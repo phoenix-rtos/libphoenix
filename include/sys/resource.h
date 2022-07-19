@@ -19,9 +19,16 @@
 #include <sys/time.h>
 #include <sys/types.h>
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 #define RLIMIT_CORE 0
 #define RLIMIT_STACK 4096
 #define RLIMIT_NOFILE 65536
+
 
 typedef int rlim_t;
 
@@ -60,5 +67,11 @@ extern int setpriority(int which, id_t who, int prio);
 
 
 extern int getpriority(int which, id_t who);
+
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif

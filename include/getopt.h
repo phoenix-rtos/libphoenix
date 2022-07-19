@@ -16,7 +16,13 @@
 #ifndef _LIBPHOENIX_GETOPT_H_
 #define _LIBPHOENIX_GETOPT_H_
 
+
 #include <unistd.h>
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
 struct option {
@@ -31,6 +37,11 @@ enum { no_argument = 0, required_argument, optional_argument };
 
 
 extern int getopt_long(int argc, char * const argv[], const char *optstring, const struct option *longopts, int *longindex);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

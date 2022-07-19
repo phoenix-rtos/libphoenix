@@ -16,7 +16,13 @@
 #ifndef _LIBPHOENIX_GRP_H_
 #define _LIBPHOENIX_GRP_H_
 
+
 #include <sys/types.h>
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
 struct group {
@@ -37,6 +43,11 @@ struct group *getgrgid(gid_t gid);
 
 
 int setgroups(size_t size, const gid_t *list);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

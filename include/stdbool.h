@@ -16,6 +16,10 @@
 #ifndef _LIBPHOENIX_STDBOOL_H_
 #define _LIBPHOENIX_STDBOOL_H_
 
+
+#ifndef __cplusplus
+
+
 #define __bool_true_false_are_defined 1
 
 #define bool _Bool
@@ -23,4 +27,7 @@
 #define false 0
 
 
-#endif
+#endif /* __cplusplus */
+
+
+#endif /* _LIBPHOENIX_STDBOOL_H_ */

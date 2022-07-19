@@ -21,6 +21,11 @@
 #include <phoenix/msg.h>
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 /* Port management */
 
 
@@ -43,6 +48,11 @@ extern int msgPulse(uint32_t port, msg_t *m);
 extern int msgRecv(uint32_t port, msg_t *m, unsigned long int *rid);
 
 extern int msgRespond(uint32_t port, msg_t *m, unsigned long int rid);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

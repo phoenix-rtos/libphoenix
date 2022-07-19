@@ -16,8 +16,15 @@
 #ifndef _LIBPHOENIX_ASSERT_H_
 #define _LIBPHOENIX_ASSERT_H_
 
+
 #include <stdio.h>
 #include <stdlib.h>
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 #ifndef NDEBUG
 #define assert(__expr) \
@@ -30,7 +37,12 @@
 #define assert(expr) ((void) 0)
 
 
+#endif /* NDEBUG */
+
+
+#ifdef __cplusplus
+}
 #endif
 
 
-#endif
+#endif /* _LIBPHOENIX_ASSERT_H_ */

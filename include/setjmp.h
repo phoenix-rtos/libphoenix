@@ -17,6 +17,11 @@
 #define _LIBPHOENIX_SETJMP_H_
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 typedef unsigned int jmp_buf[34];
 typedef jmp_buf sigjmp_buf;
 
@@ -43,6 +48,11 @@ __attribute__((noreturn)) static inline void siglongjmp(sigjmp_buf env, int val)
 {
 	_longjmp(env, val);
 }
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

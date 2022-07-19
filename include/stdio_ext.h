@@ -20,8 +20,18 @@
 #include <stdio.h>
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 /* Discard all pending buffered I/O. */
 extern void __fpurge (FILE *__fp) __THROW;
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

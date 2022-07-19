@@ -22,6 +22,12 @@
 #include <phoenix/sysinfo.h>
 #include <phoenix/signal.h>
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 typedef struct {
 	handle_t mutex;
 	handle_t cond;
@@ -141,6 +147,13 @@ extern int signalReturn(int signal);
 
 extern unsigned int signalMask(unsigned mask, unsigned mmask);
 
+
 extern int signalSuspend(unsigned mask);
+
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif

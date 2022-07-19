@@ -36,7 +36,14 @@
 #ifndef _GLOB_H_
 #define	_GLOB_H_
 
+
 #include <sys/cdefs.h>
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 struct stat;
 typedef struct {
@@ -90,5 +97,11 @@ int	glob(const char *__restrict, int, int (*)(const char *, int),
 		glob_t *__restrict);
 void	globfree(glob_t *);
 __END_DECLS
+
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif /* !_GLOB_H_ */

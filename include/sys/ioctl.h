@@ -17,8 +17,14 @@
 #ifndef _LIBPHOENIX_IOCTL_H_
 #define _LIBPHOENIX_IOCTL_H_
 
+
 #include <sys/msg.h>
 #include <sys/types.h>
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
 #define IOCPARM_MASK		0x1fff
@@ -63,6 +69,11 @@ pid_t ioctl_getSenderPid(const msg_t *msg);
 void ioctl_setResponse(msg_t *msg, unsigned long request, int err, const void *data);
 
 void ioctl_setResponseErr(msg_t *msg, unsigned long request, int err);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

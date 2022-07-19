@@ -18,6 +18,11 @@
 #define _BYTESWAP_H	1
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 /* Return a value with all bytes in the 16 bit argument swapped.  */
 #define bswap_16(x) __builtin_bswap16 (x)
 
@@ -26,5 +31,11 @@
 
 /* Return a value with all bytes in the 64 bit argument swapped.  */
 #define bswap_64(x) __builtin_bswap64 (x)
+
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif /* byteswap.h */

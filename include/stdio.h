@@ -16,10 +16,17 @@
 #ifndef _LIBPHOENIX_STDIO_H_
 #define _LIBPHOENIX_STDIO_H_
 
+
 #include <arch.h>
 #include <stddef.h>
 #include <stdarg.h>
 #include <sys/types.h>
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 #ifndef NOMMU
 #define BUFSIZ _PAGE_SIZE
@@ -339,6 +346,11 @@ extern void _file_init(void);
 /* stdio locking functions */
 extern void flockfile(FILE *stream);
 extern void funlockfile(FILE *stream);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

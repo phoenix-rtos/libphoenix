@@ -16,6 +16,12 @@
 #ifndef ALLOCA_H
 #define ALLOCA_H
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 #undef alloca
 
 extern void *alloca(size_t size);
@@ -25,4 +31,10 @@ extern void *alloca(size_t size);
 #define alloca(size)   __builtin_alloca (size)
 #endif
 
-#endif //ALLOCA_H
+
+#ifdef __cplusplus
+}
+#endif
+
+
+#endif /* ALLOCA_H */

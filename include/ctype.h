@@ -17,6 +17,11 @@
 #define _LIBPHOENIX_CTYPES_H_
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 /* This function checks whether the passed character is alphanumeric. */
 extern int isalnum(int c);
 
@@ -77,6 +82,11 @@ static inline int isascii(int c)
 {
 	return (c & ~0x7f);
 }
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

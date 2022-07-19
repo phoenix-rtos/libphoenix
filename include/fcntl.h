@@ -16,7 +16,14 @@
 #ifndef _LIBPHOENIX_FCNTL_H_
 #define _LIBPHOENIX_FCNTL_H_
 
+
 #include <sys/types.h>
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 #define O_RDONLY 0x0001
 #define O_WRONLY 0x0002
@@ -65,6 +72,11 @@ struct flock {
 	off_t l_len;
 	pid_t l_pid;
 };
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

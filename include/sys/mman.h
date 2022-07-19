@@ -25,6 +25,11 @@
 #define MAP_FAILED (void *)-1
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 extern void mmdump(void);
 
 
@@ -41,6 +46,11 @@ extern int munmap(void *vaddr, size_t size);
 
 
 extern addr_t va2pa(void *va);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif
