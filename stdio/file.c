@@ -817,51 +817,69 @@ void __fpurge(FILE *stream)
 }
 
 
+ssize_t getdelim(char **lineptr, size_t *n, int delim, FILE *stream)
+{
+	int c;
+	ssize_t ofs;
+	size_t new_n;
+	char *new_lineptr, *endptr, *ptr;
+
+	if (lineptr == NULL || n == NULL || stream == NULL) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	if (*lineptr == NULL || *n == 0) {
+		*n = BUFSIZ;
+		*lineptr = malloc(BUFSIZ);
+		if (*lineptr == NULL) {
+			/* errno set by malloc */
+			return -1;
+		}
+	}
+
+	ptr = *lineptr;
+	endptr = *lineptr + *n;
+
+	for (;;) {
+		c = fgetc(stream);
+		if (c < 0) {
+			if (feof(stream) && ptr != *lineptr) {
+				return ptr - *lineptr;
+			}
+
+			return EOF;
+		}
+
+		*ptr++ = c;
+		if (c == delim) {
+			*ptr = '\0';
+			return ptr - *lineptr;
+		}
+
+		if (ptr + 2 >= endptr) {
+			ofs = ptr - *lineptr;
+
+			new_n = 2 * (*n);
+			new_lineptr = realloc(*lineptr, new_n);
+			if (new_lineptr == NULL) {
+				/* errno set by realloc */
+				return -1;
+			}
+
+			ptr = new_lineptr + ofs;
+			endptr = new_lineptr + new_n;
+
+			*lineptr = new_lineptr;
+			*n = new_n;
+		}
+	}
+}
+
+
 ssize_t getline(char **lineptr, size_t *n, FILE *stream)
 {
-	char buff[128] = { 0 };
-	size_t linesz = 0;
-	offs_t offs;
-	int readsz, i, nl = 0;
-	char *tmp;
-
-	offs = (offs_t)ftell(stream);
-
-	while ((readsz = fread(buff, 1, sizeof(buff), stream)) > 0) {
-		for (i = 0; i < readsz; i++) {
-			if (buff[i] == '\n') {
-				linesz += i + 2;
-				nl = 1;
-				break;
-			}
-		}
-		if (nl)
-			break;
-		linesz += readsz;
-	}
-
-	if (linesz == 0)
-		return -1;  // EOF
-
-	if (!nl)
-		linesz++;
-
-	if (*lineptr == NULL || *n < linesz) {
-		tmp = realloc(*lineptr, linesz);
-		if (tmp == NULL)
-			return -1; /* errno set by malloc/realloc */
-
-		*lineptr = tmp;
-		*n = linesz;
-	}
-
-	fseek(stream, offs, SEEK_SET);
-	fread(*lineptr, 1, linesz - 1, stream);
-
-	if (linesz > 0)
-		(*lineptr)[linesz - 1] = 0;
-
-	return linesz - 1;
+	return getdelim(lineptr, n, '\n', stream);
 }
 
 
