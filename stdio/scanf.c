@@ -5,14 +5,15 @@
  *
  * scanf.c
  *
- * Copyright 2017 Phoenix Systems
- * Author: Adrian Kepka
+ * Copyright 2017, 2022 Phoenix Systems
+ * Author: Adrian Kepka, Gerard Swiderski
  *
  * This file is part of Phoenix-RTOS.
  *
  * %LICENSE%
  */
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -514,54 +515,90 @@ static int scanf_parse(char *ccltab, const char *inp, char const *fmt0, va_list 
 }
 
 
-int fscanf(FILE *stream, const char *format, ...)
+int vfscanf(FILE *stream, const char *format, va_list ap)
 {
-	char *lineptr = NULL;
-	size_t n = 0;
-	va_list arg;
 	int ret;
+	size_t n = 0;
+	char *lineptr = NULL;
 	char *ccltab = malloc(256);
 
-	if ((ret = getline(&lineptr, &n, stream)) > 0) {
+	if (ccltab == NULL) {
+		/* errno set by malloc */
+		return -1;
+	}
 
-		va_start(arg, format);
-		ret = scanf_parse(ccltab, lineptr, format, arg);
-		va_end(arg);
-		free(lineptr);
-
-		if (ret < 0)
+	ret = getline(&lineptr, &n, stream);
+	if (ret > 0) {
+		ret = scanf_parse(ccltab, lineptr, format, ap);
+		if (ret < 0) {
 			ret = 0;
+		}
+		free(lineptr);
 	}
 
 	free(ccltab);
+
 	return ret;
 }
 
-int sscanf(const char *str, const char *format, ...)
+
+int vsscanf(const char *str, const char *format, va_list ap)
 {
-	int retVal;
-	va_list arg;
+	int ret;
 	char *ccltab = malloc(256);
 
-	va_start(arg, format);
-	retVal = scanf_parse(ccltab, str, format, arg);
-	va_end(arg);
+	if (ccltab == NULL) {
+		/* errno set by malloc */
+		return -1;
+	}
 
+	ret = scanf_parse(ccltab, str, format, ap);
 	free(ccltab);
 
-	return retVal;
+	return ret;
+}
+
+
+int vscanf(const char *format, va_list ap)
+{
+	return vfscanf(stdin, format, ap);
+}
+
+
+int fscanf(FILE *stream, const char *format, ...)
+{
+	int ret;
+	va_list ap;
+
+	va_start(ap, format);
+	ret = vfscanf(stream, format, ap);
+	va_end(ap);
+
+	return ret;
+}
+
+
+int sscanf(const char *str, const char *format, ...)
+{
+	int ret;
+	va_list ap;
+
+	va_start(ap, format);
+	ret = vsscanf(str, format, ap);
+	va_end(ap);
+
+	return ret;
 }
 
 
 int scanf(const char *format, ...)
 {
-	int retVal = 0;
-	va_list arg;
+	int ret;
+	va_list ap;
 
-	// TODO: Read from stdin
-	va_start(arg, format);
-//	retVal = scanf_parse(stdin, format, arg);
-	va_end(arg);
+	va_start(ap, format);
+	ret = vscanf(format, ap);
+	va_end(ap);
 
-	return retVal;
+	return ret;
 }
