@@ -143,6 +143,10 @@ void *malloc(size_t size)
 	m = _malloc_heapAlloc(size);
 	mutexUnlock(malloc_common.mutex);
 
+	if (m == NULL) {
+		errno = ENOMEM;
+	}
+
 	return m;
 }
 

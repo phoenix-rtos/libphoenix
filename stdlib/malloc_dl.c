@@ -13,6 +13,7 @@
  * %LICENSE%
  */
 
+#include <errno.h>
 #include <sys/list.h>
 #include <sys/minmax.h>
 #include <sys/rb.h>
@@ -418,17 +419,29 @@ void *malloc(size_t size)
 {
 	void *ptr = NULL;
 
-	if (size == 0 || (size + CHUNK_OVERHEAD) < size)
+	if (size == 0) {
 		return NULL;
+	}
+
+	if ((size + CHUNK_OVERHEAD) < size) {
+		errno = ENOMEM;
+		return NULL;
+	}
 
 	size = CEIL(max(size + CHUNK_OVERHEAD, CHUNK_MIN_SIZE), 8);
 
 	mutexLock(malloc_common.mutex);
-	if (size <= CHUNK_SMALLBIN_MAX_SIZE)
+	if (size <= CHUNK_SMALLBIN_MAX_SIZE) {
 		ptr = _malloc_allocSmall(size);
-	else
+	}
+	else {
 		ptr = _malloc_allocLarge(size);
+	}
 	mutexUnlock(malloc_common.mutex);
+
+	if (ptr == NULL) {
+		errno = ENOMEM;
+	}
 
 	return ptr;
 }
@@ -439,13 +452,15 @@ void *calloc(size_t nitems, size_t size)
 	void *ptr;
 	uint64_t allocSize = (uint64_t)nitems * size;
 
-	if (allocSize > (uint64_t)UINT_MAX)
+	if (allocSize > (uint64_t)UINT_MAX) {
+		errno = ENOMEM;
 		return NULL;
+	}
 
 	if ((ptr = malloc((size_t) allocSize)) == NULL)
 		return NULL;
 
-	memset(ptr, 0, (size_t) allocSize);
+	memset(ptr, 0, (size_t)allocSize);
 	return ptr;
 }
 
@@ -504,8 +519,10 @@ void *realloc(void *ptr, size_t size)
 		return NULL;
 	}
 
-	if ((size + CHUNK_OVERHEAD) < size)
+	if ((size + CHUNK_OVERHEAD) < size) {
+		errno = ENOMEM;
 		return NULL;
+	}
 
 	size = CEIL(max(size + CHUNK_OVERHEAD, CHUNK_MIN_SIZE), 8);
 
