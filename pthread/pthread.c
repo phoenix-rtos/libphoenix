@@ -564,7 +564,7 @@ int pthread_cond_timedwait(pthread_cond_t *restrict cond,
 	int err = EOK;
 	struct timespec now;
 	clock_gettime(CLOCK_REALTIME, &now);
-	if (now.tv_sec >= abstime->tv_sec && now.tv_nsec >= abstime->tv_nsec) {
+	if ((now.tv_sec > abstime->tv_sec) || ((now.tv_sec == abstime->tv_sec) && (now.tv_nsec >= abstime->tv_nsec))) {
 		err = -ETIMEDOUT;
 	}
 	else {
@@ -588,6 +588,9 @@ int pthread_cond_timedwait(pthread_cond_t *restrict cond,
 				}
 			}
 		}
+	}
+	if (err == -ETIME) {
+		err = -ETIMEDOUT;
 	}
 	return err;
 }
