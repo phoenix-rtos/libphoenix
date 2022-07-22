@@ -246,6 +246,23 @@ int execle(const char *path, const char *arg, ...)
 }
 
 
+extern int nsleep(time_t *sec, long *nsec);
+
+
+extern int usleep(useconds_t usecs)
+{
+	int err;
+	time_t sec = usecs / (1000 * 1000);
+	long nsec = (usecs % (1000 * 1000)) * 1000;
+
+	err = nsleep(&sec, &nsec);
+
+	SET_ERRNO(err);
+
+	return err; /* FIXME - should return 0 or -1. Fix would be a potentially breaking change */
+}
+
+
 unsigned sleep(unsigned seconds)
 {
 	return usleep(seconds * 1000 * 1000);
