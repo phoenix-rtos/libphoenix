@@ -422,7 +422,21 @@ char *strptime(const char *restrict buf, const char *restrict format, struct tm 
 }
 
 
+extern int nsleep(time_t *sec, long *nsec);
+
+
 int nanosleep(const struct timespec *req, struct timespec *rem)
 {
-	return 0;
+	time_t sec = req->tv_sec;
+	long nsec = req->tv_nsec;
+	int ret;
+
+	ret = nsleep(&sec, &nsec);
+
+	if (ret == -EINTR) {
+		rem->tv_sec = sec;
+		rem->tv_nsec = nsec;
+	}
+
+	return SET_ERRNO(ret);
 }
