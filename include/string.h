@@ -85,8 +85,7 @@ extern int strncmp(const char *str1, const char *str2, size_t n);
 
 
 /* Compares string str1 to str2. The result is dependent on the LC_COLLATE setting of the location. */
-//extern int strcoll(const char *str1, const char *str2);
-#define strcoll strcmp
+extern int strcoll(const char *str1, const char *str2);
 
 
 /* Copies the string pointed to by src to dest. Returns a pointer to the destination string dest */

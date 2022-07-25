@@ -495,3 +495,32 @@ size_t strlcat(char *dst, const char *src, size_t size)
 		return size + strlen(src);
 	return dstlen + strlcpy(dst + dstlen, src, size - dstlen);
 }
+
+
+int strcoll(const char *str1, const char *str2)
+{
+	return strcmp(str1, str2);
+}
+
+
+/* FIXME: For strxfrm, the sensible implementation is needed */
+size_t strxfrm(char *dest, const char *src, size_t n)
+{
+	size_t current_size = 0;
+
+	while (n-- > 0) {
+		if ((*dest++ = *src++) != '\0') {
+			current_size++;
+		}
+		else {
+			return current_size;
+		}
+	}
+
+	while (*src) {
+		src++;
+		current_size++;
+	}
+
+	return current_size;
+}
