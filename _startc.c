@@ -22,6 +22,7 @@ extern void _malloc_init(void);
 extern int _env_init(void);
 extern void _signals_init(void);
 extern void _errno_init(void);
+extern void _atexit_init(void);
 extern void _init_array(void);
 extern void _pthread_init(void);
 extern int main(int argc, char **argv);
@@ -36,6 +37,7 @@ void _startc(int argc, char **argv, char **env)
 	environ = env;
 	argv_progname = *argv;
 
+	_atexit_init();
 	_errno_init();
 	_malloc_init();
 	_env_init();
