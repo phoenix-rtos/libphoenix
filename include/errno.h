@@ -27,19 +27,25 @@ extern "C" {
 
 /* Linux/x86-compatible numbers for easier debugging */
 
+#define EDEADLK         38
 #define ENOTEMPTY       39
 #define ELOOP           40
+#define ENOMSG          42
 #define EUNATCH         49
 #define ENODATA         61
 #define ENONET          64
 #define EBADFD          66
 #define EPROTO          71
 #define EBADMSG         74
+#define EOVERFLOW       75
+#define EILSEQ          84
+#define EDESTADDRREQ    89
 #define EMSGSIZE        90
 #define EPFNOSUPPORT    96
 #define EADDRNOTAVAIL   99
 #define ENETDOWN        100
 #define ENETUNREACH     101
+#define ENETRESET       102
 #define ECONNABORTED    103
 #define ECONNRESET      104
 #define ENOBUFS         105
@@ -51,7 +57,7 @@ extern "C" {
 #define ENOLCK          116
 #define EUCLEAN         117
 #define ENOTRECOVERABLE 131
-#define ENOTSUP         134
+#define ENOTSUP         EOPNOTSUPP
 
 
 #define errno (*__errno_location())
