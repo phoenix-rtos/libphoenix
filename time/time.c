@@ -433,7 +433,7 @@ int nanosleep(const struct timespec *req, struct timespec *rem)
 
 	ret = nsleep(&sec, &nsec);
 
-	if (ret == -EINTR) {
+	if (ret == -EINTR && rem != NULL) {
 		rem->tv_sec = sec;
 		rem->tv_nsec = nsec;
 	}
