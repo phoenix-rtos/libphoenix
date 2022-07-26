@@ -27,7 +27,8 @@ GCCLIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 CRTBEGIN := $(shell $(CC) $(CFLAGS) -print-file-name=crtbegin.o)
 CRTEND := $(shell $(CC) $(CFLAGS) -print-file-name=crtend.o)
 PHOENIXLIB := $(shell $(CC) $(CFLAGS) -print-file-name=libphoenix.a)
-LDLIBS := $(PHOENIXLIB) $(GCCLIB) $(CRTBEGIN) $(CRTEND)
+LIBSTDCPP := $(filter-out libstdc++.a, $(shell $(CC) $(CFLAGS) -print-file-name=libstdc++.a))
+LDLIBS := $(LIBSTDCPP) $(PHOENIXLIB) $(GCCLIB) $(CRTBEGIN) $(CRTEND)
 
 OBJCOPY = $(CROSS)objcopy
 OBJDUMP = $(CROSS)objdump

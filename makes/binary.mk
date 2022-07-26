@@ -31,7 +31,7 @@ SRCS += $(addprefix $(LOCAL_DIR), $(LOCAL_SRCS))
 HEADERS += $(addprefix $(LOCAL_DIR), $(LOCAL_HEADERS))
 
 # linking prerequisites
-OBJS.$(NAME) := $(patsubst %.c,$(PREFIX_O)%.o,$(SRCS))
+OBJS.$(NAME) := $(patsubst %,$(PREFIX_O)%.o,$(basename $(filter %.c %.cc %.cpp, $(SRCS))))
 RESOLVED_LIBS := $(patsubst %,$(PREFIX_A)%.a, $(DEP_LIBS))
 RESOLVED_LIBS += $(patsubst %,$(PREFIX_A)%.a, $(LIBS))
 
@@ -45,7 +45,7 @@ $(OBJS.$(NAME)): CFLAGS:=-I"$(ABS_HEADERS_DIR)" $(CFLAGS) $(LOCAL_CFLAGS)
 $(PREFIX_PROG)$(NAME): LDFLAGS:=$(LDFLAGS) $(LOCAL_LDFLAGS)
 
 # dynamically generated dependencies (file-to-file dependencies)
-DEPS.$(NAME) := $(patsubst %.c,$(PREFIX_O)%.c.d,$(SRCS))
+DEPS.$(NAME) := $(patsubst %,$(PREFIX_O)%.d,$(filter %.c %.cc %.cpp, $(SRCS)))
 -include $(DEPS.$(NAME))
 
 # rule for installing headers

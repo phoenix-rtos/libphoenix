@@ -147,6 +147,18 @@ $(PREFIX_O)%.o: %.c
 	$(SIL)$(CC) -c $(CFLAGS) "$(abspath $<)" -o "$@"
 	$(SIL)$(CC) -M  -MD -MP -MF $(PREFIX_O)$*.c.d -MT "$@" $(CFLAGS) $<
 
+$(PREFIX_O)%.o: %.cc
+	@mkdir -p $(@D)
+	@printf "CC  %-24s\n" "$<"
+	$(SIL)$(CC) -c $(filter-out -Wstrict-prototypes, $(CFLAGS)) "$(abspath $<)" -o "$@"
+	$(SIL)$(CC) -M  -MD -MP -MF $(PREFIX_O)$*.cc.d -MT "$@" $(filter-out -Wstrict-prototypes, $(CFLAGS)) $<
+
+$(PREFIX_O)%.o: %.cpp
+	@mkdir -p $(@D)
+	@printf "CC  %-24s\n" "$<"
+	$(SIL)$(CC) -c $(filter-out -Wstrict-prototypes, $(CFLAGS)) "$(abspath $<)" -o "$@"
+	$(SIL)$(CC) -M  -MD -MP -MF $(PREFIX_O)$*.cpp.d -MT "$@" $(filter-out -Wstrict-prototypes, $(CFLAGS)) $<
+
 $(PREFIX_O)%.o: %.S
 	@mkdir -p $(@D)
 	@printf "ASM %-24s\n" "$<"
