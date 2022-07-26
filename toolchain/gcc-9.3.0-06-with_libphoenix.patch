@@ -1,0 +1,119 @@
+diff -Naur gcc-9.3.0-orig/libstdc++-v3/configure gcc-9.3.0/libstdc++-v3/configure
+--- gcc-9.3.0-orig/libstdc++-v3/configure	2020-03-12 12:07:24.000000000 +0100
++++ gcc-9.3.0/libstdc++-v3/configure	2022-07-22 15:18:03.542694004 +0200
+@@ -899,6 +899,7 @@
+ with_target_subdir
+ with_cross_host
+ with_newlib
++with_libphoenix
+ enable_maintainer_mode
+ enable_shared
+ enable_static
+@@ -1653,6 +1654,7 @@
+                           configuring in a subdirectory
+   --with-cross-host=HOST  configuring with a cross compiler
+   --with-newlib           assume newlib as a system C library
++  --with-libphoenix       assume libphoenix as a system C library
+   --with-pic              try to use only PIC/non-PIC objects [default=use
+                           both]
+   --with-gnu-ld           assume the C compiler uses GNU ld [default=no]
+@@ -5447,6 +5449,13 @@
+ fi
+ 
+ 
++# Check whether --with-libphoenix was given.
++if test ${with_libphoenix+y}
++then :
++  withval=$with_libphoenix;
++fi
++
++
+   # Will set LN_S to either 'ln -s', 'ln', or 'cp -p' (if linking isn't
+   # available).  Uncomment the next line to force a particular method.
+   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether ln -s works" >&5
+@@ -29478,7 +29487,8 @@
+   # GLIBCXX_CHECK_MATH_SUPPORT
+ 
+   # First, test for "known" system libraries.  We may be using newlib even
+-  # on a hosted environment.
++  # on a hosted environment. There is also possibility to be using libphoenix,
++  # what is testing in the second test.
+   if test "x${with_newlib}" = "xyes"; then
+     os_include_dir="os/newlib"
+     $as_echo "#define HAVE_HYPOT 1" >>confdefs.h
+@@ -29537,6 +29547,75 @@
+ 
+     $as_echo "#define HAVE_MEMALIGN 1" >>confdefs.h
+ 
++  elif test "x${with_libphoenix}" = "xyes"; then
++    os_include_dir="os/newlib"
++    printf "%s\n" "#define HAVE_HYPOT 1" >>confdefs.h
++
++
++    # GLIBCXX_CHECK_STDLIB_SUPPORT
++    printf "%s\n" "#define HAVE_STRTOF 1" >>confdefs.h
++
++
++    printf "%s\n" "#define HAVE_ACOSF 1" >>confdefs.h
++
++    printf "%s\n" "#define HAVE_ASINF 1" >>confdefs.h
++
++    printf "%s\n" "#define HAVE_ATAN2F 1" >>confdefs.h
++
++    printf "%s\n" "#define HAVE_ATANF 1" >>confdefs.h
++
++    printf "%s\n" "#define HAVE_CEILF 1" >>confdefs.h
++
++    printf "%s\n" "#define HAVE_COSF 1" >>confdefs.h
++
++    printf "%s\n" "#define HAVE_COSHF 1" >>confdefs.h
++
++    printf "%s\n" "#define HAVE_EXPF 1" >>confdefs.h
++
++    printf "%s\n" "#define HAVE_FABSF 1" >>confdefs.h
++
++    printf "%s\n" "#define HAVE_FLOORF 1" >>confdefs.h
++
++    printf "%s\n" "#define HAVE_FMODF 1" >>confdefs.h
++
++    printf "%s\n" "#define HAVE_FREXPF 1" >>confdefs.h
++
++    printf "%s\n" "#define HAVE_LDEXPF 1" >>confdefs.h
++
++    printf "%s\n" "#define HAVE_LOG10F 1" >>confdefs.h
++
++    printf "%s\n" "#define HAVE_LOGF 1" >>confdefs.h
++
++    printf "%s\n" "#define HAVE_MODFF 1" >>confdefs.h
++
++    printf "%s\n" "#define HAVE_POWF 1" >>confdefs.h
++
++    printf "%s\n" "#define HAVE_SINF 1" >>confdefs.h
++
++    printf "%s\n" "#define HAVE_SINHF 1" >>confdefs.h
++
++    printf "%s\n" "#define HAVE_SQRTF 1" >>confdefs.h
++
++    printf "%s\n" "#define HAVE_TANF 1" >>confdefs.h
++
++    printf "%s\n" "#define HAVE_TANHF 1" >>confdefs.h
++
++
++    printf "%s\n" "#define HAVE_ICONV 1" >>confdefs.h
++
++    ac_fn_c_check_func "$LINENO" "aligned_alloc" "ac_cv_func_aligned_alloc"
++if test "x$ac_cv_func_aligned_alloc" = xyes
++then :
++  printf "%s\n" "#define HAVE_ALIGNED_ALLOC 1" >>confdefs.h
++
++fi
++ac_fn_c_check_func "$LINENO" "posix_memalign" "ac_cv_func_posix_memalign"
++if test "x$ac_cv_func_posix_memalign" = xyes
++then :
++  printf "%s\n" "#define HAVE_POSIX_MEMALIGN 1" >>confdefs.h
++
++fi
++
+   else
+ 
+ # Base decisions on target environment.
