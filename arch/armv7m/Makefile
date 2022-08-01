@@ -5,4 +5,4 @@
 # Author: Pawel Pisarczyk
 #
 
-OBJS += $(addprefix $(PREFIX_O)arch/armv7m/, _start.o syscalls.o jmp.o signal.o string.o reboot.o)
+OBJS += $(addprefix $(PREFIX_O)arch/armv7m/, _start.o syscalls.o jmp.o signal.o string.o reboot.o tls.o tls_internal.o)
