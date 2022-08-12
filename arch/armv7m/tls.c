@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * tls_internal.c
+ * tls.c
  *
  * Copyright 2022 Phoenix Systems
  * Author: Lukasz Leczkowski
@@ -19,10 +19,16 @@
 volatile uintptr_t arm_tls_ptr __attribute__((section("armtls"))) = 0;
 
 
-void aeabi_read_tp_internal(void)
+void *read_tls_ptr(void)
 {
-	__asm__ volatile("mov r0,%[tls]"
-					 :
-					 : [tls] "r"(arm_tls_ptr)
-					 :);
+	return (void *)arm_tls_ptr;
+}
+
+
+void __attribute__((naked)) __aeabi_read_tp(void)
+{
+	__asm__ volatile(
+		"push {r1-r4,r12,lr};"
+		"bl read_tls_ptr;"
+		"pop {r1-r4,r12,pc}");
 }
