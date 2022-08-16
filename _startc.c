@@ -23,6 +23,7 @@ extern int _env_init(void);
 extern void _signals_init(void);
 extern void _errno_init(void);
 extern void _init_array(void);
+extern void _pthread_init(void);
 extern int main(int argc, char **argv);
 
 
@@ -41,6 +42,7 @@ void _startc(int argc, char **argv, char **env)
 	_signals_init();
 	_file_init();
 	_init_array();
+	_pthread_init();
 
 	exit(main(argc, argv));
 }
