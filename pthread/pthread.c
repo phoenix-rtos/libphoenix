@@ -36,10 +36,14 @@ typedef struct pthread_ctx {
 	struct pthread_ctx *prev;
 	int detached;
 	struct __errno_t e;
+	int refcount;
 } pthread_ctx;
 
 
-static pthread_ctx *pthread_list = NULL;
+static struct {
+	handle_t pthread_list_lock;
+	pthread_ctx *pthread_list;
+} pthread_common;
 
 
 static const pthread_attr_t pthread_attr_default = {
@@ -49,6 +53,38 @@ static const pthread_attr_t pthread_attr_default = {
 	.detached = PTHREAD_CREATE_JOINABLE,
 	.stacksize = CEIL(PTHREAD_STACK_MIN, PAGE_SIZE)
 };
+
+
+static void _pthread_ctx_get(pthread_ctx *ctx)
+{
+	++ctx->refcount;
+}
+
+
+static void _pthread_ctx_put(pthread_ctx *ctx)
+{
+	int refcnt = --ctx->refcount;
+	mutexUnlock(pthread_common.pthread_list_lock);
+
+	if (refcnt == 0) {
+		free(ctx);
+	}
+}
+
+
+static void pthread_ctx_get(pthread_ctx *ctx)
+{
+	mutexLock(pthread_common.pthread_list_lock);
+	_pthread_ctx_get(ctx);
+	mutexUnlock(pthread_common.pthread_list_lock);
+}
+
+
+static void pthread_ctx_put(pthread_ctx *ctx)
+{
+	mutexLock(pthread_common.pthread_list_lock);
+	_pthread_ctx_put(ctx);
+}
 
 
 static void start_point(void *args)
@@ -65,16 +101,20 @@ static void start_point(void *args)
 
 static pthread_ctx *find_pthread(handle_t id)
 {
-	pthread_ctx *ctx = pthread_list;
+	mutexLock(pthread_common.pthread_list_lock);
+	pthread_ctx *ctx = pthread_common.pthread_list;
 
 	if (ctx != NULL) {
 		do {
-			if (ctx->id == id)
+			if (ctx->id == id) {
+				_pthread_ctx_get(ctx);
+				mutexUnlock(pthread_common.pthread_list_lock);
 				return ctx;
-
+			}
 			ctx = ctx->next;
-		} while (ctx != pthread_list);
+		} while (ctx != pthread_common.pthread_list);
 	}
+	mutexUnlock(pthread_common.pthread_list_lock);
 
 	return NULL;
 }
@@ -101,6 +141,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 		return -EAGAIN;
 	}
 
+	pthread_ctx_get(ctx);
 	ctx->retval = NULL;
 	ctx->detached = attrs->detached;
 	ctx->start_routine = start_routine;
@@ -114,14 +155,16 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 
 	if (err != EOK) {
 		munmap(stack, attrs->stacksize);
-		free(ctx);
+		pthread_ctx_put(ctx);
 		thread = NULL;
 	}
 	else if (ctx->detached == PTHREAD_CREATE_JOINABLE) {
-		if (pthread_list != NULL && pthread_list->id == 0)
-			pthread_list = NULL;
+		mutexLock(pthread_common.pthread_list_lock);
+		if (pthread_common.pthread_list != NULL && pthread_common.pthread_list->id == 0)
+			pthread_common.pthread_list = NULL;
 
-		LIST_ADD(&pthread_list, ctx);
+		LIST_ADD(&pthread_common.pthread_list, ctx);
+		mutexUnlock(pthread_common.pthread_list_lock);
 	}
 
 	return err;
@@ -135,8 +178,11 @@ int pthread_join(pthread_t thread, void **value_ptr)
 
 	pthread_ctx *ctx = (pthread_ctx *)thread;
 
-	if (ctx == NULL)
+	if (ctx == NULL) {
 		return -EINVAL;
+	}
+
+	mutexLock(pthread_common.pthread_list_lock);
 
 	if (ctx->detached != PTHREAD_CREATE_DETACHED) {
 		int err;
@@ -145,12 +191,17 @@ int pthread_join(pthread_t thread, void **value_ptr)
 			err = threadJoin(0);
 
 			if (err < 0) {
+				mutexUnlock(pthread_common.pthread_list_lock);
 				return err;
 			}
 			else if (ctx->id != err) {
+				mutexUnlock(pthread_common.pthread_list_lock);
 				pthread_ctx *ghost = find_pthread(err);
-				if (ghost != NULL)
+				if (ghost != NULL) {
 					ghost->detached = PTHREAD_CREATE_DETACHED;
+					pthread_ctx_put(ghost);
+				}
+				mutexLock(pthread_common.pthread_list_lock);
 			}
 		} while (ctx->id != err);
 	}
@@ -160,9 +211,11 @@ int pthread_join(pthread_t thread, void **value_ptr)
 
 	_errno_remove(&ctx->e);
 
-	LIST_REMOVE(&pthread_list, ctx);
+	LIST_REMOVE(&pthread_common.pthread_list, ctx);
+	mutexUnlock(pthread_common.pthread_list_lock);
+
 	munmap(ctx->stack, ctx->stacksize);
-	free(ctx);
+	pthread_ctx_put(ctx);
 
 	return EOK;
 }
@@ -170,16 +223,23 @@ int pthread_join(pthread_t thread, void **value_ptr)
 
 int pthread_detach(pthread_t thread)
 {
+	int err = EOK;
 	pthread_ctx *ctx = (pthread_ctx *)thread;
+	mutexLock(pthread_common.pthread_list_lock);
 
-	if (ctx == NULL)
+	if (ctx == NULL) {
+		mutexUnlock(pthread_common.pthread_list_lock);
 		return -ESRCH;
+	}
 
-	if (ctx->detached != PTHREAD_CREATE_JOINABLE)
+	if (ctx->detached != PTHREAD_CREATE_JOINABLE) {
+		mutexUnlock(pthread_common.pthread_list_lock);
 		return -EINVAL;
+	}
 
-	LIST_REMOVE(&pthread_list, ctx);
-	free(ctx);
+	LIST_REMOVE(&pthread_common.pthread_list, ctx);
+
+	_pthread_ctx_put(ctx);
 
 	return EOK;
 }
@@ -187,7 +247,11 @@ int pthread_detach(pthread_t thread)
 
 pthread_t pthread_self(void)
 {
-	return (pthread_t)find_pthread(gettid());
+	pthread_ctx *ctx = find_pthread(gettid());
+	if (ctx != NULL) {
+		pthread_ctx_put(ctx);
+	}
+	return (pthread_t)ctx;
 }
 
 
@@ -201,8 +265,11 @@ void pthread_exit(void *value_ptr)
 {
 	pthread_ctx *ctx = (pthread_ctx *)pthread_self();
 
-	if (ctx != NULL)
+	if (ctx != NULL) {
+		mutexLock(pthread_common.pthread_list_lock);
 		ctx->retval = value_ptr;
+		_pthread_ctx_put(ctx);
+	}
 
 	endthread();
 }
@@ -593,4 +660,11 @@ int pthread_cond_timedwait(pthread_cond_t *restrict cond,
 		err = -ETIMEDOUT;
 	}
 	return err;
+}
+
+
+void _pthread_init(void)
+{
+	mutexCreate(&pthread_common.pthread_list_lock);
+	pthread_common.pthread_list = NULL;
 }
