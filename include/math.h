@@ -147,6 +147,31 @@ extern double fabs(double x);
 
 
 /* C99 extensions */
+float cosf(float x);
+float sinf(float x);
+float tanf(float x);
+float acosf(float x);
+float asinf(float x);
+float atanf(float x);
+float atan2f(float y, float x);
+float coshf(float x);
+float sinhf(float x);
+float tanhf(float x);
+float expf(float x);
+float frexpf(float x, int *exp);
+float ldexpf(float x, int exp);
+float logf(float x);
+float log10f(float x);
+float powf(float base, float exponent);
+float sqrtf(float x);
+float roundf(float x);
+float ceilf(float x);
+float floorf(float x);
+float fmodf(float num, float denom);
+float truncf(float x);
+float fabsf(float x);
+
+
 #define cosf(x)              ((float)cos(x))
 #define sinf(x)              ((float)sin(x))
 #define tanf(x)              ((float)tan(x))
