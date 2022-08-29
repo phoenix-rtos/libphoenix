@@ -290,29 +290,22 @@ int pthread_join(pthread_t thread, void **value_ptr)
 	mutexLock(pthread_common.pthread_list_lock);
 
 	if (ctx->detached != PTHREAD_CREATE_DETACHED) {
-		int err;
+		int err, id = ctx->id;
+		mutexUnlock(pthread_common.pthread_list_lock);
+
 		do {
-			mutexUnlock(pthread_common.pthread_list_lock);
-			err = threadJoin(0);
-			mutexLock(pthread_common.pthread_list_lock);
-			if (err < 0) {
-				mutexUnlock(pthread_common.pthread_list_lock);
-				return -err;
-			}
-			else if (ctx->id != err) {
-				mutexUnlock(pthread_common.pthread_list_lock);
-				pthread_ctx *ghost = find_pthread(err);
-				if (ghost != NULL) {
-					ghost->detached = PTHREAD_CREATE_DETACHED;
-					pthread_ctx_put(ghost);
-				}
-				mutexLock(pthread_common.pthread_list_lock);
-			}
-		} while (ctx->id != err);
+			err = threadJoin(id, 0);
+		} while (err == -EINTR);
+
+		if (err < 0) {
+			return err;
+		}
+		mutexLock(pthread_common.pthread_list_lock);
 	}
 
-	if (value_ptr != NULL)
+	if (value_ptr != NULL) {
 		*value_ptr = ctx->retval;
+	}
 
 	_errno_remove(&ctx->e);
 
