@@ -29,13 +29,13 @@ typedef jmp_buf sigjmp_buf;
 extern int _setjmp(jmp_buf var);
 
 
-extern void _longjmp(jmp_buf var, int m) __attribute__((noreturn));
+extern void _longjmp(jmp_buf var, int m) __attribute__((__noreturn__));
 
 
 extern int setjmp(jmp_buf var);
 
 
-__attribute__((noreturn)) static inline void longjmp(jmp_buf var, int m)
+__attribute__((__noreturn__)) static inline void longjmp(jmp_buf var, int m)
 {
 	_longjmp(var, m);
 }
@@ -44,7 +44,7 @@ __attribute__((noreturn)) static inline void longjmp(jmp_buf var, int m)
 extern int sigsetjmp(sigjmp_buf env, int savesigs);
 
 
-__attribute__((noreturn)) static inline void siglongjmp(sigjmp_buf env, int val)
+__attribute__((__noreturn__)) static inline void siglongjmp(sigjmp_buf env, int val)
 {
 	_longjmp(env, val);
 }

@@ -175,13 +175,13 @@ extern int strverscmp(const char *s1, const char *s2);
 extern char *strsignal(int sig);
 
 
-__attribute__((always_inline)) static inline void bcopy(const void *src, void *dest, size_t n)
+__attribute__((__always_inline__)) static inline void bcopy(const void *src, void *dest, size_t n)
 {
 	memmove(dest, src, n);
 }
 
 
-__attribute__((always_inline)) static inline void bzero(void *p, size_t sz)
+__attribute__((__always_inline__)) static inline void bzero(void *p, size_t sz)
 {
 	memset(p, 0, sz);
 }
