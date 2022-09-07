@@ -68,13 +68,4 @@
 #define M_SQRT1_2 0.70710678118654752440
 
 
-#define HUGE_VAL __builtin_huge_val()
-
-
-#define NAN __builtin_nanf("")
-
-
-#define INFINITY (__builtin_inff())
-
-
 #endif
