@@ -46,6 +46,11 @@
 #define SEEK_END 2
 #endif
 
+#define FOPEN_MAX 16
+#define L_ctermid 11 /* Fit at least /dev/pts/XX */
+#define L_tmpnam  16
+#define TMP_MAX   32767
+
 typedef offs_t fpos_t;
 
 
