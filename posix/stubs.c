@@ -161,3 +161,28 @@ int flock(int fd, int operation)
 {
 	return 0;
 }
+
+int umount(const char *path)
+{
+	return 0;
+}
+
+long ulimit(int __cmd, ...)
+{
+	return 0;
+}
+
+char *gets(char *str)
+{
+	return NULL;
+}
+
+char *tmpnam(char *str)
+{
+	return NULL;
+}
+
+int wctomb(char *str, wchar_t wchar)
+{
+	return 0;
+}
