@@ -13,11 +13,11 @@
  * %LICENSE%
  */
 
-#include <stddef.h>
-#include "ctype.h"
+#include <stdlib.h>
+#include <ctype.h>
 
 
-unsigned long int strtoul(char *nptr, char **endptr, int base)
+unsigned long int strtoul(const char *nptr, char **endptr, int base)
 {
 	unsigned long int t, v = 0;
 
@@ -41,13 +41,13 @@ unsigned long int strtoul(char *nptr, char **endptr, int base)
 	}
 
 	if (endptr != NULL)
-		*endptr = nptr;
+		*endptr = (char *)nptr;
 
 	return v;
 }
 
 
-long int strtol(char *nptr, char **endptr, int base)
+long int strtol(const char *nptr, char **endptr, int base)
 {
 	long int sign = 1;
 
@@ -60,13 +60,13 @@ long int strtol(char *nptr, char **endptr, int base)
 }
 
 
-int atoi(char *str)
+int atoi(const char *str)
 {
 	return (int)strtol(str, NULL, 10);
 }
 
 
-long int atol(char *str)
+long int atol(const char *str)
 {
 	return strtol(str, NULL, 10);
 }
