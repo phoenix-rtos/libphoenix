@@ -187,6 +187,7 @@ long long int strtoll(const char *nptr, char **endptr, int base)
 	return (acc);
 }
 
-
-
-
+long long int atoll(const char *str)
+{
+	return strtoll(str, NULL, 10);
+}

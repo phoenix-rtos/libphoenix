@@ -56,39 +56,47 @@ typedef struct
 } lldiv_t;
 
 
-/* Converts the string pointed to, by the argument str to a floating-point number (type double). */
+/* Converts the string pointed to by the argument str to a floating-point number (type double). */
 extern double atof(const char *str);
 
 
-/* Converts the string pointed to, by the argument str to an integer (type int). */
+/* Converts the string pointed to by the argument str to an integer (type int). */
 extern int atoi(const char *str);
 
 
-/* Converts the string pointed to, by the argument str to a long integer (type long int). */
+/* Converts the string pointed to by the argument str to a long integer (type long int). */
 extern long int atol(const char *str);
 
 
-/* Converts the string pointed to, by the argument str to a floating-point number (type float). */
+/* Converts the string pointed to by the argument str to a long long integer (type long long int). */
+extern long long int atoll(const char *str);
+
+
+/* Converts the string pointed to by the argument str to a floating-point number (type float). */
 extern float strtof(const char *__restrict str, char **__restrict endptr);
 
 
-/* Converts the string pointed to, by the argument str to a floating-point number (type double). */
+/* Converts the string pointed to by the argument str to a floating-point number (type double). */
 double strtod(const char *__restrict str, char **__restrict endptr);
 
 
-/* Converts the string pointed to, by the argument str to a long integer (type long int). */
-extern long int strtol(const char *str, char **endptr, int base);
+/* Converts the string pointed to by the argument str to a long floating-point number (type long double). */
+long double strtold(const char *__restrict str, char **__restrict endptr);
 
 
-/* Converts the string pointed to, by the argument str to an unsigned long integer (type unsigned long int). */
-extern unsigned long int strtoul(const char *str, char **endptr, int base);
+/* Converts the string pointed to by the argument nptr to a long integer (type long int). */
+extern long int strtol(const char *nptr, char **endptr, int base);
 
 
-/* Converts the string pointed to, by the argument str to a long long integer (type long long int). */
+/* Converts the string pointed to by the argument nptr to an unsigned long integer (type unsigned long int). */
+extern unsigned long int strtoul(const char *nptr, char **endptr, int base);
+
+
+/* Converts the string pointed to by the argument nptr to a long long integer (type long long int). */
 extern long long int strtoll(const char *nptr, char **endptr, int base);
 
 
-/* Converts the string pointed to, by the argument str to an unsigned long long integer (type unsigned long long int). */
+/* Converts the string pointed to by the argument nptr to an unsigned long long integer (type unsigned long long int). */
 extern unsigned long long int strtoull(const char *nptr, char **endptr, int base);
 
 
