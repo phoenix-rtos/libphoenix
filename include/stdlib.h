@@ -38,16 +38,22 @@ extern "C" {
 #define MB_LEN_MAX 4
 
 typedef struct {
-  int quot;
-  int rem;
+	int quot;
+	int rem;
 } div_t;
 
 
 typedef struct {
-  long int quot;
-  long int rem;
+	long int quot;
+	long int rem;
 } ldiv_t;
 
+
+typedef struct
+{
+	long long int quot;
+	long long int rem;
+} lldiv_t;
 
 
 /* Converts the string pointed to, by the argument str to a floating-point number (type double). */
@@ -160,15 +166,12 @@ static inline int abs(int x)
 }
 
 
-/* Divides numer (numerator) by denom (denominator). */
-extern div_t div(int numer, int denom);
-
-
 /* Returns the absolute value of x. */
 static inline long int labs(long int x)
 {
 	return x >= 0 ? x : -x;
 }
+
 
 /* Returns the absolute value of x. */
 static inline long long int llabs(long long int x)
@@ -177,8 +180,16 @@ static inline long long int llabs(long long int x)
 }
 
 
-/* Divides numer (numerator) by denom (denominator). */
-extern ldiv_t ldiv(long int numer, long int denom);
+/* Divides num (numerator) by den (denominator). */
+extern div_t div(int num, int den);
+
+
+/* Divides num (numerator) by den (denominator). */
+extern ldiv_t ldiv(long int num, long int den);
+
+
+/* Divides num (numerator) by den (denominator). */
+extern lldiv_t lldiv(long long int num, long long int den);
 
 
 /* Returns a pseudo-random number in the range of 0 to RAND_MAX (reentrant version) */
