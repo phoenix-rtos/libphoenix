@@ -24,17 +24,39 @@
 #include <netinet/in.h>
 #include <stdarg.h>
 #include <grp.h>
+#include <stdio.h>
+
+
+static struct {
+	char buff[6];
+} common_setlocale = { .buff = "POSIX" };
 
 
 char* setlocale(int category, const char* locale)
 {
-	if (category != LC_ALL)
+	if (category != LC_ALL &&
+		category != LC_COLLATE &&
+		category != LC_CTYPE &&
+		category != LC_MONETARY &&
+		category != LC_NUMERIC &&
+		category != LC_TIME) {
 		return NULL;
+	}
 
-	if (strcmp(locale, "POSIX") && strcmp(locale, "C"))
-		return NULL;
+	if (locale == NULL) {
+		return common_setlocale.buff;
+	}
 
-	return "POSIX";
+	if (strcmp(locale, "POSIX") == 0 || strcmp(locale, "") == 0) {
+		strcpy(common_setlocale.buff, "POSIX");
+		return common_setlocale.buff;
+	}
+	else if (strcmp(locale, "C") == 0) {
+		strcpy(common_setlocale.buff, "C");
+		return common_setlocale.buff;
+	}
+
+	return NULL;
 }
 
 
