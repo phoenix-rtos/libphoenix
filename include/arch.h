@@ -8,6 +8,8 @@
 #include <arch/armv7/arch.h>
 #elif defined(__riscv) && (__riscv_xlen == 64)
 #include <arch/riscv64/arch.h>
+#elif defined(__sparc__)
+#include <arch/sparcv8leon3/arch.h>
 #else
 #error "unsupported architecture"
 #endif
