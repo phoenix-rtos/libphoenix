@@ -20,6 +20,7 @@
 #include <sys/threads.h>
 #include <sched.h>
 #include <time.h>
+#include <signal.h>
 
 
 #define EDEADLK 38
@@ -190,5 +191,24 @@ static inline pthread_cond_t _pthread_cond_init(void)
 	pthread_cond_init(&cond, NULL);
 	return cond;
 }
+
+
+extern int pthread_sigmask(int how, const sigset_t *__restrict__ set, sigset_t *__restrict__ oset);
+
+
+extern int pthread_kill(pthread_t thread, int sig);
+
+
+extern int pthread_key_create(pthread_key_t *key, void (*destructor)(void *));
+
+
+extern int pthread_key_delete(pthread_key_t key);
+
+
+extern int pthread_setspecific(pthread_key_t key, const void *value);
+
+
+extern void *pthread_getspecific(pthread_key_t key);
+
 
 #endif

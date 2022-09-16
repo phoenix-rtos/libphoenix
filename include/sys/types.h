@@ -71,6 +71,7 @@ typedef struct pthread_condattr_t {
 	clockid_t clock_id;
 } pthread_condattr_t;
 
+typedef struct __pthread_key_t *pthread_key_t;
 
 /* BSD legacy types permitted by POSIX */
 typedef uint8_t   u_int8_t;
