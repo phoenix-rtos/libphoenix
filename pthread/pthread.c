@@ -37,13 +37,27 @@ typedef struct pthread_ctx {
 	int detached;
 	struct __errno_t e;
 	int refcount;
+	struct pthread_key_data_t *key_data_list;
 } pthread_ctx;
 
 
 static struct {
+	handle_t pthread_key_lock;
 	handle_t pthread_list_lock;
 	pthread_ctx *pthread_list;
 } pthread_common;
+
+
+typedef struct __pthread_key_t {
+	void (*destructor)(void *);
+} __pthread_key_t;
+
+
+typedef struct pthread_key_data_t {
+	__pthread_key_t *key;
+	void *value;
+	struct pthread_key_data_t *next;
+} pthread_key_data_t;
 
 
 static const pthread_attr_t pthread_attr_default = {
@@ -141,13 +155,14 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 		return -EAGAIN;
 	}
 
-	pthread_ctx_get(ctx);
+	ctx->refcount = 1;
 	ctx->retval = NULL;
 	ctx->detached = attrs->detached;
 	ctx->start_routine = start_routine;
 	ctx->arg = arg;
 	ctx->stack = stack;
 	ctx->stacksize = attrs->stacksize;
+	ctx->key_data_list = NULL;
 	*thread = (pthread_t)ctx;
 
 	int err = beginthreadex(start_point, attrs->priority, stack,
@@ -264,6 +279,9 @@ int pthread_equal(pthread_t t1, pthread_t t2)
 void pthread_exit(void *value_ptr)
 {
 	pthread_ctx *ctx = (pthread_ctx *)pthread_self();
+	void *value;
+	void (*destructor)(void *);
+	pthread_key_data_t *thread_data;
 
 	if (ctx != NULL) {
 		mutexLock(pthread_common.pthread_list_lock);
@@ -663,8 +681,128 @@ int pthread_cond_timedwait(pthread_cond_t *restrict cond,
 }
 
 
+int pthread_sigmask(int how, const sigset_t *__restrict__ set, sigset_t *__restrict__ oset)
+{
+	int ret = sigprocmask(how, set, oset);
+	return (ret == -1) ? errno : EOK;
+}
+
+
+int pthread_kill(pthread_t thread, int sig)
+{
+	int ret = kill(thread, sig);
+	return (ret == -1) ? errno : EOK;
+}
+
+
+int pthread_key_create(pthread_key_t *key, void (*destructor)(void *))
+{
+	int err = EOK;
+	*key = malloc(sizeof(__pthread_key_t));
+	if (key == NULL) {
+		err = -ENOMEM;
+	}
+	else {
+		(*key)->destructor = destructor;
+	}
+	return err;
+}
+
+
+int pthread_key_delete(pthread_key_t key)
+{
+	mutexLock(pthread_common.pthread_list_lock);
+
+	pthread_ctx *first = pthread_common.pthread_list, *curr = pthread_common.pthread_list;
+
+	if (first != NULL) {
+		mutexLock(pthread_common.pthread_key_lock);
+		do {
+			pthread_key_data_t *head = curr->key_data_list;
+			pthread_key_data_t *prev = NULL;
+			while (head != NULL) {
+				if (head->key == key) {
+					if (prev == NULL) {
+						curr->key_data_list = head->next;
+					}
+					else {
+						prev->next = head->next;
+					}
+					free(head);
+					break;
+				}
+				prev = head;
+				head = head->next;
+			}
+			curr = curr->next;
+		} while (curr != first);
+		mutexUnlock(pthread_common.pthread_key_lock);
+	}
+	mutexUnlock(pthread_common.pthread_list_lock);
+	free(key);
+	return EOK;
+}
+
+
+int pthread_setspecific(pthread_key_t key, const void *value)
+{
+	int err = EOK;
+	pthread_ctx *ctx = (pthread_ctx *)pthread_self();
+
+	mutexLock(pthread_common.pthread_key_lock);
+	pthread_key_data_t *head = ctx->key_data_list;
+
+	while (head != NULL) {
+		if (head->key == key) {
+			head->value = (void *)value;
+			break;
+		}
+		head = head->next;
+	}
+
+	if (head == NULL) {
+		head = (pthread_key_data_t *)malloc(sizeof(pthread_key_data_t));
+		if (head == NULL) {
+			err = -ENOMEM;
+		}
+		else {
+			head->key = key;
+			head->value = (void *)value;
+			head->next = ctx->key_data_list;
+			ctx->key_data_list = head;
+		}
+	}
+	mutexUnlock(pthread_common.pthread_key_lock);
+
+	pthread_ctx_put(ctx);
+	return err;
+}
+
+
+void *pthread_getspecific(pthread_key_t key)
+{
+	void *value = NULL;
+	pthread_ctx *ctx = (pthread_ctx *)pthread_self();
+
+	mutexLock(pthread_common.pthread_key_lock);
+	pthread_key_data_t *head = ctx->key_data_list;
+	while (head != NULL) {
+		if (head->key == key) {
+			value = head->value;
+			break;
+		}
+		head = head->next;
+	}
+	mutexUnlock(pthread_common.pthread_key_lock);
+
+	pthread_ctx_put(ctx);
+	return value;
+}
+
+
 void _pthread_init(void)
 {
+	mutexCreate(&pthread_common.pthread_key_lock);
 	mutexCreate(&pthread_common.pthread_list_lock);
 	pthread_common.pthread_list = NULL;
 }
