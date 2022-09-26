@@ -20,6 +20,7 @@
 #include <sys/mman.h>
 #include <sys/minmax.h>
 #include <pthread.h>
+#include <unistd.h>
 
 
 #define CEIL(value, size)	((((value) + (size) - 1) / (size)) * (size))
@@ -35,16 +36,29 @@ typedef struct pthread_ctx {
 	struct pthread_ctx *next;
 	struct pthread_ctx *prev;
 	int detached;
+	int cancelstate;
 	struct __errno_t e;
 	int refcount;
 	struct pthread_key_data_t *key_data_list;
 } pthread_ctx;
 
 
+typedef struct pthread_fork_handlers_t {
+	void (*prepare)(void);
+	void (*parent)(void);
+	void (*child)(void);
+	struct pthread_fork_handlers_t *prev;
+	struct pthread_fork_handlers_t *next;
+} pthread_fork_handlers_t;
+
+
 static struct {
 	handle_t pthread_key_lock;
 	handle_t pthread_list_lock;
+	handle_t pthread_atfork_lock;
+	handle_t mutex_cond_init_lock;
 	pthread_ctx *pthread_list;
+	pthread_fork_handlers_t *pthread_fork_handlers;
 } pthread_common;
 
 
@@ -60,6 +74,13 @@ typedef struct pthread_key_data_t {
 } pthread_key_data_t;
 
 
+typedef struct _pthread_key_cleanup_t {
+	void (*destructor)(void *);
+	void *value;
+	struct _pthread_key_cleanup_t *next;
+} _pthread_key_cleanup_t;
+
+
 static const pthread_attr_t pthread_attr_default = {
 	.stackaddr = NULL,
 	.policy = SCHED_RR,
@@ -72,6 +93,14 @@ static const pthread_attr_t pthread_attr_default = {
 static void _pthread_ctx_get(pthread_ctx *ctx)
 {
 	++ctx->refcount;
+}
+
+
+static void pthread_ctx_get(pthread_ctx *ctx)
+{
+	mutexLock(pthread_common.pthread_list_lock);
+	_pthread_ctx_get(ctx);
+	mutexUnlock(pthread_common.pthread_list_lock);
 }
 
 
@@ -102,6 +131,50 @@ static void start_point(void *args)
 	ctx->retval = (void *)(ctx->start_routine(ctx->arg));
 
 	endthread();
+}
+
+
+static _pthread_key_cleanup_t *pthread_key_cleanup(pthread_ctx *ctx)
+{
+	_pthread_key_cleanup_t *head = NULL, *next;
+	pthread_key_data_t *thread_data;
+
+	mutexLock(pthread_common.pthread_key_lock);
+
+	while (ctx->key_data_list != NULL) {
+		thread_data = ctx->key_data_list;
+		ctx->key_data_list = ctx->key_data_list->next;
+
+		next = malloc(sizeof(_pthread_key_cleanup_t));
+		if (next == NULL) {
+			mutexUnlock(pthread_common.pthread_key_lock);
+			return head;
+		}
+		next->destructor = thread_data->key->destructor;
+		next->value = thread_data->value;
+		next->next = head;
+		head = next;
+
+		free(thread_data);
+	}
+	mutexUnlock(pthread_common.pthread_key_lock);
+
+	return head;
+}
+
+
+static void pthread_full_key_cleanup(_pthread_key_cleanup_t *head)
+{
+	_pthread_key_cleanup_t *next;
+
+	while (head != NULL) {
+		next = head->next;
+		if (head->destructor != NULL) {
+			head->destructor(head->value);
+		}
+		free(head);
+		head = next;
+	}
 }
 
 
@@ -155,6 +228,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 	ctx->stack = stack;
 	ctx->stacksize = attrs->stacksize;
 	ctx->key_data_list = NULL;
+	ctx->cancelstate = PTHREAD_CANCEL_ENABLE;
 	*thread = (pthread_t)ctx;
 
 	int err = beginthreadex(start_point, attrs->priority, stack,
@@ -193,10 +267,10 @@ int pthread_join(pthread_t thread, void **value_ptr)
 
 	if (ctx->detached != PTHREAD_CREATE_DETACHED) {
 		int err;
-
 		do {
+			mutexUnlock(pthread_common.pthread_list_lock);
 			err = threadJoin(0);
-
+			mutexLock(pthread_common.pthread_list_lock);
 			if (err < 0) {
 				mutexUnlock(pthread_common.pthread_list_lock);
 				return err;
@@ -251,6 +325,65 @@ int pthread_detach(pthread_t thread)
 }
 
 
+int pthread_setcancelstate(int state, int *oldstate)
+{
+	int err = EOK;
+	pthread_ctx *ctx = (pthread_ctx *)pthread_self();
+
+	if (state != PTHREAD_CANCEL_ENABLE && state != PTHREAD_CANCEL_DISABLE) {
+		err = -EINVAL;
+	}
+	else {
+		mutexLock(pthread_common.pthread_list_lock);
+		_pthread_ctx_get(ctx);
+		if (oldstate != NULL) {
+			*oldstate = ctx->cancelstate;
+		}
+		ctx->cancelstate = state;
+		_pthread_ctx_put(ctx);
+	}
+	return err;
+}
+
+
+int pthread_cancel(pthread_t thread)
+{
+	int err = EOK, id;
+	pthread_ctx *ctx = (pthread_ctx *)thread;
+	_pthread_key_cleanup_t *cleanup;
+
+	if (ctx == NULL) {
+		err = -ESRCH;
+	}
+	else {
+		mutexLock(pthread_common.pthread_list_lock);
+		_pthread_ctx_get(ctx);
+		if (thread == pthread_self()) {
+			if (ctx->cancelstate == PTHREAD_CANCEL_ENABLE) {
+				_pthread_ctx_put(ctx);
+				pthread_exit((void *)PTHREAD_CANCELED);
+				/* no return */
+			}
+			_pthread_ctx_put(ctx);
+		}
+		else {
+			if (ctx->cancelstate == PTHREAD_CANCEL_ENABLE) {
+				cleanup = pthread_key_cleanup(ctx);
+				ctx->retval = (void *)PTHREAD_CANCELED;
+				id = ctx->id;
+				_pthread_ctx_put(ctx);
+				pthread_full_key_cleanup(cleanup);
+				err = signalPost(getpid(), id, signal_cancel);
+			}
+			else {
+				_pthread_ctx_put(ctx);
+			}
+		}
+	}
+	return err;
+}
+
+
 pthread_t pthread_self(void)
 {
 	pthread_ctx *ctx = find_pthread(gettid());
@@ -270,26 +403,14 @@ int pthread_equal(pthread_t t1, pthread_t t2)
 void pthread_exit(void *value_ptr)
 {
 	pthread_ctx *ctx = (pthread_ctx *)pthread_self();
-	void *value;
-	void (*destructor)(void *);
-	pthread_key_data_t *thread_data;
+	_pthread_key_cleanup_t *cleanup;
 
 	if (ctx != NULL) {
 		mutexLock(pthread_common.pthread_list_lock);
 		ctx->retval = value_ptr;
-		mutexLock(pthread_common.pthread_key_lock);
-		while (ctx->key_data_list != NULL) {
-			thread_data = ctx->key_data_list;
-			value = thread_data->value;
-			destructor = thread_data->key->destructor;
-			free(thread_data);
-			if (value != NULL && destructor != NULL) {
-				destructor(value);
-			}
-			ctx->key_data_list = ctx->key_data_list->next;
-		}
-		mutexUnlock(pthread_common.pthread_key_lock);
+		cleanup = pthread_key_cleanup(ctx);
 		_pthread_ctx_put(ctx);
+		pthread_full_key_cleanup(cleanup);
 	}
 
 	endthread();
@@ -480,47 +601,126 @@ int pthread_setschedparam(pthread_t thread, int policy,
 	const struct sched_param *param);
 
 
+static int pthread_mutex_lazy_init(pthread_mutex_t *mutex)
+{
+	int err = EOK;
+	if (mutex->initialized == 0) {
+		mutexLock(pthread_common.mutex_cond_init_lock);
+		if (mutex->initialized == 0) {
+			err = mutexCreate(&mutex->mutexh);
+			if (err == EOK) {
+				mutex->initialized = 1;
+			}
+		}
+		mutexUnlock(pthread_common.mutex_cond_init_lock);
+	}
+
+	return err;
+}
+
+
 int pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr)
 {
+	int err;
+
 	(void)attr;
 
-	return mutexCreate(mutex);
+	err = mutexCreate(&mutex->mutexh);
+	if (err == EOK) {
+		mutex->initialized = 1;
+	}
+	return err;
 }
 
 
 int pthread_mutex_lock(pthread_mutex_t *mutex)
 {
-	if (mutex == NULL)
-		return -EINVAL;
+	int err = pthread_mutex_lazy_init(mutex);
 
-	return mutexLock(*mutex);
+	if (err == EOK) {
+		err = mutexLock(mutex->mutexh);
+	}
+
+	return err;
 }
 
 
 int pthread_mutex_trylock(pthread_mutex_t *mutex)
 {
-	if (mutex == NULL)
-		return -EINVAL;
+	int err = pthread_mutex_lazy_init(mutex);
 
-	return mutexTry(*mutex);
+	if (err == EOK) {
+		err = mutexTry(mutex->mutexh);
+	}
+
+	return err;
 }
 
 
 int pthread_mutex_unlock(pthread_mutex_t *mutex)
 {
-	if (mutex == NULL)
-		return -EINVAL;
+	int err = pthread_mutex_lazy_init(mutex);
 
-	return mutexUnlock(*mutex);
+	if (err == EOK) {
+		err = mutexUnlock(mutex->mutexh);
+	}
+
+	return err;
 }
 
 
 int pthread_mutex_destroy(pthread_mutex_t *mutex)
 {
-	if (mutex == NULL)
-		return -EINVAL;
+	int err = EOK;
 
-	return resourceDestroy(*mutex);
+	mutexLock(pthread_common.mutex_cond_init_lock);
+	if (mutex->initialized == 1) {
+		mutexUnlock(pthread_common.mutex_cond_init_lock);
+		err = resourceDestroy(mutex->mutexh);
+	}
+	else {
+		mutexUnlock(pthread_common.mutex_cond_init_lock);
+	}
+
+	return err;
+}
+
+
+int pthread_mutexattr_destroy(pthread_mutexattr_t *attr)
+{
+	return EOK;
+}
+
+
+int pthread_mutexattr_init(pthread_mutexattr_t *attr)
+{
+	attr->type = PTHREAD_MUTEX_DEFAULT;
+	return EOK;
+}
+
+
+int pthread_mutexattr_gettype(const pthread_mutexattr_t *attr, int *type)
+{
+	*type = attr->type;
+	return EOK;
+}
+
+
+int pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type)
+{
+	int err = -EINVAL;
+
+	if (type >= PTHREAD_MUTEX_DEFAULT && type <= PTHREAD_MUTEX_RECURSIVE) {
+		attr->type = type;
+		err = EOK;
+	}
+	return err;
+}
+
+
+int sched_yield(void)
+{
+	return usleep(0);
 }
 
 
@@ -531,6 +731,7 @@ int sched_get_priority_max(int policy)
 
 	return -EINVAL;
 }
+
 
 int sched_get_priority_min(int policy)
 {
@@ -601,39 +802,82 @@ int pthread_condattr_getclock(const pthread_condattr_t *restrict attr, clockid_t
 }
 
 
+static int pthread_cond_lazy_init(pthread_cond_t *cond)
+{
+	int err = EOK;
+
+	if (cond->initialized == 0) {
+		mutexLock(pthread_common.mutex_cond_init_lock);
+		if (cond->initialized == 0) {
+			err = condCreate(&cond->condh);
+			if (err == EOK) {
+				cond->initialized = 1;
+			}
+		}
+		mutexUnlock(pthread_common.mutex_cond_init_lock);
+	}
+	return err;
+}
+
 int pthread_cond_init(pthread_cond_t *restrict cond, const pthread_condattr_t *restrict attr)
 {
-	return condCreate(cond);
+	int err;
+
+	err = condCreate(&cond->condh);
+	if (err == EOK) {
+		cond->initialized = 1;
+	}
+	return err;
 }
 
 
 int pthread_cond_destroy(pthread_cond_t *cond)
 {
-	return resourceDestroy(*cond);
+	int err = EOK;
+	mutexLock(pthread_common.mutex_cond_init_lock);
+	if (cond->initialized == 1) {
+		mutexUnlock(pthread_common.mutex_cond_init_lock);
+		err = resourceDestroy(cond->condh);
+	}
+	else {
+		mutexUnlock(pthread_common.mutex_cond_init_lock);
+	}
+	return err;
 }
 
 
 int pthread_cond_signal(pthread_cond_t *cond)
 {
-	return condSignal(*cond);
+	int err = pthread_cond_lazy_init(cond);
+
+	if (err == EOK) {
+		err = condSignal(cond->condh);
+	}
+	return err;
 }
 
 
 int pthread_cond_broadcast(pthread_cond_t *cond)
 {
-	return condBroadcast(*cond);
+	int err = pthread_cond_lazy_init(cond);
+
+	if (err == EOK) {
+		err = condBroadcast(cond->condh);
+	}
+	return err;
 }
 
 
 int pthread_cond_wait(pthread_cond_t *restrict cond, pthread_mutex_t *restrict mutex)
 {
-	int err = condWait(*cond, *mutex, 0);
+	int err = pthread_cond_lazy_init(cond);
 
-	while (err == -EINTR) {
-		err = mutexLock(*mutex);
-		if (err == EOK) {
-			err = condWait(*cond, *mutex, 0);
-		}
+	if (err == EOK) {
+		err = pthread_mutex_lazy_init(mutex);
+	}
+
+	if (err == EOK) {
+		err = condWait(cond->condh, mutex->mutexh, 0);
 	}
 	return err;
 }
@@ -659,22 +903,15 @@ int pthread_cond_timedwait(pthread_cond_t *restrict cond,
 		time_t now_us = timespec_to_us(&now);
 		const time_t abstime_us = timespec_to_us(abstime);
 		time_t timeout_us = abstime_us - now_us;
-		err = condWait(*cond, *mutex, timeout_us);
 
-		while (err == -EINTR) {
-			err = mutexLock(*mutex);
-			if (err == EOK) {
-				clock_gettime(CLOCK_REALTIME, &now);
-				now_us = timespec_to_us(&now);
+		err = pthread_cond_lazy_init(cond);
 
-				if (now_us >= abstime_us) {
-					err = -ETIMEDOUT;
-				}
-				else {
-					timeout_us = abstime_us - now_us;
-					err = condWait(*cond, *mutex, timeout_us);
-				}
-			}
+		if (err == EOK) {
+			err = pthread_mutex_lazy_init(mutex);
+		}
+
+		if (err == EOK) {
+			err = condWait(cond->condh, mutex->mutexh, timeout_us);
 		}
 	}
 	if (err == -ETIME) {
@@ -693,8 +930,9 @@ int pthread_sigmask(int how, const sigset_t *__restrict__ set, sigset_t *__restr
 
 int pthread_kill(pthread_t thread, int sig)
 {
-	int ret = kill(thread, sig);
-	return (ret == -1) ? errno : EOK;
+	pthread_ctx *ctx = (pthread_ctx *)thread;
+	int ret = signalPostPosix(getpid(), ctx->id, sig);
+	return ret;
 }
 
 
@@ -751,7 +989,7 @@ int pthread_setspecific(pthread_key_t key, const void *value)
 {
 	int err = EOK;
 	pthread_ctx *ctx = (pthread_ctx *)pthread_self();
-
+	pthread_ctx_get(ctx);
 	mutexLock(pthread_common.pthread_key_lock);
 	pthread_key_data_t *head = ctx->key_data_list;
 
@@ -786,7 +1024,7 @@ void *pthread_getspecific(pthread_key_t key)
 {
 	void *value = NULL;
 	pthread_ctx *ctx = (pthread_ctx *)pthread_self();
-
+	pthread_ctx_get(ctx);
 	mutexLock(pthread_common.pthread_key_lock);
 	pthread_key_data_t *head = ctx->key_data_list;
 	while (head != NULL) {
@@ -803,9 +1041,102 @@ void *pthread_getspecific(pthread_key_t key)
 }
 
 
+int pthread_once(pthread_once_t *once_control, void (*init_routine)(void))
+{
+	mutexLock(pthread_common.pthread_key_lock);
+
+	if (*once_control == PTHREAD_ONCE_INIT) {
+		init_routine();
+		*once_control = 0;
+	}
+
+	mutexUnlock(pthread_common.pthread_key_lock);
+	return EOK;
+}
+
+
+int pthread_atfork(void (*prepare)(void), void (*parent)(void), void (*child)(void))
+{
+	int err = EOK;
+	pthread_fork_handlers_t *fork_handlers = (pthread_fork_handlers_t *)malloc(sizeof(pthread_fork_handlers_t));
+	if (fork_handlers == NULL) {
+		err = -ENOMEM;
+	}
+	else {
+		fork_handlers->prepare = prepare;
+		fork_handlers->parent = parent;
+		fork_handlers->child = child;
+		mutexLock(pthread_common.pthread_atfork_lock);
+		LIST_ADD(&pthread_common.pthread_fork_handlers, fork_handlers);
+		mutexUnlock(pthread_common.pthread_atfork_lock);
+	}
+	return err;
+}
+
+
+void _pthread_atfork_prepare(void)
+{
+	/* prepare functions must be called in reverse order */
+	mutexLock(pthread_common.pthread_atfork_lock);
+	pthread_fork_handlers_t *last = pthread_common.pthread_fork_handlers, *curr;
+
+	if (last != NULL) {
+		last = last->prev;
+		curr = last;
+		do {
+			if (curr->prepare != NULL) {
+				curr->prepare();
+			}
+			curr = curr->prev;
+		} while (curr != last);
+	}
+	mutexUnlock(pthread_common.pthread_atfork_lock);
+}
+
+
+/* parent and child functions must be called in order */
+void _pthread_atfork_parent(void)
+{
+	mutexLock(pthread_common.pthread_atfork_lock);
+	pthread_fork_handlers_t *first = pthread_common.pthread_fork_handlers,
+							*curr = pthread_common.pthread_fork_handlers;
+
+	if (first != NULL) {
+		do {
+			if (curr->parent != NULL) {
+				curr->parent();
+			}
+			curr = curr->next;
+		} while (curr != first);
+	}
+	mutexUnlock(pthread_common.pthread_atfork_lock);
+}
+
+
+void _pthread_atfork_child(void)
+{
+	mutexLock(pthread_common.pthread_atfork_lock);
+	pthread_fork_handlers_t *first = pthread_common.pthread_fork_handlers,
+		*curr = pthread_common.pthread_fork_handlers;
+
+	if (first != NULL) {
+		do {
+			if (curr->child != NULL) {
+				curr->child();
+			}
+			curr = curr->next;
+		} while (curr != first);
+	}
+	mutexUnlock(pthread_common.pthread_atfork_lock);
+}
+
+
 void _pthread_init(void)
 {
 	mutexCreate(&pthread_common.pthread_key_lock);
 	mutexCreate(&pthread_common.pthread_list_lock);
+	mutexCreate(&pthread_common.pthread_atfork_lock);
+	mutexCreate(&pthread_common.mutex_cond_init_lock);
 	pthread_common.pthread_list = NULL;
+	pthread_common.pthread_fork_handlers = NULL;
 }

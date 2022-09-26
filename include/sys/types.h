@@ -61,10 +61,22 @@ typedef struct pthread_attr_t {
 
 typedef uintptr_t pthread_t;
 
-typedef handle_t pthread_mutex_t;
-typedef void *pthread_mutexattr_t;
+typedef struct {
+	handle_t mutexh;
+	volatile int initialized;
+} pthread_mutex_t;
 
-typedef handle_t pthread_cond_t;
+
+typedef struct pthread_mutexattr_t {
+	int type;
+} pthread_mutexattr_t;
+
+
+typedef struct {
+	handle_t condh;
+	volatile int initialized;
+} pthread_cond_t;
+
 
 typedef struct pthread_condattr_t {
 	int pshared;
@@ -72,6 +84,8 @@ typedef struct pthread_condattr_t {
 } pthread_condattr_t;
 
 typedef struct __pthread_key_t *pthread_key_t;
+
+typedef uint32_t pthread_once_t;
 
 /* BSD legacy types permitted by POSIX */
 typedef uint8_t   u_int8_t;

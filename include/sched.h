@@ -28,6 +28,9 @@ struct sched_param {
 };
 
 
+extern int sched_yield(void);
+
+
 extern int sched_get_priority_max(int policy);
 
 

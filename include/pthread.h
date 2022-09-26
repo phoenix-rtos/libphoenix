@@ -41,14 +41,20 @@
 #define PTHREAD_SCOPE_PROCESS 0
 #define PTHREAD_SCOPE_SYSTEM  1
 
-#define PTHREAD_MUTEX_INITIALIZER 0
+#define PTHREAD_MUTEX_INITIALIZER { 0, 0 }
 
 #define PTHREAD_MUTEX_DEFAULT    0
 #define PTHREAD_MUTEX_ERRORCHECK 1
 #define PTHREAD_MUTEX_NORMAL     2
 #define PTHREAD_MUTEX_RECURSIVE  3
 
-#define PTHREAD_COND_INITIALIZER _pthread_cond_init();
+#define PTHREAD_ONCE_INIT 1
+
+#define PTHREAD_CANCEL_DISABLE 0
+#define PTHREAD_CANCEL_ENABLE  1
+#define PTHREAD_CANCELED       2
+
+#define PTHREAD_COND_INITIALIZER { 0, 0 }
 
 
 extern int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_routine)(void *), void *arg);
@@ -58,6 +64,12 @@ extern int pthread_join(pthread_t thread, void **value_ptr);
 
 
 extern int pthread_detach(pthread_t thread);
+
+
+extern int pthread_setcancelstate(int state, int *oldstate);
+
+
+extern int pthread_cancel(pthread_t thread);
 
 
 extern pthread_t pthread_self(void);
@@ -141,10 +153,16 @@ extern int pthread_mutex_trylock(pthread_mutex_t *);
 extern int pthread_mutex_unlock(pthread_mutex_t *);
 
 
-extern int pthread_mutexattr_destroy(pthread_mutexattr_t *);
+extern int pthread_mutexattr_destroy(pthread_mutexattr_t *attr);
 
 
-extern int pthread_mutexattr_init(pthread_mutexattr_t *);
+extern int pthread_mutexattr_init(pthread_mutexattr_t *attr);
+
+
+extern int pthread_mutexattr_gettype(const pthread_mutexattr_t *attr, int *type);
+
+
+extern int pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type);
 
 
 extern int pthread_condattr_init(pthread_condattr_t *attr);
@@ -185,14 +203,6 @@ extern int pthread_cond_timedwait(pthread_cond_t *restrict cond,
 	const struct timespec *restrict abstime);
 
 
-static inline pthread_cond_t _pthread_cond_init(void)
-{
-	pthread_cond_t cond;
-	pthread_cond_init(&cond, NULL);
-	return cond;
-}
-
-
 extern int pthread_sigmask(int how, const sigset_t *__restrict__ set, sigset_t *__restrict__ oset);
 
 
@@ -209,6 +219,21 @@ extern int pthread_setspecific(pthread_key_t key, const void *value);
 
 
 extern void *pthread_getspecific(pthread_key_t key);
+
+
+extern int pthread_once(pthread_once_t *once_control, void (*init_routine)(void));
+
+
+extern int pthread_atfork(void (*prepare)(void), void (*parent)(void), void (*child)(void));
+
+
+extern void _pthread_atfork_prepare(void);
+
+
+extern void _pthread_atfork_parent(void);
+
+
+extern void _pthread_atfork_child(void);
 
 
 #endif

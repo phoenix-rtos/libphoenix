@@ -26,6 +26,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <stdarg.h>
+#include <pthread.h>
 
 
 WRAP_ERRNO_DEF(int, setpgid, (pid_t pid, pid_t pgid), (pid, pgid))
@@ -284,10 +285,16 @@ extern void release(void);
 pid_t fork(void)
 {
 	pid_t pid;
-	if (!(pid = sys_fork()))
+	_pthread_atfork_prepare();
+	if (!(pid = sys_fork())) {
 		release();
+		_pthread_atfork_child();
+	}
 	else if (pid < 0) {
 		return SET_ERRNO(pid);
+	}
+	else {
+		_pthread_atfork_parent();
 	}
 	return pid;
 }
