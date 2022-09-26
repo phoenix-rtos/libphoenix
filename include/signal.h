@@ -167,4 +167,7 @@ extern int sigsuspend(const sigset_t *);
 extern int sigwait(const sigset_t *, int *);
 
 
+extern int signalPostPosix(int pid, int tid, int signal);
+
+
 #endif

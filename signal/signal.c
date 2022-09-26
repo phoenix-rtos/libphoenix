@@ -375,6 +375,12 @@ int sigdelset(sigset_t *set, int signum)
 }
 
 
+int signalPostPosix(int pid, int tid, int signal)
+{
+	return signalPost(pid, tid, _signals_posix2phx[signal]);
+}
+
+
 extern void _signal_trampoline(void);
 
 
