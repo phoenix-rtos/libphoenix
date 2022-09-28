@@ -86,14 +86,6 @@ static void _pthread_ctx_put(pthread_ctx *ctx)
 }
 
 
-static void pthread_ctx_get(pthread_ctx *ctx)
-{
-	mutexLock(pthread_common.pthread_list_lock);
-	_pthread_ctx_get(ctx);
-	mutexUnlock(pthread_common.pthread_list_lock);
-}
-
-
 static void pthread_ctx_put(pthread_ctx *ctx)
 {
 	mutexLock(pthread_common.pthread_list_lock);
@@ -238,7 +230,6 @@ int pthread_join(pthread_t thread, void **value_ptr)
 
 int pthread_detach(pthread_t thread)
 {
-	int err = EOK;
 	pthread_ctx *ctx = (pthread_ctx *)thread;
 	mutexLock(pthread_common.pthread_list_lock);
 
