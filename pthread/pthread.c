@@ -277,6 +277,18 @@ void pthread_exit(void *value_ptr)
 	if (ctx != NULL) {
 		mutexLock(pthread_common.pthread_list_lock);
 		ctx->retval = value_ptr;
+		mutexLock(pthread_common.pthread_key_lock);
+		while (ctx->key_data_list != NULL) {
+			thread_data = ctx->key_data_list;
+			value = thread_data->value;
+			destructor = thread_data->key->destructor;
+			free(thread_data);
+			if (value != NULL && destructor != NULL) {
+				destructor(value);
+			}
+			ctx->key_data_list = ctx->key_data_list->next;
+		}
+		mutexUnlock(pthread_common.pthread_key_lock);
 		_pthread_ctx_put(ctx);
 	}
 
