@@ -27,12 +27,17 @@ int mutexLock(handle_t m)
 
 int condWait(handle_t h, handle_t m, time_t timeout)
 {
-	int err;
+	int err, mut_err;
 
 	err = phCondWait(h, m, timeout);
 
-	while (err == -EINTR)
-		err = phMutexLock(m);
+	while (err == -EINTR) {
+		mut_err = mutexLock(m);
+		if (mut_err != EOK) {
+			return mut_err;
+		}
+		err = phCondWait(h, m, timeout);
+	}
 
 	return err;
 }
