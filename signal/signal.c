@@ -39,7 +39,7 @@ const int _signals_phx2posix[] = { 0, SIGKILL, SIGSEGV, SIGILL, SIGFPE, SIGHUP, 
 
 
 static const int _signals_posix2phx[] = { 0, 5, 6, 7, 3, 8, 9, 10, 4, 1, 11, 2, 12, 13, 14, 15, 16, 17, 18, 19,
-	20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31 };
+	20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32 };
 
 
 static void _signal_bug(int sig)
