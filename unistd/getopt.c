@@ -41,7 +41,6 @@ int getopt(int argc, char * const argv[], const char *optstring)
 		return -1;
 
 	if (argv[optind][1] == '-') {
-		optind++;
 		return -1;
 	}
 
