@@ -17,25 +17,25 @@
 #include <string.h>
 
 
-void lib_rbInit(rbtree_t *tree, rbcomp_t compare, rbaugment_t augment)
+void lib_rbInit(rbtree_t *rbtree, rbcomp_t compare, rbaugment_t augment)
 {
-	tree->root = NULL;
-	tree->compare = compare;
-	tree->augment = augment;
+	rbtree->root = NULL;
+	rbtree->compare = compare;
+	rbtree->augment = augment;
 }
 
 
-static inline void rb_augment(rbtree_t *tree, rbnode_t *node)
+static inline void rb_augment(rbtree_t *rbtree, rbnode_t *node)
 {
 	if (node == NULL)
 		return;
 
-	if (tree->augment != NULL)
-		tree->augment(node);
+	if (rbtree->augment != NULL)
+		rbtree->augment(node);
 }
 
 
-static void rb_rotateLeft(rbtree_t *tree, rbnode_t *x)
+static void rb_rotateLeft(rbtree_t *rbtree, rbnode_t *x)
 {
 	rbnode_t *y = x->right;
 	x->right = y->left;
@@ -45,7 +45,7 @@ static void rb_rotateLeft(rbtree_t *tree, rbnode_t *x)
 
 	y->parent = x->parent;
 	if (x->parent == NULL)
-		tree->root = y;
+		rbtree->root = y;
 	else if (x == x->parent->left)
 		x->parent->left = y;
 	else
@@ -54,12 +54,12 @@ static void rb_rotateLeft(rbtree_t *tree, rbnode_t *x)
 	y->left = x;
 	x->parent = y;
 
-	rb_augment(tree, y->left);
-	rb_augment(tree, y->right);
+	rb_augment(rbtree, y->left);
+	rb_augment(rbtree, y->right);
 }
 
 
-static void rb_rotateRight(rbtree_t *tree, rbnode_t *x)
+static void rb_rotateRight(rbtree_t *rbtree, rbnode_t *x)
 {
 	rbnode_t *y = x->left;
 	x->left = y->right;
@@ -69,7 +69,7 @@ static void rb_rotateRight(rbtree_t *tree, rbnode_t *x)
 
 	y->parent = x->parent;
 	if (x->parent == NULL)
-		tree->root = y;
+		rbtree->root = y;
 	else if (x == x->parent->right)
 		x->parent->right = y;
 	else
@@ -78,12 +78,12 @@ static void rb_rotateRight(rbtree_t *tree, rbnode_t *x)
 	y->right = x;
 	x->parent = y;
 
-	rb_augment(tree, y->left);
-	rb_augment(tree, y->right);
+	rb_augment(rbtree, y->left);
+	rb_augment(rbtree, y->right);
 }
 
 
-void lib_rbInsertBalance(rbtree_t *tree, rbnode_t *node)
+void lib_rbInsertBalance(rbtree_t *rbtree, rbnode_t *node)
 {
 	rbnode_t *z = node;
 	rbnode_t *y;
@@ -99,12 +99,12 @@ void lib_rbInsertBalance(rbtree_t *tree, rbnode_t *node)
 			}
 			else if (z == z->parent->right) {
 				z = z->parent;
-				rb_rotateLeft(tree, z);
+				rb_rotateLeft(rbtree, z);
 			}
 			else {
 				z->parent->color = RB_BLACK;
 				z->parent->parent->color = RB_RED;
-				rb_rotateRight(tree, z->parent->parent);
+				rb_rotateRight(rbtree, z->parent->parent);
 			}
 		}
 		else {
@@ -117,21 +117,21 @@ void lib_rbInsertBalance(rbtree_t *tree, rbnode_t *node)
 			}
 			else if (z == z->parent->left) {
 				z = z->parent;
-				rb_rotateRight(tree, z);
+				rb_rotateRight(rbtree, z);
 			}
 			else {
 				z->parent->color = RB_BLACK;
 				z->parent->parent->color = RB_RED;
-				rb_rotateLeft(tree, z->parent->parent);
+				rb_rotateLeft(rbtree, z->parent->parent);
 			}
 		}
 	}
 
-	tree->root->color = RB_BLACK;
+	rbtree->root->color = RB_BLACK;
 }
 
 
-static void lib_rbRemoveBalance(rbtree_t *tree, rbnode_t *parent, rbnode_t *node)
+static void lib_rbRemoveBalance(rbtree_t *rbtree, rbnode_t *parent, rbnode_t *node)
 {
 	rbnode_t nil = {
 		.color = RB_BLACK,
@@ -141,17 +141,17 @@ static void lib_rbRemoveBalance(rbtree_t *tree, rbnode_t *parent, rbnode_t *node
 	rbnode_t *x = (node == NULL) ? &nil : node;
 	rbnode_t *w;
 
-	if (tree->root == NULL)
+	if (rbtree->root == NULL)
 		return;
 
-	while (x != tree->root && x->color == RB_BLACK) {
+	while (x != rbtree->root && x->color == RB_BLACK) {
 		if (x == x->parent->left || (x == &nil && x->parent->left == NULL)) {
 			w = x->parent->right;
 
 			if (w->color == RB_RED) {
 				w->color = RB_BLACK;
 				x->parent->color = RB_RED;
-				rb_rotateLeft(tree, x->parent);
+				rb_rotateLeft(rbtree, x->parent);
 				w = x->parent->right;
 			}
 
@@ -163,15 +163,15 @@ static void lib_rbRemoveBalance(rbtree_t *tree, rbnode_t *parent, rbnode_t *node
 			else if (w->right == NULL || w->right->color == RB_BLACK) {
 				w->left->color = RB_BLACK;
 				w->color = RB_RED;
-				rb_rotateRight(tree, w);
+				rb_rotateRight(rbtree, w);
 				w = x->parent->right;
 			}
 			else {
 				w->color = x->parent->color;
 				x->parent->color = RB_BLACK;
 				w->right->color = RB_BLACK;
-				rb_rotateLeft(tree, x->parent);
-				x = tree->root;
+				rb_rotateLeft(rbtree, x->parent);
+				x = rbtree->root;
 			}
 		}
 		else {
@@ -180,7 +180,7 @@ static void lib_rbRemoveBalance(rbtree_t *tree, rbnode_t *parent, rbnode_t *node
 			if (w->color == RB_RED) {
 				w->color = RB_BLACK;
 				x->parent->color = RB_RED;
-				rb_rotateRight(tree, x->parent);
+				rb_rotateRight(rbtree, x->parent);
 				w = x->parent->left;
 			}
 
@@ -192,15 +192,15 @@ static void lib_rbRemoveBalance(rbtree_t *tree, rbnode_t *parent, rbnode_t *node
 			else if (w->left == NULL || w->left->color == RB_BLACK) {
 				w->right->color = RB_BLACK;
 				w->color = RB_RED;
-				rb_rotateLeft(tree, w);
+				rb_rotateLeft(rbtree, w);
 				w = x->parent->left;
 			}
 			else {
 				w->color = x->parent->color;
 				x->parent->color = RB_BLACK;
 				w->left->color = RB_BLACK;
-				rb_rotateRight(tree, x->parent);
-				x = tree->root;
+				rb_rotateRight(rbtree, x->parent);
+				x = rbtree->root;
 			}
 		}
 	}
@@ -209,7 +209,7 @@ static void lib_rbRemoveBalance(rbtree_t *tree, rbnode_t *parent, rbnode_t *node
 }
 
 
-void rb_transplant(rbtree_t *tree, rbnode_t *u, rbnode_t *v)
+void rb_transplant(rbtree_t *rbtree, rbnode_t *u, rbnode_t *v)
 {
 	if (u->parent != NULL) {
 		if (u == u->parent->left)
@@ -217,28 +217,28 @@ void rb_transplant(rbtree_t *tree, rbnode_t *u, rbnode_t *v)
 		else
 			u->parent->right = v;
 
-		rb_augment(tree, u->parent);
+		rb_augment(rbtree, u->parent);
 	}
 	else
-		tree->root = v;
+		rbtree->root = v;
 
 	if (v != NULL)
 		v->parent = u->parent;
 
-	rb_augment(tree, v);
+	rb_augment(rbtree, v);
 }
 
 
-rbnode_t *lib_rbInsert(rbtree_t *tree, rbnode_t *z)
+rbnode_t *lib_rbInsert(rbtree_t *rbtree, rbnode_t *z)
 {
 	rbnode_t *y = NULL;
-	rbnode_t *x = tree->root;
+	rbnode_t *x = rbtree->root;
 	int c = 0;
 
 	while (x != NULL) {
 		y = x;
 
-		c = tree->compare(y, z);
+		c = rbtree->compare(y, z);
 		if (c == 0)
 			return y;
 
@@ -247,7 +247,7 @@ rbnode_t *lib_rbInsert(rbtree_t *tree, rbnode_t *z)
 
 	z->parent = y;
 	if (y == NULL)
-		tree->root = z;
+		rbtree->root = z;
 	else if (c > 0)
 		y->left = z;
 	else
@@ -257,13 +257,13 @@ rbnode_t *lib_rbInsert(rbtree_t *tree, rbnode_t *z)
 	z->right = NULL;
 	z->color = RB_RED;
 
-	rb_augment(tree, z);
-	lib_rbInsertBalance(tree, z);
+	rb_augment(rbtree, z);
+	lib_rbInsertBalance(rbtree, z);
 	return NULL;
 }
 
 
-void lib_rbRemove(rbtree_t *tree, rbnode_t *z)
+void lib_rbRemove(rbtree_t *rbtree, rbnode_t *z)
 {
 	rbnode_t *y = z;
 	rbnode_t *x;
@@ -273,11 +273,11 @@ void lib_rbRemove(rbtree_t *tree, rbnode_t *z)
 
 	if (z->left == NULL) {
 		x = z->right;
-		rb_transplant(tree, z, z->right);
+		rb_transplant(rbtree, z, z->right);
 	}
 	else if (z->right == NULL) {
 		x = z->left;
-		rb_transplant(tree, z, z->left);
+		rb_transplant(rbtree, z, z->left);
 	}
 	else {
 		y = lib_rbMinimum(z->right);
@@ -289,25 +289,25 @@ void lib_rbRemove(rbtree_t *tree, rbnode_t *z)
 		else {
 			p = y->parent;
 
-			rb_transplant(tree, y, y->right);
+			rb_transplant(rbtree, y, y->right);
 			y->right = z->right;
 			y->right->parent = y;
 		}
 
-		rb_transplant(tree, z, y);
+		rb_transplant(rbtree, z, y);
 		y->left = z->left;
 		y->left->parent = y;
 		y->color = z->color;
 
 		t = lib_rbMaximum(y->left);
-		rb_augment(tree, t);
+		rb_augment(rbtree, t);
 
 		t = lib_rbMinimum(y->right);
-		rb_augment(tree, t);
+		rb_augment(rbtree, t);
 	}
 
 	if (c == RB_BLACK)
-		lib_rbRemoveBalance(tree, p, x);
+		lib_rbRemoveBalance(rbtree, p, x);
 }
 
 
@@ -367,9 +367,9 @@ rbnode_t *lib_rbNext(rbnode_t *node)
 }
 
 
-rbnode_t *lib_rbFind(rbtree_t *tree, rbnode_t *node)
+rbnode_t *lib_rbFind(rbtree_t *rbtree, rbnode_t *node)
 {
-	return lib_rbFindEx(tree->root, node, tree->compare);
+	return lib_rbFindEx(rbtree->root, node, rbtree->compare);
 }
 
 

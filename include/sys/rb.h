@@ -60,19 +60,19 @@ typedef struct _rbtree_t {
 } rbtree_t;
 
 
-extern void lib_rbInit(rbtree_t *tree, rbcomp_t compare, rbaugment_t augment);
+extern void lib_rbInit(rbtree_t *rbtree, rbcomp_t compare, rbaugment_t augment);
 
 
-extern rbnode_t *lib_rbInsert(rbtree_t *tree, rbnode_t *node);
+extern rbnode_t *lib_rbInsert(rbtree_t *rbtree, rbnode_t *node);
 
 
-extern void lib_rbInsertBalance(rbtree_t *tree, rbnode_t *node);
+extern void lib_rbInsertBalance(rbtree_t *rbtree, rbnode_t *node);
 
 
-extern void rb_transplant(rbtree_t *tree, rbnode_t *u, rbnode_t *v);
+extern void rb_transplant(rbtree_t *rbtree, rbnode_t *u, rbnode_t *v);
 
 
-extern void lib_rbRemove(rbtree_t *tree, rbnode_t *node);
+extern void lib_rbRemove(rbtree_t *rbtree, rbnode_t *node);
 
 
 extern rbnode_t *lib_rbMinimum(rbnode_t *node);
@@ -87,7 +87,7 @@ extern rbnode_t *lib_rbPrev(rbnode_t *node);
 extern rbnode_t *lib_rbNext(rbnode_t *node);
 
 
-extern rbnode_t *lib_rbFind(rbtree_t *tree, rbnode_t *node);
+extern rbnode_t *lib_rbFind(rbtree_t *rbtree, rbnode_t *node);
 
 
 extern rbnode_t *lib_rbFindEx(rbnode_t *root, rbnode_t *node, rbcomp_t compare);
