@@ -199,6 +199,30 @@ static pthread_ctx *find_pthread(handle_t id)
 }
 
 
+static int pthread_create_main(void)
+{
+	pthread_ctx *ctx = (pthread_ctx *)malloc(sizeof(pthread_ctx));
+	if (ctx == NULL) {
+		return ENOMEM;
+	}
+	ctx->id = gettid();
+	ctx->arg = NULL;
+	ctx->retval = NULL;
+	ctx->stack = NULL;
+	ctx->stacksize = 0;
+	ctx->detached = pthread_attr_default.detached;
+	ctx->cancelstate = PTHREAD_CANCEL_ENABLE;
+	ctx->refcount = 1;
+	ctx->key_data_list = NULL;
+
+	mutexLock(pthread_common.pthread_list_lock);
+	LIST_ADD(&pthread_common.pthread_list, ctx);
+	mutexUnlock(pthread_common.pthread_list_lock);
+
+	return 0;
+}
+
+
 int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 	void *(*start_routine)(void *), void *arg)
 {
@@ -1139,4 +1163,5 @@ void _pthread_init(void)
 	mutexCreate(&pthread_common.mutex_cond_init_lock);
 	pthread_common.pthread_list = NULL;
 	pthread_common.pthread_fork_handlers = NULL;
+	pthread_create_main();
 }
