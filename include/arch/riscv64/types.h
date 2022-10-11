@@ -19,7 +19,7 @@
 typedef unsigned long addr_t;
 typedef long long offs_t;
 
-typedef int ssize_t;
+typedef long ssize_t;
 typedef unsigned long long time_t;
 typedef unsigned int useconds_t;
 typedef int suseconds_t;
