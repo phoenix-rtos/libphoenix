@@ -34,13 +34,18 @@ int getopt(int argc, char * const argv[], const char *optstring)
 	char *optspec;
 	int leading_colon;
 
+	if (optind <= 0) {
+		optind = 1;
+		optwhere = 1;
+	}
+
 	if (argc == 0 || argv == NULL || optind >= argc)
 		return -1;
 
 	if (argv[optind] == NULL || argv[optind][0] != '-' || argv[optind][1] == '\0')
 		return -1;
 
-	if (argv[optind][1] == '-') {
+	if ((argv[optind][1] == '-') && (argv[optind][2] == '\0')) {
 		optind++;
 		return -1;
 	}
