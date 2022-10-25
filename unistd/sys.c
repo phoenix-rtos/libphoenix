@@ -37,13 +37,39 @@ WRAP_ERRNO_DEF(pid_t, getpgrp, (void), ())
 
 WRAP_ERRNO_DEF(int, setsid, (void), ())
 
+
+#define PATH_DELIM ':'
+
+
+static struct {
+	/* execve variables */
+	char *execBuff;
+	char *filePathBuff;
+	char *canonicalPath;
+	char **sbArgs;
+} sys_common;
+
+
+static void sys_clear(void)
+{
+	free(sys_common.execBuff);
+	sys_common.execBuff = NULL;
+
+	free(sys_common.filePathBuff);
+	sys_common.filePathBuff = NULL;
+
+	free(sys_common.canonicalPath);
+	sys_common.canonicalPath = NULL;
+
+	free(sys_common.sbArgs);
+	sys_common.sbArgs = NULL;
+}
+
+
 pid_t getsid(pid_t pid)
 {
 	return getpgid(pid);
 }
-
-
-char exec_buffer[256];
 
 
 static int shebang(const char *path)
@@ -68,88 +94,111 @@ int execv(const char *path, char *const argv[])
 	return execve(path, argv, environ);
 }
 
-#define PATH_DELIM ':'
 
 int execve(const char *file, char *const argv[], char *const envp[])
 {
 	int fd, noargs = 0, err;
-	char *interp = exec_buffer, *end, **sb_args = NULL;
-	char *canonical_path;
+	char *interp, *end;
 	char *path = getenv("PATH");
-	char filepath_buffer[PATH_MAX];
-	int filename_len = strlen(file);
+	int fileNameLen = strlen(file);
 	struct stat buf;
 
 	fflush(NULL);
+	sys_clear();
+
+	sys_common.execBuff = calloc(PATH_MAX, sizeof(char));
+	sys_common.filePathBuff = calloc(PATH_MAX, sizeof(char));
+	if (sys_common.execBuff == NULL || sys_common.filePathBuff == NULL) {
+		sys_clear();
+		return -ENOMEM;
+	}
+
+	interp = sys_common.execBuff;
 
 	if (!strchr(file, '/') && path) {
 		while (*path) {
 			char* delim = strchrnul(path, ':');
 
 			int path_len = delim - path;
-			if (path_len + 1 + filename_len + 1 <= sizeof(filepath_buffer)) {
-				memcpy(filepath_buffer, path, path_len);
-				filepath_buffer[path_len] = '/';
-				memcpy(filepath_buffer + path_len + 1, file, filename_len);
-				filepath_buffer[path_len + 1 + filename_len] = '\0';
+			if (path_len + 1 + fileNameLen + 1 <= PATH_MAX) {
+				memcpy(sys_common.filePathBuff, path, path_len);
+				sys_common.filePathBuff[path_len] = '/';
+				memcpy(sys_common.filePathBuff + path_len + 1, file, fileNameLen);
+				sys_common.filePathBuff[path_len + 1 + fileNameLen] = '\0';
 
 				/* check if file exists with symlink resolving */
-				if ((canonical_path = resolve_path(filepath_buffer, NULL, 1, 0)) != NULL) {
-					free(canonical_path);
-					file = filepath_buffer;
+				sys_common.canonicalPath = resolve_path(sys_common.filePathBuff, NULL, 1, 0);
+				if (sys_common.canonicalPath != NULL) {
+					free(sys_common.canonicalPath);
+					sys_common.canonicalPath = NULL;
+					file = sys_common.filePathBuff;
 					break;
 				}
 			}
 
 			path = delim;
-			if (*path == PATH_DELIM) path++;
+			if (*path == PATH_DELIM) {
+				path++;
+			}
 		}
 	}
 
 	if ((fd = shebang(file)) >= 0) {
-		if (read(fd, exec_buffer, sizeof(exec_buffer)) < 0) {
+		if (read(fd, sys_common.execBuff, PATH_MAX) < 0) {
 			close(fd);
+			sys_clear();
 			return SET_ERRNO(-EIO);
 		}
 
-		exec_buffer[sizeof(exec_buffer) - 1] = 0;
+		sys_common.execBuff[PATH_MAX - 1] = 0;
 
-		while (*interp == ' ') ++interp;
+		while (*interp == ' ') {
+			++interp;
+		}
+
 		end = interp;
-		while (*end && !isspace(*end)) ++end;
+		while (*end && !isspace(*end)) {
+			++end;
+		}
 		*end = 0;
 		/* TODO: support shebang params */
 
-		while (argv[noargs++] != NULL) ;
+		while (argv[noargs++] != NULL)
+			;
 
-		if ((sb_args = calloc(noargs + 1, sizeof(char *))) == NULL) {
+		sys_common.sbArgs = calloc(noargs + 1, sizeof(char *));
+		if (sys_common.sbArgs == NULL) {
 			close(fd);
+			sys_clear();
 			return -ENOMEM;
 		}
 
-		while (noargs-- > 0)
-			sb_args[noargs + 1] = argv[noargs];
+		while (noargs-- > 0) {
+			sys_common.sbArgs[noargs + 1] = argv[noargs];
+		}
 
-		sb_args[0] = interp;
-		sb_args[1] = (char *)file; /* replace first argument in case it was found in path */
+		sys_common.sbArgs[0] = interp;
+		sys_common.sbArgs[1] = (char *)file; /* replace first argument in case it was found in path */
 
 		close(fd);
 		file = interp;
-		argv = sb_args;
+		argv = sys_common.sbArgs;
 	}
 
-	if ((canonical_path = resolve_path(file, NULL, 1, 0)) == NULL)
+	sys_common.canonicalPath = resolve_path(file, NULL, 1, 0);
+	if (sys_common.canonicalPath == NULL) {
+		sys_clear();
 		return -1; /* errno set by resolve_path */
+	}
 
 	/* execute only if it is regular file */
-	err = stat(canonical_path, &buf);
+	err = stat(sys_common.canonicalPath, &buf);
 	if (!err) {
 		/* TODO: check execution bit presence when native chmod is available */
-		err = (S_ISREG(buf.st_mode)) ? exec(canonical_path, argv, envp) : -EACCES;
+		err = (S_ISREG(buf.st_mode)) ? exec(sys_common.canonicalPath, argv, envp) : -EACCES;
 	}
 
-	free(canonical_path);
-	free(sb_args);
+	sys_clear();
 
 	return SET_ERRNO(err);
 }
@@ -159,6 +208,7 @@ int execvp(const char *file, char *const argv[])
 {
 	return execvpe(file, argv, environ);
 }
+
 
 int execvpe(const char *file, char *const argv[], char *const envp[])
 {
@@ -207,6 +257,7 @@ int execl(const char *path, const char *arg, ...)
 	free(argv);
 	return err;
 }
+
 
 int execlp(const char *file, const char *arg, ...)
 {
