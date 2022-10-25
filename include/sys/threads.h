@@ -57,7 +57,7 @@ extern int gettid(void);
 extern int exec(const char *path, char *const argv[], char *const env[]);
 
 
-extern int spawnSyspage(const char *map, const char *name, char *const argv[]);
+extern int spawnSyspage(const char *imap, const char *dmap, const char *name, char *const argv[]);
 
 
 extern int threadJoin(time_t timeout);
