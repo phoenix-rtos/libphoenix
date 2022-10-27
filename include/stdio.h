@@ -90,7 +90,7 @@ extern FILE *stderr, *stdin, *stdout;
 #define stdout stdout
 
 /* Closes the stream. All buffers are flushed. */
-extern int fclose(FILE *file);
+extern int fclose(FILE *stream);
 
 
 /* Clears the end-of-file and error indicators for the given stream. */
@@ -333,8 +333,8 @@ extern void _file_init(void);
 
 
 /* stdio locking functions */
-extern void flockfile(FILE *file);
-extern void funlockfile(FILE *file);
+extern void flockfile(FILE *stream);
+extern void funlockfile(FILE *stream);
 
 
 #endif
