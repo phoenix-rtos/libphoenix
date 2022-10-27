@@ -5,14 +5,15 @@
  *
  * printf.c
  *
- * Copyright 2017 Phoenix Systems
- * Author: Adrian Kepka
+ * Copyright 2017, 2022 Phoenix Systems
+ * Author: Adrian Kepka, Gerard Swiderski
  *
  * This file is part of Phoenix-RTOS.
  *
  * %LICENSE%
  */
 
+#include "errno.h"
 #include "stdio.h"
 #include "stdlib.h"
 #include "unistd.h"
@@ -20,76 +21,145 @@
 #include "sys/debug.h"
 
 
-typedef struct _fprintf_ctx_t {
-	FILE *file;
+struct feed_ctx_s {
+	union {
+		FILE *stream;
+		int fd;
+	} h;
+	char htype;
 	char buff[16];
-	int n;
+	size_t n;
 	size_t total;
-} fprintf_ctx_t;
+	int error;
+};
 
 
-static void fprintf_feed(void *context, char c)
+static size_t safe_write(int fd, const char *buff, size_t size)
 {
-	fprintf_ctx_t* ctx = (fprintf_ctx_t *)context;
+	size_t todo = size;
+	ssize_t wlen;
+
+	while (todo != 0) {
+		wlen = write(fd, buff, todo);
+		if (wlen < 0) {
+			if (errno != EINTR && errno != EAGAIN) {
+				continue;
+			}
+
+			break;
+		}
+		todo -= wlen;
+		buff += wlen;
+	}
+
+	return size - todo;
+}
+
+
+static void format_feed(void *context, char c)
+{
+	size_t res;
+	struct feed_ctx_s *ctx = (struct feed_ctx_s *)context;
+
+	if (ctx->error < 0) {
+		return;
+	}
 
 	ctx->buff[ctx->n++] = c;
 	ctx->buff[ctx->n] = '\0';
 
 	if (ctx->n == sizeof(ctx->buff) - 1) {
-		fwrite(ctx->buff, 1, ctx->n, ctx->file);
+		res = (ctx->htype == 0) ?
+			fwrite(ctx->buff, 1, ctx->n, ctx->h.stream) :
+			safe_write(ctx->h.fd, ctx->buff, ctx->n);
+
+		ctx->total += res;
+		if (ctx->n != res) {
+			ctx->error = (ctx->htype == 0 ? -1 : -errno);
+		}
+
 		ctx->n = 0;
 	}
-
-	ctx->total++;
 }
 
 
-int fprintf(FILE *file, const char *format, ...)
+int fprintf(FILE *stream, const char *format, ...)
 {
 	int err;
 	va_list arg;
 
 	va_start(arg, format);
-	err = vfprintf(file, format, arg);
+	err = vfprintf(stream, format, arg);
 	va_end(arg);
 
 	return err;
 }
 
 
-int vfprintf(FILE *file, const char *format, va_list arg)
+int vfprintf(FILE *stream, const char *format, va_list arg)
 {
-	fprintf_ctx_t ctx;
+	struct feed_ctx_s ctx;
+	size_t res;
 
+	ctx.h.stream = stream;
+	ctx.htype = 0;
 	ctx.n = 0;
 	ctx.total = 0;
-	ctx.file = file;
+	ctx.error = 0;
 
-	format_parse(&ctx, fprintf_feed, format, arg);
+	format_parse(&ctx, format_feed, format, arg);
 
-	if (ctx.n != 0)
-		fwrite(ctx.buff, 1, ctx.n, ctx.file);
+	if (ctx.n != 0) {
+		res = fwrite(ctx.buff, 1, ctx.n, ctx.h.stream);
+		ctx.total += res;
 
-	return ctx.total;
+		if (ctx.n != res) {
+			ctx.error = -1;
+		}
+	}
+
+	return ctx.error < 0 ?
+		-1 : /* check error with feof() or ferror() */
+		ctx.total;
+}
+
+
+int vdprintf(int fd, const char *format, va_list arg)
+{
+	struct feed_ctx_s ctx;
+	size_t res;
+
+	ctx.h.fd = fd;
+	ctx.htype = 1;
+	ctx.n = 0;
+	ctx.total = 0;
+	ctx.error = 0;
+
+	format_parse(&ctx, format_feed, format, arg);
+
+	if (ctx.n != 0) {
+		res = safe_write(ctx.h.fd, ctx.buff, ctx.n);
+		ctx.total += res;
+
+		if (ctx.n != res) {
+			ctx.error = -errno;
+		}
+	}
+
+	return ctx.error < 0 ?
+		SET_ERRNO(ctx.error) :
+		ctx.total;
 }
 
 
 int dprintf(int fd, const char *format, ...)
 {
-	/* TEMPORARY */
-	va_list ap;
-	char *buf = malloc(1024);
 	int retVal;
-
-	if (!buf)
-		return -1;
+	va_list ap;
 
 	va_start(ap, format);
-	retVal = vsprintf(buf, format, ap);
+	retVal = vdprintf(fd, format, ap);
 	va_end(ap);
-
-	write(fd, buf, retVal);
-	free(buf);
 
 	return retVal;
 }
