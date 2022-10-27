@@ -198,7 +198,7 @@ extern char *tmpnam(char *str);
 extern int fprintf(FILE *stream, const char *format, ...);
 
 
-/* Sends formatted outout to a file descriptor. */
+/* Sends formatted output to a file descriptor. */
 extern int dprintf(int fd, const char *format, ...);
 
 
@@ -216,6 +216,10 @@ extern int snprintf(char *str, size_t n, const char *format, ...);
 
 /* Sends formatted output to a stream using an argument list. */
 extern int vfprintf(FILE *stream, const char *format, va_list arg);
+
+
+/* Sends formatted output to a file descriptor using an argument list. */
+extern int vdprintf(int fd, const char *format, va_list arg);
 
 
 /* Sends formatted output to stdout using an argument list. */
