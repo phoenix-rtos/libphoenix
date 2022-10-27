@@ -21,17 +21,20 @@
 #include "sys/debug.h"
 
 
+/* clang-format off */
 struct feed_ctx_s {
+	/* NOTE: Structure layout optimized for 32bit, and 64bit arch */
 	union {
 		FILE *stream;
 		int fd;
 	} h;
-	char htype;
-	char buff[16];
 	size_t n;
 	size_t total;
 	int error;
+	enum { feed_hStream = 0, feed_hDescriptor } hType;
+	char buff[16];
 };
+/* clang-format on */
 
 
 static size_t safe_write(int fd, const char *buff, size_t size)
@@ -69,13 +72,13 @@ static void format_feed(void *context, char c)
 	ctx->buff[ctx->n] = '\0';
 
 	if (ctx->n == sizeof(ctx->buff) - 1) {
-		res = (ctx->htype == 0) ?
+		res = (ctx->hType == feed_hStream) ?
 			fwrite(ctx->buff, 1, ctx->n, ctx->h.stream) :
 			safe_write(ctx->h.fd, ctx->buff, ctx->n);
 
 		ctx->total += res;
 		if (ctx->n != res) {
-			ctx->error = (ctx->htype == 0 ? -1 : -errno);
+			ctx->error = (ctx->hType == feed_hStream ? -1 : -errno);
 		}
 
 		ctx->n = 0;
@@ -101,8 +104,8 @@ int vfprintf(FILE *stream, const char *format, va_list arg)
 	struct feed_ctx_s ctx;
 	size_t res;
 
+	ctx.hType = feed_hStream;
 	ctx.h.stream = stream;
-	ctx.htype = 0;
 	ctx.n = 0;
 	ctx.total = 0;
 	ctx.error = 0;
@@ -129,8 +132,8 @@ int vdprintf(int fd, const char *format, va_list arg)
 	struct feed_ctx_s ctx;
 	size_t res;
 
+	ctx.hType = feed_hDescriptor;
 	ctx.h.fd = fd;
-	ctx.htype = 1;
 	ctx.n = 0;
 	ctx.total = 0;
 	ctx.error = 0;
