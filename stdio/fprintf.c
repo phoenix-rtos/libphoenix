@@ -45,7 +45,7 @@ static size_t safe_write(int fd, const char *buff, size_t size)
 	while (todo != 0) {
 		wlen = write(fd, buff, todo);
 		if (wlen < 0) {
-			if (errno != EINTR && errno != EAGAIN) {
+			if ((errno == EINTR) || (errno == EAGAIN)) {
 				continue;
 			}
 
