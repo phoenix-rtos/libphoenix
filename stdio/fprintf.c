@@ -44,15 +44,22 @@ static size_t safe_write(int fd, const char *buff, size_t size)
 
 	while (todo != 0) {
 		wlen = write(fd, buff, todo);
-		if (wlen < 0) {
+		if (wlen > 0) {
+			todo -= wlen;
+			buff += wlen;
+			continue;
+		}
+		else if (wlen < 0) {
 			if ((errno == EINTR) || (errno == EAGAIN)) {
 				continue;
 			}
-
 			break;
 		}
-		todo -= wlen;
-		buff += wlen;
+		else {
+			/* Undefined behaviour (wlen==0) */
+			errno = EIO;
+			break;
+		}
 	}
 
 	return size - todo;
