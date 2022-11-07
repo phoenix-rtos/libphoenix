@@ -6,7 +6,7 @@
  * netinet/in.h
  *
  * Copyright 2018 Phoenix Systems
- * Author: Jan Sikorski, Michał Mirosław, Kamil Amanowicz
+ * Author: Jan Sikorski, Michal Miroslaw, Kamil Amanowicz
  *
  * This file is part of Phoenix-RTOS.
  *

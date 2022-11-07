@@ -6,7 +6,7 @@
  * net/ethernet.h
  *
  * Copyright 2018 Phoenix Systems
- * Author: Marek Białowąs
+ * Author: Marek Bialowas
  *
  * This file is part of Phoenix-RTOS.
  *

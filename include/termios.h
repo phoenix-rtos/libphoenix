@@ -6,7 +6,7 @@
  * termios.h
  *
  * Copyright 2018 Phoenix Systems
- * Author: Jan Sikorski, Marek Białowąs
+ * Author: Jan Sikorski, Marek Bialowas
  *
  * This file is part of Phoenix-RTOS.
  *

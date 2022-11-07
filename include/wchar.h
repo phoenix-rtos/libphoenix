@@ -6,7 +6,7 @@
  * wchar.h
  *
  * Copyright 2018, 2022 Phoenix Systems
- * Author: Michał Mirosław, Damian Loewnau
+ * Author: Michal Miroslaw, Damian Loewnau
  *
  * This file is part of Phoenix-RTOS.
  *

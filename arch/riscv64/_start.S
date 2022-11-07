@@ -6,7 +6,7 @@
  * Entrypoint (RISCV64)
  *
  * Copyright 2018 Phoenix Systems
- * Author: Michał Mirosław, Pawel Pisarczyk
+ * Author: Michal Miroslaw, Pawel Pisarczyk
  *
  * This file is part of Phoenix-RTOS.
  *

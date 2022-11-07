@@ -7,7 +7,7 @@
  * _setjmp, _longjmp, setjmp, sigsetjmp
  *
  * Copyright 2018, 2019 Phoenix Systems
- * Author: Kamil Amanowicz, Aleksander Kaminski, Jakub Sarzyński
+ * Author: Kamil Amanowicz, Aleksander Kaminski, Jakub Sarzynski
  *
  * This file is part of Phoenix-RTOS.
  *
