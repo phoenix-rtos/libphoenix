@@ -36,7 +36,7 @@
 #define M_LN10 2.30258509299404568402
 
 
-/* Pi, the ratio of a circle’s circumference to its diameter. */
+/* Pi, the ratio of a circle's circumference to its diameter. */
 #define M_PI 3.14159265358979323846
 
 

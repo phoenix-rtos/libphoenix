@@ -6,7 +6,7 @@
  * unistd (POSIX routines for user operations)
  *
  * Copyright 2018 Phoenix Systems
- * Author: Michał Mirosław
+ * Author: Michal Miroslaw
  *
  * This file is part of Phoenix-RTOS.
  *

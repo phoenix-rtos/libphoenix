@@ -6,7 +6,7 @@
  * Binary search
  *
  * Copyright 2012 Phoenix Systems
- * Author: Paweł Kołodziej, Jan Sikorski
+ * Author: Pawel Kolodziej, Jan Sikorski
  *
  * This file is part of Phoenix-RTOS.
  *

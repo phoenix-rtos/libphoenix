@@ -6,7 +6,7 @@
  * setjmp, longjmp (RISCV64)
  *
  * Copyright 2020 Phoenix Systems
- * Author: Paweł Pisarczyk
+ * Author: Pawel Pisarczyk
  *
  * This file is part of Phoenix-RTOS.
  *

@@ -6,7 +6,7 @@
  * pthread
  *
  * Copyright 2017-2018, 2019 Phoenix Systems
- * Author: Pawel Pisarczyk, Michał Mirosław, Marcin Baran
+ * Author: Pawel Pisarczyk, Michal Miroslaw, Marcin Baran
  *
  * This file is part of Phoenix-RTOS.
  *

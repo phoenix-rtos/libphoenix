@@ -6,7 +6,7 @@
  * sys/socket.c
  *
  * Copyright 2018, 2021 Phoenix Systems
- * Author: Michał Mirosław, Maciej Purski, Ziemowit Leszczynski
+ * Author: Michal Miroslaw, Maciej Purski, Ziemowit Leszczynski
  *
  * This file is part of Phoenix-RTOS.
  *

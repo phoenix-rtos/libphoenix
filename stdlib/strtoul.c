@@ -6,7 +6,7 @@
  * strtoul, strtol
  *
  * Copyright 2017-2018 Phoenix Systems
- * Author: Jakub Sejdak, Pawel Pisarczyk, Michał Mirosław
+ * Author: Jakub Sejdak, Pawel Pisarczyk, Michal Miroslaw
  *
  * This file is part of Phoenix-RTOS.
  *

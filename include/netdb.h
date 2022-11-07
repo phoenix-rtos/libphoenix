@@ -6,7 +6,7 @@
  * netdb.h
  *
  * Copyright 2018 Phoenix Systems
- * Author: Jan Sikorski, Michał Mirosław
+ * Author: Jan Sikorski, Michal Miroslaw
  *
  * This file is part of Phoenix-RTOS.
  *
