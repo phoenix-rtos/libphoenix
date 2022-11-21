@@ -25,6 +25,8 @@
 
 #define CEIL(value, size)	((((value) + (size) - 1) / (size)) * (size))
 
+#define PTHREAD_ONCE_DONE        0
+#define PTHREAD_ONCE_IN_PROGRESS 2
 
 typedef struct pthread_ctx {
 	handle_t id;
@@ -57,6 +59,8 @@ static struct {
 	handle_t pthread_list_lock;
 	handle_t pthread_atfork_lock;
 	handle_t mutex_cond_init_lock;
+	pthread_mutex_t pthread_once_lock;
+	pthread_cond_t pthread_once_cond;
 	pthread_ctx *pthread_list;
 	pthread_fork_handlers_t *pthread_fork_handlers;
 } pthread_common;
@@ -1067,14 +1071,21 @@ void *pthread_getspecific(pthread_key_t key)
 
 int pthread_once(pthread_once_t *once_control, void (*init_routine)(void))
 {
-	mutexLock(pthread_common.pthread_key_lock);
-
-	if (*once_control == PTHREAD_ONCE_INIT) {
-		init_routine();
-		*once_control = 0;
+	pthread_mutex_lock(&pthread_common.pthread_once_lock);
+	while (*once_control == PTHREAD_ONCE_IN_PROGRESS) {
+		pthread_cond_wait(&pthread_common.pthread_once_cond, &pthread_common.pthread_once_lock);
 	}
+	if (*once_control == PTHREAD_ONCE_INIT) {
+		*once_control = PTHREAD_ONCE_IN_PROGRESS;
+		pthread_mutex_unlock(&pthread_common.pthread_once_lock);
+		init_routine();
+		pthread_mutex_lock(&pthread_common.pthread_once_lock);
+		*once_control = PTHREAD_ONCE_DONE;
+	}
+	pthread_cond_broadcast(&pthread_common.pthread_once_cond);
 
-	mutexUnlock(pthread_common.pthread_key_lock);
+	pthread_mutex_unlock(&pthread_common.pthread_once_lock);
+
 	return 0;
 }
 
@@ -1161,6 +1172,8 @@ void _pthread_init(void)
 	mutexCreate(&pthread_common.pthread_list_lock);
 	mutexCreate(&pthread_common.pthread_atfork_lock);
 	mutexCreate(&pthread_common.mutex_cond_init_lock);
+	pthread_mutex_init(&pthread_common.pthread_once_lock, NULL);
+	pthread_cond_init(&pthread_common.pthread_once_cond, NULL);
 	pthread_common.pthread_list = NULL;
 	pthread_common.pthread_fork_handlers = NULL;
 	pthread_create_main();
