@@ -91,3 +91,115 @@ int mount(const char *source, const char *target, const char *fstype, long mode,
 
 	return SET_ERRNO(msg.o.attr.err);
 }
+
+
+int umount(const char *target)
+{
+	msg_t msg = { 0 };
+	mount_mnt_t *mnt = (mount_mnt_t *)msg.o.raw;
+	int rootfs = 0;
+	oid_t oid, dev;
+	char *abspath;
+
+	abspath = resolve_path(target, NULL, 1, 0);
+	if (abspath == NULL) {
+		/* errno set by resolve_path() */
+		return -1;
+	}
+
+	if (lookup(abspath, &oid, &dev) < 0) {
+		free(abspath);
+		return SET_ERRNO(-ENOENT);
+	}
+
+	/* Check for attached device */
+	if (oid.port == dev.port) {
+		/* Check for rootfs */
+		if ((abspath[0] == '/') && (abspath[1] == '\0')) {
+			rootfs = 1;
+		}
+		/* Invalid target, neither device nor mountpoint */
+		else {
+			free(abspath);
+			return SET_ERRNO(-EINVAL);
+		}
+	}
+	free(abspath);
+
+	/* Check file type */
+	msg.type = mtGetAttr;
+	msg.i.attr.type = atMode;
+	msg.i.attr.oid = oid;
+
+	if (msgSend(oid.port, &msg) < 0) {
+		return SET_ERRNO(-EIO);
+	}
+
+	if (msg.o.attr.err < 0) {
+		return SET_ERRNO(msg.o.attr.err);
+	}
+
+	/* Got mountpoint */
+	if (S_ISDIR(msg.o.attr.val)) {
+		/* TODO: implement umount() by mountpoint, set ENOTSUP errno for now */
+		return SET_ERRNO(-ENOTSUP);
+	}
+	/* Got mounted device */
+	/* TODO: check device type (should be S_IFBLK?) */
+	else {
+		/* Get mountpoint */
+		msg.type = mtMnt;
+		msg.i.data = &dev;
+		msg.i.size = sizeof(dev);
+
+		if (msgSend(dev.port, &msg) < 0) {
+			return SET_ERRNO(-EIO);
+		}
+
+		if (mnt->err < 0) {
+			/* Check for rootfs */
+			if (mnt->err == -ENOENT) {
+				rootfs = 1;
+			}
+			/* No mountpoint */
+			else {
+				return SET_ERRNO(mnt->err);
+			}
+		}
+		else {
+			oid = mnt->mnt;
+		}
+	}
+
+	/* Unmount filesystem */
+	msg.type = mtUmount;
+	msg.i.data = &dev;
+	msg.i.size = sizeof(dev);
+
+	if (msgSend(dev.port, &msg) < 0) {
+		return SET_ERRNO(-EIO);
+	}
+
+	if (msg.o.io.err < 0) {
+		return SET_ERRNO(msg.o.io.err);
+	}
+
+	/* Remove mountpoint */
+	if (rootfs == 0) {
+		msg.type = mtSetAttr;
+		msg.i.attr.type = atDev;
+		msg.i.attr.oid = oid;
+		msg.i.data = &oid;
+		msg.i.size = sizeof(oid);
+
+		if (msgSend(oid.port, &msg) < 0) {
+			return SET_ERRNO(-EIO);
+		}
+
+		return SET_ERRNO(msg.o.attr.err);
+	}
+	/* TODO: unregister root in kernel */
+	else {
+		return EOK;
+	}
+}

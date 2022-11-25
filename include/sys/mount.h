@@ -38,6 +38,7 @@
 extern int mount(const char *source, const char *target, const char *fstype, unsigned long mode, char *data);
 
 
-extern int umount(const char *path);
+extern int umount(const char *target);
+
 
 #endif
