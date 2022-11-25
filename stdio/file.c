@@ -840,8 +840,14 @@ ssize_t getline(char **lineptr, size_t *n, FILE *stream)
 		linesz += readsz;
 	}
 
-	if (linesz == 0)
-		return -1;  // EOF
+	if (linesz == 0) {
+		/* accordig to POSIX - even if there is nothing to read - terminating NUL shall be allocated */
+		if (*lineptr == NULL) {
+			*lineptr = calloc(1, 1);
+		}
+		/* EOF */
+		return -1;
+	}
 
 	if (!nl)
 		linesz++;
@@ -858,8 +864,9 @@ ssize_t getline(char **lineptr, size_t *n, FILE *stream)
 	fseek(stream, offs, SEEK_SET);
 	fread(*lineptr, 1, linesz - 1, stream);
 
-	if (linesz > 0)
+	if (linesz > 0) {
 		(*lineptr)[linesz - 1] = 0;
+	}
 
 	return linesz - 1;
 }
