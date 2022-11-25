@@ -55,40 +55,53 @@ static int string2mode(const char *mode)
 		return -1;
 	}
 	else if (mode[0] == 'r') {
-		if (mode[next_char] == 'b')
+		if (mode[next_char] == 'b') {
 			next_char += 1;
+		}
 
-		if (mode[next_char] == '\0')
+		if (mode[next_char] == '\0') {
 			return O_RDONLY;
-		else if (mode[next_char] == '+')
+		}
+		else if (mode[next_char] == '+') {
 			return O_RDWR;
-		else if (mode[next_char] == 'c')
+		}
+		else if (mode[next_char] == 'c') {
 			/* glibc extension - ignored */
 			return O_RDONLY;
-		else
+		}
+		else {
 			return -1;
+		}
 	}
 	else if (mode[0] == 'w') {
-		if (mode[next_char] == 'b')
+		if (mode[next_char] == 'b') {
 			next_char += 1;
+		}
 
-		if (mode[next_char] == '\0')
+		if (mode[next_char] == '\0') {
 			return O_WRONLY | O_CREAT | O_TRUNC;
-		else if (mode[next_char] == '+')
+		}
+		else if (mode[next_char] == '+') {
 			return O_RDWR | O_CREAT | O_TRUNC;
-		else
+		}
+		else {
 			return -1;
+		}
 	}
 	else if (mode[0] == 'a') {
-		if (mode[next_char] == 'b')
+		if (mode[next_char] == 'b') {
 			next_char += 1;
+		}
 
-		if (mode[next_char] == '\0')
+		if (mode[next_char] == '\0') {
 			return O_WRONLY | O_CREAT | O_APPEND;
-		else if (mode[next_char] == '+')
+		}
+		else if (mode[next_char] == '+') {
 			return O_RDWR | O_CREAT | O_APPEND;
-		else
+		}
+		else {
 			return -1;
+		}
 	}
 
 	return -1;
@@ -100,8 +113,9 @@ static void *buffAlloc(size_t size)
 	void *ret;
 
 #ifndef NOMMU
-	if ((ret = mmap(NULL, (size + (_PAGE_SIZE - 1)) & ~(_PAGE_SIZE - 1), PROT_READ | PROT_WRITE, MAP_ANONYMOUS, NULL, 0)) == MAP_FAILED)
+	if ((ret = mmap(NULL, (size + (_PAGE_SIZE - 1)) & ~(_PAGE_SIZE - 1), PROT_READ | PROT_WRITE, MAP_ANONYMOUS, NULL, 0)) == MAP_FAILED) {
 		return NULL;
+	}
 #else
 	ret = malloc(size);
 #endif
@@ -122,8 +136,9 @@ static void buffFree(void *ptr, size_t size)
 
 static void file_free(FILE *file)
 {
-	if (file->buffer != NULL && !(file->flags & F_USRBUF))
+	if (file->buffer != NULL && !(file->flags & F_USRBUF)) {
 		buffFree(file->buffer, file->bufsz);
+	}
 
 	resourceDestroy(file->lock);
 	free(file);
@@ -133,8 +148,8 @@ static void file_free(FILE *file)
 static ssize_t safe_read(int fd, void *buf, size_t size)
 {
 	int err;
-	while ((err = read(fd, buf, size)) < 0 && errno == EINTR)
-		;
+	while ((err = read(fd, buf, size)) < 0 && errno == EINTR) {
+	}
 	return err;
 }
 
@@ -142,8 +157,8 @@ static ssize_t safe_read(int fd, void *buf, size_t size)
 static ssize_t safe_write(int fd, const void *buf, size_t size)
 {
 	int err;
-	while ((err = write(fd, buf, size)) < 0 && errno == EINTR)
-		;
+	while ((err = write(fd, buf, size)) < 0 && errno == EINTR) {
+	}
 	return err;
 }
 
@@ -151,8 +166,8 @@ static ssize_t safe_write(int fd, const void *buf, size_t size)
 static int safe_open(const char *path, int oflag, mode_t mode)
 {
 	int err;
-	while ((err = open(path, oflag, mode)) < 0 && errno == EINTR)
-		;
+	while ((err = open(path, oflag, mode)) < 0 && errno == EINTR) {
+	}
 	return err;
 }
 
@@ -160,8 +175,8 @@ static int safe_open(const char *path, int oflag, mode_t mode)
 static int safe_close(int fd)
 {
 	int err;
-	while ((err = close(fd)) < 0 && errno == EINTR)
-		;
+	while ((err = close(fd)) < 0 && errno == EINTR) {
+	}
 	return err;
 }
 
@@ -170,12 +185,13 @@ int fclose(FILE *file)
 {
 	int err;
 
-	if (file == NULL)
+	if (file == NULL) {
 		return -EINVAL;
+	}
 
 	fflush(file);
-	while ((err = safe_close(file->fd)) < 0 && errno == EINTR)
-		;
+	while ((err = safe_close(file->fd)) < 0 && errno == EINTR) {
+	}
 	file_free(file);
 
 	return err;
@@ -193,8 +209,9 @@ FILE *fopen(const char *filename, const char *mode)
 		return NULL;
 	}
 
-	if ((fd = safe_open(filename, m, DEFFILEMODE)) < 0)
+	if ((fd = safe_open(filename, m, DEFFILEMODE)) < 0) {
 		return NULL;
+	}
 
 	if ((f = calloc(1, sizeof(FILE))) == NULL) {
 		safe_close(fd);
@@ -226,8 +243,9 @@ FILE *fdopen(int fd, const char *mode)
 		return NULL;
 	}
 
-	if ((fdm = fcntl(fd, F_GETFL)) < 0)
+	if ((fdm = fcntl(fd, F_GETFL)) < 0) {
 		return NULL;
+	}
 
 	/* POSIX: check if mode argument is allowed by the file access mode of the FD (not necessarily exactly the same) */
 	fdm &= 0x7;
@@ -236,8 +254,9 @@ FILE *fdopen(int fd, const char *mode)
 		return NULL;
 	}
 
-	if ((f = calloc(1, sizeof(FILE))) == NULL)
+	if ((f = calloc(1, sizeof(FILE))) == NULL) {
 		return NULL;
+	}
 
 	if ((f->buffer = buffAlloc(BUFSIZ)) == NULL) {
 		free(f);
@@ -288,10 +307,12 @@ static int full_read(int fd, void *ptr, size_t size)
 	int total = 0;
 
 	while (size) {
-		if ((err = safe_read(fd, ptr, size)) < 0)
+		if ((err = safe_read(fd, ptr, size)) < 0) {
 			return -1;
-		else if (!err)
+		}
+		else if (!err) {
 			return total;
+		}
 		ptr += err;
 		total += err;
 		size -= err;
@@ -305,8 +326,9 @@ static int full_write(int fd, const void *ptr, size_t size)
 {
 	int err;
 	while (size) {
-		if ((err = safe_write(fd, ptr, size)) < 0)
+		if ((err = safe_write(fd, ptr, size)) < 0) {
 			return -1;
+		}
 		ptr += err;
 		size -= err;
 	}
@@ -321,21 +343,24 @@ size_t fread_unlocked(void *ptr, size_t size, size_t nmemb, FILE *stream)
 	size_t readsz = nmemb * size;
 	size_t bytes;
 
-	if (!readsz)
+	if (!readsz) {
 		return 0;
+	}
 
 	if (stream->buffer == NULL) {
 		/* unbuffered read */
-		if ((err = full_read(stream->fd, ptr, readsz)) < 0)
+		if ((err = full_read(stream->fd, ptr, readsz)) < 0) {
 			return 0;
+		}
 
 		return err / size;
 	}
 
 	/* flush write buffer if writing */
 	if (stream->flags & F_WRITING) {
-		if (fflush_unlocked(stream) < 0)
+		if (fflush_unlocked(stream) < 0) {
 			return 0;
+		}
 
 		stream->flags &= ~F_WRITING;
 		stream->bufpos = stream->bufeof = stream->bufsz;
@@ -349,8 +374,9 @@ size_t fread_unlocked(void *ptr, size_t size, size_t nmemb, FILE *stream)
 
 	/* refill read buffer */
 	if (stream->bufpos == stream->bufeof) {
-		if ((err = safe_read(stream->fd, stream->buffer, stream->bufsz)) == -1)
+		if ((err = safe_read(stream->fd, stream->buffer, stream->bufsz)) == -1) {
 			return 0;
+		}
 
 		stream->bufpos = 0;
 		stream->bufeof = err;
@@ -369,16 +395,18 @@ size_t fread_unlocked(void *ptr, size_t size, size_t nmemb, FILE *stream)
 		stream->bufpos += bytes;
 		readsz -= bytes;
 
-		if (!readsz)
+		if (!readsz) {
 			return nmemb;
+		}
 	}
 
 	/* read remainder directly into ptr */
 	if ((err = full_read(stream->fd, ptr, readsz)) != -1) {
 		bytes += err;
 
-		if (err < readsz)
+		if (err < readsz) {
 			stream->flags |= F_EOF;
+		}
 	}
 	else {
 		stream->flags |= F_ERROR;
@@ -405,13 +433,15 @@ size_t fwrite_unlocked(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 	size_t writesz = nmemb * size;
 	char *nl;
 
-	if (!writesz)
+	if (!writesz) {
 		return 0;
+	}
 
 	if (stream->buffer == NULL) {
 		/* unbuffered write */
-		if ((err = safe_write(stream->fd, ptr, writesz)) < 0)
+		if ((err = safe_write(stream->fd, ptr, writesz)) < 0) {
 			return 0;
+		}
 
 		return err / size;
 	}
@@ -435,8 +465,9 @@ size_t fwrite_unlocked(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 		stream->bufpos += writesz;
 
 		if ((stream->flags & F_LINE) && (nl = memrchr(stream->buffer, '\n', stream->bufpos)) != NULL) {
-			if ((err = full_write(stream->fd, stream->buffer, nl - stream->buffer + 1)) < 0)
+			if ((err = full_write(stream->fd, stream->buffer, nl - stream->buffer + 1)) < 0) {
 				return 0;
+			}
 
 			stream->bufpos -= nl - stream->buffer + 1;
 			memmove(stream->buffer, nl + 1, stream->bufpos);
@@ -446,13 +477,15 @@ size_t fwrite_unlocked(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 	}
 
 	/* flush buffer and write to file */
-	if ((err = full_write(stream->fd, stream->buffer, stream->bufpos)) == -1)
+	if ((err = full_write(stream->fd, stream->buffer, stream->bufpos)) == -1) {
 		return 0;
+	}
 
 	stream->bufpos = 0;
 
-	if ((err = full_write(stream->fd, ptr, writesz)) == -1)
+	if ((err = full_write(stream->fd, ptr, writesz)) == -1) {
 		return 0;
+	}
 
 	return nmemb;
 }
@@ -476,8 +509,9 @@ int fgetc_unlocked(FILE *stream)
 		return EOF;
 	}
 
-	if (fread_unlocked(&cc, 1, 1, stream) != 1)
+	if (fread_unlocked(&cc, 1, 1, stream) != 1) {
 		return EOF;
+	}
 
 	return cc;
 }
@@ -496,8 +530,9 @@ int fgetc(FILE *stream)
 int fputc_unlocked(int c, FILE *stream)
 {
 	unsigned char cc = c;
-	if (fwrite_unlocked(&cc, 1, 1, stream) != 1)
+	if (fwrite_unlocked(&cc, 1, 1, stream) != 1) {
 		return EOF;
+	}
 
 	return c;
 }
@@ -518,14 +553,17 @@ char *fgets_unlocked(char *str, int n, FILE *stream)
 	int c, i = 0;
 	while ((c = fgetc_unlocked(stream)) != EOF) {
 		str[i++] = c;
-		if (c == '\n' || i == n - 1)
+		if (c == '\n' || i == n - 1) {
 			break;
+		}
 	}
 
-	if (i)
+	if (i) {
 		str[i] = 0;
-	else
+	}
+	else {
 		return NULL;
+	}
 
 	return str;
 }
@@ -567,8 +605,9 @@ int fflush(FILE *stream)
 {
 	int ret;
 
-	if (stream == NULL)
+	if (stream == NULL) {
 		return fflush(stdout);
+	}
 
 	mutexLock(stream->lock);
 	ret = fflush_unlocked(stream);
@@ -658,8 +697,9 @@ int getc(FILE *stream)
 int putc_unlocked(int c, FILE *stream)
 {
 	unsigned char cc = c;
-	if (fwrite_unlocked(&cc, 1, 1, stream) != 1)
+	if (fwrite_unlocked(&cc, 1, 1, stream) != 1) {
 		return EOF;
+	}
 
 	return c;
 }
@@ -678,8 +718,9 @@ int putc(int c, FILE *stream)
 int putchar_unlocked(int c)
 {
 	unsigned char cc = c;
-	if (fwrite_unlocked(&cc, 1, 1, stdout) != 1)
+	if (fwrite_unlocked(&cc, 1, 1, stdout) != 1) {
 		return EOF;
+	}
 
 	return c;
 }
@@ -698,19 +739,22 @@ int putchar(int c)
 int ungetc_unlocked(int c, FILE *stream)
 {
 	/* TODO: The file-position indicator is decremented by each successful call to ungetc(); */
-	if (c == EOF)
+	if (c == EOF) {
 		return EOF;
+	}
 
 	/* flush write buffer if writing */
 	if (stream->flags & F_WRITING) {
-		if (fflush(stream) < 0)
+		if (fflush(stream) < 0) {
 			return EOF;
+		}
 
 		stream->flags &= ~F_WRITING;
 	}
 
-	if (!stream->bufpos)
+	if (!stream->bufpos) {
 		return EOF;
+	}
 
 	stream->buffer[--stream->bufpos] = c;
 	stream->flags &= ~F_EOF;
@@ -733,8 +777,9 @@ int puts_unlocked(const char *s)
 	int len = strlen(s), l = 0, err;
 
 	while (l < len) {
-		if ((err = fwrite_unlocked((void *)s + l, 1, len - l, stdout)) < 0)
+		if ((err = fwrite_unlocked((void *)s + l, 1, len - l, stdout)) < 0) {
 			return -1;
+		}
 		l += err;
 	}
 	putchar_unlocked('\n');
@@ -936,12 +981,14 @@ int setvbuf(FILE *stream, char *buffer, int mode, size_t size)
 			}
 		}
 
-		if (mode == _IOLBF)
+		if (mode == _IOLBF) {
 			stream->flags |= F_LINE;
+		}
 	}
 
-	if (!(old_flags & F_USRBUF) && old_siz != size)
+	if (!(old_flags & F_USRBUF) && old_siz != size) {
 		buffFree(old_buf, old_siz);
+	}
 
 	mutexUnlock(stream->lock);
 	return 0;
@@ -959,31 +1006,37 @@ FILE *popen(const char *command, const char *mode)
 	int fd[2], pid;
 	popen_FILE *pf;
 
-	if (pipe(fd) < 0)
+	if (pipe(fd) < 0) {
 		return NULL;
+	}
 
-	if ((pf = calloc(1, sizeof(popen_FILE))) == NULL)
+	if ((pf = calloc(1, sizeof(popen_FILE))) == NULL) {
 		goto failed;
+	}
 
-	if ((pf->file.mode = string2mode(mode)) < 0)
+	if ((pf->file.mode = string2mode(mode)) < 0) {
 		goto failed;
+	}
 
 	if (mutexCreate(&pf->file.lock) < 0) {
 		pf->file.lock = 0;
 		goto failed;
 	}
 
-	if ((pf->file.buffer = mmap(NULL, BUFSIZ, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, NULL, 0)) == MAP_FAILED)
+	if ((pf->file.buffer = mmap(NULL, BUFSIZ, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, NULL, 0)) == MAP_FAILED) {
 		goto failed;
+	}
 
 	if ((pid = vfork()) < 0) {
 		goto failed;
 	}
 	else if (!pid) {
-		if (mode[0] == 'r')
+		if (mode[0] == 'r') {
 			dup2(fd[1], 1);
-		else
+		}
+		else {
 			dup2(fd[0], 0);
+		}
 
 		close(fd[1]);
 		close(fd[0]);
@@ -1010,10 +1063,12 @@ FILE *popen(const char *command, const char *mode)
 
 failed:
 
-	if (pf->file.lock)
+	if (pf->file.lock) {
 		resourceDestroy(pf->file.lock);
-	if (pf->file.buffer != MAP_FAILED)
+	}
+	if (pf->file.buffer != MAP_FAILED) {
 		munmap(pf->file.buffer, BUFSIZ);
+	}
 	free(pf);
 	close(fd[0]);
 	close(fd[1]);
@@ -1067,8 +1122,9 @@ void _file_init(void)
 	stderr->flags = F_WRITING;
 	mutexCreate(&stderr->lock);
 
-	if (isatty(stdout->fd))
+	if (isatty(stdout->fd)) {
 		stdout->flags |= F_LINE;
+	}
 
 	stdin->mode = O_RDONLY;
 	stdout->mode = O_WRONLY;
@@ -1091,13 +1147,15 @@ FILE *tmpfile(void)
 	oid_t oid, dev;
 
 	while (lookup("/dev/posix/tmpfile", &oid, &dev) < 0) {
-		if (errno != EINTR)
+		if (errno != EINTR) {
 			return NULL;
+		}
 	}
 
 	/* Make sure it's a device (created by posixsrv) */
-	if (oid.port == dev.port)
+	if (oid.port == dev.port) {
 		return NULL;
+	}
 
 	return fopen("/dev/posix/tmpfile", "w+");
 }
