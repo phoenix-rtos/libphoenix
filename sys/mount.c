@@ -25,12 +25,13 @@
 int mount(const char *source, const char *target, const char *fstype, long mode, char *data)
 {
 	struct stat buf;
-	oid_t toid, soid, doid, *doidp;
+	oid_t toid, soid, root;
 	msg_t msg = {0};
 	char *source_abspath, *target_abspath;
 	int err;
 
-	mount_msg_t *mnt = (mount_msg_t *)msg.i.raw;
+	mount_i_msg_t *imnt = (mount_i_msg_t *)msg.i.raw;
+	mount_o_msg_t *omnt = (mount_o_msg_t *)msg.o.raw;
 
 	if ((target_abspath = resolve_path(target, NULL, 1, 0)) == NULL)
 		return -1; /* errno set by resolve_path */
@@ -64,10 +65,10 @@ int mount(const char *source, const char *target, const char *fstype, long mode,
 		return SET_ERRNO(-ENOTDIR);
 
 	msg.type = mtMount;
-	mnt->id = soid.id;
-	mnt->mode = mode;
-	strncpy(mnt->fstype, fstype, sizeof(mnt->fstype));
-	mnt->fstype[sizeof(mnt->fstype) - 1] = '\0';
+	imnt->id = soid.id;
+	imnt->mode = mode;
+	strncpy(imnt->fstype, fstype, sizeof(imnt->fstype));
+	imnt->fstype[sizeof(imnt->fstype) - 1] = '\0';
 
 	msg.i.size = data != NULL ? strlen(data) : 0;
 	msg.i.data = data;
@@ -75,15 +76,19 @@ int mount(const char *source, const char *target, const char *fstype, long mode,
 	if (msgSend(soid.port, &msg) < 0)
 		return SET_ERRNO(-EIO);
 
-	doidp = (oid_t *)msg.o.raw;
-	doid = *doidp;
+	/* Mount failed */
+	if (omnt->err < 0) {
+		return SET_ERRNO(omnt->err);
+	}
+	root = omnt->root;
 
+	/* Create mountpoint */
 	memset(&msg, 0, sizeof(msg));
 
 	msg.type = mtSetAttr;
 	msg.i.attr.oid = toid;
 	msg.i.attr.type = atDev;
-	msg.i.data = &doid;
+	msg.i.data = &root;
 	msg.i.size = sizeof(oid_t);
 
 	if (msgSend(toid.port, &msg) < 0)
