@@ -35,7 +35,7 @@
 #define MS_SILENT      (1 << 15)
 
 
-extern int mount(const char *source, const char *target, const char *fstype, unsigned long mode, char *data);
+extern int mount(const char *source, const char *target, const char *fstype, unsigned long mode, const char *data);
 
 
 extern int umount(const char *path);
