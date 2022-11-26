@@ -30,9 +30,15 @@ enum { mtMount = 0xf50, mtUmount, mtSync, mtStat };
 
 typedef struct {
 	long id;
-	unsigned mode;
+	unsigned long mode;
 	char fstype[16];
-} mount_msg_t;
+} mount_i_msg_t;
+
+
+typedef struct {
+	int err;
+	oid_t oid;
+} mount_o_msg_t;
 
 
 extern int fileAdd(unsigned int *h, oid_t *oid, unsigned mode);
