@@ -784,7 +784,7 @@ int ferror(FILE *stream)
 
 void clearerr(FILE *stream)
 {
-	stream->flags &= ~F_ERROR;
+	stream->flags &= ~(F_ERROR | F_EOF);
 }
 
 
