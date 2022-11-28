@@ -472,6 +472,10 @@ int fgetc_unlocked(FILE *stream)
 {
 	unsigned char cc;
 
+	if (stream->flags & F_EOF) {
+		return EOF;
+	}
+
 	if (fread_unlocked(&cc, 1, 1, stream) != 1)
 		return EOF;
 
