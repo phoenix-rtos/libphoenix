@@ -25,11 +25,12 @@ enum { otDir = 0, otFile, otDev, otSymlink, otUnknown };
 enum { atMode = 0, atUid, atGid, atSize, atBlocks, atIOBlock, atType, atPort, atPollStatus, atEventMask, atCTime, atMTime, atATime, atLinks, atDev };
 
 
-enum { mtMount = 0xf50, mtUmount, mtSync, mtStat };
+enum { mtMount = 0xf50, mtUmount, mtSync, mtStat, mtMountPoint };
 
 
 typedef struct {
-	long id;
+	oid_t dev;
+	oid_t mnt;
 	unsigned long mode;
 	char fstype[16];
 } mount_i_msg_t;
