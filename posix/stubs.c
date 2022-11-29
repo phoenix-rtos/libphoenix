@@ -162,10 +162,6 @@ int flock(int fd, int operation)
 	return 0;
 }
 
-int umount(const char *path)
-{
-	return 0;
-}
 
 long ulimit(int __cmd, ...)
 {
