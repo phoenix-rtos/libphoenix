@@ -22,7 +22,7 @@
 #include <sys/msg.h>
 
 
-int mount(const char *source, const char *target, const char *fstype, long mode, char *data)
+int mount(const char *source, const char *target, const char *fstype, unsigned long mode, const char *data)
 {
 	struct stat buf;
 	oid_t toid, soid, doid;
@@ -71,7 +71,7 @@ int mount(const char *source, const char *target, const char *fstype, long mode,
 	imnt->fstype[sizeof(imnt->fstype) - 1] = '\0';
 
 	msg.i.size = data != NULL ? strlen(data) : 0;
-	msg.i.data = data;
+	msg.i.data = (char *)data; /* FIXME: dropping const because of broken msg_t declaration */
 
 	if (msgSend(soid.port, &msg) < 0)
 		return SET_ERRNO(-EIO);
