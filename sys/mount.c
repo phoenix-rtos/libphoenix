@@ -65,7 +65,8 @@ int mount(const char *source, const char *target, const char *fstype, unsigned l
 		return SET_ERRNO(-ENOTDIR);
 
 	msg.type = mtMount;
-	imnt->id = soid.id;
+	imnt->dev = soid;
+	imnt->mnt = toid;
 	imnt->mode = mode;
 	strncpy(imnt->fstype, fstype, sizeof(imnt->fstype));
 	imnt->fstype[sizeof(imnt->fstype) - 1] = '\0';
