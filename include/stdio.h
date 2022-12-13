@@ -24,7 +24,7 @@
 #ifndef NOMMU
 #define BUFSIZ _PAGE_SIZE
 #else
-#define BUFSIZ 32
+#define BUFSIZ 80
 #endif
 
 #define EOF (-1)
