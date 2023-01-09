@@ -16,7 +16,7 @@ include ../phoenix-rtos-build/Makefile.$(TARGET_SUFF)
 SYSROOT := $(shell $(CC) $(CFLAGS) -print-sysroot)
 MULTILIB_DIR := $(shell $(CC) $(CFLAGS) -print-multi-directory)
 LIBC_INSTALL_DIR := $(SYSROOT)/lib/$(MULTILIB_DIR)
-LIBC_INSTALL_NAMES := libc.a libm.a crt0.o libg.a
+LIBC_INSTALL_NAMES := libc.a crt0.o libg.a
 HEADERS_INSTALL_DIR := $(SYSROOT)/usr/include
 LIBNAME := libphoenix.a
 
@@ -30,17 +30,17 @@ CFLAGS += -Iinclude -fno-builtin-malloc
 
 
 OBJS = $(PREFIX_O)_startc.o
+LIBM_OBJS = $(PREFIX_O)_startc.o
 
 
-all: $(PREFIX_A)libphoenix.a
+all: $(PREFIX_A)libphoenix.a $(PREFIX_A)libmphoenix.a
 
-
+# Libphoenix .o files
 include arch/$(TARGET_SUFF)/Makefile
 include ctype/Makefile
 include err/Makefile
 include errno/Makefile
 include locale/Makefile
-include math/Makefile
 include misc/Makefile
 include net/Makefile
 include netinet/Makefile
@@ -58,24 +58,31 @@ include time/Makefile
 include unistd/Makefile
 include wchar/Makefile
 
+# Libmphoenix .o files
+include math/Makefile
+
 #include test/Makefile
 
 $(PREFIX_A)libphoenix.a: $(OBJS)
 	$(ARCH)
 
+$(PREFIX_A)libmphoenix.a: $(LIBM_OBJS)
+	$(ARCH)
 
 SRCHEADERS := $(shell find include -name \*.h)
 
 #HEADERS := $(patsubst include/%,$(HEADERS_INSTALL_DIR)%,$(SRCHEADERS))
-install: $(PREFIX_A)libphoenix.a $(SRCHEADERS)
+install: $(PREFIX_A)libphoenix.a $(PREFIX_A)libmphoenix.a  $(SRCHEADERS)
 	@echo INSTALL "$(LIBC_INSTALL_DIR)/*"; \
 	mkdir -p "$(LIBC_INSTALL_DIR)"; \
 	cp -a "$<" "$(LIBC_INSTALL_DIR)"; \
+	cp -a $(PREFIX_A)libmphoenix.a "$(LIBC_INSTALL_DIR)"; \
 	for lib in $(LIBC_INSTALL_NAMES); do \
 		if [ ! -e "$(LIBC_INSTALL_DIR)/$$lib" ]; then \
 			ln -sf "$(LIBC_INSTALL_DIR)/libphoenix.a" "$(LIBC_INSTALL_DIR)/$$lib"; \
 		fi \
 	done; \
+	ln -sf "$(LIBC_INSTALL_DIR)/libmphoenix.a" "$(LIBC_INSTALL_DIR)/libm.a"; \
 	echo INSTALL "$(HEADERS_INSTALL_DIR)/*"; \
 	mkdir -p "$(HEADERS_INSTALL_DIR)"; \
 	cp -a include/* "$(HEADERS_INSTALL_DIR)";
