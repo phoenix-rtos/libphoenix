@@ -249,6 +249,18 @@ extern int asprintf(char **strp, const char *fmt, ...);
 extern int vasprintf(char **strp, const char *fmt, va_list ap);
 
 
+/* Reads formatted input from a stream using an argument list. */
+extern int vfscanf(FILE *stream, const char *format, va_list ap);
+
+
+/* Reads formatted input from a string using an argument list. */
+extern int vsscanf(const char *str, const char *format, va_list ap);
+
+
+/* Reads formatted input from stdin using an argument list. */
+extern int vscanf(const char *format, va_list ap);
+
+
 /* Reads formatted input from a stream. */
 extern int fscanf(FILE *stream, const char *format, ...);
 
@@ -337,6 +349,11 @@ extern FILE *popen(const char *command, const char *type);
 extern int pclose(FILE *stream);
 
 
+/* Reads a string input delimited by a user-specified character. */
+extern ssize_t getdelim(char **lineptr, size_t *n, int delim, FILE *stream);
+
+
+/* Reads a string separated by a newline character. */
 extern ssize_t getline(char **lineptr, size_t *n, FILE *stream);
 
 
