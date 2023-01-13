@@ -16,7 +16,7 @@ include ../phoenix-rtos-build/Makefile.$(TARGET_SUFF)
 SYSROOT := $(shell $(CC) $(CFLAGS) -print-sysroot)
 MULTILIB_DIR := $(shell $(CC) $(CFLAGS) -print-multi-directory)
 LIBC_INSTALL_DIR := $(SYSROOT)/lib/$(MULTILIB_DIR)
-LIBC_INSTALL_NAMES := libc.a libm.a crt0.o libg.a
+LIBC_INSTALL_NAMES := libc.a libm.a crt0.o libg.a libpthread.a
 HEADERS_INSTALL_DIR := $(SYSROOT)/usr/include
 LIBNAME := libphoenix.a
 
