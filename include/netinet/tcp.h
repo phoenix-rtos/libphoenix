@@ -17,7 +17,9 @@
 #define _LIBPHOENIX_NETINET_TCP_H_
 
 #define TCP_NODELAY   0x1
+#define TCP_KEEPALIVE 0x2
 #define TCP_KEEPIDLE  0x3
 #define TCP_KEEPINTVL 0x4
+#define TCP_KEEPCNT   0x5
 
 #endif
