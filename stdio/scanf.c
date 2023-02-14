@@ -5,7 +5,7 @@
  *
  * scanf.c
  *
- * Copyright 2017, 2022 Phoenix Systems
+ * Copyright 2017, 2022-2023 Phoenix Systems
  * Author: Adrian Kepka, Gerard Swiderski
  *
  * This file is part of Phoenix-RTOS.
@@ -24,6 +24,7 @@
 
 
 #define LONG       0x01   /* l: long or double */
+#define LONGDOUBLE 0x02   /* L: long double */
 #define SHORT      0x04   /* h: short */
 #define SUPPRESS   0x08   /* *: suppress assignment */
 #define POINTER    0x10   /* p: void * (as hex) */
@@ -43,6 +44,7 @@
 #define CT_CCL    1 /* %[...] conversion */
 #define CT_STRING 2 /* %s conversion */
 #define CT_INT    3 /* %[dioupxX] conversion */
+#define CT_FLOAT  4 /* %[aefgAEFG] conversion */
 
 
 static const unsigned char *__sccl(char *tab, const unsigned char *fmt)
@@ -170,6 +172,10 @@ static int scanf_parse(char *ccltab, const char *inp, char const *fmt0, va_list 
 						flags |= LONG;
 					continue;
 
+				case 'L':
+					flags |= LONGDOUBLE;
+					continue;
+
 				case 'q':
 				case 'j':
 					flags |= LONGLONG;
@@ -234,6 +240,18 @@ static int scanf_parse(char *ccltab, const char *inp, char const *fmt0, va_list 
 					flags |= UNSIGNED;
 					base = 16;
 					break;
+
+				case 'A':
+				case 'E':
+				case 'F':
+				case 'G':
+				case 'a':
+				case 'e':
+				case 'f':
+				case 'g':
+					c = CT_FLOAT;
+					break;
+
 
 				case 's':
 					c = CT_STRING;
@@ -510,8 +528,58 @@ static int scanf_parse(char *ccltab, const char *inp, char const *fmt0, va_list 
 				nread += p - buf;
 				nconversions++;
 				break;
-			}
+
+			case CT_FLOAT:
+				if (width == 0 || width > sizeof(buf) - 1) {
+					width = sizeof(buf) - 1;
+				}
+
+				if (strtold(inp, &p) == 0 && (inp == p || errno == ERANGE)) {
+					return (nconversions != 0 ? nassigned : -1);
+				}
+
+				if ((size_t)(p - inp) >= width) {
+					return (nconversions != 0 ? nassigned : -1);
+				}
+
+				width = p - inp;
+
+				p = buf;
+				while (width > 0) {
+					if (inr <= 0) {
+						return (nconversions != 0 ? nassigned : -1);
+					}
+					*p++ = *inp++;
+					width--;
+					inr--;
+				}
+
+				if ((flags & SUPPRESS) == 0) {
+					*p = '\0';
+					if ((flags & LONGDOUBLE) != 0) {
+						long double res = strtold(buf, NULL);
+						*va_arg(ap, long double *) = res;
+					}
+					else if ((flags & LONG) != 0) {
+						double res = strtod(buf, NULL);
+						*va_arg(ap, double *) = res;
+					}
+					else {
+						float res = strtof(buf, NULL);
+						*va_arg(ap, float *) = res;
+					}
+					nassigned++;
+				}
+
+				nread += p - buf;
+				nconversions++;
+				break;
+
+			default:
+				break;
+		}
 	}
+	/* never reached */
 }
 
 
