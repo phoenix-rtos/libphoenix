@@ -41,7 +41,7 @@ static long double strto_any(const char *__restrict str, char **__restrict endpt
 {
 	long double whole_number = 0, fraction = 0;
 	char base = 10, is_number = 0;
-	char sign = 1, exp_sign = 1;
+	char negative = 0, exp_negative = 0;
 	char len_int = 0, len_fraction = 0;
 	int overflow_int = 0, exp = 0, dot_position = 0, i;
 	long double tmp = base;
@@ -57,7 +57,7 @@ static long double strto_any(const char *__restrict str, char **__restrict endpt
 
 	/*  check the sign */
 	if (*str == '-' && (isdigit(*(str + 1)) || *(str + 1) == '.')) {
-		sign = -1;
+		negative = 1;
 		str++;
 	}
 	else if (*str == '+' && (isdigit(*(str + 1)) || *(str + 1) == '.')) {
@@ -105,7 +105,7 @@ static long double strto_any(const char *__restrict str, char **__restrict endpt
 		str++;
 
 		if (*str == '-') {
-			exp_sign = -1;
+			exp_negative = 1;
 			str++;
 		}
 		else if (*str == '+') {
@@ -139,7 +139,7 @@ static long double strto_any(const char *__restrict str, char **__restrict endpt
 	tmp = base;
 	for (i = 0; i < powers; i++) {
 		if ((exp >> i) & 1) {
-			if (exp_sign == -1) {
+			if (exp_negative != 0) {
 				result /= tmp;
 			}
 			else {
@@ -152,7 +152,9 @@ static long double strto_any(const char *__restrict str, char **__restrict endpt
 		tmp *= tmp;
 	}
 
-	result *= sign;
+	if (negative != 0) {
+		result = -result;
+	}
 
 	if (endptr != NULL) {
 		*endptr = (char *)str;
