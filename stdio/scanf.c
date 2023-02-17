@@ -5,7 +5,7 @@
  *
  * scanf.c
  *
- * Copyright 2017, 2022 Phoenix Systems
+ * Copyright 2017, 2022-2023 Phoenix Systems
  * Author: Adrian Kepka, Gerard Swiderski
  *
  * This file is part of Phoenix-RTOS.
@@ -176,8 +176,10 @@ static int scanf_parse(char *ccltab, const char *inp, char const *fmt0, va_list 
 					continue;
 
 				case 'z':
-					if (sizeof(size_t) == sizeof(uint64_t))
+					if (sizeof(size_t) == sizeof(uint64_t)) {
 						flags |= LONGLONG;
+					}
+					continue;
 
 				case 'h':
 					if (flags & SHORT) {
