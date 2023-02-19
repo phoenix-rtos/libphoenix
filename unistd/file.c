@@ -5,7 +5,7 @@
  *
  * unistd (POSIX routines for file operations)
  *
- * Copyright 2017-2018 Phoenix Systems
+ * Copyright 2017-2023 Phoenix Systems
  * Author: Aleksander Kaminski, Pawel Pisarczyk, Kamil Amanowicz
  *
  * This file is part of Phoenix-RTOS.
@@ -484,14 +484,6 @@ int ptsname_r(int fd, char *buf, size_t buflen)
 
 int isatty(int fd)
 {
-/* FIXME remove after moving ioctls from devctls */
-#ifdef NOMMU
-	if (fd == 1 || fd == 0)
-		return 1;
-
-	return 0;
-#endif
-
 	struct termios t;
 	return tcgetattr(fd, &t) == 0;
 }
