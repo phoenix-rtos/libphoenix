@@ -34,26 +34,58 @@
 #define FLAG_NULLMARK           0x800
 #define FLAG_MINUS              0x1000
 #define FLAG_FIELD_WIDTH_STAR 	0x2000
-
 #define DOUBLE_EXP_INVALID             1024
 #define HEXDOUBLE_SUFFICIENT_PRECISION 13
+#define FLAG_8BIT                      0x8000
+#define FLAG_16BIT                     0x10000
+#define FLAG_LONG_DOUBLE               0x20000
 
-
-#define GET_UNSIGNED(number, flags, args) do {		\
-		if ((flags) & FLAG_64BIT)		\
-			(number) = va_arg((args), uint64_t);	\
-		else					\
-			(number) = va_arg((args), uint32_t);	\
+/* clang-format off */
+#define GET_UNSIGNED(number, flags, args) \
+	do { \
+		if (((flags) & FLAG_8BIT) != 0) { \
+			(number) = (uint8_t)va_arg((args), unsigned int); \
+		} \
+		else if (((flags) & FLAG_16BIT) != 0) { \
+			(number) = (uint16_t)va_arg((args), unsigned int); \
+		} \
+		else if (((flags) & FLAG_64BIT) != 0) { \
+			(number) = va_arg((args), uint64_t); \
+		} \
+		else { \
+			(number) = va_arg((args), uint32_t); \
+		} \
 	} while (0)
 
 
-#define GET_SIGNED(number, flags, args) do {		\
-		if ((flags) & FLAG_64BIT)		\
-			(number) = va_arg((args), int64_t);	\
-		else					\
-			(number) = va_arg((args), int32_t);	\
+#define GET_SIGNED(number, flags, args) \
+	do { \
+		if (((flags) & FLAG_8BIT) != 0) { \
+			(number) = (int8_t)va_arg((args), int); \
+		} \
+		else if (((flags) & FLAG_16BIT) != 0) { \
+			(number) = (int16_t)va_arg((args), int); \
+		} \
+		else if (((flags) & FLAG_64BIT) != 0) { \
+			(number) = va_arg((args), int64_t); \
+		} \
+		else { \
+			(number) = va_arg((args), int32_t); \
+		} \
 	} while (0)
 
+
+#define GET_DOUBLE(number, flags, args) \
+	do { \
+		if (((flags)&FLAG_LONG_DOUBLE) != 0) { \
+			(number) = (double)va_arg((args), long double); \
+		} \
+		else { \
+			(number) = (double)va_arg((args), double); \
+		} \
+	} while (0)
+
+/* clang-format on */
 union double_u64 {
 	double d;
 	uint64_t u;
@@ -756,28 +788,38 @@ static void format_sprintfDouble(void *ctx, feedfunc feed, double d, uint32_t fl
 
 static void format_sprintf_num(void *ctx, feedfunc feed, uint64_t num64, uint32_t flags, int minFieldWidth, int precision)
 {
+	const char nilString[] = "(nil)";
+	const int nilStringLength = strlen(nilString);
 	const char *digits = (flags & FLAG_LARGE_DIGITS) ? largeDigits : smallDigits,
 			   *prefix = (flags & FLAG_LARGE_DIGITS) ? "X0" : "x0";
 	char tmp_buf[32];
 	char sign = 0;
 	char *tmp = tmp_buf;
-
-	if (((flags & FLAG_NULLMARK) != 0) && (num64 == 0)) {
-		const char *s = "(nil)";
-		const int s_len = strlen(s);
-		int i;
-		for (i = 0; i < s_len; i++) {
-			feed(ctx, s[i]);
-		}
-	}
-
+	int i;
 	uint32_t num32 = (uint32_t)num64;
 	uint32_t num_high = (uint32_t)(num64 >> 32);
 
+	if (((flags & FLAG_NULLMARK) != 0) && (num64 == 0)) {
+		for (i = 0; i < nilStringLength; i++) {
+			feed(ctx, nilString[i]);
+		}
+	}
+
 	if ((flags & FLAG_SIGNED) != 0) {
 
-		if ((flags & FLAG_64BIT) != 0) {
-
+		if ((flags & FLAG_8BIT) != 0) {
+			if ((int8_t)num32 < 0) {
+				num32 = -(int8_t)num32;
+				sign = '-';
+			}
+		}
+		else if ((flags & FLAG_16BIT) != 0) {
+			if ((int16_t)num32 < 0) {
+				num32 = -(int16_t)num32;
+				sign = '-';
+			}
+		}
+		else if ((flags & FLAG_64BIT) != 0) {
 			if ((int32_t)num_high < 0) {
 				num64 = -(int64_t)num64;
 				num32 = (uint32_t)num64;
@@ -811,7 +853,6 @@ static void format_sprintf_num(void *ctx, feedfunc feed, uint64_t num64, uint32_
 	}
 	else if ((flags & FLAG_HEX) != 0) {
 		if ((flags & FLAG_64BIT) != 0) {
-			int i;
 			for (i = 0; i < 8; ++i) {
 				*tmp++ = digits[num32 & 0x0f];
 				num32 >>= 4;
@@ -834,7 +875,6 @@ static void format_sprintf_num(void *ctx, feedfunc feed, uint64_t num64, uint32_
 	}
 	else if ((flags & FLAG_OCT) != 0) {
 		if ((flags & FLAG_64BIT) != 0) {
-			int i;
 			// 30 bits
 			for (i = 0; i < 10; ++i) {
 				*tmp++ = digits[num32 & 0x07];
@@ -886,6 +926,7 @@ void format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 	uint32_t flags, minFieldWidth;
 	int precision, length;
 	char c, fmt;
+	double doubleNumber;
 	for (;;) {
 		fmt = *format++;
 
@@ -973,16 +1014,32 @@ void format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 			}
 		}
 
+		if (fmt == 'L') {
+			fmt = *format++;
+			flags |= FLAG_LONG_DOUBLE;
+		}
+
+		if (fmt == 'h') {
+			fmt = *format++;
+			if (fmt == 'h') {
+				fmt = *format++;
+				flags |= FLAG_8BIT;
+			}
+			else {
+				flags |= FLAG_16BIT;
+			}
+		}
+
 		if (fmt == 'l') {
 			fmt = *format++;
+			if (sizeof(long int) == sizeof(int64_t)) {
+				flags |= FLAG_64BIT;
+			}
 
 			if (fmt == 'l') {
 				flags |= FLAG_64BIT;
 				fmt = *format++;
 			}
-		}
-		if (fmt == '\0') {
-			break;
 		}
 
 		if (fmt == 'z') {
@@ -991,8 +1048,12 @@ void format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 				flags |= FLAG_64BIT;
 			}
 		}
-		if (fmt == '\0') {
-			break;
+
+		if (fmt == 't') {
+			fmt = *format++;
+			if (sizeof(ptrdiff_t) == sizeof(int64_t)) {
+				flags |= FLAG_64BIT;
+			}
 		}
 
 		if (fmt == 'j') {
@@ -1062,23 +1123,27 @@ void format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 			case 'A':
 				flags |= FLAG_LARGE_DIGITS;
 			case 'a':
-				format_sprintfDouble(ctx, feed, (double)va_arg(args, double), flags, minFieldWidth, precision, 'a');
+				GET_DOUBLE(doubleNumber, flags, args);
+				format_sprintfDouble(ctx, feed, doubleNumber, flags, minFieldWidth, precision, 'a');
 				break;
 			case 'E':
 				flags |= FLAG_LARGE_DIGITS;
 			case 'e':
-				format_sprintfDouble(ctx, feed, (double)va_arg(args, double), flags, minFieldWidth, precision, 'e');
+				GET_DOUBLE(doubleNumber, flags, args);
+				format_sprintfDouble(ctx, feed, doubleNumber, flags, minFieldWidth, precision, 'e');
 				break;
 			case 'G':
 				flags |= FLAG_LARGE_DIGITS;
 			case 'g':
 				flags |= FLAG_NO_TRAILING_ZEROS;
-				format_sprintfDouble(ctx, feed, (double)va_arg(args, double), flags, minFieldWidth, precision, 'g');
+				GET_DOUBLE(doubleNumber, flags, args);
+				format_sprintfDouble(ctx, feed, doubleNumber, flags, minFieldWidth, precision, 'g');
 				break;
 			case 'F':
 				flags |= FLAG_LARGE_DIGITS;
 			case 'f':
-				format_sprintfDouble(ctx, feed, (double)va_arg(args, double), flags, minFieldWidth, precision, 'f');
+				GET_DOUBLE(doubleNumber, flags, args);
+				format_sprintfDouble(ctx, feed, doubleNumber, flags, minFieldWidth, precision, 'f');
 				break;
 			case '%':
 				feed(ctx, '%');
