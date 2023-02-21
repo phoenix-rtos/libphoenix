@@ -849,7 +849,9 @@ static void format_sprintf_num(void *ctx, feedfunc feed, uint64_t num64, uint32_
 	}
 
 	if (num64 == 0) {
-		*tmp++ = '0';
+		if (precision > 0) {
+			*tmp++ = '0';
+		}
 	}
 	else if ((flags & FLAG_HEX) != 0) {
 		if ((flags & FLAG_64BIT) != 0) {
@@ -867,10 +869,6 @@ static void format_sprintf_num(void *ctx, feedfunc feed, uint64_t num64, uint32_
 				*tmp++ = digits[num32 & 0x0f];
 				num32 >>= 4;
 			}
-		}
-		if ((flags & FLAG_ALTERNATE) != 0) {
-			memcpy(tmp, prefix, 2);
-			tmp += 2;
 		}
 	}
 	else if ((flags & FLAG_OCT) != 0) {
@@ -896,9 +894,6 @@ static void format_sprintf_num(void *ctx, feedfunc feed, uint64_t num64, uint32_
 				num32 >>= 3;
 			}
 		}
-		if ((flags & FLAG_ALTERNATE) != 0) {
-			*tmp++  = '0';
-		}
 	}
 	else {
 		if ((flags & FLAG_64BIT) != 0) {  // TODO: optimize
@@ -913,6 +908,20 @@ static void format_sprintf_num(void *ctx, feedfunc feed, uint64_t num64, uint32_
 				num32 /= 10;
 			}
 		}
+	}
+
+	if (((flags & FLAG_OCT) != 0) && ((num64 != 0) || (precision == 0)) && ((flags & FLAG_ALTERNATE) != 0)) {
+		*tmp++ = '0';
+	}
+
+	if (tmp - tmp_buf < precision) {
+		memset(tmp, '0', precision - (tmp - tmp_buf));
+		tmp = tmp_buf + precision;
+	}
+
+	if (((flags & FLAG_HEX) != 0) && (num64 != 0) && ((flags & FLAG_ALTERNATE) != 0)) {
+		*tmp++ = prefix[0];
+		*tmp++ = prefix[1];
 	}
 	format_printBuffer(ctx, feed, flags, minFieldWidth, tmp, tmp_buf, sign);
 }
@@ -1102,6 +1111,12 @@ void format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 				format_sprintf_num(ctx, feed, number, flags, minFieldWidth, precision);
 				break;
 			case 'o':
+				if (precision != -1) {
+					flags &= ~FLAG_ZERO;
+				}
+				else {
+					precision = 1;
+				}
 				flags |= FLAG_OCT;
 				GET_UNSIGNED(number, flags, args);
 				format_sprintf_num(ctx, feed, number, flags, minFieldWidth, precision);
@@ -1111,11 +1126,23 @@ void format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 			case 'x':
 				flags |= FLAG_HEX;
 			case 'u':
+				if (precision != -1) {
+					flags &= ~FLAG_ZERO;
+				}
+				else {
+					precision = 1;
+				}
 				GET_UNSIGNED(number, flags, args);
 				format_sprintf_num(ctx, feed, number, flags, minFieldWidth, precision);
 				break;
 			case 'd':
 			case 'i':
+				if (precision != -1) {
+					flags &= ~FLAG_ZERO;
+				}
+				else {
+					precision = 1;
+				}
 				flags |= FLAG_SIGNED;
 				GET_SIGNED(number, flags, args);
 				format_sprintf_num(ctx, feed, number, flags, minFieldWidth, precision);
