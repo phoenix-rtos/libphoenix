@@ -30,6 +30,7 @@
 #define POINTER    0x10   /* p: void * (as hex) */
 #define NOSKIP     0x20   /* [ or c: do not skip blanks */
 #define LONGLONG   0x400  /* ll: long long (+ deprecated q: quad) */
+#define PTRDIFF    0x800  /* t: ptrdiff_t */
 #define SHORTSHORT 0x4000 /* hh: char */
 #define UNSIGNED   0x8000 /* %[oupxX] conversions */
 
@@ -181,6 +182,10 @@ static int scanf_parse(char *ccltab, const char *inp, char const *fmt0, va_list 
 					flags |= LONGLONG;
 					continue;
 
+				case 't':
+					flags |= PTRDIFF;
+					continue;
+
 				case 'z':
 					if (sizeof(size_t) == sizeof(uint64_t)) {
 						flags |= LONGLONG;
@@ -289,6 +294,8 @@ static int scanf_parse(char *ccltab, const char *inp, char const *fmt0, va_list 
 						*va_arg(ap, long *) = nread;
 					else if (flags & LONGLONG)
 						*va_arg(ap, long long *) = nread;
+					else if (flags & PTRDIFF)
+						*va_arg(ap, ptrdiff_t *) = nread;
 					else
 						*va_arg(ap, int *) = nread;
 					continue;
@@ -521,6 +528,8 @@ static int scanf_parse(char *ccltab, const char *inp, char const *fmt0, va_list 
 						*va_arg(ap, long *) = res;
 					else if (flags & LONGLONG)
 						*va_arg(ap, long long *) = res;
+					else if (flags & PTRDIFF)
+						*va_arg(ap, ptrdiff_t *) = res;
 					else {
 						*va_arg(ap, int *) = res;
 					}
