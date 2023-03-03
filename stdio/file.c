@@ -894,6 +894,7 @@ ssize_t getdelim(char **lineptr, size_t *n, int delim, FILE *stream)
 		c = fgetc(stream);
 		if (c < 0) {
 			if (feof(stream) && ptr != *lineptr) {
+				*ptr = '\0';
 				return ptr - *lineptr;
 			}
 
