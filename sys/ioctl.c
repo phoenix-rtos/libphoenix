@@ -68,8 +68,15 @@ const void * ioctl_unpackEx(const msg_t *msg, unsigned long *request, id_t *id, 
 		 * we want to change it. TODO: find better place to allocate and free
 		 * message */
 		struct rtentry *rt = malloc(msg->i.size);
+		if (rt == NULL) {
+			return NULL;
+		}
 		memcpy(rt, msg->i.data, msg->i.size);
 		rt->rt_dev = malloc(msg->o.size);
+		if (rt->rt_dev == NULL) {
+			free(rt);
+			return NULL;
+		}
 		memcpy(rt->rt_dev, msg->o.data, msg->o.size);
 		data = (void *)rt;
 	}
