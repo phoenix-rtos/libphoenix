@@ -5,8 +5,8 @@
  *
  * sys/ioctl.c
  *
- * Copyright 2018 Phoenix Systems
- * Author: Krystian Wasik
+ * Copyright 2018, 2023 Phoenix Systems
+ * Author: Krystian Wasik, Aleksander Kaminski
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -27,43 +27,50 @@
 #include <stdlib.h>
 
 
-const void * ioctl_unpack(const msg_t *msg, unsigned long *request, id_t *id)
+const void *ioctl_unpack(const msg_t *msg, unsigned long *request, id_t *id)
 {
 	return ioctl_unpackEx(msg, request, id, NULL);
 }
 
-const void * ioctl_unpackEx(const msg_t *msg, unsigned long *request, id_t *id, void** response_buf)
+
+const void *ioctl_unpackEx(const msg_t *msg, unsigned long *request, id_t *id, void **response_buf)
 {
 	size_t size;
 	const void *data = NULL;
 	ioctl_in_t *ioctl = (ioctl_in_t *)msg->i.raw;
 
-	if (request != NULL)
+	if (request != NULL) {
 		*request = ioctl->request;
+	}
 
-	if (id != NULL)
+	if (id != NULL) {
 		*id = ioctl->id;
+	}
 
 	size = IOCPARM_LEN(ioctl->request);
 
-	if (ioctl->request & IOC_IN) {
-		if (size <= (sizeof(msg->i.raw) - sizeof(ioctl_in_t)))
+	if ((ioctl->request & IOC_IN) != 0) {
+		if (size <= (sizeof(msg->i.raw) - sizeof(ioctl_in_t))) {
 			data = ioctl->data;
-		else
+		}
+		else {
 			data = msg->i.data;
-	} else if (!(ioctl->request & IOC_INOUT) && size > 0) {
+		}
+	}
+	else if (((ioctl->request & IOC_INOUT) == 0) && (size > 0)) {
 		/* the data is passed by value instead of pointer */
-		size = min(size, sizeof(void*));
-		memcpy(&data, ioctl->data, size);
+		size = min(size, sizeof(void *));
+		(void)memcpy(&data, ioctl->data, size);
 	}
 
 	/* ioctl special case: arg is structure with pointer - has to be custom-packed into message */
 	if (ioctl->request == SIOCGIFCONF) {
-		struct ifconf* ifc = (struct ifconf*) data;
+		struct ifconf *ifc = (struct ifconf *)data;
 		if (ifc->ifc_len > 0) {
 			ifc->ifc_buf = msg->o.data;
 		}
-	} else if (ioctl->request == SIOCADDRT || ioctl->request == SIOCDELRT) {
+	}
+	else if ((ioctl->request == SIOCADDRT) || (ioctl->request == SIOCDELRT)) {
 		/* input data is read only so we have allocate the in_data if
 		 * we want to change it. TODO: find better place to allocate and free
 		 * message */
@@ -71,35 +78,42 @@ const void * ioctl_unpackEx(const msg_t *msg, unsigned long *request, id_t *id, 
 		if (rt == NULL) {
 			return NULL;
 		}
-		memcpy(rt, msg->i.data, msg->i.size);
+		(void)memcpy(rt, msg->i.data, msg->i.size);
 		rt->rt_dev = malloc(msg->o.size);
 		if (rt->rt_dev == NULL) {
 			free(rt);
 			return NULL;
 		}
-		memcpy(rt->rt_dev, msg->o.data, msg->o.size);
+		(void)memcpy(rt->rt_dev, msg->o.data, msg->o.size);
 		data = (void *)rt;
 	}
+	else {
+	}
 
-	if (response_buf && ioctl->request & IOC_OUT) {
+	if ((response_buf != NULL) && ((ioctl->request & IOC_OUT) != 0)) {
 		ioctl_out_t *ioctl_out = (ioctl_out_t *)msg->o.raw;
-		if (size <= (sizeof(msg->o.raw) - sizeof(ioctl_out_t)))
+		if (size <= (sizeof(msg->o.raw) - sizeof(ioctl_out_t))) {
 			*response_buf = ioctl_out->data;
-		else
+		}
+		else {
 			*response_buf = msg->o.data;
+		}
 
-		if (ioctl->request & IOC_IN)
-			memcpy(*response_buf, data, size);
+		if ((ioctl->request & IOC_IN) != 0) {
+			(void)memcpy(*response_buf, data, size);
+		}
 	}
 
 	return data;
 }
 
+
 pid_t ioctl_getSenderPid(const msg_t *msg)
 {
-	ioctl_in_t *ioctl = (ioctl_in_t *)msg->i.raw;
-	return (pid_t) ioctl->pid;
+	const ioctl_in_t *ioctl = (const ioctl_in_t *)msg->i.raw;
+	return (pid_t)ioctl->pid;
 }
+
 
 void ioctl_setResponse(msg_t *msg, unsigned long request, int err, const void *data)
 {
@@ -109,18 +123,24 @@ void ioctl_setResponse(msg_t *msg, unsigned long request, int err, const void *d
 
 	ioctl->err = err;
 
-	if ((request & IOC_OUT) && data != NULL) {
-		if (size <= (sizeof(msg->o.raw) - sizeof(ioctl_out_t)))
+	if (((request & IOC_OUT) != 0) && (data != NULL)) {
+		if (size <= (sizeof(msg->o.raw) - sizeof(ioctl_out_t))) {
 			dst = ioctl->data;
-		else
+		}
+		else {
 			dst = msg->o.data;
+		}
 
-		memcpy(dst, data, size);
+		(void)memcpy(dst, data, size);
 	}
 }
+
 
 void ioctl_setResponseErr(msg_t *msg, unsigned long request, int err)
 {
 	ioctl_out_t *ioctl = (ioctl_out_t *)msg->o.raw;
+
+	(void)request;
+
 	ioctl->err = err;
 }
