@@ -36,6 +36,11 @@
 #define _PAGE_SIZE 0x200
 #define SIZE_PAGE _Pragma("GCC warning \"'SIZE_PAGE' is deprecated. Use _PAGE_SIZE from arch.h or PAGE_SIZE from limits.h (POSIX only)\"") _PAGE_SIZE
 
-#define __LIBPHOENIX_ARCH_TLS_SUPPORTED
+/* FIXME provide libphoenix config to be able to
+ * selectively disable/enable features on per
+ * project basis.
+ * Disabled for now as TLS consumes too much
+ * memory to be advantageous on some targets. */
+//#define __LIBPHOENIX_ARCH_TLS_SUPPORTED
 
 #endif
