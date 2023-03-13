@@ -154,6 +154,7 @@ extern int fileno_unlocked(FILE *stream);
 extern int fseek(FILE *stream, long int offset, int whence);
 extern int fseek_unlocked(FILE *stream, long int offset, int whence);
 extern int fseeko(FILE *stream, off_t offset, int whence);
+extern int fseeko_unlocked(FILE *stream, off_t offset, int whence);
 
 
 /*
@@ -165,7 +166,9 @@ extern int fsetpos(FILE *stream, const fpos_t *pos);
 
 /* Returns the current file position of the given stream. */
 extern long int ftell(FILE *stream);
+extern long int ftell_unlocked(FILE *stream);
 extern off_t ftello(FILE *stream);
+extern off_t ftello_unlocked(FILE *stream);
 
 
 /* Writes data from the array pointed to by ptr to the given stream. */
