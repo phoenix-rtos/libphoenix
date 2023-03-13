@@ -616,11 +616,17 @@ int fflush(FILE *stream)
 }
 
 
-int fseek_unlocked(FILE *stream, long offset, int whence)
+static off_t fseektell_unlocked(FILE *stream, off_t offset, int whence)
 {
 	fflush_unlocked(stream);
 	stream->flags &= ~F_EOF;
 	return lseek(stream->fd, offset, whence);
+}
+
+
+int fseek_unlocked(FILE *stream, long offset, int whence)
+{
+	return (int)fseektell_unlocked(stream, offset, whence);
 }
 
 
@@ -636,7 +642,7 @@ int fseek(FILE *stream, long offset, int whence)
 
 long int ftell_unlocked(FILE *stream)
 {
-	return (long)fseek_unlocked(stream, 0, SEEK_CUR);
+	return (long int)fseektell_unlocked(stream, 0, SEEK_CUR);
 }
 
 
@@ -652,7 +658,7 @@ long int ftell(FILE *stream)
 
 off_t ftello_unlocked(FILE *stream)
 {
-	return (off_t)fseek_unlocked(stream, 0, SEEK_CUR);
+	return fseektell_unlocked(stream, 0, SEEK_CUR);
 }
 
 
@@ -663,6 +669,17 @@ off_t ftello(FILE *stream)
 	ret = ftello_unlocked(stream);
 	mutexUnlock(stream->lock);
 	return ret;
+}
+
+
+int fgetpos(FILE *stream, fpos_t *pos)
+{
+	off_t ret = ftello(stream);
+	if (ret >= 0) {
+		*pos = (fpos_t)ret;
+		return 0;
+	}
+	return -1;
 }
 
 
@@ -855,9 +872,26 @@ void rewind(FILE *file)
 }
 
 
+int fseeko_unlocked(FILE *stream, off_t offset, int whence)
+{
+	return (int)fseektell_unlocked(stream, offset, whence);
+}
+
+
 int fseeko(FILE *stream, off_t offset, int whence)
 {
-	return fseek(stream, offset, whence);
+	int ret;
+	mutexLock(stream->lock);
+	ret = fseeko_unlocked(stream, offset, whence);
+	mutexUnlock(stream->lock);
+	return (ret >= 0) ? 0 : -1;
+}
+
+
+int fsetpos(FILE *stream, const fpos_t *pos)
+{
+	off_t off = (off_t)(*pos);
+	return (fseeko(stream, off, SEEK_SET) >= 0) ? 0 : -1;
 }
 
 
