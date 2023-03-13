@@ -100,17 +100,17 @@ static const unsigned char *__sccl(char *tab, const unsigned char *fmt)
 }
 
 
-static int scanf_parse(char *ccltab, const char *inp, char const *fmt0, va_list ap)
+static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0, va_list ap)
 {
 	const unsigned char *fmt = (const unsigned char *)fmt0;
-	int c, n, inr, flags, nassigned, nconversions, nread, base;
+	int c, n, flags, nassigned, nconversions, nread, base;
 	size_t width;
 	char *p, *p0;
 	char buf[32];
 
 	static short basefix[17] = { 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
 
-	inr = strlen(inp);
+	*inr = strlen(inp);
 
 	nassigned = 0;
 	nconversions = 0;
@@ -122,23 +122,23 @@ static int scanf_parse(char *ccltab, const char *inp, char const *fmt0, va_list 
 			return (nassigned);
 
 		if (isspace(c)) {
-			while (inr > 0 && isspace(*inp)) {
+			while (*inr > 0 && isspace(*inp)) {
 				nread++;
-				inr--;
+				(*inr)--;
 				inp++;
 			}
 			continue;
 		}
 
 		if (c != '%') {
-			if (inr <= 0)
+			if (*inr <= 0)
 				return (nconversions != 0 ? nassigned : -1);
 
 			if (*inp != c)
 				return nassigned;
 
 			nread++;
-			inr--;
+			(*inr)--;
 			inp++;
 			continue;
 		}
@@ -148,14 +148,14 @@ static int scanf_parse(char *ccltab, const char *inp, char const *fmt0, va_list 
 		for(;;) {
 			c = *fmt++;
 			if (c == '%') {
-				if (inr <= 0)
+				if (*inr <= 0)
 					return (nconversions != 0 ? nassigned : -1);
 
 				if (*inp != c)
 					return nassigned;
 
 				nread++;
-				inr--;
+				(*inr)--;
 				inp++;
 				break;
 			}
@@ -306,13 +306,13 @@ static int scanf_parse(char *ccltab, const char *inp, char const *fmt0, va_list 
 		if(c == '%')
 			continue;
 
-		if (inr <= 0)
+		if (*inr <= 0)
 			return (nconversions != 0 ? nassigned : -1);
 
 		if ((flags & NOSKIP) == 0) {
 			while (isspace(*inp)) {
 				nread++;
-				if (--inr > 0)
+				if (--(*inr) > 0)
 					inp++;
 				else
 					return (nconversions != 0 ? nassigned : -1);
@@ -329,7 +329,8 @@ static int scanf_parse(char *ccltab, const char *inp, char const *fmt0, va_list 
 				if (flags & SUPPRESS) {
 					size_t sum = 0;
 					for (;;) {
-						if ((n = inr) < (int)width) {
+						n = *inr;
+						if (n < (int)width) {
 							sum += n;
 							width -= n;
 							inp += n;
@@ -338,7 +339,7 @@ static int scanf_parse(char *ccltab, const char *inp, char const *fmt0, va_list 
 							break;
 						} else {
 							sum += width;
-							inr -= width;
+							*inr -= width;
 							inp += width;
 							break;
 						}
@@ -346,7 +347,7 @@ static int scanf_parse(char *ccltab, const char *inp, char const *fmt0, va_list 
 					nread += sum;
 				} else {
 					memcpy(va_arg(ap, char *), inp, width);
-					inr -= width;
+					*inr -= width;
 					inp += width;
 					nread += width;
 					nassigned++;
@@ -360,10 +361,12 @@ static int scanf_parse(char *ccltab, const char *inp, char const *fmt0, va_list 
 				if (flags & SUPPRESS) {
 					n = 0;
 					while (ccltab[(unsigned char)*inp]) {
-						n++, inr--, inp++;
+						n++;
+						(*inr)--;
+						inp++;
 						if (--width == 0)
 							break;
-						if (inr <= 0) {
+						if (*inr <= 0) {
 							if (n == 0)
 								return (nconversions != 0 ? nassigned : -1);
 							break;
@@ -374,11 +377,11 @@ static int scanf_parse(char *ccltab, const char *inp, char const *fmt0, va_list 
 				} else {
 					p0 = p = va_arg(ap, char *);
 					while (ccltab[(unsigned char)*inp]) {
-						inr--;
+						(*inr)--;
 						*p++ = *inp++;
 						if (--width == 0)
 							break;
-						if (inr <= 0) {
+						if (*inr <= 0) {
 							if (p == p0)
 								return (nconversions != 0 ? nassigned : -1);
 							break;
@@ -400,21 +403,23 @@ static int scanf_parse(char *ccltab, const char *inp, char const *fmt0, va_list 
 				if (flags & SUPPRESS) {
 					n = 0;
 					while (!isspace(*inp)) {
-						n++, inr--, inp++;
+						n++;
+						(*inr)--;
+						inp++;
 						if (--width == 0)
 							break;
-						if (inr <= 0)
+						if (*inr <= 0)
 							break;
 					}
 					nread += n;
 				} else {
 					p0 = p = va_arg(ap, char *);
 					while (!isspace(*inp)) {
-						inr--;
+						(*inr)--;
 						*p++ = *inp++;
 						if (--width == 0)
 							break;
-						if (inr <= 0)
+						if (*inr <= 0)
 							break;
 					}
 					*p = 0;
@@ -494,7 +499,7 @@ static int scanf_parse(char *ccltab, const char *inp, char const *fmt0, va_list 
 
 					if ((flags & SUPPRESS) == 0)
 						*p++ = c;
-					if (--inr > 0)
+					if (--(*inr) > 0)
 						inp++;
 					else
 						break;
@@ -506,7 +511,7 @@ static int scanf_parse(char *ccltab, const char *inp, char const *fmt0, va_list 
 				if (c == 'x' || c == 'X') {
 					--p;
 					inp--;
-					inr++;
+					(*inr)++;
 				}
 
 				if ((flags & SUPPRESS) == 0) {
@@ -557,12 +562,12 @@ static int scanf_parse(char *ccltab, const char *inp, char const *fmt0, va_list 
 
 				p = buf;
 				while (width > 0) {
-					if (inr <= 0) {
+					if (*inr <= 0) {
 						return (nconversions != 0 ? nassigned : -1);
 					}
 					*p++ = *inp++;
 					width--;
-					inr--;
+					(*inr)--;
 				}
 
 				if ((flags & SUPPRESS) == 0) {
@@ -594,13 +599,32 @@ static int scanf_parse(char *ccltab, const char *inp, char const *fmt0, va_list 
 }
 
 
+/* Unget string from the end */
+static inline void ungetstr(FILE *stream, const char *str, int nr)
+{
+	const char *end = strchrnul(str, '\0');
+
+	for (; nr > 0; --nr) {
+		if (ungetc((int)(unsigned char)*(--end), stream) == EOF) {
+			fseeko(stream, -nr, SEEK_CUR);
+			break;
+		}
+	}
+}
+
+
 int vfscanf(FILE *stream, const char *format, va_list ap)
 {
-	int ret;
+	int ret, nremain;
 	size_t n = 0;
 	char *lineptr = NULL;
-	char *ccltab = malloc(256);
+	char *ccltab;
 
+	if (strlen(format) == 0) {
+		return 0;
+	}
+
+	ccltab = malloc(256);
 	if (ccltab == NULL) {
 		/* errno set by malloc */
 		return -1;
@@ -608,10 +632,8 @@ int vfscanf(FILE *stream, const char *format, va_list ap)
 
 	ret = getline(&lineptr, &n, stream);
 	if (ret > 0) {
-		ret = scanf_parse(ccltab, lineptr, format, ap);
-		if (ret < 0) {
-			ret = 0;
-		}
+		ret = scanf_parse(ccltab, lineptr, &nremain, format, ap);
+		ungetstr(stream, lineptr, nremain);
 		free(lineptr);
 	}
 
@@ -623,7 +645,7 @@ int vfscanf(FILE *stream, const char *format, va_list ap)
 
 int vsscanf(const char *str, const char *format, va_list ap)
 {
-	int ret;
+	int ret, nremain;
 	char *ccltab = malloc(256);
 
 	if (ccltab == NULL) {
@@ -631,7 +653,7 @@ int vsscanf(const char *str, const char *format, va_list ap)
 		return -1;
 	}
 
-	ret = scanf_parse(ccltab, str, format, ap);
+	ret = scanf_parse(ccltab, str, &nremain, format, ap);
 	free(ccltab);
 
 	return ret;
