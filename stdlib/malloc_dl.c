@@ -415,6 +415,22 @@ static void *_malloc_allocSmall(size_t size)
 }
 
 
+size_t malloc_usable_size(void *ptr)
+{
+	chunk_t *chunk;
+	size_t size = 0;
+
+	if (ptr != NULL) {
+		mutexLock(malloc_common.mutex);
+		chunk = (chunk_t *)((uintptr_t)ptr - CHUNK_OVERHEAD);
+		size = malloc_chunkSize(chunk) - CHUNK_OVERHEAD;
+		mutexUnlock(malloc_common.mutex);
+	}
+
+	return size;
+}
+
+
 void *malloc(size_t size)
 {
 	void *ptr = NULL;
