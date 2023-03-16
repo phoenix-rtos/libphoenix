@@ -119,6 +119,10 @@ extern void *realloc(void *ptr, size_t size);
 #define reallocf realloc /* TODO: free on fail */
 
 
+/* Return total size of chunk allocated by a malloc. */
+extern size_t malloc_usable_size(void *ptr);
+
+
 /* Causes an abnormal program termination. */
 extern void abort(void);
 
