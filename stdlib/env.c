@@ -139,28 +139,33 @@ static int _env_insert(int idx, char *v, unsigned allocated)
 	return 0;
 }
 
+
 int unsetenv(const char *name)
 {
-	if (!name || strchr(name, '=')) {
-		errno = EINVAL;
-		return -1;
+	char *v;
+	int idx;
+
+	if ((name == NULL) || (*name == '\0') || (strchr(name, '=') != NULL)) {
+		return set_errno(-EINVAL);
 	}
 
-	int idx;
-	char *v = _env_find(name, strlen(name), &idx);
-	if (!v)
+	v = _env_find(name, strlen(name), &idx);
+	if (v == NULL) {
 		return 0;
+	}
 
-	if (_string_allocated && _string_allocated[idx])
+	if ((_string_allocated != NULL) && (_string_allocated[idx] != 0)) {
 		free(environ[idx]);
+	}
 
 	_cnt--;
 
 	environ[idx] = environ[_cnt];
 	environ[_cnt] = NULL;
 
-	if (_string_allocated)
+	if (_string_allocated != NULL) {
 		_string_allocated[idx] = _string_allocated[_cnt];
+	}
 
 	return 0;
 }
