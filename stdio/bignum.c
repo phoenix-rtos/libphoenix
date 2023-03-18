@@ -14,6 +14,7 @@
  */
 
 #include "bignum.h"
+#include <errno.h>
 
 
 static void bignum_shiftrInternal(bignum_t *bn, const size_t shift)
@@ -43,7 +44,7 @@ static int bignum_resize(bignum_t *bn, const size_t newSize)
 		bn->data = ptr;
 		return 0;
 	}
-	return -1;
+	return -ENOMEM;
 }
 
 
@@ -111,7 +112,7 @@ int bignum_init(bignum_t *bn, size_t size, bignum_data_t val)
 		return 0;
 	}
 	else {
-		return -1;
+		return -ENOMEM;
 	}
 }
 

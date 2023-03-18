@@ -110,6 +110,7 @@ int vfprintf(FILE *stream, const char *format, va_list arg)
 {
 	struct feed_ctx_s ctx;
 	size_t res;
+	int ret;
 
 	ctx.hType = feed_hStream;
 	ctx.h.stream = stream;
@@ -117,9 +118,9 @@ int vfprintf(FILE *stream, const char *format, va_list arg)
 	ctx.total = 0;
 	ctx.error = 0;
 
-	format_parse(&ctx, format_feed, format, arg);
+	ret = format_parse(&ctx, format_feed, format, arg);
 
-	if (ctx.n != 0) {
+	if ((ret == 0) && (ctx.n != 0)) {
 		res = fwrite(ctx.buff, 1, ctx.n, ctx.h.stream);
 		ctx.total += res;
 
@@ -127,10 +128,12 @@ int vfprintf(FILE *stream, const char *format, va_list arg)
 			ctx.error = -1;
 		}
 	}
-
-	return ctx.error < 0 ?
-		-1 : /* check error with feof() or ferror() */
-		ctx.total;
+	if (ret != 0) {
+		return SET_ERRNO(ret);
+	}
+	else {
+		return ctx.error < 0 ? -1 : /* check error with feof() or ferror() */ ctx.total;
+	}
 }
 
 
@@ -138,6 +141,7 @@ int vdprintf(int fd, const char *format, va_list arg)
 {
 	struct feed_ctx_s ctx;
 	size_t res;
+	int ret;
 
 	ctx.hType = feed_hDescriptor;
 	ctx.h.fd = fd;
@@ -145,9 +149,9 @@ int vdprintf(int fd, const char *format, va_list arg)
 	ctx.total = 0;
 	ctx.error = 0;
 
-	format_parse(&ctx, format_feed, format, arg);
+	ret = format_parse(&ctx, format_feed, format, arg);
 
-	if (ctx.n != 0) {
+	if ((ret == 0) && (ctx.n != 0)) {
 		res = safe_write(ctx.h.fd, ctx.buff, ctx.n);
 		ctx.total += res;
 
@@ -156,9 +160,12 @@ int vdprintf(int fd, const char *format, va_list arg)
 		}
 	}
 
-	return ctx.error < 0 ?
-		SET_ERRNO(ctx.error) :
-		ctx.total;
+	if (ret != 0) {
+		return SET_ERRNO(ret);
+	}
+	else {
+		return ctx.error < 0 ? SET_ERRNO(ctx.error) : ctx.total;
+	}
 }
 
 

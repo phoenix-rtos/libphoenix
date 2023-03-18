@@ -16,6 +16,7 @@
 #include "stdlib.h"
 #include "stdio.h"
 #include "format.h"
+#include "errno.h"
 
 
 typedef struct _vsprintf_ctx_t {
@@ -85,27 +86,39 @@ int snprintf(char *str, size_t n, const char *format, ...)
 int vsprintf(char *str, const char *format, va_list arg)
 {
 	vsprintf_ctx_t ctx;
+	int ret;
 
 	ctx.buff = str;
 	ctx.n = 0;
 
-	format_parse(&ctx, vsprintf_feed, format, arg);
+	ret = format_parse(&ctx, vsprintf_feed, format, arg);
 	vsprintf_feed(&ctx, '\0');
 
-	return ctx.n - 1;
+	if (ret == 0) {
+		return ctx.n - 1;
+	}
+	else {
+		return SET_ERRNO(ret);
+	}
 }
 
 
 int vsnprintf(char *str, size_t n, const char *format, va_list arg)
 {
 	vsnprintf_ctx_t ctx;
+	int ret;
 
 	ctx.buff = str;
 	ctx.n = 0;
 	ctx.max_len = n;
 
-	format_parse(&ctx, vsnprintf_feed, format, arg);
+	ret = format_parse(&ctx, vsnprintf_feed, format, arg);
 	vsnprintf_feed(&ctx, '\0');
 
-	return ctx.n - 1;
+	if (ret == 0) {
+		return ctx.n - 1;
+	}
+	else {
+		return SET_ERRNO(ret);
+	}
 }

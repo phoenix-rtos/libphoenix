@@ -17,6 +17,7 @@
 #include "format.h"
 #include "sys/debug.h"
 #include "unistd.h"
+#include "errno.h"
 
 typedef struct _printf_ctx_t {
 	size_t n;
@@ -47,7 +48,11 @@ int printf(const char *format, ...)
 int vprintf(const char *format, va_list arg)
 {
 	size_t n = 0;
-	format_parse(&n, printf_feed, format, arg);
-
-	return n;
+	int ret = format_parse(&n, printf_feed, format, arg);
+	if (ret == 0) {
+		return n;
+	}
+	else {
+		return SET_ERRNO(ret);
+	}
 }
