@@ -22,7 +22,7 @@
 typedef void (*feedfunc)(void *, char);
 
 
-extern void format_parse(void *ctx, feedfunc feed, const char *format, va_list args);
+extern int format_parse(void *ctx, feedfunc feed, const char *format, va_list args);
 
 
 #endif
