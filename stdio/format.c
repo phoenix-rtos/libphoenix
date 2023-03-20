@@ -86,7 +86,7 @@
 		} \
 	} while (0)
 
-#define BIGDOUBLE_DEFAULT_SIZE 32
+#define BIGDOUBLE_DEFAULT_SIZE 4
 
 /* clang-format on */
 union double_u64 {
