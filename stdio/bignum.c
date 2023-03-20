@@ -15,7 +15,7 @@
 
 #include "bignum.h"
 #include <errno.h>
-
+#include <string.h>
 
 static void bignum_shiftrInternal(bignum_t *bn, const size_t shift)
 {
@@ -38,11 +38,64 @@ static void bignum_shiftrInternal(bignum_t *bn, const size_t shift)
 
 static int bignum_resize(bignum_t *bn, const size_t newSize)
 {
-	bignum_data_t *ptr = realloc(bn->data, sizeof(*bn->data) * newSize);
-	if (ptr != NULL) {
-		bn->size = newSize;
-		bn->data = ptr;
+	bignum_data_t *ptr;
+	if (bn->size == newSize) {
 		return 0;
+	}
+	else if (bn->size > newSize) {
+		if (bn->data != bn->stackBuffer) {
+			if (newSize <= BIGNUM_STACK_BUFFER_SIZE) {
+				if (bn->len > newSize) {
+					bn->len = newSize;
+				}
+				(void)memcpy(bn->stackBuffer, bn->data, bn->len * sizeof(*bn->data));
+				free(bn->data);
+				bn->data = bn->stackBuffer;
+				bn->size = newSize;
+				return 0;
+			}
+			else {
+				ptr = realloc(bn->data, newSize * sizeof(*bn->data));
+				if (ptr != NULL) {
+					bn->data = ptr;
+					bn->size = newSize;
+					if (bn->len > bn->size) {
+						bn->len = bn->size;
+					}
+					return 0;
+				}
+			}
+		}
+		else {
+			bn->size = newSize;
+			if (bn->len > bn->size) {
+				bn->len = bn->size;
+			}
+			return 0;
+		}
+	}
+	else {
+		if (newSize <= BIGNUM_STACK_BUFFER_SIZE) {
+			bn->size = newSize;
+			return 0;
+		}
+		else if (bn->data == bn->stackBuffer) {
+			ptr = calloc(newSize, sizeof(*bn->data));
+			if (ptr != NULL) {
+				(void)memcpy(ptr, bn->data, bn->size * sizeof(*bn->data));
+				bn->size = newSize;
+				bn->data = ptr;
+				return 0;
+			}
+		}
+		else {
+			ptr = realloc(bn->data, sizeof(*bn->data) * newSize);
+			if (ptr != NULL) {
+				bn->size = newSize;
+				bn->data = ptr;
+				return 0;
+			}
+		}
 	}
 	return -ENOMEM;
 }
@@ -104,22 +157,17 @@ static int bignum_cmpInternal(const bignum_t *first, const bignum_t *second)
 
 int bignum_init(bignum_t *bn, size_t size, bignum_data_t val)
 {
-	bignum_t result = { .data = NULL, .len = 1, .size = size };
-	result.data = calloc(result.size, sizeof(*result.data));
-	if (result.data != NULL) {
-		result.data[0] = val;
-		*bn = result;
-		return 0;
-	}
-	else {
-		return -ENOMEM;
-	}
+	*bn = (bignum_t) { .data = bn->stackBuffer, .len = 1, .size = 1 };
+	bn->data[0] = val;
+	return bignum_resize(bn, size);
 }
 
 void bignum_destroy(bignum_t *bn)
 {
 	if (bn != NULL) {
-		free(bn->data);
+		if (bn->data != bn->stackBuffer) {
+			free(bn->data);
+		}
 		bn->data = NULL;
 		bn->len = 0;
 		bn->size = 0;

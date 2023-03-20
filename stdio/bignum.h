@@ -22,13 +22,15 @@
 #define BIGNUM_DATA_MASK     ((bignum_data_t)(((bignum_ddata_t)1 << BIGNUM_DATA_BITS) - 1))
 #define DOUBLE_EXP_SHIFT     52
 #define DOUBLE_MANTISSA_MASK ((1LLU << DOUBLE_EXP_SHIFT) - 1)
+#define BIGNUM_STACK_BUFFER_SIZE 4
 
 typedef uint32_t bignum_data_t;
 typedef uint64_t bignum_ddata_t;
 
 typedef struct bignum {
-	bignum_data_t *data;
 	size_t len, size;
+	bignum_data_t *data;
+	bignum_data_t stackBuffer[BIGNUM_STACK_BUFFER_SIZE];
 } bignum_t;
 
 extern int bignum_init(bignum_t *bn, size_t size, bignum_data_t val);
