@@ -800,9 +800,9 @@ static void format_sprintf_num(void *ctx, feedfunc feed, uint64_t num64, uint32_
 	uint32_t num_high = (uint32_t)(num64 >> 32);
 
 	if (((flags & FLAG_NULLMARK) != 0) && (num64 == 0)) {
-		for (i = 0; i < nilStringLength; i++) {
-			feed(ctx, nilString[i]);
-		}
+		flags &= ~FLAG_ZERO;
+		format_printBuffer(ctx, feed, flags, minFieldWidth, nilString, nilString + nilStringLength, sign);
+		return;
 	}
 
 	if ((flags & FLAG_SIGNED) != 0) {
