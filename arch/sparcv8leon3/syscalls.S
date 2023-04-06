@@ -25,15 +25,18 @@
 .type sym, #function; \
 .align 4; \
 sym: \
-	st  %i7, [%sp + 0x3c]; \
-	mov %o7, %i7; \
-	sub %sp, 0x60, %sp; \
+	save %sp, -0x60, %sp; \
+	mov %i0, %o0; \
+	mov %i1, %o1; \
+	mov %i2, %o2; \
+	mov %i3, %o3; \
+	mov %i4, %o4; \
+	mov %i5, %o5; \
 	mov sn, %g4; \
 	ta 0; \
-	mov %i7, %o7; \
-	ld [%sp + 0x9c], %i7; \
-	retl; \
-	add %sp, 0x60, %sp; \
+	/* return value in %o0 */; \
+	ret; \
+	restore %g0, %o0, %o0; \
 .size sym, .-sym
 
 
