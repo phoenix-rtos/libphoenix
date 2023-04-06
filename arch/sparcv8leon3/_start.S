@@ -21,10 +21,11 @@
 .globl _start
 .type _start, #function
 _start:
-	ld [%o5 + 0], %o7
-	ld [%o5 + 4], %o0
-	ld [%o5 + 8], %o1
-	ld [%o5 + 12], %o2
+	save %sp, -0x60, %sp
+	ld [%i5 + 0], %o7
+	ld [%i5 + 4], %o0
+	ld [%i5 + 8], %o1
+	ld [%i5 + 12], %o2
 	call _startc
 	nop
 .size _start, .-_start
