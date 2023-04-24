@@ -869,7 +869,7 @@ static int format_sprintfDouble(void *ctx, feedfunc feed, double d, uint32_t fla
 }
 
 
-static int format_sprintf_num(void *ctx, feedfunc feed, uint64_t num64, uint32_t flags, int minFieldWidth, int precision)
+static void format_sprintf_num(void *ctx, feedfunc feed, uint64_t num64, uint32_t flags, int minFieldWidth, int precision)
 {
 	const char nilString[] = "(nil)";
 	const int nilStringLength = strlen(nilString);
@@ -1007,7 +1007,6 @@ static int format_sprintf_num(void *ctx, feedfunc feed, uint64_t num64, uint32_t
 		*tmp++ = prefix[1];
 	}
 	format_printBuffer(ctx, feed, flags, minFieldWidth, tmp, tmp_buf, sign);
-	return 0;
 }
 
 
@@ -1193,10 +1192,7 @@ int format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 				}
 				minFieldWidth = sizeof(void *) * 2;
 				GET_UNSIGNED(number, flags, args);
-				ret = format_sprintf_num(ctx, feed, number, flags, minFieldWidth, precision);
-				if (ret < 0) {
-					return ret;
-				}
+				format_sprintf_num(ctx, feed, number, flags, minFieldWidth, precision);
 				break;
 			case 'o':
 				if (precision != -1) {
@@ -1207,10 +1203,7 @@ int format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 				}
 				flags |= FLAG_OCT;
 				GET_UNSIGNED(number, flags, args);
-				ret = format_sprintf_num(ctx, feed, number, flags, minFieldWidth, precision);
-				if (ret < 0) {
-					return ret;
-				}
+				format_sprintf_num(ctx, feed, number, flags, minFieldWidth, precision);
 				break;
 			case 'X':
 				flags |= FLAG_LARGE_DIGITS;
@@ -1224,10 +1217,7 @@ int format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 					precision = 1;
 				}
 				GET_UNSIGNED(number, flags, args);
-				ret = format_sprintf_num(ctx, feed, number, flags, minFieldWidth, precision);
-				if (ret < 0) {
-					return ret;
-				}
+				format_sprintf_num(ctx, feed, number, flags, minFieldWidth, precision);
 				break;
 			case 'd':
 			case 'i':
@@ -1239,10 +1229,7 @@ int format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 				}
 				flags |= FLAG_SIGNED;
 				GET_SIGNED(number, flags, args);
-				ret = format_sprintf_num(ctx, feed, number, flags, minFieldWidth, precision);
-				if (ret < 0) {
-					return ret;
-				}
+				format_sprintf_num(ctx, feed, number, flags, minFieldWidth, precision);
 				break;
 			case 'A':
 				flags |= FLAG_LARGE_DIGITS;
