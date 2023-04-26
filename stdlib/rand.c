@@ -16,7 +16,7 @@
 #include <stdlib.h>
 
 
-unsigned int __randseed;
+static unsigned int __randseed = 1;
 
 int rand_r (unsigned int *seed)
 {
