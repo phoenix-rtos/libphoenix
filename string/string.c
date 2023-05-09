@@ -29,18 +29,20 @@ struct {
 #define __STRCMP
 int strcmp(const char *s1, const char *s2)
 {
-	const char *p;
+	const unsigned char *us1 = (const unsigned char *)s1;
+	const unsigned char *us2 = (const unsigned char *)s2;
+	const unsigned char *p;
 	unsigned int k;
 
-	for (p = s1, k = 0; *p; p++, k++) {
+	for (p = us1, k = 0; *p; p++, k++) {
 
-		if (*p < *(s2 + k))
+		if (*p < *(us2 + k))
 			return -1;
-		else if (*p > *(s2 + k))
+		else if (*p > *(us2 + k))
 			return 1;
 	}
 
-	if (*p != *(s2 + k))
+	if (*p != *(us2 + k))
 		return -1;
 
 	return 0;
@@ -99,17 +101,19 @@ int strncasecmp(const char *s1, const char *s2, size_t n)
 #define __STRNCMP
 int strncmp(const char *s1, const char *s2, size_t n)
 {
-	const char *p;
+	const unsigned char *us1 = (const unsigned char *)s1;
+	const unsigned char *us2 = (const unsigned char *)s2;
+	const unsigned char *p;
 	size_t k = 0;
 
-	for (p = s1, k = 0; *p && k < n; p++, k++) {
-		if (*p < *(s2 + k))
+	for (p = us1, k = 0; *p && k < n; p++, k++) {
+		if (*p < *(us2 + k))
 			return -1;
-		else if (*p > *(s2 + k))
+		else if (*p > *(us2 + k))
 			return 1;
 	}
 
-	if (k < n && (*p != *(s2 + k))) {
+	if (k < n && (*p != *(us2 + k))) {
 		return -1;
 	}
 
@@ -120,13 +124,12 @@ int strncmp(const char *s1, const char *s2, size_t n)
 
 #ifndef __STRCHR
 #define __STRCHR
-char *strchr(const char *str, int z)
+char *strchr(const char *str, int c)
 {
 	do {
-		if (*str == z)
+		if (*str == (char)c)
 			return (char *)str;
-	}
-	while (*(str++));
+	} while (*(str++));
 
 	return NULL;
 }
@@ -140,7 +143,7 @@ void *memchr(const void *s, int c, size_t n)
 	int i;
 
 	for (i = 0; i < n; ++i, ++s) {
-		if (*(char *)s == c)
+		if (*(char *)s == (char)c)
 			return (void *)s;
 	}
 
@@ -151,9 +154,9 @@ void *memchr(const void *s, int c, size_t n)
 
 #ifndef __STRCHRNUL
 #define __STRCHRNUL
-char *strchrnul(const char *str, int z)
+char *strchrnul(const char *str, int c)
 {
-	while (*str && *str != z)
+	while (*str && *str != (char)c)
 		str++;
 	return (char *)str;
 }
@@ -166,7 +169,7 @@ int memcmp(const void *s1, const void *s2, size_t count)
 {
 	int res;
 	while (count--)
-		if ((res = *((char *)s1++) - *((char *)s2++)))
+		if ((res = *((unsigned char *)s1++) - *((unsigned char *)s2++)))
 			return res < 0 ? -1 : 1;
 
 	return 0;
@@ -180,7 +183,8 @@ size_t strlen(const char *s)
 {
 	unsigned int k;
 
-	for (k = 0; *s; s++, k++);
+	for (k = 0; *s; s++, k++)
+		;
 	return k;
 }
 #endif
@@ -192,7 +196,8 @@ size_t strnlen(const char *s, size_t maxlen)
 {
 	unsigned int k;
 
-	for (k = 0; k < maxlen && *s != '\0'; s++, k++);
+	for (k = 0; k < maxlen && *s != '\0'; s++, k++)
+		;
 	return k;
 }
 #endif
@@ -258,7 +263,7 @@ void *memmove(void *dest, const void *src, size_t n)
 		for (i = 0; i < n; ++i)
 			((char *)dest)[i] = ((const char *)src)[i];
 	else
-		for (i = n; i-- > 0; )
+		for (i = n - 1; i >= 0; --i)
 			((char *)dest)[i] = ((const char *)src)[i];
 	return dest;
 }
@@ -309,10 +314,9 @@ char *strrchr(const char *s, int c)
 	const char *p = NULL;
 
 	do {
-		if (*s == c)
+		if (*s == (char)c)
 			p = s;
-	}
-	while (*(s++));
+	} while (*(s++));
 
 	return (char *)p;
 }
@@ -324,14 +328,14 @@ char *strstr(const char *s1, const char *s2)
 	const char *p1, *p2;
 
 	for (; *s1; ++s1) {
-		for (p1 = s1, p2 = s2; *p2 && *p1 && *p1 == *p2; ++p1, ++p2);
+		for (p1 = s1, p2 = s2; *p2 && *p1 && *p1 == *p2; ++p1, ++p2)
+			;
 
 		if (!*p2)
 			return (char *)s1;
 	}
 
 	return NULL;
-
 }
 
 
@@ -340,14 +344,14 @@ char *strcasestr(const char *s1, const char *s2)
 	const char *p1, *p2;
 
 	for (; *s1; ++s1) {
-		for (p1 = s1, p2 = s2; *p2 && *p1 && tolower(*p1) == tolower(*p2); ++p1, ++p2);
+		for (p1 = s1, p2 = s2; *p2 && *p1 && tolower(*p1) == tolower(*p2); ++p1, ++p2)
+			;
 
 		if (!*p2)
 			return (char *)s1;
 	}
 
 	return NULL;
-
 }
 
 
@@ -357,7 +361,8 @@ size_t strspn(const char *s1, const char *s2)
 	const char *p;
 
 	for (count = 0; *s1; ++count, ++s1) {
-		for (p = s2; *p && *s1 != *p; ++p) ;
+		for (p = s2; *p && *s1 != *p; ++p)
+			;
 		if (!*p)
 			return count;
 	}
@@ -432,7 +437,7 @@ void *memrchr(const void *s, int c, size_t n)
 {
 	unsigned char *src = (unsigned char *)s + n - 1;
 	while (n > 0) {
-		if (*src == (unsigned char) c)
+		if (*src == (unsigned char)c)
 			return src;
 
 		src -= 1;
