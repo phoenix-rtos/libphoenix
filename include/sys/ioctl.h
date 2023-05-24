@@ -33,7 +33,7 @@ extern "C" {
 #define IOCGROUP(x)    (((x) >> 8) & 0xff)
 
 
-#define IOC_VOID    0x00000000
+#define IOC_VOID    0x20000000
 #define IOC_OUT     0x40000000
 #define IOC_IN      0x80000000
 #define IOC_INOUT   (IOC_IN | IOC_OUT)
