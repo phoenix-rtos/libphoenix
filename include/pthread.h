@@ -103,6 +103,12 @@ extern int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize);
 extern int pthread_attr_getstacksize(const pthread_attr_t *attr, size_t *stacksize);
 
 
+extern int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr, size_t stacksize);
+
+
+extern int pthread_attr_getstack(const pthread_attr_t *attr, void **stackaddr, size_t *stacksize);
+
+
 extern int pthread_attr_setschedparam(pthread_attr_t *attr, const struct sched_param *param);
 
 
