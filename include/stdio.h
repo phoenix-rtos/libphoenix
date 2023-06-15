@@ -71,6 +71,9 @@ typedef struct _FILE {
 	size_t bufsz;
 	char *buffer;
 	handle_t lock;
+
+	struct _FILE *next;
+	struct _FILE *prev;
 } FILE;
 
 

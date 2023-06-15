@@ -21,6 +21,7 @@
 #include <sys/minmax.h>
 #include <sys/mman.h>
 #include <sys/threads.h>
+#include <sys/list.h>
 
 #include <arch.h>
 #include <stdio.h>
@@ -45,6 +46,12 @@ typedef struct {
 
 
 FILE *stdin, *stdout, *stderr;
+
+
+static struct {
+	FILE *list;
+	handle_t lock;
+} file_common;
 
 
 static int string2mode(const char *mode)
@@ -136,11 +143,16 @@ static void buffFree(void *ptr, size_t size)
 
 static void file_free(FILE *file)
 {
+	mutexLock(file_common.lock);
+	LIST_REMOVE(&file_common.list, file);
+	mutexUnlock(file_common.lock);
+
 	if (file->buffer != NULL && !(file->flags & F_USRBUF)) {
 		buffFree(file->buffer, file->bufsz);
 	}
 
 	resourceDestroy(file->lock);
+
 	free(file);
 }
 
@@ -229,6 +241,11 @@ FILE *fopen(const char *filename, const char *mode)
 	f->fd = fd;
 	f->mode = m;
 	fflush(f);
+
+	mutexLock(file_common.lock);
+	LIST_ADD(&file_common.list, f);
+	mutexUnlock(file_common.lock);
+
 	return f;
 }
 
@@ -268,6 +285,11 @@ FILE *fdopen(int fd, const char *mode)
 	f->fd = fd;
 	f->mode = m;
 	fflush(f);
+
+	mutexLock(file_common.lock);
+	LIST_ADD(&file_common.list, f);
+	mutexUnlock(file_common.lock);
+
 	return f;
 }
 
@@ -579,25 +601,69 @@ char *fgets(char *str, int n, FILE *stream)
 }
 
 
-int fflush_unlocked(FILE *stream)
+static int __fflush_one(FILE *stream)
 {
-	if (stream == NULL) {
-		fflush_unlocked(stdout);
-		return 0; /* TODO: flush all FILE's */
-	}
+	int ret = 0;
 
-	if (stream->flags & F_WRITING) {
-		if (stream->bufpos) {
-			full_write(stream->fd, stream->buffer, stream->bufpos);
-			stream->bufpos = 0;
+	if ((stream->flags & F_WRITING) != 0) {
+		if (stream->bufpos != 0) {
+			if (full_write(stream->fd, stream->buffer, stream->bufpos) < 0) {
+				ret = -1;
+			}
+			else {
+				stream->bufpos = 0;
+			}
 		}
 	}
 	else {
-		lseek(stream->fd, (off_t)stream->bufpos - stream->bufeof, SEEK_CUR);
-		stream->bufpos = stream->bufeof = stream->bufsz;
+		if (lseek(stream->fd, (off_t)stream->bufpos - stream->bufeof, SEEK_CUR) < 0) {
+			ret = -1;
+		}
+		else {
+			stream->bufpos = stream->bufeof = stream->bufsz;
+		}
 	}
 
-	return 0;
+	return ret;
+}
+
+
+static int __fflush_unlocked(FILE *stream, int lock)
+{
+	int ret = 0;
+
+	if (stream == NULL) {
+		mutexLock(file_common.lock);
+		if (file_common.list != NULL) {
+			FILE *iter = file_common.list;
+			do {
+				if (lock != 0) {
+					mutexLock(iter->lock);
+				}
+				if ((iter->flags & F_WRITING) != 0) {
+					if (__fflush_one(iter) < 0) {
+						ret = -1;
+					}
+				}
+				if (lock != 0) {
+					mutexUnlock(iter->lock);
+				}
+				iter = iter->next;
+			} while (iter != file_common.list);
+		}
+		mutexUnlock(file_common.lock);
+	}
+	else {
+		ret = __fflush_one(stream);
+	}
+
+	return ret;
+}
+
+
+int fflush_unlocked(FILE *stream)
+{
+	return __fflush_unlocked(stream, 0);
 }
 
 
@@ -605,13 +671,15 @@ int fflush(FILE *stream)
 {
 	int ret;
 
-	if (stream == NULL) {
-		return fflush(stdout);
+	if (stream != NULL) {
+		mutexLock(stream->lock);
+		ret = __fflush_one(stream);
+		mutexUnlock(stream->lock);
+	}
+	else {
+		ret = __fflush_unlocked(stream, 1);
 	}
 
-	mutexLock(stream->lock);
-	ret = fflush_unlocked(stream);
-	mutexUnlock(stream->lock);
 	return ret;
 }
 
@@ -1110,6 +1178,10 @@ FILE *popen(const char *command, const char *mode)
 		close(fd[0]);
 	}
 
+	mutexLock(file_common.lock);
+	LIST_ADD(&file_common.list, &pf->file);
+	mutexUnlock(file_common.lock);
+
 	return &pf->file;
 
 failed:
@@ -1148,6 +1220,9 @@ int pclose(FILE *file)
 
 void _file_init(void)
 {
+	mutexCreate(&file_common.lock);
+	file_common.list = NULL;
+
 	stdin = calloc(1, sizeof(FILE));
 	stdout = calloc(1, sizeof(FILE));
 	stderr = calloc(1, sizeof(FILE));
@@ -1180,6 +1255,10 @@ void _file_init(void)
 	stdin->mode = O_RDONLY;
 	stdout->mode = O_WRONLY;
 	stderr->mode = O_WRONLY;
+
+	LIST_ADD(&file_common.list, stdin);
+	LIST_ADD(&file_common.list, stdout);
+	LIST_ADD(&file_common.list, stderr);
 }
 
 
