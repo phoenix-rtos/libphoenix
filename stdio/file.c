@@ -925,6 +925,39 @@ ssize_t getdelim(char **lineptr, size_t *n, int delim, FILE *stream)
 	endptr = *lineptr + *n;
 
 	for (;;) {
+		if (ptr + 2 >= endptr) {
+			ofs = ptr - *lineptr;
+
+			/* Need to check for SSIZE_MAX - 1, because setting size
+			 * from SSIZE_MAX - 1 to SSIZE_MAX would be not enough */
+			if ((*n) >= SSIZE_MAX - 1) {
+				return SET_ERRNO(-EOVERFLOW);
+			}
+			else if ((*n) >= SSIZE_MAX / 2) {
+				new_n = SSIZE_MAX;
+			}
+			else {
+				new_n = 2 * (*n);
+			}
+
+			/* No point in allocating less than 8 via malloc */
+			if (new_n < 8u) {
+				new_n = 8u;
+			}
+
+			new_lineptr = realloc(*lineptr, new_n);
+			if (new_lineptr == NULL) {
+				/* errno set by realloc */
+				return -1;
+			}
+
+			ptr = new_lineptr + ofs;
+			endptr = new_lineptr + new_n;
+
+			*lineptr = new_lineptr;
+			*n = new_n;
+		}
+
 		c = fgetc(stream);
 		if (c < 0) {
 			if (feof(stream) && ptr != *lineptr) {
@@ -939,23 +972,6 @@ ssize_t getdelim(char **lineptr, size_t *n, int delim, FILE *stream)
 		if (c == delim) {
 			*ptr = '\0';
 			return ptr - *lineptr;
-		}
-
-		if (ptr + 2 >= endptr) {
-			ofs = ptr - *lineptr;
-
-			new_n = 2 * (*n);
-			new_lineptr = realloc(*lineptr, new_n);
-			if (new_lineptr == NULL) {
-				/* errno set by realloc */
-				return -1;
-			}
-
-			ptr = new_lineptr + ofs;
-			endptr = new_lineptr + new_n;
-
-			*lineptr = new_lineptr;
-			*n = new_n;
 		}
 	}
 }
