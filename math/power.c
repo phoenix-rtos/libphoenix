@@ -13,9 +13,11 @@
  * %LICENSE%
  */
 
+#include <arch.h> /* Needed for __ieee754_sqrt */
 #include <math.h>
 #include <limits.h>
 #include <errno.h>
+#include <stdlib.h>
 #include "common.h"
 
 
@@ -61,7 +63,7 @@ double pow(double base, double exponent)
 	return res;
 }
 
-/* Uses reciprocal square root method: */
+
 double sqrt(double x)
 {
 	if (x < 0.0) {
@@ -69,22 +71,30 @@ double sqrt(double x)
 		return -NAN;
 	}
 
-	if (x == 0.0 || x == -0.0)
+	if (x == 0.0 || x == -0.0) {
 		return x;
+	}
 
+#ifdef __IEEE754_SQRT
+	double __ieee754_sqrt(double x);
+
+	return __ieee754_sqrt(x);
+#else
+	/* Use reciprocal square root method: */
 	double xn = (double)(1.0f / (float)x);
 
 	/* IEEE-754 compliant: */
 	conv_t *init = (conv_t *)&xn;
 
 	/* +Infinity : */
-	if (init->i.mantisa == 0 && init->i.exponent == 0x7FF)
+	if (init->i.mantisa == 0 && init->i.exponent == 0x7FF) {
 		return x;
+	}
 
 	/* Subnormals: */
-	if (init->i.exponent == 0)
+	if (init->i.exponent == 0) {
 		init->i.exponent = 0x1;
-
+	}
 
 	/* Initial guess: */
 	init->i.mantisa = (init->i.mantisa >> 1);
@@ -97,10 +107,11 @@ double sqrt(double x)
 		init->i.mantisa |= (0x1ull << 51);
 	}
 
-	int i;
 	/* Reciprocal sqare root iters (avoiding division): */
-	for (i = 0; i < 4; ++i)
+	for (int i = 0; i < 4; ++i) {
 		xn = xn * (1.5 -  0.5 * x * xn * xn);
+	}
 
 	return xn * x;
+#endif
 }
