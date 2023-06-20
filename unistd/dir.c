@@ -435,6 +435,12 @@ DIR *opendir(const char *dirname)
 }
 
 
+void rewinddir(DIR *dirp)
+{
+	dirp->pos = 0;
+}
+
+
 int closedir(DIR *dirp)
 {
 	msg_t msg = { 0 };
