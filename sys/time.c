@@ -18,6 +18,7 @@
 #include <sys/file.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <utime.h>
 
 #include "posix/utils.h"
 
@@ -71,6 +72,19 @@ int utimes(const char *filename, const struct timeval times[2])
 
 	free(canonical);
 	return SET_ERRNO(err);
+}
+
+
+int utime(const char *path, const struct utimbuf *times)
+{
+	struct timeval t[2];
+
+	t[0].tv_sec = times->actime;
+	t[0].tv_usec = 0;
+	t[1].tv_sec = times->modtime;
+	t[1].tv_usec = 0;
+
+	return utimes(path, t);
 }
 
 
