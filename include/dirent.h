@@ -50,6 +50,9 @@ extern struct dirent *readdir(DIR *s);
 extern DIR *opendir(const char *dirname);
 
 
+extern void rewinddir(DIR *dirp);
+
+
 extern int closedir(DIR *dirp);
 
 
