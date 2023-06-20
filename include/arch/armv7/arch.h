@@ -33,12 +33,23 @@
 #define __STRNCPY
 #define __MEMMOVE
 
-#if (__ARM_PCS_VFP || (__VFP_FP__ && !__SOFTFP__)) && (__ARM_FP & 8)
+#if __ARM_PCS_VFP || (__VFP_FP__ && !__SOFTFP__)
+#if __ARM_FP & 8
 #define __IEEE754_SQRT
 
 static inline double __ieee754_sqrt(double x)
 {
 	__asm__ volatile ("vsqrt.f64 %P0, %P1" : "=w"(x) : "w"(x));
+
+	return x;
+}
+#endif
+
+#define __IEEE754_SQRTF
+
+static inline float __ieee754_sqrtf(float x)
+{
+	__asm__ volatile ("vsqrt.f32 %0, %1" : "=t"(x) : "t"(x));
 
 	return x;
 }

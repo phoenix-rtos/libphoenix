@@ -115,3 +115,24 @@ double sqrt(double x)
 	return xn * x;
 #endif
 }
+
+
+float sqrtf(float x)
+{
+#ifdef __IEEE754_SQRTF
+	float __ieee754_sqrtf(float x);
+
+	if (x < 0.0f) {
+		errno = EDOM;
+		return -NAN;
+	}
+
+	if (x == 0.0f || x == -0.0f) {
+		return x;
+	}
+
+	return __ieee754_sqrtf(x);
+#else
+	return (float)sqrt(x);
+#endif
+}
