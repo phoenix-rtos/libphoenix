@@ -154,111 +154,118 @@ char *canonicalize_file_name(const char *path)
  * path might be rewritten as a part of the path resolving */
 static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, int allow_missing_leaf)
 {
-	char *p = path + 1; /* skip first '/' */
-	char *r = result;
-	char *slash;
-	char *const res_end = result + PATH_MAX;
-	int is_leaf = 0;
+	char *r = result; /* r -  first unused result byte */
+	char *p = path;   /* p - first byte of remaining unresolved path */
 	int symlinkcnt = 0;
 
 	assert(path && path[0] == '/');
 
-	*r++ = '/';
+	/* path is shifted right to use its's start for symlink resolution */
+	const size_t path_len = strlen(path) + 1; /* including '\0' */
+	if (path_len < PATH_MAX) {
+		p = path + PATH_MAX - path_len;
+		memmove(p, path, path_len);
+	}
+	p += 1; /* skip initial '/' */
 
-	while (!is_leaf) {
-		slash = strchrnul(p, '/');
-		if (*slash == 0) {
-			is_leaf = 1; /* last path node */
-		}
-		else {
-			char *rem = slash;
-			while (*rem == '/')
-				rem++;
-			if (*rem == 0)
-				is_leaf = 1; /* trailing '/' */
+	while (*p != '\0') {
+		char *const node = p;
+		p = strchrnul(node, '/');
+		const size_t node_len = p - node;
 
-			*slash = 0;
+		/* skip trailing slashes to properly detect leaf node */
+		while (*p == '/') {
+			p += 1;
 		}
+
+		const int is_leaf = (*p == '\0') ? 1 : 0;
 
 		/* check for '.' and '..' */
-		if (p[0] == 0) { /* multiple '/' */
-			r -= 1;
+		if (node_len == 0) { /* multiple '/' */
+			continue;
 		}
-		else if (p[0] == '.' && p[1] == 0) { /* '.' dir */
-			r -= 1;
+		if ((node_len == 1) && (node[0] == '.')) { /* '.' dir */
+			continue;
 		}
-		else if (p[0] == '.' && p[1] == '.' && p[2] == 0) { /* '..' dir */
-			r -= 1;
+		if ((node_len == 2) && (node[0] == '.') && (node[1] == '.')) { /* '..' dir */
 			while (r > result && *--r != '/')
 				;
+			continue;
 		}
-		else { /* 'normal' path node */
-			char tmp_buf[PATH_MAX];
-			ssize_t symlink_len;
 
-			/* check for buffer overflows */
-			if (r + (slash - p + 1) > res_end)
-				return SET_ERRNO(-ENAMETOOLONG);
+		if ((r + 1 + node_len + 1) > (result + PATH_MAX)) {
+			return SET_ERRNO(-ENAMETOOLONG);
+		}
 
-			memcpy(r, p, (slash - p + 1));
+		*r++ = '/';
+		memcpy(r, node, node_len);
+		r += node_len;
+		*r = '\0';
 
-			if (is_leaf && !resolve_last_symlink) {
-				r += slash - p; /* commit node path */
+		if ((is_leaf != 0) && (resolve_last_symlink == 0)) {
+			/* WARN: slight inconsistency: we're not checking if the path actually exists in this case (TODO?) */
+			break;
+		}
 
-				/* WARN: slight inconsistency: we're not checking if the path actually exists in this case (TODO?) */
-			}
-			/* (hackish) save some messsaging by not calling lstat, but directly readlink() and checking error code */
-			else if ((symlink_len = _readlink_abs(result, tmp_buf, sizeof(tmp_buf) - 1)) < 0) { /* reserve space for \0 */
+		/*
+		 * Number of initial unused `path` bytes that can be used to resolve current node. If link content is
+		 * longer we will not be able to merge it with remaining path and still fit in PATH_MAX buffer
+		 */
+		const size_t readlink_max_len = p - path;
 
-				if ((errno == EINVAL) || ((errno == ENOENT) && is_leaf && allow_missing_leaf)) { /* not a link or non-esixting leaf */
-					r += slash - p;
-				}
-				else {
-					/* errno set by _readlink_abs */
-					return -1;
-				}
-			}
-			else {
-				if (++symlinkcnt > SYMLOOP_MAX)
-					return SET_ERRNO(-ELOOP);
+		/* (hackish) save some messsaging by not calling lstat, but directly readlink() and checking error code */
+		ssize_t symlink_len = _readlink_abs(result, path, readlink_max_len);
 
-				if (!is_leaf) { /* append remaining original path suffix */
-					*slash = '/';
-					int rempath_len = strlen(slash);
-					if (symlink_len + rempath_len + 1 >= PATH_MAX) {
-						return SET_ERRNO(-ENAMETOOLONG);
-					}
-					memcpy(tmp_buf + symlink_len, slash, rempath_len + 1);
-					symlink_len += rempath_len;
-				}
-
-				/* reuse full path buffer */
-				memcpy(path, tmp_buf, symlink_len);
-				path[symlink_len] = 0;
-				p = path;
-
-				if (tmp_buf[0] == '/') { /* ABS symlink - reset result to '/' */
-					r = result + 1;
-				}
-				/* else: relative symlink - keep current result */
-
-				/* keep parsing resolved symlink */
-				is_leaf = 0;
+		if (symlink_len < 0) {
+			if (errno == EINVAL) { /* not a symlink */
 				continue;
 			}
+			else if ((errno == ENOENT) && (is_leaf != 0) && (allow_missing_leaf != 0)) { /* non-esixting leaf */
+				break;
+			}
+			else {
+				/* errno set by _readlink_abs */
+				return -1;
+			}
 		}
 
-		if (!is_leaf) {
-			*r++ = '/';
-			p = slash + 1;
+		if (symlink_len == 0) {
+			/* NOTE: this case is not defined in POSIX */
+			/* see: https://lwn.net/Articles/551224/ */
+			return SET_ERRNO(-ENOENT);
+		}
+
+		symlinkcnt += 1;
+		if (symlinkcnt > SYMLOOP_MAX) {
+			return SET_ERRNO(-ELOOP);
+		}
+
+		assert(symlink_len <= readlink_max_len);
+		if (symlink_len == readlink_max_len) {
+			/* `readlink(..., max_len) == max_len` means result could have been truncated */
+			return SET_ERRNO(-ENAMETOOLONG);
+		}
+
+		/* prepend resolved symlink to remaining unresolved path */
+		p -= 1;
+		*p = '/';
+		p -= symlink_len;
+		memmove(p, path, symlink_len);
+
+		if (p[0] == '/') { /* ABS symlink - reset result to '/' */
+			p += 1;
+			r = result;
+		}
+		else {
+			/* relative symlink - remove resolved symlink node */
+			r -= node_len + 1;
 		}
 	}
 
-	/* guard against corner cases */
 	if (r == result)
 		*r++ = '/';
 
-	*r = 0;
+	*r = '\0';
 	return r - result;
 }
 
@@ -267,7 +274,6 @@ static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, 
  *   resolved_path: if NULL, will be allocated by malloc()
  *   allow_missing_leaf: don't return ENOENT if last path node is not existing
  *   resolve_last_symlink: if 0 return final symlink path instead of symlink destination
- * NOTE: stack usage: ~PATH_MAX
  */
 char *resolve_path(const char *path, char *resolved_path, int resolve_last_symlink, int allow_missing_leaf)
 {
@@ -490,7 +496,7 @@ static ssize_t _readlink_abs(const char *path, char *buf, size_t bufsiz)
 	if ((ret = msgSend(oid.port, &msg)) != EOK)
 		return SET_ERRNO(ret);
 
-	if (msg.o.io.err <= 0)
+	if (msg.o.io.err < 0)
 		return SET_ERRNO(msg.o.io.err);
 
 	/* number of bytes written without terminating NULL byte */
