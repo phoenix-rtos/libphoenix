@@ -40,7 +40,9 @@
 
 static inline double __ieee754_sqrt(double x)
 {
+	/* clang-format off */
 	__asm__ volatile ("vsqrt.f64 %P0, %P1" : "=w"(x) : "w"(x));
+	/* clang-format on */
 
 	return x;
 }
@@ -50,7 +52,9 @@ static inline double __ieee754_sqrt(double x)
 
 static inline float __ieee754_sqrtf(float x)
 {
+	/* clang-format off */
 	__asm__ volatile ("vsqrt.f32 %0, %1" : "=t"(x) : "t"(x));
+	/* clang-format on */
 
 	return x;
 }
