@@ -981,8 +981,8 @@ ssize_t getdelim(char **lineptr, size_t *n, int delim, FILE *stream)
 	}
 
 	if (*lineptr == NULL || *n == 0) {
-		*n = BUFSIZ;
-		*lineptr = malloc(BUFSIZ);
+		*n = 120;
+		*lineptr = malloc(*n);
 		if (*lineptr == NULL) {
 			/* errno set by malloc */
 			return -1;
