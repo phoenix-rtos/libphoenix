@@ -26,6 +26,33 @@
 #define __MEMCPY
 #define __MEMSET
 
+#if (!__SOFTFP__)
+#define __IEEE754_SQRT
+
+static inline double __ieee754_sqrt(double x)
+{
+	double result;
+
+	__asm__ volatile ("fldl %1\n\t" /* put value */
+		"fsqrt\n\t"                 /* calc sqrt */
+		"fxtract\n\t"               /* extract exponent */
+		"fisttp %0\n\t"             /* round the exponent */
+		"fld %0\n\t"                /* load the rounded exponent */
+		"fcomp\n\t"                 /* compare with the original exponent */
+		"fstsw %%ax\n\t"            /* save FPU status to AX register */
+		"sahf\n\t"                  /* copy status to CPU flags */
+		"jp 1f\n\t"                 /* jump if the result was exact */
+		"fsubrp\n"                  /* adjust mantissa down */
+		"1:\n\t"
+		"fstpl %0"                  /* get the result */
+		: "=m"(result)
+		: "m"(x));
+
+	return result;
+}
+
+#endif
+
 #define _PAGE_SIZE 0x1000
 #define SIZE_PAGE _Pragma("GCC warning \"'SIZE_PAGE' is deprecated. Use _PAGE_SIZE from arch.h or PAGE_SIZE from limits.h (POSIX only)\"") _PAGE_SIZE
 
