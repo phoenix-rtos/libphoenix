@@ -33,6 +33,7 @@ static inline double __ieee754_sqrt(double x)
 {
 	double result;
 
+	/* clang-format off */
 	__asm__ volatile ("fldl %1\n\t" /* put value */
 		"fsqrt\n\t"                 /* calc sqrt */
 		"fxtract\n\t"               /* extract exponent */
@@ -47,6 +48,7 @@ static inline double __ieee754_sqrt(double x)
 		"fstpl %0"                  /* get the result */
 		: "=m"(result)
 		: "m"(x));
+	/* clang-format on */
 
 	return result;
 }
