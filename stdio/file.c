@@ -857,36 +857,22 @@ int ungetc(int c, FILE *stream)
 }
 
 
-int puts_unlocked(const char *s)
-{
-	int len = strlen(s), l = 0, err;
-
-	while (l < len) {
-		if ((err = fwrite_unlocked((void *)s + l, 1, len - l, stdout)) < 0) {
-			return -1;
-		}
-		l += err;
-	}
-	putchar_unlocked('\n');
-
-	return l;
-}
-
-
-int puts(const char *s)
-{
-	int ret;
-	mutexLock(stdout->lock);
-	ret = puts_unlocked(s);
-	mutexUnlock(stdout->lock);
-	return ret;
-}
-
-
 int fputs_unlocked(const char *s, FILE *stream)
 {
-	int len = strlen(s);
-	return fwrite_unlocked(s, 1, len, stream);
+	size_t len = strlen(s);
+	size_t wrote = 0, ret;
+
+	while (wrote < len) {
+		ret = fwrite_unlocked(s + wrote, 1, len - wrote, stream);
+		if (ret == 0) {
+			return EOF;
+		}
+
+		wrote += ret;
+	}
+
+	/* Truncation is ok, we could return zero instead */
+	return (wrote < INT_MAX) ? (int)wrote : INT_MAX;
 }
 
 
@@ -896,6 +882,28 @@ int fputs(const char *s, FILE *stream)
 	mutexLock(stream->lock);
 	ret = fputs_unlocked(s, stream);
 	mutexUnlock(stream->lock);
+	return ret;
+}
+
+
+int puts_unlocked(const char *s)
+{
+	int wrote = fputs_unlocked(s, stdout);
+
+	if (wrote != EOF) {
+		putchar_unlocked('\n');
+	}
+
+	return wrote;
+}
+
+
+int puts(const char *s)
+{
+	int ret;
+	mutexLock(stdout->lock);
+	ret = puts_unlocked(s);
+	mutexUnlock(stdout->lock);
 	return ret;
 }
 
