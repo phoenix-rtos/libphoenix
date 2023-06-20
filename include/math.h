@@ -215,7 +215,6 @@ float fabsf(float x);
 #define logf(x)              ((float)log(x))
 #define log10f(x)            ((float)log10(x))
 #define powf(base, exponent) ((float)pow(base, exponent))
-#define sqrtf(x)             ((float)sqrt(x))
 #define roundf(x)            ((float)round(x))
 #define ceilf(x)             ((float)ceil(x))
 #define floorf(x)            ((float)floor(x))
