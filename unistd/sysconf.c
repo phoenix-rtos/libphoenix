@@ -16,6 +16,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <sys/syslimits.h>
+#include <limits.h>
 
 
 long sysconf(int name)
@@ -27,6 +28,9 @@ long sysconf(int name)
 		return 512;
 	case _SC_IOV_MAX:
 		return IOV_MAX;
+	case _SC_ATEXIT_MAX:
+		/* we have no limit since we use lists */
+		return INT_MAX;
 	default:
 		errno = EINVAL;
 		return -1;
