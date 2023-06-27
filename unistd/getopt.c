@@ -74,6 +74,10 @@ int getopt(int argc, char * const argv[], const char *optstring)
 			/* Argument in the same argv */
 			optarg = &argv[optind][optwhere];
 		}
+		else if (*(++optspec) == ':') {
+			/* Optional argument */
+			optarg = NULL;
+		}
 		else if (optind + 1 < argc) {
 			/* Argument in the next argv */
 			optarg = argv[optind + 1];
