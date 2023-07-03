@@ -39,11 +39,13 @@ int getopt(int argc, char * const argv[], const char *optstring)
 		optwhere = 1;
 	}
 
-	if (argc == 0 || argv == NULL || optind >= argc)
+	if ((argc == 0) || (argv == NULL) || (optind >= argc)) {
 		return -1;
+	}
 
-	if (argv[optind] == NULL || argv[optind][0] != '-' || argv[optind][1] == '\0')
+	if ((argv[optind] == NULL) || (argv[optind][0] != '-') || (argv[optind][1] == '\0')) {
 		return -1;
+	}
 
 	if ((argv[optind][1] == '-') && (argv[optind][2] == '\0')) {
 		optind++;
@@ -51,13 +53,15 @@ int getopt(int argc, char * const argv[], const char *optstring)
 	}
 
 	opt = argv[optind][optwhere++];
-	leading_colon = *optstring == ':';
+	leading_colon = ((*optstring == ':') ? 1 : 0);
 
 	optspec = strchr(optstring, opt);
-	if (optspec == NULL) { /* Unrecognized option */
+	if (optspec == NULL) {
+		/* Unrecognized option */
 		optopt = opt;
-		if (opterr && !leading_colon)
+		if ((opterr != 0) && (leading_colon == 0)) {
 			fprintf(stderr, "%s: illegal option -- %c\n", argv[0], opt);
+		}
 		if (argv[optind][optwhere] == '\0') {
 			optind++;
 			optwhere = 1;
@@ -66,27 +70,33 @@ int getopt(int argc, char * const argv[], const char *optstring)
 	}
 
 	if (*(++optspec) == ':') {
-		if (argv[optind][optwhere] != '\0') { /* Argument in the same argv */
+		if (argv[optind][optwhere] != '\0') {
+			/* Argument in the same argv */
 			optarg = &argv[optind][optwhere];
-
-		} else if (optind + 1 < argc) { /* Argument in the next argv */
+		}
+		else if (optind + 1 < argc) {
+			/* Argument in the next argv */
 			optarg = argv[optind + 1];
 			optind++;
-
-		} else { /* Argument not provided */
+		}
+		else {
+			/* Argument not provided */
 			optopt = opt;
 			optind++;
 			optwhere = 1;
-			if (leading_colon) {
+			if (leading_colon != 0) {
 				return ':';
-			} else {
-				if (opterr)
+			}
+			else {
+				if (opterr != 0) {
 					fprintf(stderr, "%s: option requires an argument -- %c\n", argv[0], opt);
+				}
 				return '?';
 			}
 		}
-
-	} else if (argv[optind][optwhere] != '\0') { /* More options in the same argv */
+	}
+	else if (argv[optind][optwhere] != '\0') {
+		/* More options in the same argv */
 		return opt;
 	}
 
