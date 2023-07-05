@@ -22,10 +22,10 @@
 .type _start, #function
 _start:
 	save %sp, -0x60, %sp
-	ld [%i5 + 0], %o7
-	ld [%i5 + 4], %o0
-	ld [%i5 + 8], %o1
-	ld [%i5 + 12], %o2
+	ld [%i0 + 0], %o7
+	ld [%i0 + 4], %o0
+	ld [%i0 + 8], %o1
+	ld [%i0 + 12], %o2
 	call _startc
 	nop
 .size _start, .-_start
