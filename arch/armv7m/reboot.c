@@ -15,7 +15,14 @@
 
 #include <sys/reboot.h>
 #include <sys/platform.h>
+
+#if defined(__CPU_STM32L4X6)
+#include <phoenix/arch/stm32l4.h>
+#elif defined(__CPU_IMXRT117X)
+#include <phoenix/arch/imxrt1170.h>
+#else
 #include <phoenix/arch/imxrt.h>
+#endif
 
 
 int reboot(int magic)
