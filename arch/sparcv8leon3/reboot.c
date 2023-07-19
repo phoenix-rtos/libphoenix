@@ -16,16 +16,27 @@
 
 #include <sys/reboot.h>
 #include <sys/platform.h>
+#include <phoenix/arch/gr716.h>
 
-/* TODO */
 
 int reboot(int magic)
 {
-	return 0;
+	platformctl_t pctl = {
+		.action = pctl_set,
+		.type = pctl_reboot,
+		/* clang-format off */
+		.reboot = {
+			.magic = magic
+		}
+		/* clang-format on */
+	};
+
+	return platformctl(&pctl);
 }
 
 
 int reboot_reason(uint32_t *val)
 {
+	*val = 0u;
 	return 0;
 }
