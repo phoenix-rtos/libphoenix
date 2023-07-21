@@ -5,8 +5,8 @@
  *
  * setjmp, longjmp (RISCV64)
  *
- * Copyright 2020 Phoenix Systems
- * Author: Pawel Pisarczyk
+ * Copyright 2020, 2023 Phoenix Systems
+ * Author: Pawel Pisarczyk, Lukasz Leczkowski
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -15,6 +15,13 @@
 
 #define __ASSEMBLY__
 
+/* jmp_buf layout:
+ * s0 - s11: saved registers
+ * sp: stack pointer
+ * ra: return address
+ * signal mask indicator (0 - not saved, 1 - saved)
+ * signal mask (if saved)
+ */
 
 .text
 
@@ -35,26 +42,17 @@ _setjmp:
 	sd s10, 80(a0)
 	sd s11, 88(a0)
 
-j _setjmp
-
-	/* Store stack pointer */
 	sd sp,  96(a0)
 
-	/* Store jump address */
-	la t0, (1f)
-	sd t0, 102(a0)
+	/* return address */
+	sd ra, 104(a0)
 
-	/* Store return address */
-	sd ra, 110(a0)
+	/* signal mask indicator */
+	sd zero, 112(a0)
 
-	/* Set result */
+	/* return value */
 	mv a0, zero
 	ret
-1:
-	ld ra, 110(a0)
-	mv a0, a3 /* longjump puts argument in a3 */
-	ret
-
 .size _setjmp, .-_setjmp
 
 
@@ -72,7 +70,7 @@ setjmp:
 	ld   a0,  (sp)
 	ld   ra, 8(sp)
 	addi sp, sp, 16
-2:
+
 	/* Store registers into jmpbuf */
 	sd s0,    (a0)
 	sd s1,   8(a0)
@@ -86,57 +84,47 @@ setjmp:
 	sd s9,  72(a0)
 	sd s10, 80(a0)
 	sd s11, 88(a0)
-	j 2b
 
-	/* Store stack pointer */
 	sd sp,  96(a0)
 
-	/* Store jump address */
-	la t0, (1f)
-	sd t0, 102(a0)
+	/* return address */
+	sd ra, 104(a0)
 
-	/* Store return address */
-	sd ra, 110(a0)
+	/* signal mask indicator */
+	li a1, 1
+	sd a1, 112(a0)
 
-	/* Store signal mask */
-	sd a3, 118(a0)
+	/* signal mask */
+	sd a3, 120(a0)
 
-	/* Set result */
+	/* return value */
 	mv a0, zero
 	ret
-1:
-	/* this is where we land after the jump
-	 * we want to restore signal mask */
-
-	addi sp, sp, -24
-	sd   a0,   (sp)
-	sd   s0,  8(sp)
-	sd   ra, 16(sp)
-
-	ld   s0, 118(a0)
-	mv   s0, a3
-	li   a1, -1
-	call signalMask
-	mv   a0, s0
-
-	ld   a0,   (sp)
-	ld   s0,  8(sp)
-	ld   ra, 16(sp)
-	addi sp, sp, 24
-	jr   ra
-
 .size setjmp, .-setjmp
 
 
 .globl _longjmp
 .type _longjmp, %function
 _longjmp:
-	/* move return value to r3.
-	 * longjmp should not make setjmp return 0 though */
-	mv     a3, a0
-	bnez   a3, 1f
-	addi   a3, a3, 1
+	/* calculate return value */
+	mv s1, a1
+	bnez s1, 1f
+	li s1, 1
 1:
+	/* check if signal mask was saved */
+	mv s0, a0
+	ld a1, 112(a0)
+	beqz a1, 2f
+
+	/* restore signal mask */
+	ld a0, 120(a0)
+	li a1, -1
+	call signalMask
+	mv a0, s0
+
+2:
+	mv a1, s1
+
 	/* restore registers from jmpbuf */
 	ld s0,    (a0)
 	ld s1,   8(a0)
@@ -150,19 +138,15 @@ _longjmp:
 	ld s9,  72(a0)
 	ld s10, 80(a0)
 	ld s11, 88(a0)
-	j 1b
 
-	/* Restore stack pointer */
 	ld sp,  96(a0)
 
-	/* Retore jump address */
-	ld t0, 102(a0)
+	/* return address */
+	ld ra, 104(a0)
 
-	/* Retore return address */
-	sd ra, 110(a0)
-
-	jr t0
-
+	/* return value */
+	mv a0, a1
+	ret
 .size _longjmp, .-_longjmp
 
 
