@@ -27,7 +27,6 @@ extern "C" {
 
 /* Linux/x86-compatible numbers for easier debugging */
 
-#define EDEADLK         38
 #define ENOTEMPTY       39
 #define ELOOP           40
 #define ENOMSG          42
