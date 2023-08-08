@@ -89,7 +89,7 @@ struct sockaddr {
 struct sockaddr_storage {
 	sa_family_t ss_family;
 	char        ss_data[128-sizeof(sa_family_t)];
-};
+} __attribute__ ((aligned(8)));
 
 
 struct linger {
