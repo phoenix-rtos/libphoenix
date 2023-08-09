@@ -81,7 +81,7 @@ double sqrt(double x)
 	return __ieee754_sqrt(x);
 #else
 	/* Use reciprocal square root method: */
-	double xn = (double)(1.0f / (float)x);
+	double xn = 1.0 / x;
 
 	/* IEEE-754 compliant: */
 	conv_t *init = (conv_t *)&xn;
