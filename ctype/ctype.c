@@ -16,85 +16,106 @@
 #include "ctype.h"
 
 
+#undef isalpha
 int isalpha(int c)
 {
-	return (islower(c) || isupper(c));
+	return __isalpha(c);
 }
 
 
+#undef isdigit
 int isdigit(int c)
 {
-	return (c >= '0' && c <= '9');
+	return __isdigit(c);
 }
 
 
+#undef islower
 int islower(int c)
 {
-	return (c >= 'a' && c <= 'z');
+	return __islower(c);
 }
 
 
+#undef isspace
 int isspace(int c)
 {
-	return (c == ' ' || c == '\f' || c == '\t' || c == '\n' || c == '\r' || c == '\v');
+	return __isspace(c);
 }
 
 
+#undef isupper
 int isupper(int c)
 {
-	return (c >= 'A' && c <= 'Z');
+	return __isupper(c);
 }
 
 
+#undef tolower
 int tolower(int c)
 {
-	return isupper(c) ? c - 'A' + 'a' : c;
+	return __tolower(c);
 }
 
 
+#undef toupper
 int toupper(int c)
 {
-	return islower(c) ? c - 'a' + 'A' : c;
+	return __toupper(c);
 }
 
 
+#undef isalnum
 int isalnum(int c)
 {
-	return isalpha(c) || isdigit(c);
+	return __isalnum(c);
 }
 
 
+#undef iscntrl
 int iscntrl(int c)
 {
-	return (c >= 0x00 && c <= 0x1f) || c == 0x7f;
+	return __iscntrl(c);
 }
 
 
+#undef isprint
 int isprint(int c)
 {
-	return c > 0x1f && c < 0x7f;
+	return __isprint(c);
 }
 
 
+#undef isgraph
 int isgraph(int c)
 {
-	return c != ' ' && isprint(c);
+	return __isgraph(c);
 }
 
 
+#undef ispunct
 int ispunct(int c)
 {
-	return isgraph(c) && !isalnum(c);
+	return __ispunct(c);
 }
 
 
+#undef isxdigit
 int isxdigit(int c)
 {
-	return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+	return __isxdigit(c);
 }
 
 
+#undef isblank
 int isblank(int c)
 {
-	return c == ' ' || c == '\t';
+	return __isblank(c);
+}
+
+
+#undef isascii
+int isascii(int c)
+{
+	return __isascii(c);
 }
