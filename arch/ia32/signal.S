@@ -20,22 +20,13 @@
 .globl _signal_trampoline
 .type _signal_trampoline, %function
 _signal_trampoline:
-	// stack: return address, signal number
-	xchgl (%esp), %eax
-	push %ebx
-	push %ecx
-	push %edx
-	pushf
-
-	push %eax
+	/* Signal number on stack */
 	call _signal_handler
-	addl $4, %esp
 
-	popf
-	pop %edx
-	pop %ecx
-	pop %ebx
-	pop %eax
-	ret
+	addl $4, %esp
+	/* Put old mask on stack */
+	push %eax
+	/* cpu context *, eip, esp on stack */
+	call sigreturn
 .size _signal_trampoline, .-_signal_trampoline
 
