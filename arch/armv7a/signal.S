@@ -5,7 +5,7 @@
  *
  * Signal trampoline (arm-imx)
  *
- * Copyright 2019 Phoenix Systems
+ * Copyright 2019, 2023 Phoenix Systems
  * Author: Jan Sikorski
  *
  * This file is part of Phoenix-RTOS.
@@ -20,15 +20,13 @@
 .globl _signal_trampoline
 .type _signal_trampoline, %function
 _signal_trampoline:
-	// stack: return address, signal number
-	push {r0-r3,r9,r12,lr}
-	mrs r0, apsr
-	push {r0}
-	ldr r0, [sp, #32]
+	/* Signal number, cpu_context * */
+	pop {r0,r4}
 	blx _signal_handler
-	pop {r0}
-	msr apsr_nzcvqg, r0
-	pop {r0-r3,r9,r12,lr}
-	add sp, #4
-	pop {pc}
+
+	/* Old signal mask in r0 */
+	mov r1, r4
+	pop {r2,r3} /* pc, sp */
+	/* psr on stack */
+	bl sigreturn
 .size _signal_trampoline, .-_signal_trampoline
