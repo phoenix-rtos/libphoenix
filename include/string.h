@@ -115,6 +115,10 @@ extern size_t strcspn(const char *str1, const char *str2);
 extern char *strerror(int errnum);
 
 
+/* Thread-safe strerror. */
+extern int strerror_r(int errnum, char *buf, size_t buflen);
+
+
 /* Computes the length of the string str up to but not including the terminating null character. */
 extern size_t strlen(const char *str);
 
