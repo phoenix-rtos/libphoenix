@@ -43,7 +43,7 @@ sym: \
 	.cfi_rel_offset a6, 48; \
 	.cfi_rel_offset a7, 56; \
 	li a7, sn; \
-	scall; \
+	ecall; \
 	add sp, sp, 64; \
 	.cfi_adjust_cfa_offset -64; \
 	ret; \
