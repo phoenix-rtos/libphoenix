@@ -25,7 +25,10 @@ _start:
 .option norelax
 	la gp, __global_pointer$
 .option pop
-
+	ld ra, (sp)
+	ld a0, 8(sp)
+	ld a1, 16(sp)
+	ld a2, 24(sp)
+	addi sp, sp, 32
 	j _startc
-
 .size _start, .-_start
