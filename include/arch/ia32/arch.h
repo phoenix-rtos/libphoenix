@@ -31,26 +31,25 @@
 
 static inline double __ieee754_sqrt(double x)
 {
-	double result;
+	unsigned short newcw, savecw;
+	unsigned short register reg;
 
 	/* clang-format off */
-	__asm__ volatile ("fldl %1\n\t" /* put value */
-		"fsqrt\n\t"                 /* calc sqrt */
-		"fxtract\n\t"               /* extract exponent */
-		"fisttp %0\n\t"             /* round the exponent */
-		"fld %0\n\t"                /* load the rounded exponent */
-		"fcomp\n\t"                 /* compare with the original exponent */
-		"fstsw %%ax\n\t"            /* save FPU status to AX register */
-		"sahf\n\t"                  /* copy status to CPU flags */
-		"jp 1f\n\t"                 /* jump if the result was exact */
-		"fsubrp\n"                  /* adjust mantissa down */
-		"1:\n\t"
-		"fstpl %0"                  /* get the result */
-		: "=m"(result)
-		: "m"(x));
+	__asm__ volatile (
+		"fstcw %w[savecw]\n\t"        /* save control word */
+		"mov %w[savecw], %w[reg]\n\t" /* reg <- (memptr) */
+		"and $0xf0ff, %w[reg]\n\t"    /* inherit exception mask and infinity */
+		"or $0x200, %w[reg]\n\t"      /* set double precision, round to nearest-even */
+		"mov %w[reg], %w[newcw]\n\t"  /* (memptr) <- reg */
+		"fldcw %w[newcw]\n\t"         /* and apply (memptr) new control word */
+		"fsqrt\n\t"                   /* calculate double precision sqrt */
+		"fldcw %w[savecw]"            /* restore control word */
+		: "+t" (x), [reg] "=&r" (reg)
+		: [newcw] "m" (newcw), [savecw] "m" (savecw)
+		: "cc", "memory");
 	/* clang-format on */
 
-	return result;
+	return x;
 }
 
 #endif
