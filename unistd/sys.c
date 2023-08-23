@@ -110,7 +110,7 @@ int execve(const char *file, char *const argv[], char *const envp[])
 	sys_common.filePathBuff = calloc(PATH_MAX, sizeof(char));
 	if (sys_common.execBuff == NULL || sys_common.filePathBuff == NULL) {
 		sys_clear();
-		return -ENOMEM;
+		return SET_ERRNO(-ENOMEM);
 	}
 
 	interp = sys_common.execBuff;
@@ -170,7 +170,7 @@ int execve(const char *file, char *const argv[], char *const envp[])
 		if (sys_common.sbArgs == NULL) {
 			close(fd);
 			sys_clear();
-			return -ENOMEM;
+			return SET_ERRNO(-ENOMEM);
 		}
 
 		while (noargs-- > 0) {
