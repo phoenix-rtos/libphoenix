@@ -32,8 +32,6 @@ extern "C" {
 #define STDOUT_FILENO 1
 #define STDERR_FILENO 2
 
-#define _SC_CLK_TCK 0
-#define _SC_PAGESIZE 1
 
 #define SEEK_SET 0
 #define SEEK_CUR 1
@@ -46,16 +44,21 @@ extern "C" {
 #define X_OK (1 << 0)
 
 
-enum {
-	_SC_OPEN_MAX,
-	_SC_IOV_MAX,
-	_SC_ATEXIT_MAX
-};
+#define _SC_OPEN_MAX   0
+#define _SC_IOV_MAX    1
+#define _SC_ATEXIT_MAX 2
+#define _SC_CLK_TCK    3
+#define _SC_PAGESIZE   4
+#define _SC_PAGE_SIZE  _SC_PAGESIZE /* spec. 1170 compatibility */
 
 
+extern long sysconf(int name);
+
+
+/* NOTE: Legacy from SUSv2, new applications should use sysconf(_SC_PAGESIZE) */
 static inline int getpagesize(void)
 {
-	return _PAGE_SIZE;
+	return (int)sysconf(_SC_PAGESIZE);
 }
 
 
@@ -194,9 +197,6 @@ extern int truncate(const char *path, off_t length);
 
 
 extern int ftruncate(int fildes, off_t length);
-
-
-extern long sysconf(int name);
 
 
 extern unsigned int alarm(unsigned int seconds);
