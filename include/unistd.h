@@ -28,7 +28,7 @@ extern "C" {
 #endif
 
 
-#define STDIN_FILENO 0
+#define STDIN_FILENO  0
 #define STDOUT_FILENO 1
 #define STDERR_FILENO 2
 
@@ -39,12 +39,11 @@ extern "C" {
 #define SEEK_CUR 1
 #define SEEK_END 2
 
-enum {
-	F_OK = 0,
-	R_OK = 1 << 2,
-	W_OK = 1 << 1,
-	X_OK = 1 << 0,
-};
+
+#define F_OK 0
+#define R_OK (1 << 2)
+#define W_OK (1 << 1)
+#define X_OK (1 << 0)
 
 
 enum {
