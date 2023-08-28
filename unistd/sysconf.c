@@ -31,6 +31,9 @@ long sysconf(int name)
 	case _SC_ATEXIT_MAX:
 		/* we have no limit since we use lists */
 		return INT_MAX;
+	case _SC_PAGESIZE:
+		/* _SC_PAGE_SIZE is synonym */
+		return _PAGE_SIZE;
 	default:
 		errno = EINVAL;
 		return -1;
