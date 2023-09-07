@@ -10,7 +10,6 @@ SIL ?= @
 MAKEFLAGS += --no-print-directory
 
 include ../phoenix-rtos-build/Makefile.common
-include ../phoenix-rtos-build/Makefile.$(TARGET_SUFF)
 
 # establish sysroot
 SYSROOT := $(shell $(CC) $(CFLAGS) -print-sysroot)
