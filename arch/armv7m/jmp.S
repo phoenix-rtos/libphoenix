@@ -6,7 +6,7 @@
  *
  * _setjmp, _longjmp, setjmp, sigsetjmp
  *
- * Copyright 2018, 2019 Phoenix Systems
+ * Copyright 2018, 2019, 2023 Phoenix Systems
  * Author: Kamil Amanowicz, Aleksander Kaminski, Jakub Sarzynski
  *
  * This file is part of Phoenix-RTOS.
@@ -15,14 +15,14 @@
  */
 
  /* setjmp env buffer description
-  * Offset	Description
-  * 0		Signal mask flag - if != 0 then next value stores a signal mask
-  * 4		Signal mask
-  * 8		SP register
-  * 12-44	r4-r11 registers
-  * 44		LR register
-  * 48-80	d8-d15 registers
-  * 80		fpscr register
+  * Offset  Description
+  * 0       Signal mask flag - if != 0 then next value stores a signal mask
+  * 4       Signal mask
+  * 8       SP register
+  * 12-43   r4-r11 registers
+  * 44      LR register
+  * 48-79   d8-d15 registers
+  * 80      fpscr register
   */
 
 #define __ASSEMBLY__
@@ -30,18 +30,22 @@
 .thumb
 .syntax unified
 
+.text
+.align 2
+
 
 .globl sigsetjmp
 .type sigsetjmp, %function
+.align 2
 sigsetjmp:
 	/* Store signal mask if savesigs != 0 */
-	mov r2, #0
+	movs r2, #0
 	cbz r1, 1f
 
 	/* Get signal mask */
 	/* Stack must be aligned to 8 bytes */
 	push {r0, r1, r3, lr}
-	mov r0, #0
+	movs r0, #0
 	mov r1, r0
 	bl signalMask
 	mov r2, r0
@@ -59,27 +63,32 @@ sigsetjmp:
 	str r2, [r0], #4
 #endif
 
-	mov r0, #0
+	movs r0, #0
 	bx lr
 .size sigsetjmp, .-sigsetjmp
 
+
 .globl _setjmp
 .type _setjmp, %function
+.align 2
 _setjmp:
-	mov r1, #0
+	movs r1, #0
 	b sigsetjmp
 .size _setjmp, .-_setjmp
 
+
 .globl setjmp
 .type setjmp, %function
+.align 2
 setjmp:
-	mov r1, #1
+	movs r1, #1
 	b sigsetjmp
 .size setjmp, .-setjmp
 
 
 .globl _longjmp
 .type _longjmp, %function
+.align 2
 _longjmp:
 	/* Check for signal mask in env buffer, if it's saved restore it */
 	ldmia r0!, {r2-r3}
@@ -110,5 +119,3 @@ _longjmp:
 	moveq r0, #1
 	bx lr
 .size _longjmp, .-_longjmp
-
-

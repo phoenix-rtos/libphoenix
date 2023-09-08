@@ -6,90 +6,116 @@
  *
  * _setjmp, _longjmp, setjmp, sigsetjmp
  *
- * Copyright 2018 Phoenix Systems
- * Author: Kamil Amanowicz
+ * Copyright 2018, 2019, 2023 Phoenix Systems
+ * Author: Kamil Amanowicz, Aleksander Kaminski, Jakub Sarzynski
  *
  * This file is part of Phoenix-RTOS.
  *
  * %LICENSE%
  */
 
+ /* setjmp env buffer description
+  * Offset  Description
+  * 0       Signal mask flag - if != 0 then next value stores a signal mask
+  * 4       Signal mask
+  * 8       SP register
+  * 12-43   r4-r11 registers
+  * 44      LR register
+  * 48-79   d8-d15 registers
+  * 80      fpscr register
+  */
+
 #define __ASSEMBLY__
 
 .thumb
 .syntax unified
 
-.globl _setjmp
-.type _setjmp, %function
-_setjmp:
-	/* set jump address and stack pointer */
-	ldr r1, =(1f + 1)
-	mov r2, sp
-	/* store everythig in jmpbuf */
-	stm r0, {r1, r2, r4, r5, r6, r7, r8, r9, r10, r11, lr}
-	mov r0, #0
-	b 2f
-1:
-	/* this is where we land after the jump
-	 * just pass the return value which is in r3 */
-	mov r0, r3
-2:
-	bx lr
-.size _setjmp, .-_setjmp
+.text
+.align 2
 
-.globl _longjmp
-.type _longjmp, %function
-_longjmp:
-	/* move return value to r3.
-	 * longjmp should not make setjmp return 0 though */
-	cmp r1, #0
-	ite eq
-	moveq r3, #1
-	movne r3, r1
-	/* restore registers from jmpbuf */
-	ldmia r0!, {r1, r2, r4, r5, r6, r7, r8, r9, r10, r11, lr}
-	mov sp, r2
-	bx r1
-.size _longjmp, .-_longjmp
-
-.globl setjmp
-.type setjmp, %function
-setjmp:
-	push {r0, lr}
-	/* get signal mask */
-	mov r0, #0
-	mov r1, #0
-	bl signalMask
-	mov r3, r0
-	pop {r0, lr}
-	/* store everything in jmpbuf */
-	ldr r1, =(1f + 1)
-	mov r2, sp
-	stmia r0!, {r1, r2, r4, r5, r6, r7, r8, r9, r10, r11, lr}
-	str r3, [r0]
-	mov r0, #0
-	b 2f
-1:
-	/* this is where we land after the jump
-	 * r0 is now pointing to signal mask
-	 * which we want to restore */
-	push {r1, r4, lr}
-	ldr r4, [r0]
-	mov r0, r4
-	mov r4, r3
-	ldr r1, =0xffffffff
-	bl signalMask
-	/* set return value and pop the stack */
-	mov r0, r4
-	pop {r1, r4, lr}
-2:
-	bx lr
-.size setjmp, .-setjmp
 
 .globl sigsetjmp
 .type sigsetjmp, %function
+.align 2
 sigsetjmp:
-	cmp r1, #0
-	bne setjmp
-	b _setjmp
+	/* Store signal mask if savesigs != 0 */
+	movs r2, #0
+	cbz r1, 1f
+
+	/* Get signal mask */
+	/* Stack must be aligned to 8 bytes */
+	push {r0, r1, r3, lr}
+	movs r0, #0
+	mov r1, r0
+	bl signalMask
+	mov r2, r0
+	pop {r0, r1, r3, lr}
+
+1:
+	/* Store mask (fake or real) and general registers */
+	mov r3, sp
+	stmia r0!, {r1-r11, lr}
+
+#ifndef __SOFTFP__
+	/* Store fpu registers */
+	vstm r0!, {d8-d15}
+	vmrs r2, fpscr
+	str r2, [r0], #4
+#endif
+
+	movs r0, #0
+	bx lr
 .size sigsetjmp, .-sigsetjmp
+
+
+.globl _setjmp
+.type _setjmp, %function
+.align 2
+_setjmp:
+	movs r1, #0
+	b sigsetjmp
+.size _setjmp, .-_setjmp
+
+
+.globl setjmp
+.type setjmp, %function
+.align 2
+setjmp:
+	movs r1, #1
+	b sigsetjmp
+.size setjmp, .-setjmp
+
+
+.globl _longjmp
+.type _longjmp, %function
+.align 2
+_longjmp:
+	/* Check for signal mask in env buffer, if it's saved restore it */
+	ldmia r0!, {r2-r3}
+	cbz r2, 1f
+
+	/* Restore mask */
+	push {r0, r1}
+	mov r0, r3
+	mvn r1, #0
+	bl signalMask
+	pop {r0, r1}
+
+1:
+	/* Restore general registers */
+	ldmia r0!, {r2, r4-r11, lr}
+	mov sp, r2
+
+#ifndef __SOFTFP__
+	/* Restore fpu registers */
+	vldm r0!, {d8-d15}
+	ldr r2, [r0], #4
+	vmsr fpscr, r2
+#endif
+
+	/* Set return value */
+	movs r0, r1
+	it eq
+	moveq r0, #1
+	bx lr
+.size _longjmp, .-_longjmp
