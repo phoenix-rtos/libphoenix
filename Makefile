@@ -15,7 +15,7 @@ include ../phoenix-rtos-build/Makefile.common
 SYSROOT := $(shell $(CC) $(CFLAGS) -print-sysroot)
 MULTILIB_DIR := $(shell $(CC) $(CFLAGS) -print-multi-directory)
 LIBC_INSTALL_DIR := $(SYSROOT)/lib/$(MULTILIB_DIR)
-LIBC_INSTALL_NAMES := libc.a libm.a crt0.o libg.a libpthread.a
+LIBC_INSTALL_NAMES := libc.a libm.a libg.a libpthread.a
 HEADERS_INSTALL_DIR := $(SYSROOT)/usr/include
 LIBNAME := libphoenix.a
 
@@ -23,15 +23,16 @@ ifeq (,$(filter-out /,$(SYSROOT)))
 $(error SYSROOT is not supported by the toolchain. Use cross-toolchain to compile.)
 endif
 
-# libphoenix shoudl be linked only with GCC library therefore LDLIBS is overloaded
-LDLIBS = $(GCCLIB)
 CFLAGS += -Iinclude -fno-builtin-malloc
 
 
-OBJS = $(PREFIX_O)_startc.o
+OBJS :=
+# crt0.o should have all necessary initialization + call to main()
+CRT0_OBJS := $(PREFIX_O)_startc.o
 
+LIB_TARGETS := $(PREFIX_A)libphoenix.a $(PREFIX_A)crt0.o
 
-all: $(PREFIX_A)libphoenix.a
+all: $(LIB_TARGETS)
 
 
 include arch/$(TARGET_SUFF)/Makefile
@@ -62,25 +63,32 @@ include wchar/Makefile
 $(PREFIX_A)libphoenix.a: $(OBJS)
 	$(ARCH)
 
+$(PREFIX_A)crt0.o: $(CRT0_OBJS)
+	$(ARCH)
+
 
 SRCHEADERS := $(shell find include -name \*.h)
 
-#HEADERS := $(patsubst include/%,$(HEADERS_INSTALL_DIR)%,$(SRCHEADERS))
-install: $(PREFIX_A)libphoenix.a $(SRCHEADERS)
+install: install-headers install-libs
+
+install-headers: $(SRCHEADERS)
+	@echo INSTALL "$(HEADERS_INSTALL_DIR)/*"; \
+	mkdir -p "$(HEADERS_INSTALL_DIR)"; \
+	cp -a include/* "$(HEADERS_INSTALL_DIR)";
+
+# TODO: remove `rm crt0.o` when we will be sure it's not a symlink to libphoenix.a anymore
+install-libs: $(LIB_TARGETS)
 	@echo INSTALL "$(LIBC_INSTALL_DIR)/*"; \
 	mkdir -p "$(LIBC_INSTALL_DIR)"; \
-	cp -a "$<" "$(LIBC_INSTALL_DIR)"; \
+	rm -rf "$(LIBC_INSTALL_DIR)/crt0.o"; \
+	cp -a $^ "$(LIBC_INSTALL_DIR)"; \
 	for lib in $(LIBC_INSTALL_NAMES); do \
 		if [ ! -e "$(LIBC_INSTALL_DIR)/$$lib" ]; then \
 			ln -sf "$(LIBC_INSTALL_DIR)/libphoenix.a" "$(LIBC_INSTALL_DIR)/$$lib"; \
 		fi \
-	done; \
-	echo INSTALL "$(HEADERS_INSTALL_DIR)/*"; \
-	mkdir -p "$(HEADERS_INSTALL_DIR)"; \
-	cp -a include/* "$(HEADERS_INSTALL_DIR)";
+	done
 
-
-.PHONY: clean headers install
+.PHONY: clean install install-headers install-libs
 clean:
 	@echo "rm -rf $(BUILD_DIR)"
 

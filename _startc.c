@@ -21,6 +21,7 @@
 extern void _malloc_init(void);
 extern int _env_init(void);
 extern void _signals_init(void);
+extern void _file_init(void);
 extern void _errno_init(void);
 extern void _atexit_init(void);
 extern void _init_array(void);
