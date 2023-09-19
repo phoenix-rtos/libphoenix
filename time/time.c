@@ -5,8 +5,8 @@
  *
  * time
  *
- * Copyright 2017 Phoenix Systems
- * Author: Andrzej Asztemborski
+ * Copyright 2017, 2023 Phoenix Systems
+ * Author: Andrzej Asztemborski, Jacek Maksymowicz
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -20,6 +20,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdio.h>
+#include <limits.h>
 
 
 char *tzname[2];
@@ -52,17 +53,6 @@ static int daysofmonth(int month, int leap)
 static inline int isleap(int year)
 {
 	return !(year % 400) || (!(year % 4) && (year % 100));
-}
-
-
-static inline int leapcount(int year)
-{
-	year -= 1;
-
-	if (year < 1972)
-		return 0;
-
-	return ((year - 1968) / 4) - ((year - 2000) / 100) + ((year - 2000) / 400);
 }
 
 
@@ -154,59 +144,105 @@ double difftime(time_t t1, time_t t2)
 }
 
 
-struct tm *gmtime_r(const time_t *timep, struct tm *res)
+static int epochDaysToYears(int days, int *yearDay)
 {
-	time_t sec = *timep, minute = 0, hou = 0, t;
-	int day = 0, leap, leapcnt;
+	/* Move day 0 from 1970-01-01 to 2000-02-29. 2000-02-29 closest date when all periods restart.
+	 * Algorithm also works correctly when days < 0.
+	 */
+	int year = 2000, leapDay, fullPeriods;
+	days -= 11016;
 
-	if ((t = sec % 60) != sec) {
-		minute = sec / 60;
-		sec = t;
+	static const struct {
+		int nDays;         /* Number of days this period has */
+		int nYears;        /* Number of years this period has */
+		int isZeroDayLeap; /* Is day 0 of this period a leap day (unless a larger period was tried before) */
+	} periods[4] = {
+		{ 146097, 400, 1 },
+		{ 36524, 100, 0 },
+		{ 1461, 4, 1 },
+		{ 365, 1, 0 },
+	};
+
+	for (int i = 0; i < sizeof(periods) / sizeof(*periods); i++) {
+		fullPeriods = days / periods[i].nDays;
+		days = days % periods[i].nDays;
+		if (days < 0) {
+			days += periods[i].nDays;
+			fullPeriods -= 1;
+		}
+
+		year += fullPeriods * periods[i].nYears;
+		leapDay = periods[i].isZeroDayLeap;
+		if (days == 0) {
+			break;
+		}
 	}
 
-	if ((t = minute % 60) != minute) {
-		hou = minute / 60;
-		minute = t;
+	/* Day 0 is now Feb 29th if leapDay == 1, otherwise it's Feb 28th (leap years have two 0-days!)
+	 * Day 1 is always March 1st, but which year day depends on if the year is a leap year.
+	 * Day 307 and higher are next year, but before Feb 28th (before possible leap day, so leap year or not doesn't matter)
+	 */
+	if (days >= 307) {
+		year += 1;
+		*yearDay = days - 307;
 	}
-
-	if ((t = hou % 24) != hou) {
-		day = hou / 24;
-		hou = t;
-	}
-
-	res->tm_sec = sec;
-	res->tm_min = minute;
-	res->tm_hour = hou;
-
-	res->tm_wday = (day + 4) % 7;
-
-	res->tm_year = 70 + day / 365;
-	leapcnt = leapcount(res->tm_year + 1900);
-	day -= leapcnt;
-	res->tm_year = 70 + day / 365;
-
-	if (leapcnt != leapcount(res->tm_year + 1900)) {
-		leapcnt = leapcount(res->tm_year + 1900);
-		++day;
-	}
-
-	day -= (res->tm_year - 70) * 365;
-	leap = isleap(res->tm_year + 1900);
-	res->tm_yday = day;
-
-	for (res->tm_mon = 0; day >= 0 && res->tm_mon < 12; ++res->tm_mon)
-		day -= daysofmonth(res->tm_mon, leap);
-
-	if (day < 0) {
-		--res->tm_mon;
-		day += daysofmonth(res->tm_mon, leap);
+	else if (days == 0) {
+		*yearDay = 58 + leapDay;
 	}
 	else {
-		res->tm_mon = 0;
-		++res->tm_year;
+		*yearDay = days + (isleap(year) ? 59 : 58);
 	}
 
-	res->tm_mday = day + 1;
+	return year;
+}
+
+
+struct tm *gmtime_r(const time_t *timep, struct tm *res)
+{
+	/* We need to be able to represent days as int */
+	if ((sizeof(time_t) > sizeof(int)) && (*timep > ((time_t)INT_MAX * (24 * 60 * 60)))) {
+		errno = EOVERFLOW;
+		return NULL;
+	}
+
+	int seconds;
+	int days, month, year, isYearLeap;
+
+	days = *timep / (24 * 60 * 60);
+	seconds = *timep - (time_t)days * (24 * 60 * 60);
+	if (seconds < 0) {
+		days--;
+		seconds += (24 * 60 * 60);
+	}
+
+	res->tm_hour = seconds / (60 * 60);
+	seconds = seconds % (60 * 60);
+
+	res->tm_min = seconds / 60;
+	res->tm_sec = seconds % 60;
+
+	res->tm_wday = (days + 4) % 7;
+	if (res->tm_wday < 0) {
+		res->tm_wday += 7;
+	}
+
+	year = epochDaysToYears(days, &days);
+	isYearLeap = isleap(year);
+	res->tm_year = year - 1900;
+	res->tm_yday = days;
+
+	for (month = 0; month < 12; month++) {
+		int monthLength = daysofmonth(month, isYearLeap);
+		if (days >= monthLength) {
+			days -= monthLength;
+		}
+		else {
+			break;
+		}
+	}
+
+	res->tm_mon = month;
+	res->tm_mday = days + 1;
 	res->tm_isdst = 0;
 
 	return res;
@@ -238,11 +274,11 @@ struct tm *localtime(const time_t *timep)
 
 char *ctime_r(const time_t *timep, char *buf)
 {
-	struct tm t;
+	struct tm t, *tp;
 
-	localtime_r(timep, &t);
+	tp = localtime_r(timep, &t);
 
-	return asctime_r(&t, buf);
+	return (tp == NULL) ? NULL : asctime_r(&t, buf);
 }
 
 
@@ -253,22 +289,51 @@ char *ctime(const time_t *timep)
 	return ctime_r(timep, buff);
 }
 
-
-static time_t _mktimeSkel(struct tm *tp)
+/* Calculate number of leap days between 1970-01-01 and year-01-01 */
+static int leapcount(int year)
 {
-	int year = tp->tm_year - 70, leap, i;
+	/* Center on 2000-01-01 for the calculations. There are 8 leap days between 1970-01-01 and that date.
+	 * Also subtract 1 because while 2000 is a leap year, its leap day isn't counted yet at 2000-01-01.
+	 */
+	int leap_days = 8;
+	year -= 2001;
+	if (year < 0) {
+		/* If year is negative, push it into the positive and compensate by subtracting the appropriate
+		 * number of leap days from the result. This avoids dealing with the C division operator on negative numbers.
+		 */
+		int periods = (year - 399) / 400;
+		year -= periods * 400;
+		leap_days += periods * 97;
+	}
+
+	leap_days += year / 400;
+	leap_days -= year / 100;
+	leap_days += year / 4;
+
+	return leap_days;
+}
+
+
+static time_t _mktimeSkel(const struct tm *tp)
+{
+	int year = tp->tm_year - 70, leap, i, month;
 	time_t res, days;
 
 	year += tp->tm_mon / 12;
-	tp->tm_mon %= 12;
+	month = tp->tm_mon % 12;
+	if (month < 0) {
+		year -= 1;
+		month += 12;
+	}
 
-	days = year * 365 + tp->tm_mday + leapcount(year + 1970);
+	days = (time_t)year * 365 + leapcount(year + 1970);
 	leap = isleap(year + 1970);
-
-	for (i = 0; i < tp->tm_mon; ++i)
+	for (i = 0; i < month; ++i) {
 		days += daysofmonth(i, leap);
+	}
 
-	res = (days - 1) * 24 * 60 * 60;
+	days += tp->tm_mday - 1;
+	res = days * 24 * 60 * 60;
 	res += (tp->tm_hour * 60 + tp->tm_min) * 60;
 	res += tp->tm_sec;
 
@@ -283,7 +348,9 @@ time_t mktime(struct tm *tp)
 	tzset();
 
 	res = _mktimeSkel(tp) + timezone - ((daylight && tp->tm_isdst > 0) ? 3600 : 0);
-	localtime_r(&res, tp);
+	if (localtime_r(&res, tp) == NULL) {
+		return -1;
+	}
 
 	return res;
 }
@@ -300,7 +367,9 @@ time_t timegm(struct tm *tm)
 	time_t res;
 
 	res = _mktimeSkel(tm);
-	gmtime_r(&res, tm);
+	if (gmtime_r(&res, tm) == NULL) {
+		return -1;
+	}
 
 	return res;
 }
