@@ -16,7 +16,12 @@
 
 #include <sys/reboot.h>
 #include <sys/platform.h>
+
+#if defined(__CPU_GR716)
 #include <phoenix/arch/gr716.h>
+#elif defined(__CPU_GR712RC)
+#include <phoenix/arch/gr712rc.h>
+#endif
 
 
 int reboot(int magic)

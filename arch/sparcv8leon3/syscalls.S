@@ -28,6 +28,7 @@ sym: \
 	mov sn, %g4; \
 	ta 0; \
 	/* return value in %o0 */; \
+	nop; /* TN-0018 fix */ \
 	retl; \
 	nop; \
 .size sym, .-sym
