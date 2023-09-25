@@ -13,14 +13,15 @@
  * %LICENSE%
  */
 
-#include <sys/minmax.h>
 #include "format.h"
 #include "bignum.h"
+
 #include <sys/minmax.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
 #include <errno.h>
+
 
 #define FLAG_SIGNED                    0x1
 #define FLAG_64BIT                     0x2
@@ -871,8 +872,6 @@ static int format_sprintfDouble(void *ctx, feedfunc feed, double d, uint32_t fla
 
 static void format_sprintf_num(void *ctx, feedfunc feed, uint64_t num64, uint32_t flags, int minFieldWidth, int precision)
 {
-	const char nilString[] = "(nil)";
-	const int nilStringLength = strlen(nilString);
 	const char *digits = (flags & FLAG_LARGE_DIGITS) ? largeDigits : smallDigits,
 			   *prefix = (flags & FLAG_LARGE_DIGITS) ? "X0" : "x0";
 	char tmp_buf[32];
@@ -884,7 +883,7 @@ static void format_sprintf_num(void *ctx, feedfunc feed, uint64_t num64, uint32_
 
 	if (((flags & FLAG_NULLMARK) != 0) && (num64 == 0)) {
 		flags &= ~FLAG_ZERO;
-		format_printBuffer(ctx, feed, flags, minFieldWidth, nilString, nilString + nilStringLength, sign);
+		format_printBuffer(ctx, feed, flags, minFieldWidth, FORMAT_NIL_STR, FORMAT_NIL_STR + FORMAT_NIL_STR_LEN, sign);
 		return;
 	}
 
