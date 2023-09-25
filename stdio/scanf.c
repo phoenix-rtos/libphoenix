@@ -56,7 +56,8 @@ static const unsigned char *__sccl(char *tab, const unsigned char *fmt)
 	if (c == '^') {
 		v = 1;
 		c = *fmt++;
-	} else
+	}
+	else
 		v = 0;
 
 	memset(tab, (uint8_t)v, 256);
@@ -145,7 +146,7 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 
 		width = 0;
 		flags = 0;
-		for(;;) {
+		for (;;) {
 			c = *fmt++;
 			if (c == '%') {
 				if (*inr <= 0)
@@ -169,7 +170,8 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 					if (flags & LONG) {
 						flags &= ~LONG;
 						flags |= LONGLONG;
-					} else
+					}
+					else
 						flags |= LONG;
 					continue;
 
@@ -196,7 +198,8 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 					if (flags & SHORT) {
 						flags &= ~SHORT;
 						flags |= SHORTSHORT;
-					} else
+					}
+					else
 						flags |= SHORT;
 					continue;
 
@@ -242,7 +245,7 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 
 				case 'X':
 				case 'x':
-					flags |= PFXOK;    /* enable 0x prefixing */
+					flags |= PFXOK; /* enable 0x prefixing */
 					c = CT_INT;
 					flags |= UNSIGNED;
 					base = 16;
@@ -303,7 +306,7 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 
 			break;
 		}
-		if(c == '%')
+		if (c == '%')
 			continue;
 
 		if (*inr <= 0)
@@ -337,7 +340,8 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 							if (sum == 0)
 								return (nconversions != 0 ? nassigned : -1);
 							break;
-						} else {
+						}
+						else {
 							sum += width;
 							*inr -= width;
 							inp += width;
@@ -345,7 +349,8 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 						}
 					}
 					nread += sum;
-				} else {
+				}
+				else {
 					memcpy(va_arg(ap, char *), inp, width);
 					*inr -= width;
 					inp += width;
@@ -357,7 +362,7 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 
 			case CT_CCL:
 				if (width == 0)
-					width = (size_t)~0;	/* `infinity' */
+					width = (size_t)~0; /* `infinity' */
 				if (flags & SUPPRESS) {
 					n = 0;
 					while (ccltab[(unsigned char)*inp]) {
@@ -374,7 +379,8 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 					}
 					if (n == 0)
 						return nassigned;
-				} else {
+				}
+				else {
 					p0 = p = va_arg(ap, char *);
 					while (ccltab[(unsigned char)*inp]) {
 						(*inr)--;
@@ -412,7 +418,8 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 							break;
 					}
 					nread += n;
-				} else {
+				}
+				else {
 					p0 = p = va_arg(ap, char *);
 					while (!isspace(*inp)) {
 						(*inr)--;
@@ -448,53 +455,69 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 								flags |= PFXOK;
 							}
 							if (flags & NZDIGITS)
-								flags &= ~(SIGNOK|NZDIGITS|NDIGITS);
+								flags &= ~(SIGNOK | NZDIGITS | NDIGITS);
 							else
-								flags &= ~(SIGNOK|PFXOK|NDIGITS);
+								flags &= ~(SIGNOK | PFXOK | NDIGITS);
 							ok = 1;
 							break;
 
-						case '1': case '2': case '3':
-						case '4': case '5': case '6': case '7':
+						case '1':
+						case '2':
+						case '3':
+						case '4':
+						case '5':
+						case '6':
+						case '7':
 							base = basefix[base];
 							flags &= ~(SIGNOK | PFXOK | NDIGITS);
 							ok = 1;
 							break;
 
-						case '8': case '9':
+						case '8':
+						case '9':
 							base = basefix[base];
 							if (base <= 8)
-								break;	/* not legal here */
+								break; /* not legal here */
 							flags &= ~(SIGNOK | PFXOK | NDIGITS);
 							ok = 1;
 							break;
 
-						case 'A': case 'B': case 'C':
-						case 'D': case 'E': case 'F':
-						case 'a': case 'b': case 'c':
-						case 'd': case 'e': case 'f':
+						case 'A':
+						case 'B':
+						case 'C':
+						case 'D':
+						case 'E':
+						case 'F':
+						case 'a':
+						case 'b':
+						case 'c':
+						case 'd':
+						case 'e':
+						case 'f':
 							if (base <= 10)
 								break;
 							flags &= ~(SIGNOK | PFXOK | NDIGITS);
 							ok = 1;
 							break;
 
-						case '+': case '-':
+						case '+':
+						case '-':
 							if (flags & SIGNOK) {
 								flags &= ~SIGNOK;
 								ok = 1;
 							}
 							break;
 
-						case 'x': case 'X':
+						case 'x':
+						case 'X':
 							if (flags & PFXOK && p == buf + 1) {
-								base = 16;	/* if %i */
+								base = 16; /* if %i */
 								flags &= ~PFXOK;
 								ok = 1;
 							}
 							break;
 					}
-					if(!ok)
+					if (!ok)
 						break;
 
 					if ((flags & SUPPRESS) == 0)

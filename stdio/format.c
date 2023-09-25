@@ -22,19 +22,19 @@
 #include <string.h>
 #include <errno.h>
 
-#define FLAG_SIGNED             0x1
-#define FLAG_64BIT              0x2
-#define FLAG_NO_TRAILING_ZEROS  0x4
-#define FLAG_SPACE              0x10
-#define FLAG_ZERO               0x20
-#define FLAG_PLUS               0x40
-#define FLAG_HEX                0x80
-#define FLAG_OCT                0x100
-#define FLAG_LARGE_DIGITS       0x200
-#define FLAG_ALTERNATE          0x400
-#define FLAG_NULLMARK           0x800
-#define FLAG_MINUS              0x1000
-#define FLAG_FIELD_WIDTH_STAR 	0x2000
+#define FLAG_SIGNED                    0x1
+#define FLAG_64BIT                     0x2
+#define FLAG_NO_TRAILING_ZEROS         0x4
+#define FLAG_SPACE                     0x10
+#define FLAG_ZERO                      0x20
+#define FLAG_PLUS                      0x40
+#define FLAG_HEX                       0x80
+#define FLAG_OCT                       0x100
+#define FLAG_LARGE_DIGITS              0x200
+#define FLAG_ALTERNATE                 0x400
+#define FLAG_NULLMARK                  0x800
+#define FLAG_MINUS                     0x1000
+#define FLAG_FIELD_WIDTH_STAR          0x2000
 #define DOUBLE_EXP_INVALID             (-1024)
 #define HEXDOUBLE_SUFFICIENT_PRECISION 13
 #define FLAG_8BIT                      0x8000
