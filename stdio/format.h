@@ -19,6 +19,10 @@
 #include <stdarg.h>
 
 
+#define FORMAT_NIL_STR     "(nil)"
+#define FORMAT_NIL_STR_LEN (sizeof(FORMAT_NIL_STR) - 1)
+
+
 typedef void (*feedfunc)(void *, char);
 
 

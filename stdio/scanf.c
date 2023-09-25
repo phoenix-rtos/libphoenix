@@ -13,6 +13,8 @@
  * %LICENSE%
  */
 
+#include "format.h"
+
 #include <errno.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -279,9 +281,8 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 					break;
 
 				case 'p':
-					flags |= POINTER | PFXOK;
+					flags |= POINTER | PFXOK | UNSIGNED;
 					c = CT_INT;
-					flags |= UNSIGNED;
 					base = 16;
 					break;
 
@@ -407,9 +408,8 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 				if (width == 0)
 					width = (size_t)~0;
 				if (flags & SUPPRESS) {
-					n = 0;
 					while (!isspace(*inp)) {
-						n++;
+						nread++;
 						(*inr)--;
 						inp++;
 						if (--width == 0)
@@ -417,7 +417,6 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 						if (*inr <= 0)
 							break;
 					}
-					nread += n;
 				}
 				else {
 					p0 = p = va_arg(ap, char *);
@@ -437,6 +436,16 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 				continue;
 
 			case CT_INT:
+				if (((flags & POINTER) != 0) && ((*inr) >= FORMAT_NIL_STR_LEN) && (strncmp(FORMAT_NIL_STR, inp, FORMAT_NIL_STR_LEN) == 0)) {
+					*va_arg(ap, void **) = NULL;
+					nassigned++;
+					nconversions++;
+					nread += FORMAT_NIL_STR_LEN;
+					inp += FORMAT_NIL_STR_LEN;
+					(*inr) -= FORMAT_NIL_STR_LEN;
+					break;
+				}
+
 				if (--width > sizeof(buf) - 2)
 					width = sizeof(buf) - 2;
 				width++;
