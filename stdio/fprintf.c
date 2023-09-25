@@ -184,16 +184,16 @@ int dprintf(int fd, const char *format, ...)
 
 #if 0
 
-#define FLAG_SIGNED        0x1
-#define FLAG_64BIT         0x2
-#define FLAG_FLOAT         0x4
-#define FLAG_SPACE         0x10
-#define FLAG_ZERO          0x20
-#define FLAG_PLUS          0x40
-#define FLAG_HEX           0x80
-#define FLAG_LARGE_DIGITS  0x100
-#define FLAG_ALTERNATE     0x200
-#define FLAG_NULLMARK      0x400
+#define FLAG_SIGNED       0x1
+#define FLAG_64BIT        0x2
+#define FLAG_FLOAT        0x4
+#define FLAG_SPACE        0x10
+#define FLAG_ZERO         0x20
+#define FLAG_PLUS         0x40
+#define FLAG_HEX          0x80
+#define FLAG_LARGE_DIGITS 0x100
+#define FLAG_ALTERNATE    0x200
+#define FLAG_NULLMARK     0x400
 
 
 union float_u32
