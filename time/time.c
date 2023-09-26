@@ -90,7 +90,6 @@ time_t time(time_t *tp)
 	now += offs;
 
 	/* microseconds to seconds */
-	now += 500 * 1000;
 	now /= 1000 * 1000;
 
 	if (tp != NULL)
