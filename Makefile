@@ -15,7 +15,7 @@ include ../phoenix-rtos-build/Makefile.common
 SYSROOT := $(shell $(CC) $(CFLAGS) -print-sysroot)
 MULTILIB_DIR := $(shell $(CC) $(CFLAGS) -print-multi-directory)
 LIBC_INSTALL_DIR := $(SYSROOT)/lib/$(MULTILIB_DIR)
-LIBC_INSTALL_NAMES := libc.a libm.a libg.a libpthread.a
+LIBC_INSTALL_NAMES := libc.a libm.a libg.a libpthread.a libubsan.a
 HEADERS_INSTALL_DIR := $(SYSROOT)/usr/include
 LIBNAME := libphoenix.a
 
@@ -57,6 +57,7 @@ include termios/Makefile
 include time/Makefile
 include unistd/Makefile
 include wchar/Makefile
+include ubsan/Makefile
 
 #include test/Makefile
 
