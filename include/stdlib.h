@@ -32,8 +32,6 @@ extern "C" {
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1
 
-#define ATEXIT_MAX 32
-
 #define MB_CUR_MAX 1
 #define MB_LEN_MAX 4
 
