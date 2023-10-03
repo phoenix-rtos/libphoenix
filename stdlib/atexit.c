@@ -21,8 +21,14 @@
 /* The atexit_node structure uses uint32_t for flags that
  indicate whether to call a function with arguments or not, therefore
  why ATEXIT_MAX must be 32 as type "fntype" */
+#define ATEXIT_MAX 32
+
+
+typedef void (*destructor_t)(void);
+
+
 struct atexit_node {
-	void (*destructors[ATEXIT_MAX])(void);
+	destructor_t destructors[ATEXIT_MAX];
 	void *args[ATEXIT_MAX];
 	uint32_t fntype;
 	struct atexit_node *prev;
@@ -33,6 +39,7 @@ struct atexit_node {
 static struct {
 	handle_t lock;
 	struct atexit_node *head;
+	unsigned int idx;
 } atexit_common = { .head = &((struct atexit_node) {}) };
 
 
@@ -41,6 +48,7 @@ void _atexit_init(void)
 {
 	mutexCreate(&atexit_common.lock);
 	memset(atexit_common.head, 0, sizeof(struct atexit_node));
+	atexit_common.idx = 0;
 }
 
 
@@ -48,36 +56,30 @@ void _atexit_init(void)
 static int _atexit_register(int isarg, void (*fn)(void), void *arg)
 {
 	struct atexit_node *node;
-	int i;
 
 	mutexLock(atexit_common.lock);
 	node = atexit_common.head;
 
-	/* Looking for an empty slot */
-	for (i = 0; i < ATEXIT_MAX; i++) {
-		if (node->destructors[i] == NULL) {
-			break;
-		}
-	}
-
 	/* Allocate new node if there are no free slots left */
-	if (i == ATEXIT_MAX) {
+	if (atexit_common.idx == ATEXIT_MAX) {
 		node = (struct atexit_node *)calloc(1, sizeof(struct atexit_node));
 		if (node == NULL) {
 			mutexUnlock(atexit_common.lock);
 			return -1;
 		}
 		node->prev = atexit_common.head;
+
 		atexit_common.head = node;
-
-		i = 0;
+		atexit_common.idx = 0;
 	}
 
-	if (isarg) {
-		node->fntype |= 1u << i;
-		node->args[i] = arg;
+	if (isarg != 0) {
+		node->fntype |= (1u << atexit_common.idx);
+		node->args[atexit_common.idx] = arg;
 	}
-	node->destructors[i] = fn;
+	node->destructors[atexit_common.idx] = fn;
+
+	atexit_common.idx++;
 
 	mutexUnlock(atexit_common.lock);
 	return 0;
@@ -87,28 +89,32 @@ static int _atexit_register(int isarg, void (*fn)(void), void *arg)
 /* Call all registered destructors */
 void _atexit_call(void)
 {
-	struct atexit_node *last, *node = atexit_common.head;
-	int i;
+	mutexLock(atexit_common.lock);
+	while ((atexit_common.head != NULL) && (atexit_common.idx != 0)) {
+		atexit_common.idx--;
+		destructor_t destructor = atexit_common.head->destructors[atexit_common.idx];
+		if (((atexit_common.head->fntype >> atexit_common.idx) & 1) == 1) {
+			void *arg = atexit_common.head->args[atexit_common.idx];
+			mutexUnlock(atexit_common.lock);
+			((void (*)(void *))destructor)(arg);
+		}
+		else {
+			mutexUnlock(atexit_common.lock);
+			destructor();
+		}
+		mutexLock(atexit_common.lock);
 
-	while (node != NULL) {
-		for (i = ATEXIT_MAX - 1; i >= 0; i--) {
-			if (node->destructors[i] != NULL) {
-				if (((node->fntype >> i) & 1) == 1) {
-					((void (*)(void *))node->destructors[i])(node->args[i]);
-				}
-				else {
-					node->destructors[i]();
-				}
+		if (atexit_common.idx == 0) {
+			struct atexit_node *last = atexit_common.head;
+			atexit_common.head = atexit_common.head->prev;
+			if (atexit_common.head != NULL) {
+				/* Free only if it's not the first node (statically allocated) */
+				free(last);
+				atexit_common.idx = ATEXIT_MAX;
 			}
 		}
-
-		last = node;
-		node = node->prev;
-		if (node != NULL) {
-			/* Free only if it's not the first node (statically allocated) */
-			free(last);
-		}
 	}
+	mutexUnlock(atexit_common.lock);
 }
 
 
