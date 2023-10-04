@@ -25,8 +25,9 @@
 
 #define CEIL(value, size)	((((value) + (size) - 1) / (size)) * (size))
 
-#define PTHREAD_ONCE_DONE        0
-#define PTHREAD_ONCE_IN_PROGRESS 2
+#define PTHREAD_ONCE_DONE          0
+#define PTHREAD_ONCE_IN_PROGRESS   2
+#define PTHREAD_COND_CLOCK_DEFAULT CLOCK_MONOTONIC
 
 typedef struct pthread_ctx {
 	handle_t id;
@@ -766,7 +767,7 @@ int sched_get_priority_min(int policy)
 int pthread_condattr_init(pthread_condattr_t *attr)
 {
 	attr->pshared = PTHREAD_PROCESS_PRIVATE;
-	attr->clock_id = CLOCK_MONOTONIC;
+	attr->clock_id = PTHREAD_COND_CLOCK_DEFAULT;
 	return 0;
 }
 
@@ -804,12 +805,16 @@ int pthread_condattr_setclock(pthread_condattr_t *attr, clockid_t clock_id)
 {
 	int err = 0;
 
-	/* Only 'CLOCK_MONOTONIC' supported */
-	if (clock_id != CLOCK_MONOTONIC) {
-		err = EINVAL;
-	}
-	else {
-		attr->clock_id = clock_id;
+	/* Only 'CLOCK_MONOTONIC', 'CLOCK_REALTIME' and 'CLOCK_MONOTONIC_RAW' are supported */
+	switch (clock_id) {
+		case CLOCK_REALTIME:
+		case CLOCK_MONOTONIC:
+		case CLOCK_MONOTONIC_RAW:
+			attr->clock_id = clock_id;
+			break;
+		default:
+			err = EINVAL;
+			break;
 	}
 
 	return err;
@@ -830,6 +835,7 @@ static int pthread_cond_lazy_init(pthread_cond_t *cond)
 	if (cond->initialized == 0) {
 		mutexLock(pthread_common.mutex_cond_init_lock);
 		if (cond->initialized == 0) {
+			cond->clock_id = PTHREAD_COND_CLOCK_DEFAULT;
 			err = condCreate(&cond->condh);
 			if (err == 0) {
 				cond->initialized = 1;
@@ -844,6 +850,8 @@ static int pthread_cond_lazy_init(pthread_cond_t *cond)
 int pthread_cond_init(pthread_cond_t *__restrict cond, const pthread_condattr_t *__restrict attr)
 {
 	int err;
+
+	cond->clock_id = (attr == NULL) ? PTHREAD_COND_CLOCK_DEFAULT : attr->clock_id;
 
 	err = condCreate(&cond->condh);
 	if (err == 0) {
@@ -917,7 +925,7 @@ int pthread_cond_timedwait(pthread_cond_t *__restrict cond,
 {
 	int err = 0;
 	struct timespec now;
-	clock_gettime(CLOCK_REALTIME, &now);
+	clock_gettime(cond->clock_id, &now);
 	if ((now.tv_sec > abstime->tv_sec) || ((now.tv_sec == abstime->tv_sec) && (now.tv_nsec >= abstime->tv_nsec))) {
 		err = -ETIMEDOUT;
 	}
