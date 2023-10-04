@@ -75,6 +75,7 @@ typedef struct pthread_mutexattr_t {
 typedef struct {
 	handle_t condh;
 	volatile int initialized;
+	clockid_t clock_id;
 } pthread_cond_t;
 
 
