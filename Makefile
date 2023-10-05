@@ -83,11 +83,12 @@ install-libs: $(LIB_TARGETS)
 	mkdir -p "$(LIBC_INSTALL_DIR)"; \
 	rm -rf "$(LIBC_INSTALL_DIR)/crt0.o"; \
 	cp -a $^ "$(LIBC_INSTALL_DIR)"; \
-	for lib in $(LIBC_INSTALL_NAMES); do \
-		if [ ! -e "$(LIBC_INSTALL_DIR)/$$lib" ]; then \
-			ln -sf "$(LIBC_INSTALL_DIR)/libphoenix.a" "$(LIBC_INSTALL_DIR)/$$lib"; \
-		fi \
-	done
+	(cd $(LIBC_INSTALL_DIR) && \
+		for lib in $(LIBC_INSTALL_NAMES); do \
+			if [ ! -e "$$lib" ]; then \
+				ln -sf "libphoenix.a" "$$lib"; \
+			fi \
+	done)
 
 .PHONY: clean install install-headers install-libs
 clean:
