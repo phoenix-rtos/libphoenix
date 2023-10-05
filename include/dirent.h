@@ -27,15 +27,6 @@ extern "C" {
 #endif
 
 
-/* dirent types */
-/* FIXME: remove when dirent support would be straightened out in filesystems */
-enum {	dtDir = 0,
-		dtFile,
-		dtDev,
-		dtSymlink,
-		dtUnknown
-};
-
 /* NOTE: these values can't be changed as they are kept on FLASH (eg. in jffs2) */
 #define DT_UNKNOWN 0
 #define DT_FIFO    1
