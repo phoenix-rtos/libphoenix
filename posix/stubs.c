@@ -110,6 +110,10 @@ char *ttyname(int fildes)
 
 int ttyname_r(int fildes, char *name, size_t namesize)
 {
+	if (namesize > 0) {
+		name[0] = '\0';
+	}
+
 	return 0;
 }
 
