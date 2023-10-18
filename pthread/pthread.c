@@ -260,20 +260,23 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 	ctx->cancelstate = PTHREAD_CANCEL_ENABLE;
 	*thread = (pthread_t)ctx;
 
+	mutexLock(pthread_common.pthread_list_lock);
+
 	int err = beginthreadex(start_point, attrs->priority, stack,
 		attrs->stacksize, (void *)ctx, &ctx->id);
 
 	if (err != 0) {
 		munmap(stack, attrs->stacksize);
-		pthread_ctx_put(ctx);
+		_pthread_ctx_put(ctx);
 		thread = NULL;
 	}
-	else if (ctx->detached == PTHREAD_CREATE_JOINABLE) {
-		mutexLock(pthread_common.pthread_list_lock);
-		if (pthread_common.pthread_list != NULL && pthread_common.pthread_list->id == 0)
-			pthread_common.pthread_list = NULL;
-
-		LIST_ADD(&pthread_common.pthread_list, ctx);
+	else {
+		if (ctx->detached == PTHREAD_CREATE_JOINABLE) {
+			if (pthread_common.pthread_list != NULL && pthread_common.pthread_list->id == 0) {
+				pthread_common.pthread_list = NULL;
+			}
+			LIST_ADD(&pthread_common.pthread_list, ctx);
+		}
 		mutexUnlock(pthread_common.pthread_list_lock);
 	}
 
