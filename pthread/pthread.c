@@ -5,8 +5,8 @@
  *
  * pthread
  *
- * Copyright 2017, 2019 Phoenix Systems
- * Author: Pawel Pisarczyk, Marcin Baran
+ * Copyright 2017, 2019, 2023 Phoenix Systems
+ * Author: Pawel Pisarczyk, Marcin Baran, Hubert Badocha
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -23,7 +23,7 @@
 #include <unistd.h>
 
 
-#define CEIL(value, size)	((((value) + (size) - 1) / (size)) * (size))
+#define CEIL(value, size) ((((value) + (size)-1) / (size)) * (size))
 
 #define PTHREAD_ONCE_DONE          0
 #define PTHREAD_ONCE_IN_PROGRESS   2
@@ -44,6 +44,7 @@ typedef struct pthread_ctx {
 	int refcount;
 	struct pthread_key_data_t *key_data_list;
 	struct _pthread_cleanup_t *cleanup_list;
+	int exiting;
 } pthread_ctx;
 
 
@@ -78,13 +79,6 @@ typedef struct pthread_key_data_t {
 	void *value;
 	struct pthread_key_data_t *next;
 } pthread_key_data_t;
-
-
-typedef struct _pthread_key_cleanup_t {
-	void (*destructor)(void *);
-	void *value;
-	struct _pthread_key_cleanup_t *next;
-} _pthread_key_cleanup_t;
 
 
 typedef struct _pthread_cleanup_t {
@@ -147,50 +141,6 @@ static void start_point(void *args)
 }
 
 
-static _pthread_key_cleanup_t *pthread_key_cleanup(pthread_ctx *ctx)
-{
-	_pthread_key_cleanup_t *head = NULL, *next;
-	pthread_key_data_t *thread_data;
-
-	mutexLock(pthread_common.pthread_key_lock);
-
-	while (ctx->key_data_list != NULL) {
-		thread_data = ctx->key_data_list;
-		ctx->key_data_list = ctx->key_data_list->next;
-
-		next = malloc(sizeof(_pthread_key_cleanup_t));
-		if (next == NULL) {
-			mutexUnlock(pthread_common.pthread_key_lock);
-			return head;
-		}
-		next->destructor = thread_data->key->destructor;
-		next->value = thread_data->value;
-		next->next = head;
-		head = next;
-
-		free(thread_data);
-	}
-	mutexUnlock(pthread_common.pthread_key_lock);
-
-	return head;
-}
-
-
-static void pthread_full_key_cleanup(_pthread_key_cleanup_t *head)
-{
-	_pthread_key_cleanup_t *next;
-
-	while (head != NULL) {
-		next = head->next;
-		if (head->destructor != NULL) {
-			head->destructor(head->value);
-		}
-		free(head);
-		head = next;
-	}
-}
-
-
 static void _pthread_do_cleanup(pthread_ctx *ctx)
 {
 	pthread_cleanup_t *head = ctx->cleanup_list;
@@ -244,6 +194,7 @@ static int pthread_create_main(void)
 	ctx->refcount = 1;
 	ctx->key_data_list = NULL;
 	ctx->cleanup_list = NULL;
+	ctx->exiting = 0;
 
 	mutexLock(pthread_common.pthread_list_lock);
 	LIST_ADD(&pthread_common.pthread_list, ctx);
@@ -403,11 +354,51 @@ int pthread_setcancelstate(int state, int *oldstate)
 }
 
 
+static void pthread_key_cleanup(pthread_ctx *ctx)
+{
+	ctx->exiting = 1;
+
+	mutexLock(pthread_common.pthread_key_lock);
+
+	for (int i = 0; i <= PTHREAD_DESTRUCTOR_ITERATIONS; i++) {
+		int all_null = 1;
+		for (pthread_key_data_t *key_data = ctx->key_data_list; key_data != NULL; key_data = key_data->next) {
+			if (key_data->key == NULL) {
+				continue;
+			}
+			void (*destructor)(void *) = key_data->key->destructor;
+			void *value = key_data->value;
+
+			if ((value != NULL) && (destructor != NULL)) {
+				all_null = 0;
+				key_data->value = NULL;
+				mutexUnlock(pthread_common.pthread_key_lock);
+
+				destructor(value);
+
+				mutexLock(pthread_common.pthread_key_lock);
+			}
+		}
+		if (all_null != 0) {
+			break;
+		}
+	}
+
+	pthread_key_data_t *key_data = ctx->key_data_list;
+	while (key_data != NULL) {
+		pthread_key_data_t *curr = key_data;
+		key_data = key_data->next;
+		free(curr);
+	}
+
+	mutexUnlock(pthread_common.pthread_key_lock);
+}
+
+
 int pthread_cancel(pthread_t thread)
 {
 	int err = 0, id;
 	pthread_ctx *ctx = (pthread_ctx *)thread;
-	_pthread_key_cleanup_t *cleanup;
 
 	if (ctx == NULL) {
 		err = -ESRCH;
@@ -425,11 +416,12 @@ int pthread_cancel(pthread_t thread)
 		}
 		else {
 			if (ctx->cancelstate == PTHREAD_CANCEL_ENABLE) {
-				cleanup = pthread_key_cleanup(ctx);
 				ctx->retval = (void *)PTHREAD_CANCELED;
 				id = ctx->id;
+				mutexUnlock(pthread_common.pthread_list_lock);
+				pthread_key_cleanup(ctx);
+				mutexLock(pthread_common.pthread_list_lock);
 				_pthread_ctx_put(ctx);
-				pthread_full_key_cleanup(cleanup);
 				err = signalPost(getpid(), id, signal_cancel);
 			}
 			else {
@@ -457,18 +449,16 @@ int pthread_equal(pthread_t t1, pthread_t t2)
 }
 
 
-void pthread_exit(void *value_ptr)
+__attribute__((noreturn)) void pthread_exit(void *value_ptr)
 {
 	pthread_ctx *ctx = (pthread_ctx *)pthread_self();
-	_pthread_key_cleanup_t *cleanup;
 
 	if (ctx != NULL) {
+		pthread_key_cleanup(ctx);
 		mutexLock(pthread_common.pthread_list_lock);
 		_pthread_do_cleanup(ctx);
 		ctx->retval = value_ptr;
-		cleanup = pthread_key_cleanup(ctx);
 		_pthread_ctx_put(ctx);
-		pthread_full_key_cleanup(cleanup);
 	}
 
 	endthread();
@@ -556,7 +546,7 @@ int pthread_attr_setschedparam(pthread_attr_t *attr,
 		return EINVAL;
 
 	if (param->sched_priority > sched_get_priority_max(SCHED_RR) ||
-			param->sched_priority < sched_get_priority_min(SCHED_RR))
+		param->sched_priority < sched_get_priority_min(SCHED_RR))
 		return ENOTSUP;
 
 	attr->priority = param->sched_priority;
@@ -619,7 +609,7 @@ int pthread_attr_getscope(const pthread_attr_t *attr,
 int pthread_attr_setdetachstate(pthread_attr_t *attr, int detachstate)
 {
 	if (detachstate != PTHREAD_CREATE_DETACHED ||
-			detachstate != PTHREAD_CREATE_JOINABLE)
+		detachstate != PTHREAD_CREATE_JOINABLE)
 		return EINVAL;
 
 	attr->detached = detachstate;
@@ -1018,9 +1008,10 @@ int pthread_key_create(pthread_key_t *key, void (*destructor)(void *))
 
 int pthread_key_delete(pthread_key_t key)
 {
+	int err = EINVAL;
 	mutexLock(pthread_common.pthread_list_lock);
 
-	pthread_ctx *first = pthread_common.pthread_list, *curr = pthread_common.pthread_list;
+	pthread_ctx *first = pthread_common.pthread_list, *curr = first;
 
 	if (first != NULL) {
 		mutexLock(pthread_common.pthread_key_lock);
@@ -1029,13 +1020,20 @@ int pthread_key_delete(pthread_key_t key)
 			pthread_key_data_t *prev = NULL;
 			while (head != NULL) {
 				if (head->key == key) {
-					if (prev == NULL) {
-						curr->key_data_list = head->next;
+					err = 0;
+					if (curr->exiting == 0) {
+						if (prev == NULL) {
+							curr->key_data_list = head->next;
+						}
+						else {
+							prev->next = head->next;
+						}
+						free(head);
 					}
 					else {
-						prev->next = head->next;
+						/* Prevent further calls to destructor. */
+						head->key = NULL;
 					}
-					free(head);
 					break;
 				}
 				prev = head;
@@ -1047,7 +1045,7 @@ int pthread_key_delete(pthread_key_t key)
 	}
 	mutexUnlock(pthread_common.pthread_list_lock);
 	free(key);
-	return 0;
+	return err;
 }
 
 
@@ -1190,7 +1188,7 @@ void _pthread_atfork_child(void)
 {
 	mutexLock(pthread_common.pthread_atfork_lock);
 	pthread_fork_handlers_t *first = pthread_common.pthread_fork_handlers,
-		*curr = pthread_common.pthread_fork_handlers;
+							*curr = pthread_common.pthread_fork_handlers;
 
 	if (first != NULL) {
 		do {
