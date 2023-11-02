@@ -120,7 +120,8 @@ static void *buffAlloc(size_t size)
 	void *ret;
 
 #ifndef NOMMU
-	if ((ret = mmap(NULL, (size + (_PAGE_SIZE - 1)) & ~(_PAGE_SIZE - 1), PROT_READ | PROT_WRITE, MAP_ANONYMOUS, NULL, 0)) == MAP_FAILED) {
+	ret = mmap(NULL, (size + (_PAGE_SIZE - 1)) & ~(_PAGE_SIZE - 1), PROT_READ | PROT_WRITE, MAP_ANONYMOUS, -1, 0);
+	if (ret == MAP_FAILED) {
 		return NULL;
 	}
 #else
@@ -1150,7 +1151,8 @@ FILE *popen(const char *command, const char *mode)
 		goto failed;
 	}
 
-	if ((pf->file.buffer = mmap(NULL, BUFSIZ, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, NULL, 0)) == MAP_FAILED) {
+	pf->file.buffer = mmap(NULL, BUFSIZ, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, -1, 0);
+	if (pf->file.buffer == MAP_FAILED) {
 		goto failed;
 	}
 

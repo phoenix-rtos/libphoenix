@@ -237,7 +237,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 		attrs = attr;
 
 	void *stack = mmap(attrs->stackaddr, attrs->stacksize,
-		PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, NULL, 0);
+		PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
 	if (stack == MAP_FAILED || stack == NULL)
 		return EAGAIN;
