@@ -57,8 +57,10 @@ static heap_t *_malloc_heapCreate(size_t size)
 	heap_t *heap;
 	chunk_t *chunk;
 
-	if ((heap = mmap((void *)0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, NULL, 0)) == NULL)
+	heap = mmap((void *)0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	if (heap == NULL) {
 		return NULL;
+	}
 
 	heap->size = size;
 	chunk = (chunk_t *)(heap + 1);

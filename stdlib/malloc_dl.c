@@ -309,12 +309,14 @@ static heap_t *_malloc_heapAlloc(size_t size)
 	size_t heapSize = CEIL(sizeof(heap_t) + size, _PAGE_SIZE);
 	heap_t *heap;
 
-	if (heapSize < size)
+	if (heapSize < size) {
 		return NULL;
+	}
 
-	heap = mmap(NULL, heapSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, NULL, 0);
-	if (heap == MAP_FAILED)
+	heap = mmap(NULL, heapSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	if (heap == MAP_FAILED) {
 		return NULL;
+	}
 
 	chunk = (chunk_t*) heap->space;
 

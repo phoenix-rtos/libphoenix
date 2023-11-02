@@ -21,8 +21,7 @@
 #include <phoenix/mman.h>
 
 
-#define MAP_ANON   MAP_ANONYMOUS
-#define MAP_FAILED (void *)-1
+#define MAP_ANON MAP_ANONYMOUS
 
 
 #ifdef __cplusplus
@@ -39,7 +38,7 @@ extern void meminfo(meminfo_t *info);
 extern int syspageprog(syspageprog_t *prog, int index);
 
 
-extern void *mmap(void *vaddr, size_t size, int prot, int flags, oid_t *oid, offs_t offs);
+extern void *mmap(void *vaddr, size_t size, int prot, int flags, int fildes, off_t offs);
 
 
 extern int munmap(void *vaddr, size_t size);
