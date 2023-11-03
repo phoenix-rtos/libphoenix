@@ -28,9 +28,7 @@ extern "C" {
 
 #ifndef NDEBUG
 #define assert(__expr) \
-    ((__expr) \
-     ? (void)0 \
-     : ({ printf("Assertion '%s' failed in file %s:%d, function %s.\n", #__expr, __FILE__, __LINE__, __func__); exit(1);}))
+	((__expr) ? (void)0 : ({ printf("Assertion '%s' failed in file %s:%d, function %s.\n", #__expr, __FILE__, __LINE__, __func__); abort(); }))
 #else
 
 
