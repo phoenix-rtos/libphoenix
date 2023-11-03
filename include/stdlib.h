@@ -122,7 +122,7 @@ extern size_t malloc_usable_size(void *ptr);
 
 
 /* Causes an abnormal program termination. */
-extern void abort(void);
+extern void abort(void) __attribute__((__noreturn__));
 
 
 /* Causes the specified function func to be called when the program terminates normally. */
