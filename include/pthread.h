@@ -246,6 +246,12 @@ extern void _pthread_atfork_parent(void);
 extern void _pthread_atfork_child(void);
 
 
+void pthread_cleanup_push(void (*routine)(void *), void *arg);
+
+
+void pthread_cleanup_pop(int execute);
+
+
 #ifdef __cplusplus
 }
 #endif
