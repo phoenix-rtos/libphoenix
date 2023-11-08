@@ -36,7 +36,7 @@ int isupper(int c);
 /* This function checks whether the passed character is alphabetic. */
 int isalpha(int c);
 #define __isalpha(c) (((islower(c) != 0) || (isupper(c) != 0)) ? 1 : 0)
-#define isaplha(c)   __isalpha(c)
+#define isalpha(c)   __isalpha(c)
 
 
 /* This function checks whether the passed character is control character. */
