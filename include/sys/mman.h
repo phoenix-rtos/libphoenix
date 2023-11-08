@@ -44,6 +44,9 @@ extern void *mmap(void *vaddr, size_t size, int prot, int flags, int fildes, off
 extern int munmap(void *vaddr, size_t size);
 
 
+extern int mprotect(void *vaddr, size_t len, int prot);
+
+
 extern addr_t va2pa(void *va);
 
 
