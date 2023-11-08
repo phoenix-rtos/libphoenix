@@ -447,6 +447,7 @@ int pthread_cancel(pthread_t thread)
 		}
 		else {
 			if (ctx->cancelstate == PTHREAD_CANCEL_ENABLE) {
+				_pthread_do_cleanup(ctx);
 				ctx->retval = (void *)PTHREAD_CANCELED;
 				id = ctx->id;
 				mutexUnlock(pthread_common.pthread_list_lock);
@@ -589,7 +590,7 @@ int pthread_attr_setschedparam(pthread_attr_t *attr,
 		return EINVAL;
 
 	if (param->sched_priority > sched_get_priority_max(SCHED_RR) ||
-		param->sched_priority < sched_get_priority_min(SCHED_RR))
+			param->sched_priority < sched_get_priority_min(SCHED_RR))
 		return ENOTSUP;
 
 	attr->priority = param->sched_priority;
@@ -652,7 +653,7 @@ int pthread_attr_getscope(const pthread_attr_t *attr,
 int pthread_attr_setdetachstate(pthread_attr_t *attr, int detachstate)
 {
 	if ((detachstate != PTHREAD_CREATE_DETACHED) ||
-		(detachstate != PTHREAD_CREATE_JOINABLE)) {
+			(detachstate != PTHREAD_CREATE_JOINABLE)) {
 		return EINVAL;
 	}
 
