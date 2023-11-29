@@ -5,27 +5,68 @@
  *
  * Entrypoint
  *
- * Copyright 2017, 2018 Phoenix Systems
- * Author: Pawel Pisarczyk, Aleksander Kaminski
+ * Copyright 2017, 2018, 2023 Phoenix Systems
+ * Author: Pawel Pisarczyk, Aleksander Kaminski, Hubert Badocha
  *
  * This file is part of Phoenix-RTOS.
  *
  * %LICENSE%
  */
 
-#include <sys/file.h>
 #include <stdlib.h>
-#include <stdio.h>
 
 
-extern void _malloc_init(void);
-extern int _env_init(void);
-extern void _signals_init(void);
-extern void _file_init(void);
-extern void _errno_init(void);
-extern void _atexit_init(void);
-extern void _init_array(void);
-extern void _pthread_init(void);
+extern void (*__preinit_array_start[])(void);
+extern void (*__preinit_array_end[])(void);
+
+extern void (*__init_array_start[])(void);
+extern void (*__init_array_end[])(void);
+
+
+extern void _init(void);
+
+
+__attribute__((noinline)) static void _init_array(void)
+{
+	size_t i, sz;
+
+	sz = __preinit_array_end - __preinit_array_start;
+	for (i = 0; i < sz; i++) {
+		__preinit_array_start[i]();
+	}
+
+	/* FIXME: change compilation settings to make access to _init() */
+	/* _init(); */
+
+	sz = __init_array_end - __init_array_start;
+	for (i = 0; i < sz; i++) {
+		__init_array_start[i]();
+	}
+}
+
+
+extern void (*__fini_array_start[])(void);
+extern void (*__fini_array_end[])(void);
+
+
+extern void _fini(void);
+
+
+static void _fini_array(void)
+{
+	size_t i, sz;
+
+	sz = __fini_array_end - __fini_array_start;
+	for (i = sz; i > 0; i--) {
+		__fini_array_start[i - 1]();
+	}
+
+	/* FIXME: change compilation settings to make access to _fini() */
+	/* _fini(); */
+}
+
+
+extern void _libc_init(void);
 extern int main(int argc, char **argv);
 
 
@@ -33,19 +74,15 @@ char **environ;
 const char *argv_progname;
 
 
-void _startc(int argc, char **argv, char **env)
+__attribute__((noreturn)) void _startc(int argc, char **argv, char **env)
 {
 	environ = env;
 	argv_progname = *argv;
 
-	_atexit_init();
-	_errno_init();
-	_malloc_init();
-	_env_init();
-	_signals_init();
-	_file_init();
+	_libc_init();
+
+	atexit(_fini_array);
 	_init_array();
-	_pthread_init();
 
 	exit(main(argc, argv));
 }
