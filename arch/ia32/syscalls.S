@@ -32,27 +32,17 @@ sym: \
 .size sym, .-sym
 
 
-.bss
-vfork_address:
-.space 4
-.text
 .globl vfork
 .type vfork, @function
 .align 4, 0x90
 vfork:
-	mov (%esp), %eax
-	mov %eax, (vfork_address)
+	/* Save the return address as child will override parent's stack.
+	 * Syscalls restore all registers but %eax thus %edx will not be overwritten.
+	 * %edx is used as it need not to be restored before function exit. */
+	mov (%esp), %edx
 	movl $4, %eax
 	int $0x80
-	cmp $0, %eax
-	jz vfork_child
-	push %eax
-	mov (vfork_address), %eax
-	mov %eax, 4(%esp)
-	pop %eax
-	ret
-vfork_child:
-	mov $0, %eax
+	mov %edx, (%esp)
 	ret
 .size vfork, .-vfork
 
