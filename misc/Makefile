@@ -4,4 +4,4 @@
 # Copyright 2021 Phoenix Systems
 #
 
-OBJS += $(addprefix $(PREFIX_O)misc/, init.o fini.o)
+OBJS += $(addprefix $(PREFIX_O)misc/, init.o)
