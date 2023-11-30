@@ -37,17 +37,26 @@ extern int sys_link(const char *path1, const char *path2);
 extern int sys_unlink(const char *path);
 extern int sys_pipe(int fildes[2]);
 extern int sys_fstat(int fd, struct stat *buf);
+extern int sys_lseek(int fildes, off_t *offset, int whence);
 
 WRAP_ERRNO_DEF(ssize_t, read, (int fildes, void *buf, size_t nbyte), (fildes, buf, nbyte))
 WRAP_ERRNO_DEF(ssize_t, write, (int fildes, const void *buf, size_t nbyte), (fildes, buf, nbyte))
 WRAP_ERRNO_DEF(int, close, (int fildes), (fildes))
 WRAP_ERRNO_DEF(int, ftruncate, (int fildes, off_t length), (fildes, length))
-WRAP_ERRNO_DEF(off_t, lseek, (int fildes, off_t offset, int whence), (fildes, offset, whence))
 WRAP_ERRNO_DEF(int, dup, (int fildes), (fildes))
 WRAP_ERRNO_DEF(int, dup2, (int fildes, int fildes2), (fildes, fildes2))
 WRAP_ERRNO_DEF(int, fsync, (int fildes), (fildes))
-// WRAP_ERRNO_DEF(int, pipe, (int fildes[2]), (fildes))
-// WRAP_ERRNO_DEF(int, fstat, (int fd, struct stat *buf), (fd, buf))
+
+
+off_t lseek(int fildes, off_t offset, int whence)
+{
+	int retval = sys_lseek(fildes, &offset, whence);
+	if (retval < 0) {
+		return (off_t)SET_ERRNO(retval);
+	}
+
+	return offset;
+}
 
 
 int pipe(int fildes[2])
