@@ -25,6 +25,9 @@ endif
 
 CFLAGS += -Iinclude -fno-builtin-malloc
 
+ifeq ($(LIBPHOENIX_PIC), y)
+CFLAGS += $(TARGET_PIC_FLAG)
+endif
 
 OBJS :=
 # crt0.o should have all necessary initialization + call to main()
