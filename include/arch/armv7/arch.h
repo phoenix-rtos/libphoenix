@@ -16,8 +16,6 @@
 #ifndef _LIBPHOENIX_ARCH_ARMV7_ARCH_H_
 #define _LIBPHOENIX_ARCH_ARMV7_ARCH_H_
 
-#define __BYTE_ORDER __LITTLE_ENDIAN
-
 #define __ARCH_STDINT <arch/armv7/stdint.h>
 #define __ARCH_LIMITS <arch/armv7/limits.h>
 #define __ARCH_SYS_TYPES <arch/armv7/types.h>

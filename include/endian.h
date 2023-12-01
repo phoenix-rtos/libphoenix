@@ -24,22 +24,24 @@
 extern "C" {
 #endif
 
-
-#define __LITTLE_ENDIAN 0
-#define __BIG_ENDIAN 1
+#define __BYTE_ORDER    __BYTE_ORDER__
+#define __LITTLE_ENDIAN __ORDER_LITTLE_ENDIAN__
+#define __BIG_ENDIAN    __ORDER_BIG_ENDIAN__
 
 #include <arch.h>
 
-#define __CPP_CONCAT1(x, y) x ## y
-#define __CPP_CONCAT(x, y) __CPP_CONCAT1(x, y)
+#define __CPP_CONCAT1(x, y) x##y
+#define __CPP_CONCAT(x, y)  __CPP_CONCAT1(x, y)
 
 
-#if __BYTE_ORDER == __LITTLE_ENDIAN
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #define __swap_le__(b) __CPP_CONCAT(__CPP_CONCAT(uint, b), _t)
 #define __swap_be__(b) __CPP_CONCAT(__builtin_bswap, b)
-#else
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 #define __swap_le__(b) __CPP_CONCAT(__builtin_bswap, b)
 #define __swap_be__(b) __CPP_CONCAT(__CPP_CONCAT(uint, b), _t)
+#else
+#error "Unsupported byte order"
 #endif
 
 

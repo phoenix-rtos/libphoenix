@@ -16,8 +16,6 @@
 #ifndef _LIBPHOENIX_ARCH_SPARCV8LEON3_ARCH_H_
 #define _LIBPHOENIX_ARCH_SPARCV8LEON3_ARCH_H_
 
-#define __BYTE_ORDER __BIG_ENDIAN
-
 #define __ARCH_STDINT    <arch/sparcv8leon3/stdint.h>
 #define __ARCH_LIMITS    <arch/sparcv8leon3/limits.h>
 #define __ARCH_SYS_TYPES <arch/sparcv8leon3/types.h>
