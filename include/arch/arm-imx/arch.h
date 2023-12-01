@@ -16,8 +16,6 @@
 #ifndef _LIBPHOENIX_ARCH_ARM_IMX_ARCH_H_
 #define _LIBPHOENIX_ARCH_ARM_IMX_ARCH_H_
 
-#define __BYTE_ORDER __LITTLE_ENDIAN
-
 #define __ARCH_STDINT <arch/arm-imx/stdint.h>
 #define __ARCH_LIMITS <arch/arm-imx/limits.h>
 #define __ARCH_SYS_TYPES <arch/arm-imx/types.h>
