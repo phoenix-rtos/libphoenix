@@ -5,5 +5,5 @@
 # Author: Pawel Pisarczyk
 #
 
-OBJS += $(addprefix $(PREFIX_O)arch/riscv64/, syscalls.o string.o signal.o reboot.o jmp.o)
+OBJS += $(addprefix $(PREFIX_O)arch/riscv64/, syscalls.o string.o signal.o reboot.o jmp.o tls.o)
 CRT0_OBJS += $(addprefix $(PREFIX_O)arch/riscv64/, crt0.o)
