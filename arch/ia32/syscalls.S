@@ -18,14 +18,16 @@
 
 .text
 
+#define SYSCALLNUM(sym) syscalls_num_ ## sym
 
 #define SYSCALLDEF(sym, sn) \
+.equ SYSCALLNUM(sym), sn; \
 .globl sym; \
 .type sym, @function; \
 .align 4, 0x90; \
 sym: \
 	.cfi_startproc; \
-	movl $sn, %eax; \
+	mov $SYSCALLNUM(sym), %eax; \
 	int $0x80; \
 	ret; \
 	.cfi_endproc; \
@@ -40,7 +42,7 @@ vfork:
 	 * Syscalls restore all registers but %eax thus %edx will not be overwritten.
 	 * %edx is used as it need not to be restored before function exit. */
 	mov (%esp), %edx
-	movl $4, %eax
+	mov $SYSCALLNUM(vforksvc), %eax
 	int $0x80
 	mov %edx, (%esp)
 	ret
