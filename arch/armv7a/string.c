@@ -1,9 +1,9 @@
 /*
  * Phoenix-RTOS
  *
- * Operating system kernel
+ * libphoenix
  *
- * arch/arm-imx
+ * arch/armv7a
  *
  * Copyright 2017, 2018 Phoenix Systems
  * Author: Aleksander Kaminski, Pawel Pisarczyk

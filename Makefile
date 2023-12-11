@@ -28,7 +28,7 @@ CFLAGS += -Iinclude -fno-builtin-malloc
 
 OBJS :=
 # crt0.o should have all necessary initialization + call to main()
-CRT0_OBJS := $(PREFIX_O)_startc.o
+CRT0_OBJS := $(PREFIX_O)crt0-common.o
 
 LIB_TARGETS := $(PREFIX_A)libphoenix.a $(PREFIX_A)crt0.o
 

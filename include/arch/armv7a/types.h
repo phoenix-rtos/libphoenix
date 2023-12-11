@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * Architecture dependent part of types (arch/armv7)
+ * Architecture dependent part of types (arch/armv7a)
  *
  * Copyright 2019 Phoenix Systems
  * Author: Andrzej Glowinski
@@ -13,8 +13,8 @@
  * %LICENSE%
  */
 
-#ifndef _LIBPHOENIX_ARCH_ARMV7_TYPES_H_
-#define _LIBPHOENIX_ARCH_ARMV7_TYPES_H_
+#ifndef _LIBPHOENIX_ARCH_ARMV7A_TYPES_H_
+#define _LIBPHOENIX_ARCH_ARMV7A_TYPES_H_
 
 typedef unsigned int addr_t;
 typedef long long offs_t;
@@ -24,7 +24,7 @@ typedef unsigned long long time_t;
 typedef unsigned int useconds_t;
 typedef int suseconds_t;
 
-typedef unsigned int id_t;
+typedef unsigned long long id_t;
 typedef struct _oid_t {
 	unsigned int port;
 	id_t id;

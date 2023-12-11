@@ -6,4 +6,4 @@
 #
 
 OBJS += $(addprefix $(PREFIX_O)arch/sparcv8leon3/, syscalls.o jmp.o signal.o string.o reboot.o)
-CRT0_OBJS += $(addprefix $(PREFIX_O)arch/sparcv8leon3/, _start.o)
+CRT0_OBJS += $(addprefix $(PREFIX_O)arch/sparcv8leon3/, crt0.o)

@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * syscalls (arm-imx)
+ * syscalls (armv7a)
  *
  * Copyright 2017, 2018 Phoenix Systems
  * Author; Pawel Pisarczyk, Aleksander Kaminski

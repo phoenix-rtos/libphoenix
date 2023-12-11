@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * Architecture dependent part of stdint (arch/armv7)
+ * Architecture dependent part of stdint (arch/armv7m)
  *
  * Copyright 2019-2021 Phoenix Systems
  * Author: Andrzej Glowinski, Daniel Sawka
@@ -13,8 +13,8 @@
  * %LICENSE%
  */
 
-#ifndef _LIBPHOENIX_ARCH_ARMV7_STDINT_H_
-#define _LIBPHOENIX_ARCH_ARMV7_STDINT_H_
+#ifndef _LIBPHOENIX_ARCH_ARMV7M_STDINT_H_
+#define _LIBPHOENIX_ARCH_ARMV7M_STDINT_H_
 
 /* The following sections refer to ISO/IEC 9899:1999 */
 

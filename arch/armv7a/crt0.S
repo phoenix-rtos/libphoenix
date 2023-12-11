@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * Entrypoint (arm-imx)
+ * Entrypoint (armv7a)
  *
  * Copyright 2018 Phoenix Systems
  * Author; Aleksander Kaminski

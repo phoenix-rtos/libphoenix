@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * syscalls (armv7)
+ * syscalls (armv7m)
  *
  * Copyright 2017 Phoenix Systems
  * Author; Pawel Pisarczyk, Aleksander Kaminski
