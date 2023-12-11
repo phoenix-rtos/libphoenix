@@ -1,7 +1,7 @@
 /*
  * Phoenix-RTOS
  *
- * Operating system kernel
+ * libphoenix
  *
  * SBI routines (RISCV64)
  *
