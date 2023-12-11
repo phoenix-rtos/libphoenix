@@ -47,18 +47,6 @@ typedef struct {
 } mount_o_msg_t;
 
 
-extern int fileAdd(unsigned int *h, oid_t *oid, unsigned mode);
-
-
-extern int fileSet(unsigned int h, char flags, oid_t *oid, offs_t offs, unsigned mode);
-
-
-extern int fileGet(unsigned int h, char flags, oid_t *oid, offs_t *offs, unsigned *mode);
-
-
-extern int fileRemove(unsigned int h);
-
-
 extern int flock(int fd, int operation);
 
 
