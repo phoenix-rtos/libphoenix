@@ -29,6 +29,10 @@ ifneq ($(LIBPHOENIX_NOPIC), y)
 CFLAGS += -fpic
 endif
 
+ifeq ($(LIBPHOENIX_NOPIC), n)
+$(error działa)
+endif
+
 OBJS :=
 # crt0.o should have all necessary initialization + call to main()
 CRT0_OBJS := $(PREFIX_O)_startc.o
