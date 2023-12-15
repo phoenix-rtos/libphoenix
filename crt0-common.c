@@ -74,12 +74,17 @@ char **environ;
 const char *argv_progname;
 
 
-__attribute__((noreturn)) void _startc(int argc, char **argv, char **env)
+__attribute__((noreturn)) void _startc(void (*cleanup)(void), int argc, char **argv, char **env)
 {
 	environ = env;
 	argv_progname = *argv;
 
 	_libc_init();
+
+	/* cleanup function is not NULL when the dynamic linker is used */
+	if (cleanup != NULL) {
+		atexit(cleanup);
+	}
 
 	atexit(_fini_array);
 	_init_array();

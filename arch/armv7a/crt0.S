@@ -5,8 +5,8 @@
  *
  * Entrypoint (armv7a)
  *
- * Copyright 2018 Phoenix Systems
- * Author; Aleksander Kaminski
+ * Copyright 2018, 2023 Phoenix Systems
+ * Author: Aleksander Kaminski, Hubert Badocha
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -20,8 +20,6 @@
 .globl _start
 .type _start, %function
 _start:
-	pop {lr}
-	pop {r0-r2}
-	bic sp, #7
-	b _startc
+	pop {r0-r3}
+	b   _startc
 .size _start, .-_start
