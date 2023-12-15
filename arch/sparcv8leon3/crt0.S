@@ -5,8 +5,8 @@
  *
  * Entrypoint (sparcv8leon3)
  *
- * Copyright 2022 Phoenix Systems
- * Author: Lukasz Leczkowski
+ * Copyright 2022, 2023 Phoenix Systems
+ * Author: Lukasz Leczkowski, Hubert Badocha
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -22,10 +22,10 @@
 .type _start, #function
 _start:
 	save %sp, -0x60, %sp
-	ld [%i0 + 0], %o7
-	ld [%i0 + 4], %o0
-	ld [%i0 + 8], %o1
-	ld [%i0 + 12], %o2
+	ld [%sp + 0xc0], %o0
+	ld [%sp + 0xc4], %o1
+	ld [%sp + 0xc8], %o2
+	ld [%sp + 0xcc], %o3
 	call _startc
 	nop
 .size _start, .-_start
