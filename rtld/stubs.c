@@ -50,3 +50,21 @@ __attribute__((weak)) void *dlsym(void *restrict a, const char *restrict b)
 {
 	return NULL;
 }
+
+
+/* Allow override on platforms requiring __tls_get_addr in PIC compiled libraries(eg. RISC-V, ARM). */
+#ifndef __LIBPHOENIX_ARCH_HAVE__TLS_GET_ADDR
+
+/* Stub __tls_get_addr implementations. */
+__attribute__((weak)) void *__tls_get_addr(void *d)
+{
+	abort();
+}
+
+
+__attribute__((weak)) void *___tls_get_addr(void *d)
+{
+	abort();
+}
+
+#endif
