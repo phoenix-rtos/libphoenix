@@ -69,6 +69,7 @@ INSTALL_TARGETS := install-headers install-libs
 ifeq ($(LIBPHOENIX_PIC), y)
 CFLAGS += $(TARGET_PIC_FLAG)
 ifeq ($(LIBPHOENIX_SHARED), y)
+CPPFLAGS += -DLIBPHOENIX_SHARED
 include shared.mk
 endif
 endif

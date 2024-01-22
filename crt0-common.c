@@ -72,6 +72,8 @@ extern int main(int argc, char **argv);
 
 char **environ;
 const char *argv_progname;
+/* TLS cannot be used before initialized by dynamic linker in dynamically linked binaries. */
+int can_use_tls;
 
 
 __attribute__((noreturn)) void _startc(void (*cleanup)(void), int argc, char **argv, char **env)
@@ -80,6 +82,9 @@ __attribute__((noreturn)) void _startc(void (*cleanup)(void), int argc, char **a
 	argv_progname = *argv;
 
 	_libc_init();
+
+	/* At this point TLS is setup, as dynamic linker calls _startc after dealing with TLS. */
+	can_use_tls = 1;
 
 	/* cleanup function is not NULL when the dynamic linker is used */
 	if (cleanup != NULL) {
