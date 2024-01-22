@@ -19,6 +19,12 @@
 #include <arch.h>
 
 
+#ifdef LIBPHOENIX_SHARED
+/* FIXME: TLS is not yet supported by dynamic linker. */
+#undef __LIBPHOENIX_ARCH_TLS_SUPPORTED
+#endif
+
+
 #ifdef __LIBPHOENIX_ARCH_TLS_SUPPORTED
 
 static __thread int __errno_tls;
