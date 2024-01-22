@@ -23,6 +23,9 @@
 
 static __thread int __errno_tls;
 
+extern int can_use_tls;
+static int errno_single = 0;
+
 #else
 
 static int errno_global;
@@ -58,7 +61,7 @@ int *__errno_location(void)
 
 	return &errno_global;
 #else
-	return &__errno_tls;
+	return (can_use_tls == 0) ? &errno_single : &__errno_tls;
 #endif
 }
 

@@ -48,5 +48,6 @@
 #define SIZE_PAGE  _Pragma("GCC warning \"'SIZE_PAGE' is deprecated. Use _PAGE_SIZE from arch.h or PAGE_SIZE from limits.h (POSIX only)\"") _PAGE_SIZE
 
 #define __LIBPHOENIX_ARCH_TLS_SUPPORTED
+#define __LIBPHOENIX_ARCH_HAVE__TLS_GET_ADDR
 
 #endif
