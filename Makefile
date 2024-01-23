@@ -15,9 +15,8 @@ include ../phoenix-rtos-build/Makefile.common
 SYSROOT := $(shell $(CC) $(CFLAGS) -print-sysroot)
 MULTILIB_DIR := $(shell $(CC) $(CFLAGS) -print-multi-directory)
 LIBC_INSTALL_DIR := $(SYSROOT)/lib/$(MULTILIB_DIR)
-LIBC_INSTALL_NAMES := libc.a libm.a libg.a libpthread.a libubsan.a
+LIBC_INSTALL_NAMES_A := libc.a libm.a libg.a libpthread.a libubsan.a
 HEADERS_INSTALL_DIR := $(SYSROOT)/usr/include
-LIBNAME := libphoenix.a
 
 ifeq (,$(filter-out /,$(SYSROOT)))
 $(error SYSROOT is not supported by the toolchain. Use cross-toolchain to compile.)
@@ -25,17 +24,10 @@ endif
 
 CFLAGS += -Iinclude -fno-builtin-malloc
 
-ifeq ($(LIBPHOENIX_PIC), y)
-CFLAGS += $(TARGET_PIC_FLAG)
-endif
-
 OBJS :=
 # crt0.o should have all necessary initialization + call to main()
 CRT0_OBJS := $(PREFIX_O)crt0-common.o
 
-LIB_TARGETS := $(PREFIX_A)libphoenix.a $(PREFIX_A)crt0.o
-
-all: $(LIB_TARGETS)
 
 ifneq (,$(findstring arm,$(TARGET_SUFF)))
   include arch/arm/Makefile
@@ -69,7 +61,20 @@ include unistd/Makefile
 include wchar/Makefile
 include ubsan/Makefile
 
-#include test/Makefile
+
+LIB_TARGETS := $(PREFIX_A)libphoenix.a $(PREFIX_A)crt0.o
+INSTALL_TARGETS := install-headers install-libs
+
+ifeq ($(LIBPHOENIX_PIC), y)
+CFLAGS += $(TARGET_PIC_FLAG)
+ifeq ($(LIBPHOENIX_SHARED), y)
+include shared.mk
+endif
+endif
+
+
+all: $(LIB_TARGETS)
+
 
 $(PREFIX_A)libphoenix.a: $(OBJS)
 	$(ARCH)
@@ -80,7 +85,8 @@ $(PREFIX_A)crt0.o: $(CRT0_OBJS)
 
 SRCHEADERS := $(shell find include -name \*.h)
 
-install: install-headers install-libs
+
+install: $(INSTALL_TARGETS)
 
 install-headers: $(SRCHEADERS)
 	@echo INSTALL "$(HEADERS_INSTALL_DIR)/*"; \
@@ -89,16 +95,16 @@ install-headers: $(SRCHEADERS)
 
 # TODO: remove `rm crt0.o` when we will be sure it's not a symlink to libphoenix.a anymore
 install-libs: $(LIB_TARGETS)
-	@echo INSTALL "$(LIBC_INSTALL_DIR)/*"; \
+	$(SIL)echo INSTALL "$(LIBC_INSTALL_DIR)/*"; \
 	mkdir -p "$(LIBC_INSTALL_DIR)"; \
 	rm -rf "$(LIBC_INSTALL_DIR)/crt0.o"; \
 	cp -a $^ "$(LIBC_INSTALL_DIR)"; \
 	(cd $(LIBC_INSTALL_DIR) && \
-		for lib in $(LIBC_INSTALL_NAMES); do \
+		for lib in $(LIBC_INSTALL_NAMES_A); do \
 			if [ ! -e "$$lib" ]; then \
 				ln -sf "libphoenix.a" "$$lib"; \
 			fi \
-	done)
+		done)
 
 .PHONY: clean install install-headers install-libs
 clean:
