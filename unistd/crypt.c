@@ -44,11 +44,11 @@ static unsigned char enc_res[31];
 
 
 typedef struct _sha1_ctx {
-	unsigned int len;					/* message length */
-	unsigned int h[5];					/* intermediate hash */
-	unsigned char blk[SHA1_BLOCK_SZ];	/* block */
-	unsigned int blk_idx;				/* block index */
-	unsigned int ext;					/* padding extended to the next block */
+	unsigned int len;                 /* message length */
+	unsigned int h[5];                /* intermediate hash */
+	unsigned char blk[SHA1_BLOCK_SZ]; /* block */
+	unsigned int blk_idx;             /* block index */
+	unsigned int ext;                 /* padding extended to the next block */
 } sha1_ctx;
 
 
@@ -79,14 +79,13 @@ static void sha1_processBlock(sha1_ctx *ctx)
 
 			ctx->blk[ctx->blk_idx] = 0x80;
 
-			while(++ctx->blk_idx < SHA1_BLOCK_SZ)
+			while (++ctx->blk_idx < SHA1_BLOCK_SZ)
 				ctx->blk[ctx->blk_idx] = 0x0;
-
 		}
 		else {
 			ctx->blk[ctx->blk_idx++] = 0x80;
 
-			while(ctx->blk_idx < 60)
+			while (ctx->blk_idx < 60)
 				ctx->blk[ctx->blk_idx++] = 0x0;
 
 			ctx->blk[ctx->blk_idx++] = (ctx->len >> 24) & 0xff;
@@ -101,7 +100,7 @@ static void sha1_processBlock(sha1_ctx *ctx)
 		W[t] = (ctx->blk[t * 4] & 0xff) << 24;
 		W[t] |= (ctx->blk[t * 4 + 1] & 0xff) << 16;
 		W[t] |= (ctx->blk[t * 4 + 2] & 0xff) << 8;
-		W[t] |= (ctx->blk[t * 4 + 3] & 0xff) ;
+		W[t] |= (ctx->blk[t * 4 + 3] & 0xff);
 	}
 
 	/* actual hashing */
@@ -163,7 +162,7 @@ static void sha1_process(sha1_ctx *ctx, const char *msg)
 {
 	size_t len = strlen(msg);
 
-	while(len--) {
+	while (len--) {
 		ctx->blk[ctx->blk_idx++] = *msg++ & 0xff;
 		ctx->len += 8;
 		if (ctx->blk_idx == SHA1_BLOCK_SZ)
@@ -217,7 +216,7 @@ static unsigned char *sha1_crypt(const char *key, const char *salt)
 
 
 static const unsigned char base64_table[65] =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 
 static void base64_encode(unsigned char *bytes, int len, unsigned char *res)
