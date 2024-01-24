@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-static void base64_encode(unsigned char *bytes, int len, unsigned char *res);
+static void base64_encode(uint8_t *bytes, size_t len, unsigned char *res);
 
 #define _SHA1_CRYPT_
 
@@ -44,21 +44,24 @@ static unsigned char enc_res[31];
 
 
 typedef struct _sha1_ctx {
-	unsigned int len;                 /* message length */
-	unsigned int h[5];                /* intermediate hash */
-	unsigned char blk[SHA1_BLOCK_SZ]; /* block */
-	unsigned int blk_idx;             /* block index */
-	unsigned int ext;                 /* padding extended to the next block */
+	unsigned int len; /* message length */
+	union {
+		uint32_t h[5];   /* intermediate hash */
+		uint8_t res[20]; /* hash result */
+	} hash;
+	uint8_t blk[SHA1_BLOCK_SZ]; /* block */
+	size_t blk_idx;             /* block index */
+	unsigned int ext;           /* padding extended to the next block */
 } sha1_ctx;
 
 
 static void sha1_init(sha1_ctx *ctx)
 {
-	ctx->h[0] = 0x67452301;
-	ctx->h[1] = 0xEFCDAB89;
-	ctx->h[2] = 0x98BADCFE;
-	ctx->h[3] = 0x10325476;
-	ctx->h[4] = 0xC3D2E1F0;
+	ctx->hash.h[0] = 0x67452301;
+	ctx->hash.h[1] = 0xEFCDAB89;
+	ctx->hash.h[2] = 0x98BADCFE;
+	ctx->hash.h[3] = 0x10325476;
+	ctx->hash.h[4] = 0xC3D2E1F0;
 	ctx->blk_idx = 0;
 	ctx->len = 0;
 	ctx->ext = 0;
@@ -67,9 +70,9 @@ static void sha1_init(sha1_ctx *ctx)
 
 static void sha1_processBlock(sha1_ctx *ctx)
 {
-	unsigned int W[80] = { 0 };
-	unsigned int a, b, c, d, e, tmp;
-	int t;
+	uint32_t W[80] = { 0 };
+	uint32_t a, b, c, d, e, tmp;
+	size_t t;
 
 	/* message padding */
 	if (ctx->blk_idx != SHA1_BLOCK_SZ) {
@@ -107,11 +110,11 @@ static void sha1_processBlock(sha1_ctx *ctx)
 	for (t = 16; t < 80; t++)
 		W[t] = S(1, W[t - 3] ^ W[t - 8] ^ W[t - 14] ^ W[t - 16]);
 
-	a = ctx->h[0];
-	b = ctx->h[1];
-	c = ctx->h[2];
-	d = ctx->h[3];
-	e = ctx->h[4];
+	a = ctx->hash.h[0];
+	b = ctx->hash.h[1];
+	c = ctx->hash.h[2];
+	d = ctx->hash.h[3];
+	e = ctx->hash.h[4];
 
 	for (t = 0; t < 20; t++) {
 		tmp = S(5, a) + F0(b, c, d) + e + W[t] + K0;
@@ -150,11 +153,11 @@ static void sha1_processBlock(sha1_ctx *ctx)
 	}
 
 	ctx->blk_idx = 0;
-	ctx->h[0] += a;
-	ctx->h[1] += b;
-	ctx->h[2] += c;
-	ctx->h[3] += d;
-	ctx->h[4] += e;
+	ctx->hash.h[0] += a;
+	ctx->hash.h[1] += b;
+	ctx->hash.h[2] += c;
+	ctx->hash.h[3] += d;
+	ctx->hash.h[4] += e;
 }
 
 
@@ -175,6 +178,15 @@ static void sha1_process(sha1_ctx *ctx, const char *msg)
 
 	if (ctx->ext)
 		sha1_processBlock(ctx);
+
+	/* Fix byte order */
+	for (size_t i = 0; i < sizeof(ctx->hash.h) / sizeof(ctx->hash.h[0]); i++) {
+		uint32_t tmp = ctx->hash.h[i];
+		ctx->hash.res[i * 4] = (tmp & 0xffu);
+		ctx->hash.res[i * 4 + 1] = (tmp & 0xff00u) >> 8;
+		ctx->hash.res[i * 4 + 2] = (tmp & 0xff0000u) >> 16;
+		ctx->hash.res[i * 4 + 3] = (tmp & 0xff000000u) >> 24;
+	}
 }
 
 
@@ -207,7 +219,7 @@ static unsigned char *sha1_crypt(const char *key, const char *salt)
 	sha1_process(&ctx, msg);
 
 	/* encode result */
-	base64_encode((unsigned char *)ctx.h, sizeof(ctx.h), &enc_res[2]);
+	base64_encode(ctx.hash.res, sizeof(ctx.hash.res), &enc_res[2]);
 
 	free(msg);
 	return enc_res;
@@ -219,12 +231,12 @@ static const unsigned char base64_table[65] =
 	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 
-static void base64_encode(unsigned char *bytes, int len, unsigned char *res)
+static void base64_encode(uint8_t *bytes, size_t len, unsigned char *res)
 {
-	int i, j = 0;
-	int output_len = len;
-	unsigned char *pbytes;
-	unsigned int trp;
+	size_t i, j = 0;
+	size_t output_len = len;
+	uint8_t *pbytes;
+	uint32_t trp;
 
 	while (output_len % 3) output_len++;
 
