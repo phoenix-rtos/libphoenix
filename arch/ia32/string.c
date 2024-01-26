@@ -67,31 +67,3 @@ void *memset(void *where, int v, size_t n)
 
 	return where;
 }
-
-
-void *memsetw(void *where, int v, size_t n)
-{
-	__asm__ volatile
-	(" \
-		cld; \
-		movl %0, %%ecx; \
-		movl %%ecx, %%edx; \
-		andl $1, %%edx; \
-		shrl $1, %%ecx; \
-		\
-		movl %1, %%eax; \
-		andl $0x0000ffff, %%eax; \
-		movl %%eax, %%ebx; \
-		shll $16, %%ebx; \
-		orl %%ebx, %%eax; \
-		\
-		movl %2, %%edi; \
-		rep; stosl; \
-		movl %%edx, %%ecx; \
-		rep; stosw"
-	: "+d" (n)
-	: "m" (v), "m" (where)
-	: "eax", "ebx", "cc", "ecx", "edi" ,"memory");
-
-	return NULL;
-}
