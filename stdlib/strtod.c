@@ -163,7 +163,7 @@ static long double strto_any(const char *__restrict str, char **__restrict endpt
 	if (!is_number) {
 		errno = EINVAL;
 	}
-	else if (result == INFINITY || result == -INFINITY) {
+	else if (isinf(result)) {
 		errno = ERANGE;
 	}
 
@@ -174,26 +174,14 @@ static long double strto_any(const char *__restrict str, char **__restrict endpt
 /* TODO: strto_any is not fully implemented */
 float strtof(const char *__restrict str, char **__restrict endptr)
 {
-	float result = (float)strto_any(str, endptr, LENGTH_OF_SIGNIFICAND_FLOAT_32, RANGE_OF_EXPONENT_FLOAT_32);
-
-	if (result == INFINITY || result == -INFINITY) {
-		errno = ERANGE;
-	}
-
-	return result;
+	return (float)strto_any(str, endptr, LENGTH_OF_SIGNIFICAND_FLOAT_32, RANGE_OF_EXPONENT_FLOAT_32);
 }
 
 
 /* TODO: strto_any is not fully implemented*/
 double strtod(const char *__restrict str, char **__restrict endptr)
 {
-	double result = (double)strto_any(str, endptr, LENGTH_OF_SIGNIFICAND_DOUBLE_64, RANGE_OF_EXPONENT_DOUBLE_64);
-
-	if (result == INFINITY || result == -INFINITY) {
-		errno = ERANGE;
-	}
-
-	return result;
+	return (double)strto_any(str, endptr, LENGTH_OF_SIGNIFICAND_DOUBLE_64, RANGE_OF_EXPONENT_DOUBLE_64);
 }
 
 
