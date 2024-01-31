@@ -63,6 +63,7 @@
 #define MSG_OOB      0x01
 #define MSG_PEEK     0x02
 #define MSG_DONTWAIT 0x08
+#define MSG_NOSIGNAL 0x20
 
 #define SHUT_RD   0
 #define SHUT_WR   1
