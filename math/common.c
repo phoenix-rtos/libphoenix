@@ -54,7 +54,7 @@ void normalizeSub(double *x, int *exp)
 
 void createSub(double *x, int exp)
 {
-	conv_t *conv = (conv_t *)&x;
+	conv_t *conv = (conv_t *)x;
 
 	if (exp < -51) {
 		*x = 0.0;
