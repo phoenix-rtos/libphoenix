@@ -15,16 +15,23 @@
 
 #include <sys/reboot.h>
 #include <sys/platform.h>
-#include <errno.h>
+#include <phoenix/arch/riscv64.h>
 
 
 int reboot(int magic)
 {
-	return -EINVAL;
+	platformctl_t pctl = {
+		.action = pctl_set,
+		.type = pctl_reboot,
+		.task.reboot.magic = magic
+	};
+
+	return platformctl(&pctl);
 }
 
 
 int reboot_reason(uint32_t *val)
 {
-	return -EINVAL;
+	*val = 0u;
+	return 0;
 }
