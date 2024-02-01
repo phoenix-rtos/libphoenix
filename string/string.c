@@ -533,3 +533,9 @@ size_t strxfrm(char *dest, const char *src, size_t n)
 
 	return current_size;
 }
+
+
+int ffs(int i)
+{
+	return __builtin_ffs(i);
+}
