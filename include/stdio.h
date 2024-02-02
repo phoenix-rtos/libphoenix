@@ -5,8 +5,8 @@
  *
  * stdio.h
  *
- * Copyright 2017-2018 Phoenix Systems
- * Author: Pawel Pisarczyk, Kamil Amanowicz, Michal Miroslaw, Aleksander Kaminski
+ * Copyright 2017-2018, 2024 Phoenix Systems
+ * Author: Pawel Pisarczyk, Kamil Amanowicz, Michal Miroslaw, Aleksander Kaminski, Lukasz Leczkowski
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -28,6 +28,9 @@ extern "C" {
 #endif
 
 
+#include <phoenix/posix-stdio.h>
+
+
 #ifndef NOMMU
 #define BUFSIZ _PAGE_SIZE
 #else
@@ -41,24 +44,12 @@ extern "C" {
 #define _IOLBF 0x4000
 #define _IONBF 0x8000
 
-#ifndef SEEK_SET
-#define SEEK_SET 0
-#endif
-
-#ifndef SEEK_CUR
-#define SEEK_CUR 1
-#endif
-
-#ifndef SEEK_END
-#define SEEK_END 2
-#endif
-
 #define FOPEN_MAX 16
 #define L_ctermid 11 /* Fit at least /dev/pts/XX */
 #define L_tmpnam  16
 #define TMP_MAX   32767
 
-typedef offs_t fpos_t;
+typedef off_t fpos_t;
 
 
 typedef struct _FILE {

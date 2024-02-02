@@ -5,8 +5,8 @@
  *
  * types.h
  *
- * Copyright 2018, 2019 Phoenix Systems
- * Author: Jan Sikorski, Marcin Baran
+ * Copyright 2018, 2019, 2024 Phoenix Systems
+ * Author: Jan Sikorski, Marcin Baran, Lukasz Leczkowski
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -20,29 +20,17 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#ifdef __ARCH_SYS_TYPES
-#include __ARCH_SYS_TYPES
-#else
-#error "Required header sys/types.h is not defined for current architectue!"
-#endif
+#include <phoenix/types.h>
 
-typedef int pid_t;
-typedef int mode_t;
-typedef int gid_t;
-typedef int uid_t;
 
-typedef int dev_t;
-typedef int ino_t;
-typedef int nlink_t;
-typedef int blksize_t;
-typedef long long blkcnt_t;
 typedef unsigned long long fsblkcnt_t;
 typedef unsigned long long fsfilcnt_t;
-typedef long long off64_t;
-typedef off64_t off_t;
 
 typedef int clock_t;
 typedef int clockid_t;
+
+typedef unsigned int useconds_t;
+typedef int suseconds_t;
 
 typedef char *caddr_t;
 

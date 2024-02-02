@@ -18,7 +18,6 @@
 
 #define __ARCH_STDINT    <arch/armv7a/stdint.h>
 #define __ARCH_LIMITS    <arch/armv7a/limits.h>
-#define __ARCH_SYS_TYPES <arch/armv7a/types.h>
 
 #define __MEMCPY
 #define __MEMCMP

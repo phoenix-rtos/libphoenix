@@ -15,7 +15,13 @@
 
 #include <sys/reboot.h>
 #include <sys/platform.h>
-#include <phoenix/arch/imx6ull.h>
+#if defined(__CPU_ZYNQ7000)
+#include <phoenix/arch/armv7a/zynq7000/zynq7000.h>
+#elif defined(__CPU_IMX6ULL)
+#include <phoenix/arch/armv7a/imx6ull/imx6ull.h>
+#else
+#error "Unsupported TARGET"
+#endif
 
 
 int reboot(int magic)

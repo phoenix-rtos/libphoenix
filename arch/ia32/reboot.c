@@ -15,7 +15,7 @@
 
 #include <sys/reboot.h>
 #include <sys/platform.h>
-#include <phoenix/arch/ia32.h>
+#include <phoenix/arch/ia32/ia32.h>
 
 
 int reboot(int magic)
