@@ -17,11 +17,13 @@
 #include <sys/platform.h>
 
 #if defined(__CPU_STM32L4X6)
-#include <phoenix/arch/stm32l4.h>
+#include <phoenix/arch/armv7m/stm32/l4/stm32l4.h>
 #elif defined(__CPU_IMXRT117X)
-#include <phoenix/arch/imxrt1170.h>
+#include <phoenix/arch/armv7m/imxrt/11xx/imxrt1170.h>
+#elif defined(__CPU_IMXRT105X) || defined(__CPU_IMXRT106X)
+#include <phoenix/arch/armv7m/imxrt/10xx/imxrt10xx.h>
 #else
-#include <phoenix/arch/imxrt.h>
+#error "Unsupported TARGET"
 #endif
 
 
@@ -31,7 +33,7 @@ int reboot(int magic)
 		.action = pctl_set,
 		.type = pctl_reboot,
 		.reboot = {
-			.magic = magic
+			.magic = magic,
 		}
 	};
 

@@ -18,7 +18,6 @@
 
 #define __ARCH_STDINT <arch/ia32/stdint.h>
 #define __ARCH_LIMITS <arch/ia32/limits.h>
-#define __ARCH_SYS_TYPES <arch/ia32/types.h>
 #define __ARCH_SYS_IO <arch/ia32/io.h>
 
 #define __MEMCPY

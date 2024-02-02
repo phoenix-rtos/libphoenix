@@ -5,8 +5,8 @@
  *
  * time.h
  *
- * Copyright 2017, 2018 Phoenix Systems
- * Author: Pawel Pisarczyk, Aleksander Kaminski
+ * Copyright 2017, 2018, 2024 Phoenix Systems
+ * Author: Pawel Pisarczyk, Aleksander Kaminski, Lukasz Leczkowski
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -36,6 +36,9 @@ extern "C" {
 #endif
 
 
+#include <phoenix/posix-timespec.h>
+
+
 struct tm {
 	int tm_sec;
 	int tm_min;
@@ -46,12 +49,6 @@ struct tm {
 	int tm_wday;
 	int tm_yday;
 	int tm_isdst;
-};
-
-
-struct timespec {
-	time_t tv_sec;
-	long tv_nsec;
 };
 
 

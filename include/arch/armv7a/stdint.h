@@ -5,8 +5,8 @@
  *
  * Architecture dependent part of stdint (arch/armv7a)
  *
- * Copyright 2019-2021 Phoenix Systems
- * Author: Andrzej Glowinski, Daniel Sawka
+ * Copyright 2019-2021, 2024 Phoenix Systems
+ * Author: Andrzej Glowinski, Daniel Sawka, Lukasz Leczkowski
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -16,44 +16,21 @@
 #ifndef _LIBPHOENIX_ARCH_ARMV7A_STDINT_H_
 #define _LIBPHOENIX_ARCH_ARMV7A_STDINT_H_
 
+#include <phoenix/arch/armv7a/stdtypes.h>
+
 /* The following sections refer to ISO/IEC 9899:1999 */
-
-/* 7.18.1.1 Exact-width integer types */
-
-typedef signed char int8_t;
-typedef short int16_t;
-typedef int int32_t;
-typedef long long int64_t;
-
-typedef unsigned char uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned int uint32_t;
-typedef unsigned long long uint64_t;
-
-/* 7.18.1.2 Minimum-width integer types */
-
-typedef int8_t int_least8_t;
-typedef int16_t int_least16_t;
-typedef int32_t int_least32_t;
-typedef int64_t int_least64_t;
-
-typedef uint8_t uint_least8_t;
-typedef uint16_t uint_least16_t;
-typedef uint32_t uint_least32_t;
-typedef uint64_t uint_least64_t;
 
 /* 7.18.1.3 Fastest minimum-width integer types */
 
-typedef int32_t int_fast8_t;
-typedef int32_t int_fast16_t;
-typedef int32_t int_fast32_t;
-typedef int64_t int_fast64_t;
+typedef __s32 int_fast8_t;
+typedef __s32 int_fast16_t;
+typedef __s32 int_fast32_t;
+typedef __s64 int_fast64_t;
 
-typedef uint32_t uint_fast8_t;
-typedef uint32_t uint_fast16_t;
-typedef uint32_t uint_fast32_t;
-typedef uint64_t uint_fast64_t;
-
+typedef __u32 uint_fast8_t;
+typedef __u32 uint_fast16_t;
+typedef __u32 uint_fast32_t;
+typedef __u64 uint_fast64_t;
 
 /* Define other fixed types along with defines/macros */
 
@@ -61,30 +38,13 @@ typedef uint64_t uint_fast64_t;
 
 /* 7.18.1.4 Integer types capable of holding object pointers */
 
-typedef int32_t intptr_t;
-typedef uint32_t uintptr_t;
+typedef __s32 intptr_t;
+typedef __u32 uintptr_t;
 
 /* 7.18.1.5 Greatest-width integer types */
 
-typedef int64_t intmax_t;
-typedef uint64_t uintmax_t;
-
-/* 7.18.2.2 Limits of minimum-width integer types */
-
-#define INT_LEAST8_MIN  INT8_MIN
-#define INT_LEAST16_MIN INT16_MIN
-#define INT_LEAST32_MIN INT32_MIN
-#define INT_LEAST64_MIN INT64_MIN
-
-#define INT_LEAST8_MAX  INT8_MAX
-#define INT_LEAST16_MAX INT16_MAX
-#define INT_LEAST32_MAX INT32_MAX
-#define INT_LEAST64_MAX INT64_MAX
-
-#define UINT_LEAST8_MAX  UINT8_MAX
-#define UINT_LEAST16_MAX UINT16_MAX
-#define UINT_LEAST32_MAX UINT32_MAX
-#define UINT_LEAST64_MAX UINT64_MAX
+typedef __s64 intmax_t;
+typedef __u64 uintmax_t;
 
 /* 7.18.2.3 Limits of fastest minimum-width integer types */
 

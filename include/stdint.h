@@ -5,8 +5,8 @@
  *
  * stdint.h
  *
- * Copyright 2017-2019 Phoenix Systems
- * Author: Pawel Pisarczyk, Andrzej Glowinski
+ * Copyright 2017-2019, 2024 Phoenix Systems
+ * Author: Pawel Pisarczyk, Andrzej Glowinski, Lukasz Leczkowski
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -30,6 +30,30 @@
 
 /* The following sections refer to ISO/IEC 9899:1999 */
 
+/* 7.18.1.1 Exact-width integer types */
+
+typedef __s8 int8_t;
+typedef __s16 int16_t;
+typedef __s32 int32_t;
+typedef __s64 int64_t;
+
+typedef __u8 uint8_t;
+typedef __u16 uint16_t;
+typedef __u32 uint32_t;
+typedef __u64 uint64_t;
+
+/* 7.18.1.2 Minimum-width integer types */
+
+typedef int8_t int_least8_t;
+typedef int16_t int_least16_t;
+typedef int32_t int_least32_t;
+typedef int64_t int_least64_t;
+
+typedef uint8_t uint_least8_t;
+typedef uint16_t uint_least16_t;
+typedef uint32_t uint_least32_t;
+typedef uint64_t uint_least64_t;
+
 /* 7.18.2.1 Limits of exact-width integer types */
 
 #define INT8_MIN  ((int8_t)0x80)
@@ -46,6 +70,23 @@
 #define UINT16_MAX 0xffff
 #define UINT32_MAX 0xffffffff
 #define UINT64_MAX 0xffffffffffffffffLL
+
+/* 7.18.2.2 Limits of minimum-width integer types */
+
+#define INT_LEAST8_MIN  INT8_MIN
+#define INT_LEAST16_MIN INT16_MIN
+#define INT_LEAST32_MIN INT32_MIN
+#define INT_LEAST64_MIN INT64_MIN
+
+#define INT_LEAST8_MAX  INT8_MAX
+#define INT_LEAST16_MAX INT16_MAX
+#define INT_LEAST32_MAX INT32_MAX
+#define INT_LEAST64_MAX INT64_MAX
+
+#define UINT_LEAST8_MAX  UINT8_MAX
+#define UINT_LEAST16_MAX UINT16_MAX
+#define UINT_LEAST32_MAX UINT32_MAX
+#define UINT_LEAST64_MAX UINT64_MAX
 
 #endif /* _USE_STANDARD_TYPES_STDINT */
 

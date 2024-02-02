@@ -5,8 +5,8 @@
  *
  * sys/uio.h
  *
- * Copyright 2018 Phoenix Systems
- * Author: Jan Sikorski, Michal Miroslaw
+ * Copyright 2018, 2024 Phoenix Systems
+ * Author: Jan Sikorski, Michal Miroslaw, Lukasz Leczkowski
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -29,10 +29,7 @@ extern "C" {
 #endif
 
 
-struct iovec {
-	void *iov_base;
-	size_t iov_len;
-};
+#include <phoenix/posix-uio.h>
 
 
 ssize_t readv(int fd, const struct iovec *iov, int iovcnt);

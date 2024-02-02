@@ -18,7 +18,6 @@
 
 #define __ARCH_STDINT    <arch/sparcv8leon3/stdint.h>
 #define __ARCH_LIMITS    <arch/sparcv8leon3/limits.h>
-#define __ARCH_SYS_TYPES <arch/sparcv8leon3/types.h>
 
 #define __MEMCPY
 #define __MEMCMP

@@ -5,7 +5,7 @@
  *
  * reboot.c
  *
- * Copyright 2022 Phoenix Systems
+ * Copyright 2022, 2024 Phoenix Systems
  * Author: Lukasz Leczkowski
  *
  * This file is part of Phoenix-RTOS.
@@ -18,9 +18,11 @@
 #include <sys/platform.h>
 
 #if defined(__CPU_GR716)
-#include <phoenix/arch/gr716.h>
+#include <phoenix/arch/sparcv8leon3/gr716/gr716.h>
 #elif defined(__CPU_GR712RC)
-#include <phoenix/arch/gr712rc.h>
+#include <phoenix/arch/sparcv8leon3/gr712rc/gr712rc.h>
+#else
+#error "Unsupported TARGET"
 #endif
 
 
