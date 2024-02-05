@@ -26,7 +26,7 @@ static struct {
 	char stack[1024] __attribute__((aligned(8)));
 	handle_t cond, lock;
 	time_t wakeup;
-	unsigned tid;
+	int tid;
 } alarm_common;
 
 
