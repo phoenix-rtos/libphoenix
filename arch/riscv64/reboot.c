@@ -15,7 +15,7 @@
 
 #include <sys/reboot.h>
 #include <sys/platform.h>
-#include <phoenix/arch/riscv64.h>
+#include <phoenix/arch/riscv64/riscv64.h>
 
 
 int reboot(int magic)
