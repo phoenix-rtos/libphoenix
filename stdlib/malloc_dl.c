@@ -467,18 +467,19 @@ void *malloc(size_t size)
 
 void *calloc(size_t nitems, size_t size)
 {
-	void *ptr;
-	uint64_t allocSize = (uint64_t)nitems * size;
-
-	if (allocSize > (uint64_t)UINT_MAX) {
+	if ((nitems != 0) && (size > SIZE_MAX / nitems)) {
 		errno = ENOMEM;
 		return NULL;
 	}
 
-	if ((ptr = malloc((size_t) allocSize)) == NULL)
-		return NULL;
+	size_t allocSize = nitems * size;
 
-	memset(ptr, 0, (size_t)allocSize);
+	void *ptr = malloc(allocSize);
+	if (ptr == NULL) {
+		return NULL;
+	}
+
+	memset(ptr, 0, allocSize);
 	return ptr;
 }
 
