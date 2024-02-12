@@ -537,5 +537,5 @@ size_t strxfrm(char *dest, const char *src, size_t n)
 
 int ffs(int i)
 {
-	return __builtin_ffs(i);
+	return (i == 0) ? 0 : __builtin_ctz(i) + 1;
 }
