@@ -39,7 +39,6 @@ extern "C" {
 #define EOVERFLOW       75
 #define EILSEQ          84
 #define EDESTADDRREQ    89
-#define EMSGSIZE        90
 #define EPFNOSUPPORT    96
 #define EADDRNOTAVAIL   99
 #define ENETDOWN        100
