@@ -14,16 +14,16 @@
  * %LICENSE%
  */
 
- /* setjmp env buffer description
-  * Offset  Description
-  * 0       Signal mask flag - if != 0 then next value stores a signal mask
-  * 4       Signal mask
-  * 8       SP register
-  * 12-43   r4-r11 registers
-  * 44      LR register
-  * 48-79   d8-d15 registers
-  * 80      fpscr register
-  */
+/* setjmp env buffer description
+ * Offset  Description
+ * 0       Signal mask flag - if != 0 then next value stores a signal mask
+ * 4       Signal mask
+ * 8       SP register
+ * 12-43   r4-r11 registers
+ * 44      LR register
+ * 48-103  d8-d15 registers
+ * 104     fpscr register
+ */
 
 #define __ASSEMBLY__
 
@@ -31,12 +31,11 @@
 .syntax unified
 
 .text
-.align 2
+.align 4
 
 
 .globl sigsetjmp
 .type sigsetjmp, %function
-.align 2
 sigsetjmp:
 	/* Store signal mask if savesigs != 0 */
 	movs r2, #0
@@ -60,7 +59,7 @@ sigsetjmp:
 	/* Store fpu registers */
 	vstm r0!, {d8-d15}
 	vmrs r2, fpscr
-	str r2, [r0], #4
+	stm r0!, {r2}
 #endif
 
 	movs r0, #0
@@ -70,7 +69,6 @@ sigsetjmp:
 
 .globl _setjmp
 .type _setjmp, %function
-.align 2
 _setjmp:
 	movs r1, #0
 	b sigsetjmp
@@ -79,7 +77,6 @@ _setjmp:
 
 .globl setjmp
 .type setjmp, %function
-.align 2
 setjmp:
 	movs r1, #1
 	b sigsetjmp
@@ -88,7 +85,6 @@ setjmp:
 
 .globl _longjmp
 .type _longjmp, %function
-.align 2
 _longjmp:
 	/* Check for signal mask in env buffer, if it's saved restore it */
 	ldmia r0!, {r2-r3}
@@ -109,7 +105,7 @@ _longjmp:
 #ifndef __SOFTFP__
 	/* Restore fpu registers */
 	vldm r0!, {d8-d15}
-	ldr r2, [r0], #4
+	ldm r0!, {r2}
 	vmsr fpscr, r2
 #endif
 
