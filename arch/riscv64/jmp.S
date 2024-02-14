@@ -5,7 +5,7 @@
  *
  * setjmp, longjmp (RISCV64)
  *
- * Copyright 2020, 2023 Phoenix Systems
+ * Copyright 2020, 2023, 2024 Phoenix Systems
  * Author: Pawel Pisarczyk, Lukasz Leczkowski
  *
  * This file is part of Phoenix-RTOS.
@@ -21,6 +21,7 @@
  * ra: return address
  * signal mask indicator (0 - not saved, 1 - saved)
  * signal mask (if saved)
+ * fpu registers
  */
 
 .text
@@ -28,78 +29,16 @@
 .globl _setjmp
 .type _setjmp, %function
 _setjmp:
-	/* Store registers into jmpbuf */
-	sd s0,    (a0)
-	sd s1,   8(a0)
-	sd s2,  16(a0)
-	sd s3,  24(a0)
-	sd s4,  32(a0)
-	sd s5,  40(a0)
-	sd s6,  48(a0)
-	sd s7,  56(a0)
-	sd s8,  64(a0)
-	sd s9,  72(a0)
-	sd s10, 80(a0)
-	sd s11, 88(a0)
-
-	sd sp,  96(a0)
-
-	/* return address */
-	sd ra, 104(a0)
-
-	/* signal mask indicator */
-	sd zero, 112(a0)
-
-	/* return value */
-	mv a0, zero
-	ret
+	mv a1, zero
+	j sigsetjmp
 .size _setjmp, .-_setjmp
 
 
 .globl setjmp
 .type setjmp, %function
 setjmp:
-	addi sp, sp, -16
-	sd   a0,  (sp)
-	sd   ra, 8(sp)
-
-	mv   a0, zero
-	mv   a1, zero
-	call signalMask
-	mv   a3, a0
-	ld   a0,  (sp)
-	ld   ra, 8(sp)
-	addi sp, sp, 16
-
-	/* Store registers into jmpbuf */
-	sd s0,    (a0)
-	sd s1,   8(a0)
-	sd s2,  16(a0)
-	sd s3,  24(a0)
-	sd s4,  32(a0)
-	sd s5,  40(a0)
-	sd s6,  48(a0)
-	sd s7,  56(a0)
-	sd s8,  64(a0)
-	sd s9,  72(a0)
-	sd s10, 80(a0)
-	sd s11, 88(a0)
-
-	sd sp,  96(a0)
-
-	/* return address */
-	sd ra, 104(a0)
-
-	/* signal mask indicator */
 	li a1, 1
-	sd a1, 112(a0)
-
-	/* signal mask */
-	sd a3, 120(a0)
-
-	/* return value */
-	mv a0, zero
-	ret
+	j sigsetjmp
 .size setjmp, .-setjmp
 
 
@@ -144,6 +83,26 @@ _longjmp:
 	/* return address */
 	ld ra, 104(a0)
 
+	/* Unfortunately in user mode there's no way
+	 * to determine whether we're using FPU,
+	 * so we always restore FPU registers.
+	 */
+	fld f8, 128(a0)
+	fld f9, 136(a0)
+	fld f18, 144(a0)
+	fld f19, 152(a0)
+	fld f20, 160(a0)
+	fld f21, 168(a0)
+	fld f22, 176(a0)
+	fld f23, 184(a0)
+	fld f24, 192(a0)
+	fld f25, 200(a0)
+	fld f26, 208(a0)
+	fld f27, 216(a0)
+
+	ld t0, 224(a0)
+	fscsr t0
+
 	/* return value */
 	mv a0, a1
 	ret
@@ -153,6 +112,66 @@ _longjmp:
 .globl sigsetjmp
 .type sigsetjmp, %function
 sigsetjmp:
-	bne a1, zero, setjmp
-	j _setjmp
+	/* Store registers into jmpbuf */
+	sd s0,    (a0)
+	sd s1,   8(a0)
+	sd s2,  16(a0)
+	sd s3,  24(a0)
+	sd s4,  32(a0)
+	sd s5,  40(a0)
+	sd s6,  48(a0)
+	sd s7,  56(a0)
+	sd s8,  64(a0)
+	sd s9,  72(a0)
+	sd s10, 80(a0)
+	sd s11, 88(a0)
+
+	sd sp,  96(a0)
+
+	/* return address */
+	sd ra, 104(a0)
+
+	/* signal mask indicator */
+	sd a1, 112(a0)
+
+	beqz a1, 1f
+
+	addi sp, sp, -16
+	sd   a0,  (sp)
+	sd   ra, 8(sp)
+
+	mv   a0, zero
+	mv   a1, zero
+	call signalMask
+	mv   a3, a0
+	ld   a0,  (sp)
+	ld   ra, 8(sp)
+	addi sp, sp, 16
+
+	sd a3, 120(a0)
+
+1:
+	/* Unfortunately in user mode there's no way
+	 * to determine whether we're using FPU,
+	 * so we always save FPU registers.
+	 */
+	fsd f8, 128(a0)
+	fsd f9, 136(a0)
+	fsd f18, 144(a0)
+	fsd f19, 152(a0)
+	fsd f20, 160(a0)
+	fsd f21, 168(a0)
+	fsd f22, 176(a0)
+	fsd f23, 184(a0)
+	fsd f24, 192(a0)
+	fsd f25, 200(a0)
+	fsd f26, 208(a0)
+	fsd f27, 216(a0)
+
+	frcsr t0
+	sd t0, 224(a0)
+
+	/* return value */
+	mv a0, zero
+	ret
 .size sigsetjmp, .-sigsetjmp
