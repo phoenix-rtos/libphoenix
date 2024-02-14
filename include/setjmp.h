@@ -22,7 +22,9 @@ extern "C" {
 #endif
 
 
-typedef unsigned int jmp_buf[34];
+#include <arch/setjmp.h>
+
+typedef struct __jmp_buf jmp_buf[1];
 typedef jmp_buf sigjmp_buf;
 
 
