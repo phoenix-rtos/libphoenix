@@ -31,7 +31,7 @@ struct __jmp_buf {
 	__u64 d[8];
 	__u32 fpscr;
 #endif
-} __attribute__((packed));
+} __attribute__((packed, aligned(8)));
 
 
 #endif

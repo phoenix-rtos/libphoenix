@@ -26,7 +26,7 @@ struct __jmp_buf {
 	__u32 jmp;
 	__u32 ret;
 	__u32 sigMask;
-} __attribute__((packed));
+} __attribute__((packed, aligned(4)));
 
 
 #endif

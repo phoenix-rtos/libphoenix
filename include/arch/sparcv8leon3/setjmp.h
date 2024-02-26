@@ -26,7 +26,7 @@ struct __jmp_buf {
 	__u32 i[2];
 	__u32 sigFlg;
 	__u32 sigMsk;
-} __attribute__((packed));
+} __attribute__((packed, aligned(8)));
 
 
 #endif
