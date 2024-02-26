@@ -28,7 +28,7 @@ struct __jmp_buf {
 	__u64 sigMsk;
 	__u64 f[12];
 	__u64 fcsr;
-} __attribute__((packed));
+} __attribute__((packed, aligned(8)));
 
 
 #endif
