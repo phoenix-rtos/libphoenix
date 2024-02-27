@@ -1,7 +1,7 @@
 #
-# Makefile for phoenix-rtos-devices
+# Makefile for libphoenix
 #
-# Copyright 2018, 2019 Phoenix Systems
+# Copyright 2018, 2019, 2024 Phoenix Systems
 #
 # %LICENSE%
 #
@@ -34,8 +34,12 @@ LIB_TARGETS := $(PREFIX_A)libphoenix.a $(PREFIX_A)crt0.o
 
 all: $(LIB_TARGETS)
 
+ifneq (,$(findstring arm,$(TARGET_SUFF)))
+  include arch/arm/Makefile
+else
+  include arch/$(TARGET_SUFF)/Makefile
+endif
 
-include arch/$(TARGET_SUFF)/Makefile
 include ctype/Makefile
 include err/Makefile
 include errno/Makefile
