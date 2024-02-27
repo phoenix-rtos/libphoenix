@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * Signal trampoline (armv7a)
+ * Signal trampoline (arm)
  *
  * Copyright 2019, 2023 Phoenix Systems
  * Author: Jan Sikorski
