@@ -12,5 +12,5 @@ else ifneq (,$(findstring v7m,$(TARGET_SUFF)))
   include arch/arm/v7m/Makefile
 endif
 
-OBJS += $(addprefix $(PREFIX_O)arch/arm/, jmp.o signal.o string.o)
+OBJS += $(addprefix $(PREFIX_O)arch/arm/, jmp.o memcpy.o memset.o signal.o string.o)
 CRT0_OBJS += $(addprefix $(PREFIX_O)arch/arm/, crt0.o)
