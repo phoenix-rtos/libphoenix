@@ -18,6 +18,7 @@
 #define _SYS_EVENTS_H_
 
 #include <sys/msg.h>
+#include <phoenix/events.h>
 
 
 #ifdef __cplusplus
@@ -26,9 +27,6 @@ extern "C" {
 
 
 enum { evtDataOut = 0, evtDataIn, evtError, evtGone };
-
-
-enum { evAdd = 0x1, evDelete = 0x2, evEnable = 0x4, evDisable = 0x8, evOneshot = 0x10, evClear = 0x20, evDispatch = 0x40 };
 
 
 typedef struct {
