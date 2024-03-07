@@ -17,6 +17,7 @@
 #define _LIBPHOENIX_SYS_FILE_H_
 
 #include <sys/types.h>
+#include <phoenix/file.h>
 
 
 #ifdef __cplusplus
@@ -25,9 +26,6 @@ extern "C" {
 
 
 enum { otDir = 0, otFile, otDev, otSymlink, otUnknown };
-
-
-enum { atMode = 0, atUid, atGid, atSize, atBlocks, atIOBlock, atType, atPort, atPollStatus, atEventMask, atCTime, atMTime, atATime, atLinks, atDev };
 
 
 enum { mtMount = 0xf50, mtUmount, mtSync, mtStat, mtMountPoint };
