@@ -17,38 +17,6 @@
 #include <stddef.h>
 
 
-void *memcpy(void *dst, const void *src, size_t l)
-{
-	__asm__ volatile
-	(" \
-		mov r1, %2; \
-		mov r3, %1; \
-		mov r4, %0; \
-		orr r2, r3, r4; \
-		ands r2, #3; \
-		bne 2f; \
-	1: \
-		cmp r1, #4; \
-		ittt hs; \
-		ldrhs r2, [r3], #4; \
-		strhs r2, [r4], #4; \
-		subshs r1, #4; \
-		bhs 1b; \
-	2: \
-		cmp r1, #0; \
-		ittt ne; \
-		ldrbne r2, [r3], #1; \
-		strbne r2, [r4], #1; \
-		subsne r1, #1; \
-		bne 2b"
-	:
-	: "r" (dst), "r" (src), "r" (l)
-	: "r1", "r2", "r3", "r4", "memory", "cc");
-
-	return dst;
-}
-
-
 void *memmove(void *dst, const void *src, size_t l)
 {
 	__asm__ volatile
@@ -139,37 +107,6 @@ int memcmp(const void *ptr1, const void *ptr2, size_t num)
 	: "r1", "r2", "r3", "r4", "r5", "cc");
 
 	return res;
-}
-
-
-void *memset(void *dst, int v, size_t l)
-{
-	__asm__ volatile
-	(" \
-		mov r1, %2; \
-		mov r3, %1; \
-		orr r3, r3, r3, lsl #8; \
-		orr r3, r3, r3, lsl #16; \
-		mov r4, %0; \
-		ands r2, r4, #3; \
-		bne 2f; \
-	1: \
-		cmp r1, #4; \
-		itt hs; \
-		strhs r3, [r4], #4; \
-		subshs r1, #4; \
-		bhs 1b; \
-	2: \
-		cmp r1, #0; \
-		itt ne; \
-		strbne r3, [r4], #1; \
-		subsne r1, #1; \
-		bne 2b"
-	:
-	: "r" (dst), "r" (v & 0xff), "r" (l)
-	: "r1", "r2", "r3", "r4", "memory", "cc");
-
-	return dst;
 }
 
 
