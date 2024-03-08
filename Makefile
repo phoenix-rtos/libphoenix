@@ -49,6 +49,7 @@ include misc/Makefile
 include net/Makefile
 include netinet/Makefile
 include posix/Makefile
+include phoenix/Makefile
 include pthread/Makefile
 include regex/Makefile
 include signal/Makefile
