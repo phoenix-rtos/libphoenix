@@ -342,28 +342,31 @@ int getaddrinfo(const char *node, const char *service,
 	smi->socket.flags = hints ? hints->ai_flags : (AI_V4MAPPED | AI_ADDRCONFIG);
 	smi->socket.ai_node_sz = nodesz;
 
+	void *idata = NULL;
 	if (nodesz + servsz) {
 		msg.i.size = nodesz + servsz;
-		msg.i.data = malloc(msg.i.size);
-		if (!msg.i.data)
+		idata = malloc(msg.i.size);
+		if (idata == NULL) {
 			return EAI_MEMORY;
-		memcpy(msg.i.data, node, nodesz);
-		memcpy(msg.i.data + nodesz, service, servsz);
+		}
+		memcpy(idata, node, nodesz);
+		memcpy(idata + nodesz, service, servsz);
+		msg.i.data = idata;
 	}
 
 	msg.o.size = 128;
 	for (;;) {
 		void *buf = realloc(msg.o.data, msg.o.size);
 		if (!buf) {
-			realloc(msg.i.data, 0);
-			realloc(msg.o.data, 0);
+			free(idata);
+			free(msg.o.data);
 			return EAI_MEMORY;
 		}
 		msg.o.data = buf;
 
 		if (socksrvcall(&msg) < 0) {
-			realloc(msg.i.data, 0);
-			realloc(msg.o.data, 0);
+			free(idata);
+			free(msg.o.data);
 			return EAI_SYSTEM;
 		}
 
@@ -376,7 +379,7 @@ int getaddrinfo(const char *node, const char *service,
 			msg.o.size *= 2;
 	}
 
-	realloc(msg.i.data, 0);
+	free(idata);
 
 	bufsz = smo->sys.buflen;
 	if (smo->ret || bufsz > msg.o.size) {

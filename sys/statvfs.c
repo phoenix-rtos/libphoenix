@@ -25,16 +25,13 @@
 
 int statvfs(const char *path, struct statvfs *buf)
 {
-	msg_t msg = { 0 };
-	oid_t oid, dev;
-	char *canonical;
-
-	canonical = resolve_path(path, NULL, 1, 0);
+	char *canonical = resolve_path(path, NULL, 1, 0);
 	if (canonical == NULL) {
 		/* errno set by resolve_path() */
 		return -1;
 	}
 
+	oid_t oid, dev;
 	if (lookup(canonical, &oid, &dev) < 0) {
 		free(canonical);
 		return SET_ERRNO(-ENOENT);
@@ -43,11 +40,13 @@ int statvfs(const char *path, struct statvfs *buf)
 
 	/* Detect mountpoint */
 	if (oid.port != dev.port) {
-		msg.type = mtGetAttr;
-		msg.i.attr.type = atMode;
-		msg.i.attr.oid = oid;
+		msg_t msg = {
+			.type = mtGetAttr,
+			.oid = oid,
+			.i.attr.type = atMode
+		};
 
-		if ((msgSend(oid.port, &msg) < 0) || (msg.o.attr.err < 0)) {
+		if ((msgSend(oid.port, &msg) < 0) || (msg.o.err < 0)) {
 			return SET_ERRNO(-EIO);
 		}
 
@@ -57,13 +56,16 @@ int statvfs(const char *path, struct statvfs *buf)
 	}
 
 	memset(buf, 0, sizeof(struct statvfs));
-	msg.type = mtStat;
-	msg.o.data = buf;
-	msg.o.size = sizeof(struct statvfs);
+
+	msg_t msg = {
+		.type = mtStat,
+		.o.data = buf,
+		.o.size = sizeof(struct statvfs)
+	};
 
 	if (msgSend(oid.port, &msg) < 0) {
 		return SET_ERRNO(-EIO);
 	}
 
-	return SET_ERRNO(msg.o.io.err);
+	return SET_ERRNO(msg.o.err);
 }

@@ -173,52 +173,54 @@ int mkfifo(const char *filename, mode_t mode)
 
 int symlink(const char *target, const char *linkpath)
 {
-	oid_t dir;
-	char *canonical_linkpath;
-	char *dir_name, *name;
-	msg_t msg;
-	int len1, len2;
-	int ret;
-
-	if (target == NULL || linkpath == NULL)
+	if ((target == NULL) || (linkpath == NULL)) {
 		return -EINVAL;
+	}
 
 	/* allow_missing_leaf = 1 -> we will be creating a file */
-	canonical_linkpath = resolve_path(linkpath, NULL, 1, 1);
-	if (canonical_linkpath == NULL)
+	char *canonical_linkpath = resolve_path(linkpath, NULL, 1, 1);
+	if (canonical_linkpath == NULL) {
 		return -1; /* errno set by resolve_path */
+	}
 
+	char *dir_name, *name;
 	splitname(canonical_linkpath, &name, &dir_name);
 
-	if ((ret = lookup(dir_name, NULL, &dir)) < 0) {
+	oid_t dir;
+	int ret = lookup(dir_name, NULL, &dir);
+	if (ret < 0) {
 		free(canonical_linkpath);
 		return SET_ERRNO(ret);
 	}
 
-	memset(&msg, 0, sizeof(msg_t));
-	msg.type = mtCreate;
+	size_t len1 = strlen(name);
+	size_t len2 = strlen(target);
 
-	memcpy(&msg.i.create.dir, &dir, sizeof(oid_t));
-	msg.i.create.type = otSymlink;
-	/* POSIX: symlink file permissions are undefined, use sane default */
-	msg.i.create.mode = S_IFLNK | 0777;
+	msg_t msg = {
+		.type = mtCreate,
+		.oid = dir,
+		.i.create.type = otSymlink,
+		/* POSIX: symlink file permissions are undefined, use sane default */
+		.i.create.mode = S_IFLNK | 0777,
+		.i.size = len1 + len2 + 2
+	};
 
-	len1 = strlen(name);
-	len2 = strlen(target);
+	void *idata = calloc(msg.i.size, 1);
+	if (idata == NULL) {
+		free(canonical_linkpath);
+		return SET_ERRNO(-ENOMEM);
+	}
 
-	msg.i.size = len1 + len2 + 2;
-	msg.i.data = malloc(msg.i.size);
-	memset(msg.i.data, 0, msg.i.size);
-
-	memcpy(msg.i.data, name, len1);
-	memcpy(msg.i.data + len1 + 1, target, len2);
+	memcpy(idata, name, len1);
+	memcpy(idata + len1 + 1, target, len2);
+	msg.i.data = idata;
 
 	ret = msgSend(dir.port, &msg);
 
 	free(canonical_linkpath);
-	free(msg.i.data);
+	free(idata);
 
-	return ret != EOK ? SET_ERRNO(-EIO) : SET_ERRNO(msg.o.create.err);
+	return (ret != EOK) ? SET_ERRNO(-EIO) : SET_ERRNO(msg.o.err);
 }
 
 
@@ -249,40 +251,39 @@ int access(const char *path, int amode)
 
 int truncate(const char *path, off_t length)
 {
-	char *canonical_name;
-	msg_t msg = { 0 };
-	oid_t oid;
-
 	if (length < 0) {
 		return SET_ERRNO(-EINVAL);
 	}
 
-	canonical_name = resolve_path(path, NULL, 1, 0);
+	char *canonical_name = resolve_path(path, NULL, 1, 0);
 	if (canonical_name == NULL) {
 		return -1; /* errno set by resolve_path */
 	}
 
+	oid_t oid;
 	if (lookup(canonical_name, &oid, NULL) < 0) {
 		free(canonical_name);
 		return SET_ERRNO(-ENOENT);
 	}
 	free(canonical_name);
 
-	msg.type = mtTruncate;
-	msg.i.io.oid = oid;
-	msg.i.io.len = length;
+	msg_t msg = {
+		.type = mtTruncate,
+		.oid = oid,
+		.i.io.len = length
+	};
+
 	if (msgSend(oid.port, &msg) < 0) {
 		return SET_ERRNO(-EIO);
 	}
 
-	return SET_ERRNO(msg.o.io.err);
+	return SET_ERRNO(msg.o.err);
 }
 
 
 int create_dev(oid_t *oid, const char *path)
 {
 	oid_t odev, odir;
-	msg_t msg = { 0 };
 	int retry = 0, err;
 	char *canonical_path, *dir, *sep, *name, *tpathalloc = NULL;
 	const char *tpath = path;
@@ -364,56 +365,59 @@ int create_dev(oid_t *oid, const char *path)
 		if (sep != NULL)
 			*sep++ = 0;
 
-		msg.type = mtCreate;
-		msg.i.create.type = otDir;
-		msg.i.create.mode = DEFFILEMODE | S_IFDIR;
-		msg.i.create.dir = odev;
-		msg.i.data = dir;
-		msg.i.size = strlen(dir) + 1;
+		msg_t msg = {
+			.type = mtCreate,
+			.oid = odev,
+			.i.create.type = otDir,
+			.i.create.mode = DEFFILEMODE | S_IFDIR,
+			.i.data = dir,
+			.i.size = strlen(dir) + 1
+		};
 
 		if (msgSend(odev.port, &msg) < 0) {
 			free(canonical_path);
 			return -ENOMEM;
 		}
 
-		if (!msg.o.create.err) {
+		if (msg.o.err == 0) {
 			odev = msg.o.create.oid;
 		}
-		else if (msg.o.create.err == -EEXIST) {
+		else if (msg.o.err == -EEXIST) {
 			msg.type = mtLookup;
+			msg.oid = odev;
 			msg.i.size = strlen(dir) + 1;
 			msg.i.data = dir;
-			msg.i.lookup.dir = odev;
 
 			if (msgSend(odev.port, &msg) < 0) {
 				free(canonical_path);
 				return -ENOMEM;
 			}
 
-			if (msg.o.lookup.err >= 0) {
+			if (msg.o.err >= 0) {
 				odev = msg.o.lookup.dev;
 			}
 			else {
 				free(canonical_path);
-				return msg.o.lookup.err;
+				return msg.o.err;
 			}
-		} else {
+		}
+		else {
 			free(canonical_path);
-			return msg.o.create.err;
+			return msg.o.err;
 		}
 		dir = sep;
 	}
 
-	msg.type = mtCreate;
-	memcpy(&msg.i.create.dir, &odev, sizeof(oid_t));
-	memcpy(&msg.i.create.dev, oid, sizeof(*oid));
-
-	msg.i.create.type = otDev;
-	/* TODO: create_dev() should take mode argument */
-	msg.i.create.mode = S_IFCHR | 0666;
-
-	msg.i.data = name;
-	msg.i.size = strlen(name) + 1;
+	msg_t msg = {
+		.type = mtCreate,
+		.oid = odev,
+		.i.create.dev = *oid,
+		.i.create.type = otDev,
+		/* TODO: create_dev() should take mode argument */
+		.i.create.mode = S_IFCHR | 0666,
+		.i.data = name,
+		.i.size = strlen(name) + 1
+	};
 
 	if (msgSend(odev.port, &msg) != EOK) {
 		free(canonical_path);
@@ -422,7 +426,7 @@ int create_dev(oid_t *oid, const char *path)
 
 	free(canonical_path);
 
-	return msg.o.create.err;
+	return msg.o.err;
 }
 
 
@@ -449,7 +453,7 @@ extern int sys_ioctl(int fildes, unsigned long request, void *val);
 int ioctl(int fildes, unsigned long request, ...)
 {
 	va_list ap;
-	void * val;
+	void *val;
 
 	/* FIXME: handle varargs properly */
 	va_start(ap, request);

@@ -30,31 +30,34 @@ extern int sys_futimens(int fd, const struct timespec times[2]);
 static int utimes_internal(const char *path, const struct timeval times[2])
 {
 	oid_t oid, dev;
-	msg_t msg = { 0 };
-	struct timeval now;
-	int err;
-
-	if (lookup(path, &oid, &dev) < 0)
+	if (lookup(path, &oid, &dev) < 0) {
 		return -ENOENT;
+	}
 
-	if (times == NULL)
+	struct timeval now;
+	if (times == NULL) {
 		gettimeofday(&now, NULL);
+	}
 
-	msg.type = mtSetAttr;
-	msg.i.attr.oid = oid;
+	msg_t msg = {
+		.type = mtSetAttr,
+		.oid = oid,
+		.i.attr.type = atMTime,
+		.i.attr.val = (times == NULL) ? now.tv_sec : times[1].tv_sec
+	};
 
-	msg.i.attr.type = atMTime;
-	msg.i.attr.val = times == NULL ? now.tv_sec : times[1].tv_sec;
-	err = msgSend(oid.port, &msg);
-	if ((err >= 0) && (msg.o.attr.err >= 0)) {
+	int err = msgSend(oid.port, &msg);
+	if ((err >= 0) && (msg.o.err >= 0)) {
 		msg.i.attr.type = atATime;
-		msg.i.attr.val = times == NULL ? now.tv_sec : times[0].tv_sec;
+		msg.i.attr.val = (times == NULL) ? now.tv_sec : times[0].tv_sec;
 		err = msgSend(oid.port, &msg);
 	}
-	if (err >= 0)
-		err = msg.o.attr.err;
-	if (err < 0)
+	if (err >= 0) {
+		err = msg.o.err;
+	}
+	if (err < 0) {
 		return err;
+	}
 
 	return EOK;
 }

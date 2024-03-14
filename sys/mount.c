@@ -24,22 +24,17 @@
 
 int mount(const char *source, const char *target, const char *fstype, unsigned long mode, const char *data)
 {
-	struct stat buf;
-	oid_t toid, soid, doid;
-	msg_t msg = {0};
-	char *source_abspath, *target_abspath;
-	int err;
-
-	mount_i_msg_t *imnt = (mount_i_msg_t *)msg.i.raw;
-	mount_o_msg_t *omnt = (mount_o_msg_t *)msg.o.raw;
-
-	if ((target_abspath = resolve_path(target, NULL, 1, 0)) == NULL)
+	char *target_abspath = resolve_path(target, NULL, 1, 0);
+	if (target_abspath == NULL) {
 		return -1; /* errno set by resolve_path */
-
-	if ((source_abspath = resolve_path(source, NULL, 1, 0)) == NULL) {
+	}
+	char *source_abspath = resolve_path(source, NULL, 1, 0);
+	if (source_abspath == NULL) {
 		free(target_abspath);
 		return -1; /* errno set by resolve_path */
 	}
+
+	oid_t toid, soid, doid;
 
 	if (lookup(target_abspath, NULL, &toid) < 0) {
 		free(target_abspath);
@@ -53,33 +48,43 @@ int mount(const char *source, const char *target, const char *fstype, unsigned l
 		return SET_ERRNO(-ENOENT);
 	}
 
-	err = stat(target_abspath, &buf);
+	struct stat buf;
+	int err = stat(target_abspath, &buf);
 
 	free(target_abspath);
 	free(source_abspath);
 
-	if (err < 0)
+	if (err < 0) {
 		return err;
+	}
 
-	if (!S_ISDIR(buf.st_mode))
+	if (!S_ISDIR(buf.st_mode)) {
 		return SET_ERRNO(-ENOTDIR);
+	}
 
-	msg.type = mtMount;
-	imnt->dev = soid;
+	msg_t msg = {
+		.type = mtMount,
+		.i.size = (data != NULL) ? strlen(data) : 0,
+		.i.data = data,
+		.oid = soid
+	};
+
+	mount_i_msg_t *imnt = (mount_i_msg_t *)msg.i.raw;
+	mount_o_msg_t *omnt = (mount_o_msg_t *)msg.o.raw;
+
 	imnt->mnt = toid;
 	imnt->mode = mode;
 	strncpy(imnt->fstype, fstype, sizeof(imnt->fstype));
 	imnt->fstype[sizeof(imnt->fstype) - 1] = '\0';
 
-	msg.i.size = data != NULL ? strlen(data) : 0;
-	msg.i.data = (char *)data; /* FIXME: dropping const because of broken msg_t declaration */
 
-	if (msgSend(soid.port, &msg) < 0)
+	if (msgSend(soid.port, &msg) < 0) {
 		return SET_ERRNO(-EIO);
+	}
 
 	/* Mount failed */
-	if (omnt->err < 0) {
-		return SET_ERRNO(omnt->err);
+	if (msg.o.err < 0) {
+		return SET_ERRNO(msg.o.err);
 	}
 	doid = omnt->oid;
 
@@ -87,27 +92,25 @@ int mount(const char *source, const char *target, const char *fstype, unsigned l
 	memset(&msg, 0, sizeof(msg));
 
 	msg.type = mtSetAttr;
-	msg.i.attr.oid = toid;
+	msg.oid = toid;
 	msg.i.attr.type = atDev;
 	msg.i.data = &doid;
 	msg.i.size = sizeof(oid_t);
 
-	if (msgSend(toid.port, &msg) < 0)
+	if (msgSend(toid.port, &msg) < 0) {
 		return SET_ERRNO(-EIO); /* FIXME: rollback partial mount */
+	}
 
-	return SET_ERRNO(msg.o.attr.err);
+	return SET_ERRNO(msg.o.err);
 }
 
 
 int umount(const char *target)
 {
-	msg_t msg = { 0 };
-	mount_o_msg_t *omnt = (mount_o_msg_t *)msg.o.raw;
 	int rootfs = 0;
 	oid_t oid, dev;
-	char *abspath;
 
-	abspath = resolve_path(target, NULL, 1, 0);
+	char *abspath = resolve_path(target, NULL, 1, 0);
 	if (abspath == NULL) {
 		/* errno set by resolve_path() */
 		return -1;
@@ -133,16 +136,18 @@ int umount(const char *target)
 	free(abspath);
 
 	/* Check file type */
-	msg.type = mtGetAttr;
-	msg.i.attr.type = atMode;
-	msg.i.attr.oid = oid;
+	msg_t msg = {
+		.type = mtGetAttr,
+		.oid = oid,
+		.i.attr.type = atMode,
+	};
 
 	if (msgSend(oid.port, &msg) < 0) {
 		return SET_ERRNO(-EIO);
 	}
 
-	if (msg.o.attr.err < 0) {
-		return SET_ERRNO(msg.o.attr.err);
+	if (msg.o.err < 0) {
+		return SET_ERRNO(msg.o.err);
 	}
 
 	/* Got mountpoint */
@@ -153,23 +158,24 @@ int umount(const char *target)
 	/* Got mounted device */
 	/* TODO: check device type (should be S_IFBLK?) */
 	else {
+		mount_o_msg_t *omnt = (mount_o_msg_t *)msg.o.raw;
+
 		/* Get mountpoint */
 		msg.type = mtMountPoint;
-		msg.i.data = &dev;
-		msg.i.size = sizeof(dev);
+		msg.oid = dev;
 
 		if (msgSend(dev.port, &msg) < 0) {
 			return SET_ERRNO(-EIO);
 		}
 
-		if (omnt->err < 0) {
+		if (msg.o.err < 0) {
 			/* Check for rootfs */
-			if (omnt->err == -ENOENT) {
+			if (msg.o.err == -ENOENT) {
 				rootfs = 1;
 			}
 			/* No mountpoint */
 			else {
-				return SET_ERRNO(omnt->err);
+				return SET_ERRNO(msg.o.err);
 			}
 		}
 		else {
@@ -179,22 +185,21 @@ int umount(const char *target)
 
 	/* Unmount filesystem */
 	msg.type = mtUmount;
-	msg.i.data = &dev;
-	msg.i.size = sizeof(dev);
+	msg.oid = dev;
 
 	if (msgSend(dev.port, &msg) < 0) {
 		return SET_ERRNO(-EIO);
 	}
 
-	if (msg.o.io.err < 0) {
-		return SET_ERRNO(msg.o.io.err);
+	if (msg.o.err < 0) {
+		return SET_ERRNO(msg.o.err);
 	}
 
 	/* Remove mountpoint */
 	if (rootfs == 0) {
 		msg.type = mtSetAttr;
+		msg.oid = oid;
 		msg.i.attr.type = atDev;
-		msg.i.attr.oid = oid;
 		msg.i.data = &oid;
 		msg.i.size = sizeof(oid);
 
@@ -202,7 +207,7 @@ int umount(const char *target)
 			return SET_ERRNO(-EIO);
 		}
 
-		return SET_ERRNO(msg.o.attr.err);
+		return SET_ERRNO(msg.o.err);
 	}
 	/* TODO: unregister root in kernel */
 	else {
