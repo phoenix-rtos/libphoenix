@@ -27,13 +27,13 @@
 #include <stdlib.h>
 
 
-const void *ioctl_unpack(const msg_t *msg, unsigned long *request, id_t *id)
+const void *ioctl_unpack(msg_t *msg, unsigned long *request, id_t *id)
 {
 	return ioctl_unpackEx(msg, request, id, NULL);
 }
 
 
-const void *ioctl_unpackEx(const msg_t *msg, unsigned long *request, id_t *id, void **response_buf)
+const void *ioctl_unpackEx(msg_t *msg, unsigned long *request, id_t *id, void **response_buf)
 {
 	size_t size;
 	const void *data = NULL;
@@ -44,7 +44,7 @@ const void *ioctl_unpackEx(const msg_t *msg, unsigned long *request, id_t *id, v
 	}
 
 	if (id != NULL) {
-		*id = ioctl->id;
+		*id = msg->oid.id;
 	}
 
 	size = IOCPARM_LEN(ioctl->request);
@@ -91,9 +91,8 @@ const void *ioctl_unpackEx(const msg_t *msg, unsigned long *request, id_t *id, v
 	}
 
 	if ((response_buf != NULL) && ((ioctl->request & IOC_OUT) != 0)) {
-		ioctl_out_t *ioctl_out = (ioctl_out_t *)msg->o.raw;
-		if (size <= (sizeof(msg->o.raw) - sizeof(ioctl_out_t))) {
-			*response_buf = ioctl_out->data;
+		if (size <= sizeof(msg->o.raw)) {
+			*response_buf = msg->o.raw;
 		}
 		else {
 			*response_buf = msg->o.data;
@@ -108,24 +107,16 @@ const void *ioctl_unpackEx(const msg_t *msg, unsigned long *request, id_t *id, v
 }
 
 
-pid_t ioctl_getSenderPid(const msg_t *msg)
-{
-	const ioctl_in_t *ioctl = (const ioctl_in_t *)msg->i.raw;
-	return (pid_t)ioctl->pid;
-}
-
-
 void ioctl_setResponse(msg_t *msg, unsigned long request, int err, const void *data)
 {
 	size_t size = IOCPARM_LEN(request);
 	void *dst;
-	ioctl_out_t *ioctl = (ioctl_out_t *)msg->o.raw;
 
-	ioctl->err = err;
+	msg->o.err = err;
 
 	if (((request & IOC_OUT) != 0) && (data != NULL)) {
-		if (size <= (sizeof(msg->o.raw) - sizeof(ioctl_out_t))) {
-			dst = ioctl->data;
+		if (size <= sizeof(msg->o.raw)) {
+			dst = msg->o.raw;
 		}
 		else {
 			dst = msg->o.data;
@@ -133,14 +124,4 @@ void ioctl_setResponse(msg_t *msg, unsigned long request, int err, const void *d
 
 		(void)memcpy(dst, data, size);
 	}
-}
-
-
-void ioctl_setResponseErr(msg_t *msg, unsigned long request, int err)
-{
-	ioctl_out_t *ioctl = (ioctl_out_t *)msg->o.raw;
-
-	(void)request;
-
-	ioctl->err = err;
 }

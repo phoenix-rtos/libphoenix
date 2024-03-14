@@ -32,7 +32,6 @@ enum { mtMount = 0xf50, mtUmount, mtSync, mtStat, mtMountPoint };
 
 
 typedef struct {
-	oid_t dev;
 	oid_t mnt;
 	unsigned long mode;
 	char fstype[16];
@@ -40,7 +39,6 @@ typedef struct {
 
 
 typedef struct {
-	int err;
 	oid_t oid;
 } mount_o_msg_t;
 

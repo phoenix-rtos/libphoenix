@@ -59,16 +59,19 @@ extern "C" {
 int ioctl(int fd, unsigned long cmd, ...);
 
 
-const void *ioctl_unpack(const msg_t *msg, unsigned long *request, id_t *id);
+const void *ioctl_unpack(msg_t *msg, unsigned long *request, id_t *id);
 
-const void *ioctl_unpackEx(const msg_t *msg, unsigned long *request, id_t *id, void **response_buf);
 
-pid_t ioctl_getSenderPid(const msg_t *msg);
+const void *ioctl_unpackEx(msg_t *msg, unsigned long *request, id_t *id, void **response_buf);
+
+
+static inline pid_t ioctl_getSenderPid(const msg_t *msg)
+{
+	return (pid_t)msg->pid;
+}
 
 
 void ioctl_setResponse(msg_t *msg, unsigned long request, int err, const void *data);
-
-void ioctl_setResponseErr(msg_t *msg, unsigned long request, int err);
 
 
 #ifdef __cplusplus

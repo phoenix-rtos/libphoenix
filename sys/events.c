@@ -26,17 +26,17 @@ static struct {
 
 int eventsSend(event_t *event, int count)
 {
-	msg_t msg;
 	int err = -ENOSYS;
 
 	if (event_common.sink_open || (event_common.sink_open = (lookup("/dev/event/sink", NULL, &event_common.sink) == EOK))) {
-		msg.type = mtWrite;
-
-		msg.i.io.oid = event_common.sink;
-		msg.i.data = event;
-		msg.i.size = count * sizeof(event_t);
-		msg.o.data = NULL;
-		msg.o.size = 0;
+		msg_t msg = {
+			.type = mtWrite,
+			.oid = event_common.sink,
+			.i.data = event,
+			.i.size = count * sizeof(event_t),
+			.o.data = NULL,
+			.o.size = 0
+		};
 
 		err = msgSend(event_common.sink.port, &msg);
 	}

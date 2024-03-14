@@ -346,20 +346,18 @@ char *realpath(const char *path, char *resolved_path)
 
 struct dirent *readdir(DIR *s)
 {
-	msg_t msg;
-	memset(&msg, 0, sizeof(msg));
-
 	if (s->dirent == NULL) {
 		if ((s->dirent = calloc(1, sizeof(struct dirent) + NAME_MAX + 1)) == NULL)
 			return NULL;
 	}
 
-	msg.type = mtReaddir;
-	msg.i.readdir.offs = s->pos;
-
-	memcpy(&msg.i.readdir.dir, &s->oid, sizeof(oid_t));
-	msg.o.data = s->dirent;
-	msg.o.size = sizeof(struct dirent) + NAME_MAX + 1;
+	msg_t msg = {
+		.type = mtReaddir,
+		.oid = s->oid,
+		.i.readdir.offs = s->pos,
+		.o.data = s->dirent,
+		.o.size = sizeof(struct dirent) + NAME_MAX + 1
+	};
 
 	if (msgSend(s->oid.port, &msg) < 0) {
 		free(s->dirent);
@@ -367,7 +365,7 @@ struct dirent *readdir(DIR *s)
 		return NULL; /* EIO */
 	}
 
-	if (msg.o.io.err < 0) {
+	if (msg.o.err < 0) {
 		free(s->dirent);
 		s->dirent = NULL;
 		return NULL;
@@ -381,7 +379,6 @@ struct dirent *readdir(DIR *s)
 
 DIR *opendir(const char *dirname)
 {
-	msg_t msg = { 0 };
 	char *canonical_name = resolve_path(dirname, NULL, 1, 0);
 	DIR *s = calloc(1, sizeof(DIR));
 
@@ -401,13 +398,13 @@ DIR *opendir(const char *dirname)
 	free(canonical_name);
 	s->dirent = NULL;
 
-#if 1
-	memset(&msg, 0, sizeof(msg));
-	msg.type = mtGetAttr;
-	msg.i.attr.type = atType;
-	memcpy(&msg.i.attr.oid, &s->oid, sizeof(oid_t));
+	msg_t msg = {
+		.type = mtGetAttr,
+		.oid = s->oid,
+		.i.attr.type = atType,
+	};
 
-	if ((msgSend(s->oid.port, &msg) < 0) || (msg.o.attr.err < 0)) {
+	if ((msgSend(s->oid.port, &msg) < 0) || (msg.o.err < 0)) {
 		free(s);
 		errno = EIO;
 		return NULL; /* EIO */
@@ -418,11 +415,10 @@ DIR *opendir(const char *dirname)
 		errno = ENOTDIR;
 		return NULL; /* ENOTDIR */
 	}
-#endif
 
 	memset(&msg, 0, sizeof(msg));
 	msg.type = mtOpen;
-	memcpy(&msg.i.openclose.oid, &s->oid, sizeof(oid_t));
+	msg.oid = s->oid;
 	msg.i.openclose.flags = 0;
 
 	if (msgSend(s->oid.port, &msg) < 0) {
@@ -431,7 +427,7 @@ DIR *opendir(const char *dirname)
 		return NULL; /* EIO */
 	}
 
-	if (msg.o.io.err < 0) {
+	if (msg.o.err < 0) {
 		free(s);
 		errno = EIO;
 		return NULL;
@@ -449,14 +445,16 @@ void rewinddir(DIR *dirp)
 
 int closedir(DIR *dirp)
 {
-	msg_t msg = { 0 };
 	int ret = 0;
 
-	msg.type = mtClose;
-	memcpy(&msg.i.openclose.oid, &dirp->oid, sizeof(oid_t));
+	msg_t msg = {
+		.type = mtClose,
+		.oid = dirp->oid
+	};
 
-	if ((msgSend(dirp->oid.port, &msg) < 0) || (msg.o.io.err < 0))
+	if ((msgSend(dirp->oid.port, &msg) < 0) || (msg.o.err < 0)) {
 		ret = -1;
+	}
 
 	free(dirp->dirent);
 	free(dirp);
@@ -469,44 +467,55 @@ int closedir(DIR *dirp)
 /* WARN: POSIX compliance: does not append '\0' */
 static ssize_t _readlink_abs(const char *path, char *buf, size_t bufsiz)
 {
-	int ret;
-	msg_t msg = { 0 };
 	oid_t oid;
 
 	assert(path && path[0] == '/');
 
-	if ((ret = safe_lookup(path, &oid, NULL)) < 0)
+	int ret = safe_lookup(path, &oid, NULL);
+	if (ret < 0) {
 		return SET_ERRNO(ret);
+	}
 
-	msg.type = mtGetAttr;
-	memcpy(&msg.i.attr.oid, &oid, sizeof(oid_t));
-	msg.i.attr.type = atMode;
+	msg_t msg = {
+		.type = mtGetAttr,
+		.oid = oid,
+		.i.attr.type = atMode
+	};
 
-	if ((ret = msgSend(oid.port, &msg)) != EOK)
+	ret = msgSend(oid.port, &msg);
+	if (ret != EOK) {
 		return SET_ERRNO(ret);
+	}
 
-	if (msg.o.attr.err != EOK)
-		return SET_ERRNO(msg.o.attr.err);
+	if (msg.o.err < 0) {
+		return SET_ERRNO(msg.o.err);
+	}
 
-	if (!S_ISLNK(msg.o.attr.val))
+	if (msg.o.err < 0) {
+		return SET_ERRNO(msg.o.err);
+	}
+
+	if (!S_ISLNK(msg.o.attr.val)) {
 		return SET_ERRNO(-EINVAL);
+	}
 
 	memset(&msg, 0, sizeof(msg_t));
 	msg.type = mtRead;
-
-	memcpy(&msg.i.io.oid, &oid, sizeof(oid_t));
+	msg.oid = oid;
 
 	msg.o.size = bufsiz;
 	msg.o.data = buf;
-
-	if ((ret = msgSend(oid.port, &msg)) != EOK)
+	ret = msgSend(oid.port, &msg);
+	if (ret != EOK) {
 		return SET_ERRNO(ret);
+	}
 
-	if (msg.o.io.err < 0)
-		return SET_ERRNO(msg.o.io.err);
+	if (msg.o.err < 0) {
+		return SET_ERRNO(msg.o.err);
+	}
 
 	/* number of bytes written without terminating NULL byte */
-	return msg.o.io.err;
+	return msg.o.err;
 }
 
 
@@ -530,14 +539,12 @@ ssize_t readlink(const char *path, char *buf, size_t bufsiz)
 
 int rmdir(const char *path)
 {
-	msg_t msg = { 0 };
-	oid_t dir, dev;
-	char *canonical_name, *dirname, *name;
-	struct stat s;
-
-	if ((canonical_name = resolve_path(path, NULL, 1, 0)) == NULL)
+	char *canonical_name = resolve_path(path, NULL, 1, 0);
+	if (canonical_name == NULL) {
 		return -1; /* errno set by resolve_path */
+	}
 
+	struct stat s;
 	if (stat(canonical_name, &s) < 0) {
 		free(canonical_name);
 		return SET_ERRNO(-ENOENT);
@@ -548,6 +555,7 @@ int rmdir(const char *path)
 		return SET_ERRNO(-ENOTDIR);
 	}
 
+	oid_t dir, dev;
 	if (safe_lookup(canonical_name, &dir, &dev)) {
 		free(canonical_name);
 		return SET_ERRNO(-ENOENT);
@@ -559,6 +567,7 @@ int rmdir(const char *path)
 		return SET_ERRNO(-EBUSY);
 	}
 
+	char *dirname, *name;
 	splitname(canonical_name, &name, &dirname);
 
 	if (safe_lookup(dirname, NULL, &dev)) {
@@ -566,10 +575,12 @@ int rmdir(const char *path)
 		return SET_ERRNO(-ENOENT);
 	}
 
-	msg.type = mtUnlink;
-	memcpy(&msg.i.ln.dir, &dev, sizeof(dev));
-	msg.i.data = name;
-	msg.i.size = strlen(name) + 1;
+	msg_t msg = {
+		.type = mtUnlink,
+		.oid = dev,
+		.i.data = name,
+		.i.size = strlen(name) + 1
+	};
 
 	if (msgSend(dev.port, &msg) != EOK) {
 		free(canonical_name);
@@ -578,8 +589,9 @@ int rmdir(const char *path)
 
 	free(canonical_name);
 
-	if (msg.o.io.err < 0)
-		return SET_ERRNO(msg.o.io.err);
+	if (msg.o.err < 0) {
+		return SET_ERRNO(msg.o.err);
+	}
 
 	return 0;
 }

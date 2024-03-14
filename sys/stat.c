@@ -30,11 +30,10 @@
 static int _stat_abs(const char *path, struct stat *buf)
 {
 	oid_t oid, dev;
-	msg_t msg = {0};
-	int err;
 
-	if (lookup(path, &oid, &dev) < 0)
+	if (lookup(path, &oid, &dev) < 0) {
 		return -ENOENT;
+	}
 
 	memset(buf, 0, sizeof(struct stat));
 
@@ -42,58 +41,82 @@ static int _stat_abs(const char *path, struct stat *buf)
 	buf->st_ino = oid.id;
 	buf->st_rdev = dev.port;
 
-	msg.type = mtGetAttr;
-	msg.i.attr.oid = oid;
+	struct _attrAll attrs;
 
-	msg.i.attr.type = atMTime;
-	if (((err = msgSend(oid.port, &msg)) < 0) || ((err = msg.o.attr.err) < 0))
-		return err;
-	buf->st_mtime = msg.o.attr.val;
+	msg_t msg = {
+		.type = mtGetAttrAll,
+		.oid = oid,
+		.o.data = &attrs,
+		.o.size = sizeof(attrs)
+	};
 
-	msg.i.attr.type = atATime;
-	if (((err = msgSend(oid.port, &msg)) < 0) || ((err = msg.o.attr.err) < 0))
+	int err = msgSend(oid.port, &msg);
+	if (err < 0) {
 		return err;
-	buf->st_atime = msg.o.attr.val;
+	}
 
-	msg.i.attr.type = atCTime;
-	if (((err = msgSend(oid.port, &msg)) < 0) || ((err = msg.o.attr.err) < 0))
-		return err;
-	buf->st_ctime = msg.o.attr.val;
+	if (msg.o.err < 0) {
+		return msg.o.err;
+	}
 
-	msg.i.attr.type = atLinks;
-	if (((err = msgSend(oid.port, &msg)) < 0) || ((err = msg.o.attr.err) < 0))
-		return err;
-	buf->st_nlink = msg.o.attr.val;
+	if (attrs.mTime.err < 0) {
+		return attrs.mTime.err;
+	}
+	buf->st_mtime = attrs.mTime.val;
 
-	msg.i.attr.type = atMode;
-	if (((err = msgSend(oid.port, &msg)) < 0) || ((err = msg.o.attr.err) < 0))
-		return err;
-	buf->st_mode = msg.o.attr.val;
+	if (attrs.aTime.err < 0) {
+		return attrs.aTime.err;
+	}
 
-	msg.i.attr.type = atUid;
-	if (((err = msgSend(oid.port, &msg)) < 0) || ((err = msg.o.attr.err) < 0))
-		return err;
-	buf->st_uid = msg.o.attr.val;
+	buf->st_atime = attrs.aTime.val;
 
-	msg.i.attr.type = atGid;
-	if (((err = msgSend(oid.port, &msg)) < 0) || ((err = msg.o.attr.err) < 0))
-		return err;
-	buf->st_gid = msg.o.attr.val;
+	if (attrs.cTime.err < 0) {
+		return attrs.cTime.err;
+	}
 
-	msg.i.attr.type = atSize;
-	if (((err = msgSend(oid.port, &msg)) < 0) || ((err = msg.o.attr.err) < 0))
-		return err;
-	buf->st_size = msg.o.attr.val;
+	buf->st_ctime = attrs.cTime.val;
 
-	msg.i.attr.type = atBlocks;
-	if (((err = msgSend(oid.port, &msg)) < 0) || ((err = msg.o.attr.err) < 0))
-		return err;
-	buf->st_blocks = msg.o.attr.val;
+	if (attrs.links.err < 0) {
+		return attrs.links.err;
+	}
 
-	msg.i.attr.type = atIOBlock;
-	if (((err = msgSend(oid.port, &msg)) < 0) || ((err = msg.o.attr.err) < 0))
-		return err;
-	buf->st_blksize = msg.o.attr.val;
+	buf->st_nlink = attrs.links.val;
+
+	if (attrs.mode.err < 0) {
+		return attrs.mode.err;
+	}
+
+	buf->st_mode = attrs.mode.val;
+
+	if (attrs.uid.err < 0) {
+		return attrs.uid.err;
+	}
+
+	buf->st_uid = attrs.uid.val;
+
+	if (attrs.gid.err < 0) {
+		return attrs.gid.err;
+	}
+
+	buf->st_gid = attrs.gid.val;
+
+	if (attrs.size.err < 0) {
+		return attrs.size.err;
+	}
+
+	buf->st_size = attrs.size.val;
+
+	if (attrs.blocks.err < 0) {
+		return attrs.blocks.err;
+	}
+
+	buf->st_blocks = attrs.blocks.val;
+
+	if (attrs.ioblock.err < 0) {
+		return attrs.ioblock.err;
+	}
+
+	buf->st_blksize = attrs.ioblock.val;
 
 	return EOK;
 }
@@ -146,19 +169,18 @@ int creat(const char *pathname, int mode)
 
 int mkdir(const char *path, mode_t mode)
 {
-	msg_t msg = { 0 };
-	oid_t dir;
-	char *canonical_name, *name, *parent;
-
-	if (path == NULL)
+	if (path == NULL) {
 		return SET_ERRNO(-EINVAL);
+	}
 
 	/* allow_missing_leaf = 1 -> we will be creating a dir */
-	canonical_name = resolve_path(path, NULL, 1, 1);
-	if (canonical_name == NULL)
+	char *canonical_name = resolve_path(path, NULL, 1, 1);
+	if (canonical_name == NULL) {
 		return -1; /* errno set by resolve_path */
+	}
 
-	name = strrchr(canonical_name, '/');
+	char *name = strrchr(canonical_name, '/');
+	char *parent;
 
 	if (name == canonical_name) {
 		name++;
@@ -179,17 +201,20 @@ int mkdir(const char *path, mode_t mode)
 		return SET_ERRNO(-ENAMETOOLONG);
 	}
 
+	oid_t dir;
 	if (lookup(parent, NULL, &dir) < EOK) {
 		free(canonical_name);
 		return SET_ERRNO(-ENOENT);
 	}
 
-	msg.type = mtCreate;
-	msg.i.create.type = otDir;
-	msg.i.create.mode = mode | S_IFDIR;
-	msg.i.create.dir = dir;
-	msg.i.data = name;
-	msg.i.size = strlen(name) + 1;
+	msg_t msg = {
+		.type = mtCreate,
+		.oid = dir,
+		.i.create.type = otDir,
+		.i.create.mode = mode | S_IFDIR,
+		.i.data = name,
+		.i.size = strlen(name) + 1
+	};
 
 	if (msgSend(dir.port, &msg) < 0) {
 		free(canonical_name);
@@ -197,7 +222,7 @@ int mkdir(const char *path, mode_t mode)
 	}
 
 	free(canonical_name);
-	return SET_ERRNO(msg.o.create.err);
+	return SET_ERRNO(msg.o.err);
 }
 
 
