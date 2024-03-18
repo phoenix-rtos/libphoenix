@@ -36,7 +36,6 @@ extern int sys_mkfifo(const char *filename, mode_t mode);
 extern int sys_link(const char *path1, const char *path2);
 extern int sys_unlink(const char *path);
 extern int sys_pipe(int fildes[2]);
-extern int sys_fstat(int fd, struct stat *buf);
 extern int sys_lseek(int fildes, off_t *offset, int whence);
 
 WRAP_ERRNO_DEF(ssize_t, read, (int fildes, void *buf, size_t nbyte), (fildes, buf, nbyte))
@@ -63,15 +62,6 @@ int pipe(int fildes[2])
 {
 	int err;
 	while ((err = sys_pipe(fildes)) == -EINTR)
-		;
-	return SET_ERRNO(err);
-}
-
-
-int fstat(int fd, struct stat *buf)
-{
-	int err;
-	while ((err = sys_fstat(fd, buf)) == -EINTR)
 		;
 	return SET_ERRNO(err);
 }

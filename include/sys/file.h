@@ -46,6 +46,9 @@ typedef struct {
 extern int flock(int fd, int operation);
 
 
+extern int fdResolve(int fd, oid_t *oid, oid_t *dev);
+
+
 #ifdef __cplusplus
 }
 #endif
