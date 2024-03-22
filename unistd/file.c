@@ -312,15 +312,7 @@ int create_dev(oid_t *oid, const char *path)
 					tpath = tpathalloc;
 				}
 
-				/* TODO: not needed, we may assume it will always be canonical? */
-#if 0
-				if ((canonical_path = canonicalize_file_name(tpath)) == NULL) {
-					free(tpathalloc);
-					return -1;
-				}
-#else
 				canonical_path = strdup(tpath);
-#endif
 
 				err = portRegister(oid->port, canonical_path, oid);
 				free(canonical_path);
@@ -339,15 +331,7 @@ int create_dev(oid_t *oid, const char *path)
 	if (!strncmp("/dev", path, 4))
 		path += 4;
 
-#if 0
-	/* TODO: invalid usage of canonicalize_file_name() - non-existing file
-	 * do we need normalize_path() here or can we assume developers are sane? */
-
-	if ((canonical_path = canonicalize_file_name(path)) == NULL)
-		return -1;
-#else
 	canonical_path = strdup(path);
-#endif
 
 	splitname(canonical_path, &name, &dir);
 
