@@ -26,15 +26,8 @@
 #include "posix/utils.h"
 
 
-/* path needs to be canonical */
-static int _stat_abs(const char *path, struct stat *buf)
+static int _stat_getAttr(oid_t oid, oid_t dev, struct stat *buf)
 {
-	oid_t oid, dev;
-
-	if (lookup(path, &oid, &dev) < 0) {
-		return -ENOENT;
-	}
-
 	memset(buf, 0, sizeof(struct stat));
 
 	buf->st_dev = oid.port;
@@ -118,7 +111,20 @@ static int _stat_abs(const char *path, struct stat *buf)
 
 	buf->st_blksize = attrs.ioblock.val;
 
-	return EOK;
+	return 0;
+}
+
+
+/* path needs to be canonical */
+static int _stat_abs(const char *path, struct stat *buf)
+{
+	oid_t oid, dev;
+
+	if (lookup(path, &oid, &dev) < 0) {
+		return -ENOENT;
+	}
+
+	return _stat_getAttr(oid, dev, buf);
 }
 
 
@@ -158,6 +164,18 @@ int lstat(const char *path, struct stat *buf)
 
 	free(canonical);
 	return SET_ERRNO(ret);
+}
+
+
+int fstat(int fd, struct stat *buf)
+{
+	oid_t oid, dev;
+	int err = fdResolve(fd, &oid, &dev);
+	if (err >= 0) {
+		err = _stat_getAttr(oid, dev, buf);
+	}
+
+	return SET_ERRNO(err);
 }
 
 
