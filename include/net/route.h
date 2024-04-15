@@ -13,6 +13,9 @@
 #define RTF_WINDOW      0x0080
 #define RTF_IRTT        0x0100
 #define RTF_REJECT      0x0200
+#define RTF_DEFAULT     0x0400
+#define RTF_ADDRCONF    0x0800
+#define RTF_CACHE       0x1000
 #define RTF_NONEXTHOP   0x00200000
 
 
