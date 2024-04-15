@@ -40,6 +40,7 @@
 #define ARPHRD_CSLIP6   129
 #define ARPHRD_PPP      130
 #define ARPHRD_LOOPBACK 131
+#define ARPHRD_SIT      132 /* sit0 device - IPv6-in-IPv4.  */
 
 struct arphdr {
 	unsigned short int ar_hrd;		/* Format of hardware address.  */

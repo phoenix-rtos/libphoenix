@@ -63,6 +63,7 @@ enum {
 	IPPROTO_GRE = 47,
 	IPPROTO_ESP = 50,
 	IPPROTO_AH = 51,
+	IPPROTO_ICMPV6 = 58,
 	IPPROTO_SCTP = 132,
 	IPPROTO_UDPLITE = 136,
 	IPPROTO_RAW = 255,
@@ -93,6 +94,9 @@ extern const struct in6_addr in6addr_loopback;
 #define IPV6_MULTICAST_LOOP		0x00000010 /* Multicast packets are delivered back to the local application */
 #define IPV6_UNICAST_HOPS		0x00000020 /* Unicast hop limit */
 #define IPV6_V6ONLY				0x00000040 /* Restrict AF_INET6 socket to IPv6 communications only */
+
+#define IPV6_CHECKSUM 7
+#define IPV6_HOPLIMIT 52 /* not implemented  */
 
 /* IPv6 multicast address scopes */
 #define IPv6_ADDR_MC_SCOPE_NODELOCAL	0x1 /* Interface-Local scope */
