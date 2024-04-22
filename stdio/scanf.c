@@ -59,13 +59,15 @@ static const unsigned char *__sccl(char *tab, const unsigned char *fmt)
 		v = 1;
 		c = *fmt++;
 	}
-	else
+	else {
 		v = 0;
+	}
 
 	memset(tab, (uint8_t)v, 256);
 
-	if (c == 0)
+	if (c == 0) {
 		return (fmt - 1);
+	}
 
 	v = 1 - v;
 	tab[c] = v;
@@ -78,7 +80,7 @@ static const unsigned char *__sccl(char *tab, const unsigned char *fmt)
 
 			case '-':
 				n = *fmt;
-				if (n == ']' || n < c) {
+				if ((n == ']') || (n < c)) {
 					c = '-';
 					tab[c] = v;
 					break;
@@ -121,11 +123,12 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 	base = 0;
 	for (;;) {
 		c = *fmt++;
-		if (c == 0)
+		if (c == 0) {
 			return (nassigned);
+		}
 
-		if (isspace(c)) {
-			while (*inr > 0 && isspace(*inp)) {
+		if (isspace(c) != 0) {
+			while ((*inr > 0) && (isspace(*inp) != 0)) {
 				nread++;
 				(*inr)--;
 				inp++;
@@ -134,11 +137,13 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 		}
 
 		if (c != '%') {
-			if (*inr <= 0)
+			if (*inr <= 0) {
 				return (nconversions != 0 ? nassigned : -1);
+			}
 
-			if (*inp != c)
+			if (*inp != c) {
 				return nassigned;
+			}
 
 			nread++;
 			(*inr)--;
@@ -151,11 +156,13 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 		for (;;) {
 			c = *fmt++;
 			if (c == '%') {
-				if (*inr <= 0)
+				if (*inr <= 0) {
 					return (nconversions != 0 ? nassigned : -1);
+				}
 
-				if (*inp != c)
+				if (*inp != c) {
 					return nassigned;
+				}
 
 				nread++;
 				(*inr)--;
@@ -169,12 +176,13 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 					continue;
 
 				case 'l':
-					if (flags & LONG) {
+					if ((flags & LONG) != 0) {
 						flags &= ~LONG;
 						flags |= LONGLONG;
 					}
-					else
+					else {
 						flags |= LONG;
+					}
 					continue;
 
 				case 'L':
@@ -197,12 +205,13 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 					continue;
 
 				case 'h':
-					if (flags & SHORT) {
+					if ((flags & SHORT) != 0) {
 						flags &= ~SHORT;
 						flags |= SHORTSHORT;
 					}
-					else
+					else {
 						flags |= SHORT;
+					}
 					continue;
 
 				case '0':
@@ -288,38 +297,49 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 
 				case 'n':
 					nconversions++;
-					if (flags & SUPPRESS)
+					if ((flags & SUPPRESS) != 0) {
 						continue;
-					if (flags & SHORTSHORT)
+					}
+					if ((flags & SHORTSHORT) != 0) {
 						*va_arg(ap, char *) = nread;
-					else if (flags & SHORT)
+					}
+					else if ((flags & SHORT) != 0) {
 						*va_arg(ap, short *) = nread;
-					else if (flags & LONG)
+					}
+					else if ((flags & LONG) != 0) {
 						*va_arg(ap, long *) = nread;
-					else if (flags & LONGLONG)
+					}
+					else if ((flags & LONGLONG) != 0) {
 						*va_arg(ap, long long *) = nread;
-					else if (flags & PTRDIFF)
+					}
+					else if ((flags & PTRDIFF) != 0) {
 						*va_arg(ap, ptrdiff_t *) = nread;
-					else
+					}
+					else {
 						*va_arg(ap, int *) = nread;
+					}
 					continue;
 			}
 
 			break;
 		}
-		if (c == '%')
+		if (c == '%') {
 			continue;
+		}
 
-		if (*inr <= 0)
+		if (*inr <= 0) {
 			return (nconversions != 0 ? nassigned : -1);
+		}
 
 		if ((flags & NOSKIP) == 0) {
-			while (isspace(*inp)) {
+			while (isspace(*inp) != 0) {
 				nread++;
-				if (--(*inr) > 0)
+				if (--(*inr) > 0) {
 					inp++;
-				else
+				}
+				else {
 					return (nconversions != 0 ? nassigned : -1);
+				}
 			}
 		}
 
@@ -328,9 +348,10 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 		 */
 		switch (c) {
 			case CT_CHAR:
-				if (width == 0)
+				if (width == 0) {
 					width = 1;
-				if (flags & SUPPRESS) {
+				}
+				if ((flags & SUPPRESS) != 0) {
 					size_t sum = 0;
 					for (;;) {
 						n = *inr;
@@ -338,8 +359,9 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 							sum += n;
 							width -= n;
 							inp += n;
-							if (sum == 0)
+							if (sum == 0) {
 								return (nconversions != 0 ? nassigned : -1);
+							}
 							break;
 						}
 						else {
@@ -362,41 +384,48 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 				break;
 
 			case CT_CCL:
-				if (width == 0)
+				if (width == 0) {
 					width = (size_t)~0; /* `infinity' */
-				if (flags & SUPPRESS) {
+				}
+				if ((flags & SUPPRESS) != 0) {
 					n = 0;
-					while (ccltab[(unsigned char)*inp]) {
+					while (ccltab[(unsigned char)*inp] != 0) {
 						n++;
 						(*inr)--;
 						inp++;
-						if (--width == 0)
+						if (--width == 0) {
 							break;
+						}
 						if (*inr <= 0) {
-							if (n == 0)
+							if (n == 0) {
 								return (nconversions != 0 ? nassigned : -1);
+							}
 							break;
 						}
 					}
-					if (n == 0)
+					if (n == 0) {
 						return nassigned;
+					}
 				}
 				else {
 					p0 = p = va_arg(ap, char *);
-					while (ccltab[(unsigned char)*inp]) {
+					while (ccltab[(unsigned char)*inp] != 0) {
 						(*inr)--;
 						*p++ = *inp++;
-						if (--width == 0)
+						if (--width == 0) {
 							break;
+						}
 						if (*inr <= 0) {
-							if (p == p0)
+							if (p == p0) {
 								return (nconversions != 0 ? nassigned : -1);
+							}
 							break;
 						}
 					}
 					n = p - p0;
-					if (n == 0)
+					if (n == 0) {
 						return nassigned;
+					}
 					*p = 0;
 					nassigned++;
 				}
@@ -405,28 +434,33 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 				break;
 
 			case CT_STRING:
-				if (width == 0)
+				if (width == 0) {
 					width = (size_t)~0;
-				if (flags & SUPPRESS) {
-					while (!isspace(*inp)) {
+				}
+				if ((flags & SUPPRESS) != 0) {
+					while (isspace(*inp) == 0) {
 						nread++;
 						(*inr)--;
 						inp++;
-						if (--width == 0)
+						if (--width == 0) {
 							break;
-						if (*inr <= 0)
+						}
+						if (*inr <= 0) {
 							break;
+						}
 					}
 				}
 				else {
 					p0 = p = va_arg(ap, char *);
-					while (!isspace(*inp)) {
+					while (isspace(*inp) == 0) {
 						(*inr)--;
 						*p++ = *inp++;
-						if (--width == 0)
+						if (--width == 0) {
 							break;
-						if (*inr <= 0)
+						}
+						if (*inr <= 0) {
 							break;
+						}
 					}
 					*p = 0;
 					nread += p - p0;
@@ -446,12 +480,14 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 					break;
 				}
 
-				if (--width > sizeof(buf) - 2)
+				if (--width > (sizeof(buf) - 2)) {
 					width = sizeof(buf) - 2;
+				}
 				width++;
 
-				if (flags & SUPPRESS)
+				if ((flags & SUPPRESS) != 0) {
 					width = ~0;
+				}
 
 				flags |= SIGNOK | NDIGITS | NZDIGITS;
 				for (p = buf; width; width--) {
@@ -463,10 +499,12 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 								base = 8;
 								flags |= PFXOK;
 							}
-							if (flags & NZDIGITS)
+							if ((flags & NZDIGITS) != 0) {
 								flags &= ~(SIGNOK | NZDIGITS | NDIGITS);
-							else
+							}
+							else {
 								flags &= ~(SIGNOK | PFXOK | NDIGITS);
+							}
 							ok = 1;
 							break;
 
@@ -485,8 +523,9 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 						case '8':
 						case '9':
 							base = basefix[base];
-							if (base <= 8)
+							if (base <= 8) {
 								break; /* not legal here */
+							}
 							flags &= ~(SIGNOK | PFXOK | NDIGITS);
 							ok = 1;
 							break;
@@ -503,15 +542,16 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 						case 'd':
 						case 'e':
 						case 'f':
-							if (base <= 10)
+							if (base <= 10) {
 								break;
+							}
 							flags &= ~(SIGNOK | PFXOK | NDIGITS);
 							ok = 1;
 							break;
 
 						case '+':
 						case '-':
-							if (flags & SIGNOK) {
+							if ((flags & SIGNOK) != 0) {
 								flags &= ~SIGNOK;
 								ok = 1;
 							}
@@ -519,7 +559,7 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 
 						case 'x':
 						case 'X':
-							if (flags & PFXOK && p == buf + 1) {
+							if (((flags & PFXOK) != 0) && (p == buf + 1)) {
 								base = 16; /* if %i */
 								flags &= ~PFXOK;
 								ok = 1;
@@ -529,18 +569,22 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 					if (!ok)
 						break;
 
-					if ((flags & SUPPRESS) == 0)
+					if ((flags & SUPPRESS) == 0) {
 						*p++ = c;
-					if (--(*inr) > 0)
+					}
+					if (--(*inr) > 0) {
 						inp++;
-					else
+					}
+					else {
 						break;
+					}
 				}
-				if (flags & NDIGITS)
+				if ((flags & NDIGITS) != 0) {
 					return (nconversions != 0 ? nassigned : -1);
+				}
 
 				c = ((unsigned char *)p)[-1];
-				if (c == 'x' || c == 'X') {
+				if ((c == 'x') || (c == 'X')) {
 					--p;
 					inp--;
 					(*inr)++;
@@ -550,23 +594,30 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 					uint64_t res;
 
 					*p = 0;
-					if ((flags & UNSIGNED) == 0)
+					if ((flags & UNSIGNED) == 0) {
 						res = strtoll(buf, (char **)NULL, base);
-					else
+					}
+					else {
 						res = strtoull(buf, (char **)NULL, base);
-					if (flags & POINTER)
-						*va_arg(ap, void **) =
-							(void *)(unsigned long)res;
-					else if (flags & SHORTSHORT)
+					}
+					if ((flags & POINTER) != 0) {
+						*va_arg(ap, void **) = (void *)(unsigned long)res;
+					}
+					else if ((flags & SHORTSHORT) != 0) {
 						*va_arg(ap, char *) = res;
-					else if (flags & SHORT)
+					}
+					else if ((flags & SHORT) != 0) {
 						*va_arg(ap, short *) = res;
-					else if (flags & LONG)
+					}
+					else if ((flags & LONG) != 0) {
 						*va_arg(ap, long *) = res;
-					else if (flags & LONGLONG)
+					}
+					else if ((flags & LONGLONG) != 0) {
 						*va_arg(ap, long long *) = res;
-					else if (flags & PTRDIFF)
+					}
+					else if ((flags & PTRDIFF) != 0) {
 						*va_arg(ap, ptrdiff_t *) = res;
+					}
 					else {
 						*va_arg(ap, int *) = res;
 					}
@@ -578,11 +629,11 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 				break;
 
 			case CT_FLOAT:
-				if (width == 0 || width > sizeof(buf) - 1) {
+				if ((width == 0) || (width > sizeof(buf) - 1)) {
 					width = sizeof(buf) - 1;
 				}
 
-				if (strtold(inp, &p) == 0 && (inp == p || errno == ERANGE)) {
+				if ((strtold(inp, &p) == 0) && ((inp == p) || (errno == ERANGE))) {
 					return (nconversions != 0 ? nassigned : -1);
 				}
 
