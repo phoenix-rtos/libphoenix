@@ -48,6 +48,7 @@
 #define CT_STRING 2 /* %s conversion */
 #define CT_INT    3 /* %[dioupxX] conversion */
 #define CT_FLOAT  4 /* %[aefgAEFG] conversion */
+#define CT_NONE   5 /* No conversion (ex. %n) */
 
 
 static const unsigned char *__sccl(char *tab, const unsigned char *fmt)
@@ -113,7 +114,7 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 	char *p, *p0;
 	char buf[32];
 
-	static short basefix[17] = { 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
+	static const short basefix[17] = { 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
 
 	*inr = strlen(inp);
 
@@ -226,6 +227,8 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 				case '9':
 					width = width * 10 + c - '0';
 					continue;
+				default:
+					break;
 			}
 
 			/*
@@ -298,7 +301,7 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 				case 'n':
 					nconversions++;
 					if ((flags & SUPPRESS) != 0) {
-						continue;
+						break;
 					}
 					if ((flags & SHORTSHORT) != 0) {
 						*va_arg(ap, char *) = nread;
@@ -318,7 +321,12 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 					else {
 						*va_arg(ap, int *) = nread;
 					}
-					continue;
+					c = CT_NONE;
+					break;
+				default:
+					c = CT_NONE;
+					/* TODO: Handle this */
+					break;
 			}
 
 			break;
@@ -674,6 +682,8 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 				nconversions++;
 				break;
 
+			case CT_NONE:
+				break;
 			default:
 				break;
 		}
