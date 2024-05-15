@@ -15,12 +15,14 @@
 
 #include <sys/threads.h>
 #include <errno.h>
+#include <assert.h>
 
 
 int mutexLock(handle_t m)
 {
 	int err;
 	while ((err = phMutexLock(m)) == -EINTR) ;
+	assert(err >= 0); /* this will fail on uninitialized/destroyed mutex */
 	return err;
 }
 
