@@ -32,7 +32,7 @@ int reboot(int magic)
 		.action = pctl_set,
 		.type = pctl_reboot,
 		/* clang-format off */
-		.reboot = {
+		.task.reboot = {
 			.magic = magic
 		}
 		/* clang-format on */
