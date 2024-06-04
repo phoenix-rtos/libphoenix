@@ -16,6 +16,16 @@
 #ifndef _LIBPHOENIX_ARCH_ARMV7M_ARCH_H_
 #define _LIBPHOENIX_ARCH_ARMV7M_ARCH_H_
 
+#if defined(__CPU_STM32L4X6)
+#include <phoenix/arch/armv7m/stm32/l4/stm32l4.h>
+#elif defined(__CPU_IMXRT117X)
+#include <phoenix/arch/armv7m/imxrt/11xx/imxrt1170.h>
+#elif defined(__CPU_IMXRT105X) || defined(__CPU_IMXRT106X)
+#include <phoenix/arch/armv7m/imxrt/10xx/imxrt10xx.h>
+#else
+#error "Unsupported TARGET"
+#endif
+
 #define __ARCH_STDINT    <arch/armv7m/stdint.h>
 #define __ARCH_LIMITS    <arch/armv7m/limits.h>
 
