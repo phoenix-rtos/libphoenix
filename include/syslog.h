@@ -150,10 +150,12 @@ void openlog(const char *ident, int option, int facility);
 int setlogmask(int maskpri);
 
 
-void syslog(int priority, const char *format, ...);
+void syslog(int priority, const char *format, ...)
+	__attribute__((format(printf, 2, 3)));
 
 
-void vsyslog(int priority, const char *format, va_list ap);
+void vsyslog(int priority, const char *format, va_list ap)
+	__attribute__((format(printf, 2, 0)));
 
 
 void closelog(void);

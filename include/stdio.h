@@ -199,75 +199,93 @@ extern char *tmpnam(char *str);
 
 
 /* Sends formatted output to a stream. */
-extern int fprintf(FILE *stream, const char *format, ...);
+extern int fprintf(FILE *stream, const char *format, ...)
+	__attribute__((format(printf, 2, 3)));
 
 
 /* Sends formatted output to a file descriptor. */
-extern int dprintf(int fd, const char *format, ...);
+extern int dprintf(int fd, const char *format, ...)
+	__attribute__((format(printf, 2, 3)));
 
 
 /* Sends formatted output to stdout. */
-extern int printf(const char *format, ...);
+extern int printf(const char *format, ...)
+	__attribute__((format(printf, 1, 2)));
 
 
 /* Sends formatted output to a string. */
-extern int sprintf(char *str, const char *format, ...);
+extern int sprintf(char *str, const char *format, ...)
+	__attribute__((format(printf, 2, 3)));
 
 
 /* Sends formatted output to a string. */
-extern int snprintf(char *str, size_t n, const char *format, ...);
+extern int snprintf(char *str, size_t n, const char *format, ...)
+	__attribute__((format(printf, 3, 4)));
 
 
 /* Sends formatted output to a stream using an argument list. */
-extern int vfprintf(FILE *stream, const char *format, va_list arg);
+extern int vfprintf(FILE *stream, const char *format, va_list arg)
+	__attribute__((format(printf, 2, 0)));
 
 
 /* Sends formatted output to a file descriptor using an argument list. */
-extern int vdprintf(int fd, const char *format, va_list arg);
+extern int vdprintf(int fd, const char *format, va_list arg)
+	__attribute__((format(printf, 2, 0)));
 
 
 /* Sends formatted output to stdout using an argument list. */
-extern int vprintf(const char *format, va_list arg);
+extern int vprintf(const char *format, va_list arg)
+	__attribute__((format(printf, 1, 0)));
 
 
 /* Sends formatted output to a string using an argument list. */
-extern int vsprintf(char *str, const char *format, va_list arg);
+extern int vsprintf(char *str, const char *format, va_list arg)
+	__attribute__((format(printf, 2, 0)));
 
 
 /* Sends formatted output to a string using an argument list. */
-extern int vsnprintf(char *str, size_t n, const char *format, va_list arg);
+extern int vsnprintf(char *str, size_t n, const char *format, va_list arg)
+	__attribute__((format(printf, 3, 0)));
 
 
 /* Print formatted output to allocated string.  */
-extern int asprintf(char **strp, const char *fmt, ...);
+extern int asprintf(char **strp, const char *fmt, ...)
+	__attribute__((format(printf, 2, 3)));
 
 
 /* Print formatted output to allocated string using an argument list. */
-extern int vasprintf(char **strp, const char *fmt, va_list ap);
+extern int vasprintf(char **strp, const char *fmt, va_list ap)
+	__attribute__((format(printf, 2, 0)));
 
 
 /* Reads formatted input from a stream using an argument list. */
-extern int vfscanf(FILE *stream, const char *format, va_list ap);
+extern int vfscanf(FILE *stream, const char *format, va_list ap)
+	__attribute__((format(scanf, 2, 0)));
 
 
 /* Reads formatted input from a string using an argument list. */
-extern int vsscanf(const char *str, const char *format, va_list ap);
+extern int vsscanf(const char *str, const char *format, va_list ap)
+	__attribute__((format(scanf, 2, 0)));
 
 
 /* Reads formatted input from stdin using an argument list. */
-extern int vscanf(const char *format, va_list ap);
+extern int vscanf(const char *format, va_list ap)
+	__attribute__((format(scanf, 1, 0)));
 
 
 /* Reads formatted input from a stream. */
-extern int fscanf(FILE *stream, const char *format, ...);
+extern int fscanf(FILE *stream, const char *format, ...)
+	__attribute__((format(scanf, 2, 3)));
 
 
 /* Reads formatted input from stdin. */
-extern int scanf(const char *format, ...);
+extern int scanf(const char *format, ...)
+	__attribute__((format(scanf, 1, 2)));
 
 
 /* Reads formatted input from a string. */
-extern int sscanf(const char *str, const char *format, ...);
+extern int sscanf(const char *str, const char *format, ...)
+	__attribute__((format(scanf, 2, 3)));
 
 
 /* Gets the next character (an unsigned char) from the specified stream and advances the position indicator for the stream. */
