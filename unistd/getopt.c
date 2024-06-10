@@ -126,6 +126,11 @@ int getopt_long(int argc, char * const argv[], const char *optstring, const stru
 	int skipped, resumed;
 	int i, colon, ret;
 
+	if (optind <= 0) {
+		optind = 1;
+		optwhere = 1;
+	}
+
 	if (argc == 0 || argv == NULL)
 		return -1;
 
