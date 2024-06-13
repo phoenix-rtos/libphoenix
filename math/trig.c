@@ -15,6 +15,19 @@
 
 #include <math.h>
 #include <errno.h>
+#include <stdint.h>
+#include <string.h>
+#include <stdio.h>
+
+int check_NAN_INF_ZERO(double x) {
+        /* Returns 1 if x is NAN, INFINITY or 0.0 otherwise 0 */
+        uint64_t i;
+        uint64_t inf = 0x7ff0000000000000;
+
+        memcpy(&i, &x, sizeof(uint64_t));
+
+        return  i * 2 - 1 >= 2 * inf -1;
+}
 
 
 /* Calculates value of cosine using Maclaurin series. */
@@ -61,6 +74,26 @@ double sin(double x)
 {
 	int i;
 	double res, xn, xpow, factorial;
+
+	if (check_NAN_INF_ZERO(x) == 1) {
+		if (x == INFINITY) {
+			errno = EDOM;
+			return NAN;
+
+		}
+		else if (x == -INFINITY) {
+			errno = EDOM;
+			return NAN;
+
+		}
+		else if(isnan(x)) {
+			errno = EDOM;
+			return NAN;
+		}
+		else if(x == 0.0) {
+			return 0.0;
+		}
+	}
 
 	/* Normalize argument to -2*PI < x < 2*PI */
 	x = fmod(x, 2.0 * M_PI);
