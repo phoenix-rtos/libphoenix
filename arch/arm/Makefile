@@ -10,6 +10,8 @@ ifneq (,$(findstring v7a,$(TARGET_SUFF)))
   include arch/arm/v7a/Makefile
 else ifneq (,$(findstring v7m,$(TARGET_SUFF)))
   include arch/arm/v7m/Makefile
+else ifneq (,$(findstring v8m,$(TARGET_SUFF)))
+  include arch/arm/v8m/Makefile
 else ifneq (,$(findstring v8r,$(TARGET_SUFF)))
   include arch/arm/v8r/Makefile
 else
