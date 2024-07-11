@@ -116,6 +116,19 @@ int clock_gettime(clockid_t clk_id, struct timespec *tp)
 }
 
 
+int clock_settime(clockid_t clock_id, const struct timespec *tp)
+{
+	if (clock_id != CLOCK_REALTIME) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	time_t time = tp->tv_sec * 1000 * 1000 + tp->tv_nsec / 1000;
+
+	return SET_ERRNO(settime(time));
+}
+
+
 char *asctime_r(const struct tm *tp, char *buf)
 {
 	int wday, mon;
