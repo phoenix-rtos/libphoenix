@@ -17,6 +17,14 @@
 #include <errno.h>
 
 
+int mutexCreate(handle_t *h)
+{
+	static const struct lockAttr defaultAttr = { .type = PH_LOCK_NORMAL };
+
+	return phMutexCreate(h, &defaultAttr);
+}
+
+
 int mutexLock(handle_t m)
 {
 	int err;

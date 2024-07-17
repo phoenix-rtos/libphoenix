@@ -21,6 +21,7 @@
 #include <stddef.h>
 #include <phoenix/sysinfo.h>
 #include <phoenix/signal.h>
+#include <phoenix/threads.h>
 
 
 #ifdef __cplusplus
@@ -88,7 +89,16 @@ extern int threadsinfo(int n, threadinfo_t *info);
 extern int priority(int priority);
 
 
+extern int phMutexCreate(handle_t *h, const struct lockAttr *attr);
+
+
 extern int mutexCreate(handle_t *h);
+
+
+static inline int mutexCreateWithAttr(handle_t *h, const struct lockAttr *attr)
+{
+	return phMutexCreate(h, attr);
+}
 
 
 extern int phMutexLock(handle_t h);
