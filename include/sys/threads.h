@@ -22,7 +22,7 @@
 #include <phoenix/sysinfo.h>
 #include <phoenix/signal.h>
 #include <phoenix/threads.h>
-
+#include <phoenix/time.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -128,7 +128,16 @@ extern int semaphoreUp(semaphore_t *s);
 extern int semaphoreDone(semaphore_t *s);
 
 
+extern int phCondCreate(handle_t *h, const struct condAttr *attr);
+
+
 extern int condCreate(handle_t *h);
+
+
+static inline int condCreateWithAttr(handle_t *h, const struct condAttr *attr)
+{
+	return phCondCreate(h, attr);
+}
 
 
 extern int condWait(handle_t h, handle_t m, time_t timeout);
