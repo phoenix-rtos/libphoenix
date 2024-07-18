@@ -716,10 +716,13 @@ static int pthread_mutex_lazy_init(pthread_mutex_t *mutex)
 int pthread_mutex_init(pthread_mutex_t *__restrict mutex, const pthread_mutexattr_t *__restrict attr)
 {
 	int err;
+	if (attr == NULL) {
+		err = mutexCreate(&mutex->mutexh);
+	}
+	else {
+		err = mutexCreateWithAttr(&mutex->mutexh, attr);
+	}
 
-	(void)attr;
-
-	err = mutexCreate(&mutex->mutexh);
 	if (err == 0) {
 		mutex->initialized = 1;
 	}
@@ -804,7 +807,11 @@ int pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type)
 {
 	int err = EINVAL;
 
-	if (type >= PTHREAD_MUTEX_DEFAULT && type <= PTHREAD_MUTEX_RECURSIVE) {
+	/* clang-format off */
+	if ((type == PTHREAD_MUTEX_NORMAL) || (type == PTHREAD_MUTEX_ERRORCHECK) ||
+			(type == PTHREAD_MUTEX_RECURSIVE) || (type == PTHREAD_MUTEX_DEFAULT)) {
+		/* clang-format on */
+
 		attr->type = type;
 		err = 0;
 	}
@@ -900,15 +907,38 @@ int pthread_condattr_getclock(const pthread_condattr_t *__restrict attr, clockid
 }
 
 
+static int pthread_condattr_to_condAttr(const pthread_condattr_t *pattr, struct condAttr *attr)
+{
+	int ret = 0;
+	switch (pattr->clock_id) {
+		case CLOCK_REALTIME:
+			attr->clock = PH_CLOCK_REALTIME;
+			break;
+
+		case CLOCK_MONOTONIC:
+		case CLOCK_MONOTONIC_RAW:
+			attr->clock = PH_CLOCK_MONOTONIC;
+			break;
+
+		default:
+			ret = EINVAL;
+			break;
+	}
+	return ret;
+}
+
+
 static int pthread_cond_lazy_init(pthread_cond_t *cond)
 {
+	struct condAttr cattr;
 	int err = 0;
 
 	if (cond->initialized == 0) {
 		mutexLock(pthread_common.mutex_cond_init_lock);
 		if (cond->initialized == 0) {
-			cond->clock_id = PTHREAD_COND_CLOCK_DEFAULT;
-			err = condCreate(&cond->condh);
+			(void)pthread_condattr_to_condAttr(&(pthread_condattr_t) { .clock_id = PTHREAD_COND_CLOCK_DEFAULT }, &cattr);
+
+			err = condCreateWithAttr(&cond->condh, &cattr);
 			if (err == 0) {
 				cond->initialized = 1;
 			}
@@ -921,11 +951,18 @@ static int pthread_cond_lazy_init(pthread_cond_t *cond)
 
 int pthread_cond_init(pthread_cond_t *__restrict cond, const pthread_condattr_t *__restrict attr)
 {
-	int err;
+	struct condAttr cattr;
 
-	cond->clock_id = (attr == NULL) ? PTHREAD_COND_CLOCK_DEFAULT : attr->clock_id;
+	if (attr != NULL) {
+		if (pthread_condattr_to_condAttr(attr, &cattr) != 0) {
+			return EINVAL;
+		}
+	}
+	else {
+		(void)pthread_condattr_to_condAttr(&(pthread_condattr_t) { .clock_id = PTHREAD_COND_CLOCK_DEFAULT }, &cattr);
+	}
 
-	err = condCreate(&cond->condh);
+	int err = condCreateWithAttr(&cond->condh, &cattr);
 	if (err == 0) {
 		cond->initialized = 1;
 	}
@@ -996,26 +1033,24 @@ int pthread_cond_timedwait(pthread_cond_t *__restrict cond,
 	const struct timespec *__restrict abstime)
 {
 	int err = 0;
-	struct timespec now;
-	clock_gettime(cond->clock_id, &now);
-	if ((now.tv_sec > abstime->tv_sec) || ((now.tv_sec == abstime->tv_sec) && (now.tv_nsec >= abstime->tv_nsec))) {
-		err = -ETIMEDOUT;
+
+	const time_t abstime_us = timespec_to_us(abstime);
+
+	/* check timeout as condWait with timeout 0 will wait indefinitely */
+	if (abstime_us == 0) {
+		return ETIMEDOUT;
 	}
-	else {
-		time_t now_us = timespec_to_us(&now);
-		const time_t abstime_us = timespec_to_us(abstime);
-		time_t timeout_us = abstime_us - now_us;
 
-		err = pthread_cond_lazy_init(cond);
+	err = pthread_cond_lazy_init(cond);
 
-		if (err == 0) {
-			err = pthread_mutex_lazy_init(mutex);
-		}
-
-		if (err == 0) {
-			err = condWait(cond->condh, mutex->mutexh, timeout_us);
-		}
+	if (err == 0) {
+		err = pthread_mutex_lazy_init(mutex);
 	}
+
+	if (err == 0) {
+		err = condWait(cond->condh, mutex->mutexh, abstime_us);
+	}
+
 	if (err == -ETIME) {
 		err = -ETIMEDOUT;
 	}

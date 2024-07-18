@@ -55,15 +55,12 @@ typedef struct {
 } pthread_mutex_t;
 
 
-typedef struct pthread_mutexattr_t {
-	int type;
-} pthread_mutexattr_t;
+typedef struct lockAttr pthread_mutexattr_t;
 
 
 typedef struct {
 	handle_t condh;
 	volatile int initialized;
-	clockid_t clock_id;
 } pthread_cond_t;
 
 
