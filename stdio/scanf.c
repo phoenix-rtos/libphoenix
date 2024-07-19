@@ -641,51 +641,64 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 				nconversions++;
 				break;
 
-			case CT_FLOAT:
-				if ((width == 0) || (width > sizeof(buf) - 1)) {
-					width = sizeof(buf) - 1;
-				}
+			case CT_FLOAT: {
+				union {
+					float f;
+					double d;
+					long double ld;
+				} res;
 
-				if ((strtold(inp, &p) == 0) && ((inp == p) || (errno == ERANGE))) {
-					return (nconversions != 0 ? nassigned : -1);
-				}
-
-				if ((size_t)(p - inp) >= width) {
-					return (nconversions != 0 ? nassigned : -1);
-				}
-
-				width = p - inp;
-
-				p = buf;
-				while (width > 0) {
-					if (*inr <= 0) {
+				const char *srcbuf = inp;
+				if ((width != 0) && (width < *inr)) {
+					/* TODO: handle larger widths */
+					if (width > (sizeof(buf) - 1)) {
 						return (nconversions != 0 ? nassigned : -1);
 					}
-					*p++ = *inp++;
-					width--;
-					(*inr)--;
+
+					memcpy(buf, inp, width);
+					buf[width] = '\0';
+					srcbuf = buf;
 				}
 
+				int is_zero;
+				if ((flags & LONGDOUBLE) != 0) {
+					res.ld = strtold(srcbuf, &p);
+					is_zero = res.ld == 0;
+				}
+				else if ((flags & LONG) != 0) {
+					res.d = strtod(srcbuf, &p);
+					is_zero = res.d == 0;
+				}
+				else {
+					res.f = strtof(srcbuf, &p);
+					is_zero = res.f == 0;
+				}
+
+				if (is_zero && (srcbuf == p)) {
+					return (nconversions != 0 ? nassigned : -1);
+				}
+
+				int consumed = p - srcbuf;
+				*inr -= consumed;
+				inp += consumed;
+				nread += consumed;
+				nconversions++;
 				if ((flags & SUPPRESS) == 0) {
-					*p = '\0';
 					if ((flags & LONGDOUBLE) != 0) {
-						long double res = strtold(buf, NULL);
-						*va_arg(ap, long double *) = res;
+						*va_arg(ap, long double *) = res.ld;
 					}
 					else if ((flags & LONG) != 0) {
-						double res = strtod(buf, NULL);
-						*va_arg(ap, double *) = res;
+						*va_arg(ap, double *) = res.d;
 					}
 					else {
-						float res = strtof(buf, NULL);
-						*va_arg(ap, float *) = res;
+						*va_arg(ap, float *) = res.f;
 					}
+
 					nassigned++;
 				}
 
-				nread += p - buf;
-				nconversions++;
 				break;
+			}
 
 			default:
 				break;
