@@ -1042,7 +1042,7 @@ int pthread_key_create(pthread_key_t *key, void (*destructor)(void *))
 {
 	int err = 0;
 	*key = malloc(sizeof(__pthread_key_t));
-	if (key == NULL) {
+	if (*key == NULL) {
 		err = ENOMEM;
 	}
 	else {
