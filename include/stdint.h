@@ -56,10 +56,10 @@ typedef uint64_t uint_least64_t;
 
 /* 7.18.2.1 Limits of exact-width integer types */
 
-#define INT8_MIN  (-128)
-#define INT16_MIN (-32768)
-#define INT32_MIN (-2147483648)
-#define INT64_MIN (-INT64_C(9223372036854775808))
+#define INT8_MIN  (-127 - 1)
+#define INT16_MIN (-32767 - 1)
+#define INT32_MIN (-2147483647 - 1)
+#define INT64_MIN (-INT64_C(9223372036854775807) - 1)
 
 #define INT8_MAX  (127)
 #define INT16_MAX (32767)
