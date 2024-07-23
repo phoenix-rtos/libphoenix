@@ -364,35 +364,23 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 				if (width == 0) {
 					width = 1;
 				}
-				if ((flags & SUPPRESS) != 0) {
-					size_t sum = 0;
-					for (;;) {
-						n = *inr;
-						if (n < (int)width) {
-							sum += n;
-							width -= n;
-							inp += n;
-							if (sum == 0) {
-								return (nconversions != 0 ? nassigned : -1);
-							}
-							break;
-						}
-						else {
-							sum += width;
-							*inr -= width;
-							inp += width;
-							break;
-						}
-					}
-					nread += sum;
+
+				if (*inr <= 0) {
+					return (nconversions != 0 ? nassigned : -1);
 				}
-				else {
+
+				if (width > *inr) {
+					width = *inr;
+				}
+
+				if ((flags & SUPPRESS) == 0) {
 					memcpy(va_arg(ap, char *), inp, width);
-					*inr -= width;
-					inp += width;
-					nread += width;
 					nassigned++;
 				}
+
+				*inr -= width;
+				inp += width;
+				nread += width;
 				nconversions++;
 				break;
 
