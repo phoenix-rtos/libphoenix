@@ -238,6 +238,12 @@ extern int gethostname(char *name, size_t namelen);
 extern int sethostname(const char *name, size_t namelen);
 
 
+extern long gethostid(void);
+
+
+extern int sethostid(long hostid);
+
+
 extern char *getpass(const char *prompt);
 
 
