@@ -20,6 +20,8 @@
 #include "format.h"
 #include "sys/debug.h"
 
+#include "../unistd/file-internal.h"
+
 
 /* clang-format off */
 struct feed_ctx_s {
@@ -37,35 +39,6 @@ struct feed_ctx_s {
 /* clang-format on */
 
 
-static size_t safe_write(int fd, const char *buff, size_t size)
-{
-	size_t todo = size;
-	ssize_t wlen;
-
-	while (todo != 0) {
-		wlen = write(fd, buff, todo);
-		if (wlen > 0) {
-			todo -= wlen;
-			buff += wlen;
-			continue;
-		}
-		else if (wlen < 0) {
-			if ((errno == EINTR) || (errno == EAGAIN)) {
-				continue;
-			}
-			break;
-		}
-		else {
-			/* Undefined behaviour (wlen==0) */
-			errno = EIO;
-			break;
-		}
-	}
-
-	return size - todo;
-}
-
-
 static void format_feed(void *context, char c)
 {
 	size_t res;
@@ -81,7 +54,7 @@ static void format_feed(void *context, char c)
 	if (ctx->n == sizeof(ctx->buff) - 1) {
 		res = (ctx->hType == feed_hStream) ?
 			fwrite(ctx->buff, 1, ctx->n, ctx->h.stream) :
-			safe_write(ctx->h.fd, ctx->buff, ctx->n);
+			__safe_write(ctx->h.fd, ctx->buff, ctx->n);
 
 		ctx->total += res;
 		if (ctx->n != res) {
@@ -152,7 +125,7 @@ int vdprintf(int fd, const char *format, va_list arg)
 	ret = format_parse(&ctx, format_feed, format, arg);
 
 	if ((ret == 0) && (ctx.n != 0)) {
-		res = safe_write(ctx.h.fd, ctx.buff, ctx.n);
+		res = __safe_write(ctx.h.fd, ctx.buff, ctx.n);
 		ctx.total += res;
 
 		if (ctx.n != res) {

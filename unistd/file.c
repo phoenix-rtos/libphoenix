@@ -48,6 +48,86 @@ WRAP_ERRNO_DEF(int, dup2, (int fildes, int fildes2), (fildes, fildes2))
 WRAP_ERRNO_DEF(int, fsync, (int fildes), (fildes))
 
 
+size_t __safe_write(int fd, const void *buff, size_t size)
+{
+	size_t todo = size;
+	ssize_t wlen;
+	const char *ptr = buff;
+
+	while (todo != 0) {
+		wlen = write(fd, ptr, todo);
+		if (wlen > 0) {
+			todo -= wlen;
+			ptr += wlen;
+			continue;
+		}
+		else if (wlen < 0) {
+			if ((errno == EINTR) || (errno == EAGAIN)) {
+				continue;
+			}
+			break;
+		}
+		else {
+			/* Undefined behaviour (wlen==0) */
+			errno = EIO;
+			break;
+		}
+	}
+
+	return size - todo;
+}
+
+
+ssize_t __safe_read(int fd, void *buf, size_t size)
+{
+	ssize_t rlen;
+	size_t todo = size;
+	char *ptr = buf;
+
+	while (todo > 0) {
+		rlen = read(fd, ptr, todo);
+		if (rlen > 0) {
+			todo -= rlen;
+			ptr += rlen;
+		}
+		else if (rlen == 0) {
+			/* EOF */
+			break;
+		}
+		else if ((errno == EINTR) || (errno == EAGAIN)) {
+			continue;
+		}
+		else {
+			break;
+		}
+	}
+
+	return size - todo;
+}
+
+
+int __safe_open(const char *path, int oflag, mode_t mode)
+{
+	int err;
+	do {
+		err = open(path, oflag, mode);
+	} while ((err < 0) && (errno == EINTR));
+
+	return err;
+}
+
+
+int __safe_close(int fd)
+{
+	int err;
+	do {
+		err = close(fd);
+	} while ((err < 0) && (errno == EINTR));
+
+	return err;
+}
+
+
 off_t lseek(int fildes, off_t offset, int whence)
 {
 	int retval = sys_lseek(fildes, &offset, whence);
