@@ -32,6 +32,8 @@
 #include <unistd.h>
 #include <limits.h>
 
+#include "../unistd/file-internal.h"
+
 
 #define F_EOF     (1 << 0)
 #define F_WRITING (1 << 1)
@@ -158,42 +160,6 @@ static void file_free(FILE *file)
 }
 
 
-static ssize_t safe_read(int fd, void *buf, size_t size)
-{
-	int err;
-	while ((err = read(fd, buf, size)) < 0 && errno == EINTR) {
-	}
-	return err;
-}
-
-
-static ssize_t safe_write(int fd, const void *buf, size_t size)
-{
-	int err;
-	while ((err = write(fd, buf, size)) < 0 && errno == EINTR) {
-	}
-	return err;
-}
-
-
-static int safe_open(const char *path, int oflag, mode_t mode)
-{
-	int err;
-	while ((err = open(path, oflag, mode)) < 0 && errno == EINTR) {
-	}
-	return err;
-}
-
-
-static int safe_close(int fd)
-{
-	int err;
-	while ((err = close(fd)) < 0 && errno == EINTR) {
-	}
-	return err;
-}
-
-
 int fclose(FILE *file)
 {
 	int err;
@@ -203,7 +169,7 @@ int fclose(FILE *file)
 	}
 
 	fflush(file);
-	while ((err = safe_close(file->fd)) < 0 && errno == EINTR) {
+	while ((err = __safe_close(file->fd)) < 0 && errno == EINTR) {
 	}
 	file_free(file);
 
@@ -222,17 +188,17 @@ FILE *fopen(const char *filename, const char *mode)
 		return NULL;
 	}
 
-	if ((fd = safe_open(filename, m, DEFFILEMODE)) < 0) {
+	if ((fd = __safe_open(filename, m, DEFFILEMODE)) < 0) {
 		return NULL;
 	}
 
 	if ((f = calloc(1, sizeof(FILE))) == NULL) {
-		safe_close(fd);
+		__safe_close(fd);
 		return NULL;
 	}
 
 	if ((f->buffer = buffAlloc(BUFSIZ)) == NULL) {
-		safe_close(fd);
+		__safe_close(fd);
 		free(f);
 		return NULL;
 	}
@@ -307,9 +273,9 @@ FILE *freopen(const char *pathname, const char *mode, FILE *stream)
 	fflush(stream);
 
 	if (pathname != NULL) {
-		safe_close(stream->fd);
+		__safe_close(stream->fd);
 
-		if ((stream->fd = safe_open(pathname, m, DEFFILEMODE)) < 0) {
+		if ((stream->fd = __safe_open(pathname, m, DEFFILEMODE)) < 0) {
 			file_free(stream);
 			return NULL;
 		}
@@ -330,7 +296,7 @@ static int full_read(int fd, void *ptr, size_t size)
 	int total = 0;
 
 	while (size) {
-		if ((err = safe_read(fd, ptr, size)) < 0) {
+		if ((err = __safe_read(fd, ptr, size)) < 0) {
 			return -1;
 		}
 		else if (!err) {
@@ -349,7 +315,7 @@ static int full_write(int fd, const void *ptr, size_t size)
 {
 	int err;
 	while (size) {
-		if ((err = safe_write(fd, ptr, size)) < 0) {
+		if ((err = __safe_write(fd, ptr, size)) < 0) {
 			return -1;
 		}
 		ptr += err;
@@ -397,7 +363,7 @@ size_t fread_unlocked(void *ptr, size_t size, size_t nmemb, FILE *stream)
 
 	/* refill read buffer */
 	if (stream->bufpos == stream->bufeof) {
-		if ((err = safe_read(stream->fd, stream->buffer, stream->bufsz)) == -1) {
+		if ((err = __safe_read(stream->fd, stream->buffer, stream->bufsz)) == -1) {
 			return 0;
 		}
 
@@ -462,7 +428,7 @@ size_t fwrite_unlocked(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 
 	if (stream->buffer == NULL) {
 		/* unbuffered write */
-		if ((err = safe_write(stream->fd, ptr, writesz)) < 0) {
+		if ((err = __safe_write(stream->fd, ptr, writesz)) < 0) {
 			return 0;
 		}
 
