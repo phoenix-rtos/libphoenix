@@ -48,10 +48,10 @@ WRAP_ERRNO_DEF(int, dup2, (int fildes, int fildes2), (fildes, fildes2))
 WRAP_ERRNO_DEF(int, fsync, (int fildes), (fildes))
 
 
-size_t __safe_write(int fd, const void *buff, size_t size)
+ssize_t __safe_write(int fd, const void *buff, size_t size)
 {
 	size_t todo = size;
-	ssize_t wlen;
+	ssize_t wlen = 0;
 	const char *ptr = buff;
 
 	while (todo != 0) {
@@ -59,7 +59,6 @@ size_t __safe_write(int fd, const void *buff, size_t size)
 		if (wlen > 0) {
 			todo -= wlen;
 			ptr += wlen;
-			continue;
 		}
 		else if (wlen < 0) {
 			if ((errno == EINTR) || (errno == EAGAIN)) {
@@ -74,13 +73,17 @@ size_t __safe_write(int fd, const void *buff, size_t size)
 		}
 	}
 
+	if (wlen < 0) {
+		return -1;
+	}
+
 	return size - todo;
 }
 
 
 ssize_t __safe_read(int fd, void *buf, size_t size)
 {
-	ssize_t rlen;
+	ssize_t rlen = 0;
 	size_t todo = size;
 	char *ptr = buf;
 
@@ -100,6 +103,10 @@ ssize_t __safe_read(int fd, void *buf, size_t size)
 		else {
 			break;
 		}
+	}
+
+	if (rlen < 0) {
+		return -1;
 	}
 
 	return size - todo;
