@@ -13,11 +13,11 @@
  * %LICENSE%
  */
 
-#ifndef _LIBPHOENIX_ARCH_SPARCV8LEON3_SETJMP_H_
-#define _LIBPHOENIX_ARCH_SPARCV8LEON3_SETJMP_H_
+#ifndef _LIBPHOENIX_ARCH_SPARCV8LEON_SETJMP_H_
+#define _LIBPHOENIX_ARCH_SPARCV8LEON_SETJMP_H_
 
 
-#include <phoenix/arch/sparcv8leon3/stdtypes.h>
+#include <phoenix/arch/sparcv8leon/stdtypes.h>
 
 
 struct __jmp_buf {
