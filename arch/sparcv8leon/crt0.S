@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * Entrypoint (sparcv8leon3)
+ * Entrypoint (sparcv8leon)
  *
  * Copyright 2022, 2023 Phoenix Systems
  * Author: Lukasz Leczkowski, Hubert Badocha

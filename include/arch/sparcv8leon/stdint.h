@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * Architecture dependent part of stdint (arch/sparcv8leon3)
+ * Architecture dependent part of stdint (arch/sparcv8leon)
  *
  * Copyright 2022, 2024 Phoenix Systems
  * Author: Lukasz Leczkowski
@@ -13,10 +13,10 @@
  * %LICENSE%
  */
 
-#ifndef _LIBPHOENIX_ARCHSPARCV8LEON3_STDINT_H_
-#define _LIBPHOENIX_ARCHSPARCV8LEON3_STDINT_H_
+#ifndef _LIBPHOENIX_ARCH_SPARCV8LEON_STDINT_H_
+#define _LIBPHOENIX_ARCH_SPARCV8LEON_STDINT_H_
 
-#include <phoenix/arch/sparcv8leon3/stdtypes.h>
+#include <phoenix/arch/sparcv8leon/stdtypes.h>
 
 /* The following sections refer to ISO/IEC 9899:1999 */
 

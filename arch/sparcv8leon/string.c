@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * arch/sparcv8leon3
+ * arch/sparcv8leon
  *
  * Copyright 2022 Phoenix Systems
  * Author: Lukasz Leczkowski

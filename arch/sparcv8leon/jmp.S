@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * setjmp, longjmp (sparcv8leon3)
+ * setjmp, longjmp (sparcv8leon)
  *
  * Copyright 2022 Phoenix Systems
  * Author: Lukasz Leczkowski
