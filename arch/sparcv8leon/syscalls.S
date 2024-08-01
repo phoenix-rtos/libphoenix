@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * syscalls (sparcv8leon3)
+ * syscalls (sparcv8leon)
  *
  * Copyright 2022 Phoenix Systems
  * Author: Lukasz Leczkowski

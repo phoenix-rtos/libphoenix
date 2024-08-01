@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * Signal trampoline (sparcv8leon3)
+ * Signal trampoline (sparcv8leon)
  *
  * Copyright 2022 Phoenix Systems
  * Author: Lukasz Leczkowski
