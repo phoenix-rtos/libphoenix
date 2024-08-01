@@ -26,7 +26,7 @@
 #elif defined(__riscv) && (__riscv_xlen == 64)
 #include <arch/riscv64/setjmp.h>
 #elif defined(__sparc__)
-#include <arch/sparcv8leon3/setjmp.h>
+#include <arch/sparcv8leon/setjmp.h>
 #else
 #error "unsupported architecture"
 #endif

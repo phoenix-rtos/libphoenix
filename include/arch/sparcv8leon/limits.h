@@ -3,7 +3,7 @@
  *
  * libphoenix
  *
- * Architecture dependent part of limits (arch/sparcv8leon3)
+ * Architecture dependent part of limits (arch/sparcv8leon)
  *
  * Copyright 2022 Phoenix Systems
  * Author: Lukasz Leczkowski
