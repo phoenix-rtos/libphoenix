@@ -16,6 +16,14 @@
 #ifndef _LIBPHOENIX_ARCH_ARMV7A_ARCH_H_
 #define _LIBPHOENIX_ARCH_ARMV7A_ARCH_H_
 
+#if defined(__CPU_ZYNQ7000)
+#include <phoenix/arch/armv7a/zynq7000/zynq7000.h>
+#elif defined(__CPU_IMX6ULL)
+#include <phoenix/arch/armv7a/imx6ull/imx6ull.h>
+#else
+#error "Unsupported TARGET"
+#endif
+
 #define __ARCH_STDINT    <arch/armv7a/stdint.h>
 #define __ARCH_LIMITS    <arch/armv7a/limits.h>
 

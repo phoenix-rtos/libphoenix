@@ -16,6 +16,8 @@
 #ifndef _LIBPHOENIX_ARCH_SPARCV8LEON3_ARCH_H_
 #define _LIBPHOENIX_ARCH_SPARCV8LEON3_ARCH_H_
 
+#include <phoenix/arch/sparcv8leon3/sparcv8leon3.h>
+
 #define __ARCH_STDINT    <arch/sparcv8leon3/stdint.h>
 #define __ARCH_LIMITS    <arch/sparcv8leon3/limits.h>
 
