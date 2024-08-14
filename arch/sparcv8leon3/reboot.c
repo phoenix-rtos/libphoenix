@@ -21,6 +21,8 @@
 #include <phoenix/arch/sparcv8leon3/gr716/gr716.h>
 #elif defined(__CPU_GR712RC)
 #include <phoenix/arch/sparcv8leon3/gr712rc/gr712rc.h>
+#elif defined(__CPU_GENERIC)
+#include <phoenix/arch/sparcv8leon3/generic/generic.h>
 #else
 #error "Unsupported TARGET"
 #endif
