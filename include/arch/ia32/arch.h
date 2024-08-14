@@ -16,6 +16,8 @@
 #ifndef _LIBPHOENIX_ARCH_IA32_ARCH_H_
 #define _LIBPHOENIX_ARCH_IA32_ARCH_H_
 
+#include <phoenix/arch/ia32/ia32.h>
+
 #define __ARCH_STDINT <arch/ia32/stdint.h>
 #define __ARCH_LIMITS <arch/ia32/limits.h>
 #define __ARCH_SYS_IO <arch/ia32/io.h>

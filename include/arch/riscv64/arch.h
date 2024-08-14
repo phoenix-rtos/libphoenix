@@ -16,6 +16,8 @@
 #ifndef _LIBPHOENIX_ARCH_RISCV64_ARCH_H_
 #define _LIBPHOENIX_ARCH_RISCV64_ARCH_H_
 
+#include <phoenix/arch/riscv64/riscv64.h>
+
 #define __ARCH_STDINT <arch/riscv64/stdint.h>
 #define __ARCH_LIMITS <arch/riscv64/limits.h>
 #define __ARCH_SYS_IO <arch/riscv64/io.h>
