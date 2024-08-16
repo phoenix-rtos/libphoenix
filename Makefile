@@ -56,6 +56,7 @@ include posix/Makefile
 include phoenix/Makefile
 include pthread/Makefile
 include regex/Makefile
+include rtld/Makefile
 include signal/Makefile
 include stdio/Makefile
 include stdlib/Makefile
