@@ -290,16 +290,25 @@ FILE *freopen(const char *pathname, const char *mode, FILE *stream)
 }
 
 
-static int full_read(int fd, void *ptr, size_t size)
+static int full_read(int fd, void *ptr, size_t size, int *eof)
 {
 	int err;
 	int total = 0;
 
+	*eof = 0;
+
 	while (size) {
-		if ((err = __safe_read(fd, ptr, size)) < 0) {
-			return -1;
+		err = __safe_read_nb(fd, ptr, size);
+		if (err < 0) {
+			if (errno == EAGAIN) {
+				return total;
+			}
+			else {
+				return -1;
+			}
 		}
 		else if (!err) {
+			*eof = 1;
 			return total;
 		}
 		ptr += err;
@@ -328,21 +337,34 @@ static int full_write(int fd, const void *ptr, size_t size)
 
 size_t fread_unlocked(void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
-	int err;
+	int err, eof;
 	size_t readsz = nmemb * size;
 	size_t bytes;
 
-	if (!readsz) {
+	if (readsz == 0) {
 		return 0;
 	}
 
 	if (stream->buffer == NULL) {
 		/* unbuffered read */
-		if ((err = full_read(stream->fd, ptr, readsz)) < 0) {
+		err = full_read(stream->fd, ptr, readsz, &eof);
+		if (err >= 0) {
+			if (err < readsz) {
+				if (eof == 1) {
+					stream->flags |= F_EOF;
+				}
+				else {
+					/* received EAGAIN */
+					stream->flags |= F_ERROR;
+				}
+			}
+
+			return err / size;
+		}
+		else {
+			stream->flags |= F_ERROR;
 			return 0;
 		}
-
-		return err / size;
 	}
 
 	/* flush write buffer if writing */
@@ -363,43 +385,49 @@ size_t fread_unlocked(void *ptr, size_t size, size_t nmemb, FILE *stream)
 
 	/* refill read buffer */
 	if (stream->bufpos == stream->bufeof) {
-		if ((err = __safe_read(stream->fd, stream->buffer, stream->bufsz)) == -1) {
+		err = __safe_read_nb(stream->fd, stream->buffer, stream->bufsz);
+		if (err < 0) {
+			stream->flags |= F_ERROR;
 			return 0;
 		}
-
-		stream->bufpos = 0;
-		stream->bufeof = err;
-
-		if (!err) {
+		else if (err == 0) {
 			stream->flags |= F_EOF;
 			return 0;
 		}
-	}
-
-	if ((bytes = stream->bufeof - stream->bufpos)) {
-		bytes = min(bytes, readsz);
-		memcpy(ptr, stream->buffer + stream->bufpos, bytes);
-
-		ptr += bytes;
-		stream->bufpos += bytes;
-		readsz -= bytes;
-
-		if (!readsz) {
-			return nmemb;
+		else {
+			stream->bufpos = 0;
+			stream->bufeof = err;
 		}
 	}
 
-	/* read remainder directly into ptr */
-	if ((err = full_read(stream->fd, ptr, readsz)) != -1) {
+	bytes = min(stream->bufeof - stream->bufpos, readsz);
+	memcpy(ptr, stream->buffer + stream->bufpos, bytes);
+
+	ptr += bytes;
+	stream->bufpos += bytes;
+	readsz -= bytes;
+
+	if (readsz == 0) {
+		return nmemb;
+	}
+
+	/* read the remaining bytes directly into the user buffer */
+	err = full_read(stream->fd, ptr, readsz, &eof);
+	if (err >= 0) {
 		bytes += err;
 
 		if (err < readsz) {
-			stream->flags |= F_EOF;
+			if (eof == 1) {
+				stream->flags |= F_EOF;
+			}
+			else {
+				/* received EAGAIN */
+				stream->flags |= F_ERROR;
+			}
 		}
 	}
 	else {
 		stream->flags |= F_ERROR;
-		return 0;
 	}
 
 	return bytes / size;
@@ -437,7 +465,11 @@ size_t fwrite_unlocked(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 
 	/* discard reading buffer */
 	if (!(stream->flags & F_WRITING)) {
-		fflush_unlocked(stream);
+		if (stream->bufpos != stream->bufeof) {
+			if (fflush_unlocked(stream) < 0) {
+				return 0;
+			}
+		}
 		stream->flags |= F_WRITING;
 		stream->bufpos = 0;
 	}
