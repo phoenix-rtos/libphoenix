@@ -160,20 +160,24 @@ static void file_free(FILE *file)
 }
 
 
-int fclose(FILE *file)
+int fclose(FILE *stream)
 {
 	int err;
 
-	if (file == NULL) {
-		return -EINVAL;
+	if (stream == NULL) {
+		errno = EBADF;
+		return EOF;
 	}
 
-	fflush(file);
-	while ((err = __safe_close(file->fd)) < 0 && errno == EINTR) {
+	err = fflush(stream);
+	if (err == EOF) {
+		return EOF;
 	}
-	file_free(file);
 
-	return err;
+	err = __safe_close(stream->fd);
+	file_free(stream);
+
+	return (err < 0) ? EOF : 0;
 }
 
 
@@ -207,7 +211,6 @@ FILE *fopen(const char *filename, const char *mode)
 	f->bufsz = BUFSIZ;
 	f->fd = fd;
 	f->mode = m;
-	fflush(f);
 
 	mutexLock(file_common.lock);
 	LIST_ADD(&file_common.list, f);
@@ -251,7 +254,6 @@ FILE *fdopen(int fd, const char *mode)
 	f->bufsz = BUFSIZ;
 	f->fd = fd;
 	f->mode = m;
-	fflush(f);
 
 	mutexLock(file_common.lock);
 	LIST_ADD(&file_common.list, f);
@@ -263,14 +265,17 @@ FILE *fdopen(int fd, const char *mode)
 
 FILE *freopen(const char *pathname, const char *mode, FILE *stream)
 {
-	int m;
+	int m, err;
 
 	if ((m = string2mode(mode)) < 0) {
 		errno = EINVAL;
 		return NULL;
 	}
 
-	fflush(stream);
+	err = fflush(stream);
+	if (err == EOF) {
+		return NULL;
+	}
 
 	if (pathname != NULL) {
 		__safe_close(stream->fd);
@@ -283,24 +288,22 @@ FILE *freopen(const char *pathname, const char *mode, FILE *stream)
 		stream->mode = m;
 	}
 	else {
-		/* change mode */
+		/* TODO: change mode */
 	}
 
 	return stream;
 }
 
 
-static int full_read(int fd, void *ptr, size_t size)
+static ssize_t full_write(int fd, const void *ptr, size_t size)
 {
-	int err;
-	int total = 0;
+	ssize_t err;
+	ssize_t total = 0;
 
-	while (size) {
-		if ((err = __safe_read(fd, ptr, size)) < 0) {
-			return -1;
-		}
-		else if (!err) {
-			return total;
+	while (size > 0) {
+		err = __safe_write_nb(fd, ptr, size);
+		if (err < 0) {
+			return (errno == EAGAIN) ? total : -1;
 		}
 		ptr += err;
 		total += err;
@@ -311,48 +314,137 @@ static int full_read(int fd, void *ptr, size_t size)
 }
 
 
-static int full_write(int fd, const void *ptr, size_t size)
+static int __fflush_one(FILE *stream)
 {
-	int err;
-	while (size) {
-		if ((err = __safe_write(fd, ptr, size)) < 0) {
-			return -1;
-		}
-		ptr += err;
-		size -= err;
+	int ret = 0;
+	ssize_t err;
+	off_t off;
+
+	if (stream->buffer == NULL) {
+		return 0;
 	}
 
-	return size;
+	if ((stream->flags & F_WRITING) != 0) {
+		if (stream->bufpos != 0) {
+			err = full_write(stream->fd, stream->buffer, stream->bufpos);
+			if (err != stream->bufpos) {
+				stream->flags |= F_ERROR;
+				ret = -1;
+			}
+			else {
+				stream->bufpos = 0;
+			}
+		}
+	}
+	else {
+		if (stream->bufpos != stream->bufeof) {
+			off = lseek(stream->fd, (off_t)stream->bufpos - stream->bufeof, SEEK_CUR);
+			if (off == (off_t)-1) {
+				if (errno == ESPIPE) {
+					/* read buffer for non-seekable stream cannot be flushed */
+				}
+				else {
+					stream->flags |= F_ERROR;
+					ret = -1;
+				}
+			}
+			else {
+				stream->bufpos = stream->bufeof = stream->bufsz;
+			}
+		}
+	}
+
+	return ret;
+}
+
+
+static inline size_t unbuffer_data(FILE *stream, void *ptr, size_t readsz)
+{
+	size_t bytes = min(stream->bufeof - stream->bufpos, readsz);
+	if (bytes > 0) {
+		memcpy(ptr, stream->buffer + stream->bufpos, bytes);
+		stream->bufpos += bytes;
+	}
+	return bytes;
+}
+
+
+static inline ssize_t read_buffer(FILE *stream, size_t readsz)
+{
+	ssize_t err;
+	ssize_t total = 0;
+
+	/*
+	 * Note that readsz < stream->bufsz. Try to refill the buffer,
+	 * but stop if at least readsz bytes have already been read.
+	 */
+	while (total < readsz) {
+		err = __safe_read_nb(stream->fd, stream->buffer + total, stream->bufsz - total);
+		if (err < 0) {
+			stream->flags |= F_ERROR;
+			if (errno != EAGAIN) {
+				return -1;
+			}
+			break;
+		}
+		else if (err == 0) {
+			stream->flags |= F_EOF;
+			break;
+		}
+		total += err;
+	}
+
+	if (total > 0) {
+		stream->bufpos = 0;
+		stream->bufeof = total;
+	}
+
+	return total;
+}
+
+
+static inline ssize_t read_data(FILE *stream, void *ptr, size_t readsz)
+{
+	ssize_t err;
+	ssize_t total = 0;
+
+	while (readsz > 0) {
+		err = __safe_read_nb(stream->fd, ptr, readsz);
+		if (err < 0) {
+			stream->flags |= F_ERROR;
+			if (errno != EAGAIN) {
+				return -1;
+			}
+			break;
+		}
+		else if (err == 0) {
+			stream->flags |= F_EOF;
+			break;
+		}
+		ptr += err;
+		total += err;
+		readsz -= err;
+	}
+
+	return total;
 }
 
 
 size_t fread_unlocked(void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
-	int err;
+	ssize_t err;
 	size_t readsz = nmemb * size;
+	size_t total = 0;
 	size_t bytes;
 
-	if (!readsz) {
+	if (readsz == 0) {
 		return 0;
 	}
 
 	if (stream->buffer == NULL) {
 		/* unbuffered read */
-		if ((err = full_read(stream->fd, ptr, readsz)) < 0) {
-			return 0;
-		}
-
-		return err / size;
-	}
-
-	/* flush write buffer if writing */
-	if (stream->flags & F_WRITING) {
-		if (fflush_unlocked(stream) < 0) {
-			return 0;
-		}
-
-		stream->flags &= ~F_WRITING;
-		stream->bufpos = stream->bufeof = stream->bufsz;
+		err = read_data(stream, ptr, readsz);
+		return (err > 0) ? err / size : 0;
 	}
 
 	if (stream->mode & O_WRONLY) {
@@ -361,48 +453,52 @@ size_t fread_unlocked(void *ptr, size_t size, size_t nmemb, FILE *stream)
 		return 0;
 	}
 
-	/* refill read buffer */
-	if (stream->bufpos == stream->bufeof) {
-		if ((err = __safe_read(stream->fd, stream->buffer, stream->bufsz)) == -1) {
+	/* flush the write buffer if currently writing */
+	if ((stream->flags & F_WRITING) != 0) {
+		if (__fflush_one(stream) < 0) {
 			return 0;
 		}
-
-		stream->bufpos = 0;
-		stream->bufeof = err;
-
-		if (!err) {
-			stream->flags |= F_EOF;
-			return 0;
-		}
+		stream->flags &= ~F_WRITING;
+		stream->bufpos = stream->bufeof = stream->bufsz;
 	}
 
-	if ((bytes = stream->bufeof - stream->bufpos)) {
-		bytes = min(bytes, readsz);
-		memcpy(ptr, stream->buffer + stream->bufpos, bytes);
-
+	/* read from the buffer first */
+	if (stream->bufpos != stream->bufeof) {
+		bytes = unbuffer_data(stream, ptr, readsz);
 		ptr += bytes;
-		stream->bufpos += bytes;
 		readsz -= bytes;
+		total += bytes;
+	}
 
-		if (!readsz) {
-			return nmemb;
+	/* read full blocks directly from the file */
+	if (readsz >= stream->bufsz) {
+		bytes = (readsz / stream->bufsz) * stream->bufsz;
+		err = read_data(stream, ptr, bytes);
+		if (err > 0) {
+			ptr += err;
+			readsz -= err;
+			total += err;
+		}
+		if (err < bytes) {
+			return total / size;
 		}
 	}
 
-	/* read remainder directly into ptr */
-	if ((err = full_read(stream->fd, ptr, readsz)) != -1) {
-		bytes += err;
-
-		if (err < readsz) {
-			stream->flags |= F_EOF;
-		}
-	}
-	else {
-		stream->flags |= F_ERROR;
-		return 0;
+	if (readsz == 0) {
+		return nmemb;
 	}
 
-	return bytes / size;
+	/*
+	 * Note that at this point, the buffer is empty and readsz < stream->bufsz.
+	 * Refill the buffer and read the remaining bytes from it.
+	 */
+	err = read_buffer(stream, readsz);
+	if (err < 0) {
+		return total / size;
+	}
+	total += unbuffer_data(stream, ptr, readsz);
+
+	return total / size;
 }
 
 
@@ -416,67 +512,167 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
 }
 
 
+static inline size_t buffer_data(FILE *stream, const void *ptr, size_t writesz)
+{
+	size_t bytes = min(stream->bufsz - stream->bufpos, writesz);
+	if (bytes > 0) {
+		memcpy(stream->buffer + stream->bufpos, ptr, bytes);
+		stream->bufpos += bytes;
+	}
+	return bytes;
+}
+
+
+static inline ssize_t write_buffer(FILE *stream, size_t writesz)
+{
+	ssize_t err = full_write(stream->fd, stream->buffer, writesz);
+	if (err >= 0) {
+		stream->bufpos -= err;
+
+		if (err < writesz) {
+			/* EAGAIN */
+			stream->flags |= F_ERROR;
+
+			if (err > 0) {
+				memmove(stream->buffer, stream->buffer + err, stream->bufpos);
+			}
+		}
+	}
+	else {
+		stream->flags |= F_ERROR;
+	}
+	return err;
+}
+
+
+static inline ssize_t write_data(FILE *stream, const void *ptr, size_t writesz)
+{
+	ssize_t err = full_write(stream->fd, ptr, writesz);
+	if (err >= 0) {
+		if (err < writesz) {
+			/* EAGAIN */
+			stream->flags |= F_ERROR;
+		}
+	}
+	else {
+		stream->flags |= F_ERROR;
+	}
+	return err;
+}
+
+
 size_t fwrite_unlocked(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
-	int err;
+	ssize_t err;
 	size_t writesz = nmemb * size;
+	size_t total = 0;
+	size_t bytes;
 	char *nl;
 
-	if (!writesz) {
+	if (writesz == 0) {
 		return 0;
 	}
 
 	if (stream->buffer == NULL) {
 		/* unbuffered write */
-		if ((err = __safe_write(stream->fd, ptr, writesz)) < 0) {
-			return 0;
-		}
-
-		return err / size;
+		err = write_data(stream, ptr, writesz);
+		return (err > 0) ? err / size : 0;
 	}
 
-	/* discard reading buffer */
-	if (!(stream->flags & F_WRITING)) {
-		fflush_unlocked(stream);
-		stream->flags |= F_WRITING;
-		stream->bufpos = 0;
-	}
-
-	if (stream->mode & O_RDONLY) {
+	if ((stream->mode & O_RDONLY) != 0) {
 		set_errno(-EBADF);
 		stream->flags |= F_ERROR;
 		return 0;
 	}
 
-	/* write to buffer if fits */
-	if ((stream->bufsz - stream->bufpos) > writesz) {
-		memcpy(stream->buffer + stream->bufpos, ptr, writesz);
-		stream->bufpos += writesz;
+	/* flush the read buffer if currently reading */
+	if ((stream->flags & F_WRITING) == 0) {
+		if (__fflush_one(stream) < 0) {
+			return 0;
+		}
+		if (stream->bufpos != stream->bufeof) {
+			/* abort if the read buffer cannot be flushed (non-seekable stream) */
+			return 0;
+		}
+		stream->flags |= F_WRITING;
+		stream->bufpos = 0;
+	}
 
-		if ((stream->flags & F_LINE) && (nl = memrchr(stream->buffer, '\n', stream->bufpos)) != NULL) {
-			if ((err = full_write(stream->fd, stream->buffer, nl - stream->buffer + 1)) < 0) {
-				return 0;
+	/* fill the incomplete buffer first */
+	if (stream->bufpos > 0 && stream->bufpos < stream->bufsz) {
+		bytes = buffer_data(stream, ptr, writesz);
+		ptr += bytes;
+		writesz -= bytes;
+		total += bytes;
+	}
+
+	/* flush the full buffer */
+	if (stream->bufpos == stream->bufsz) {
+		err = write_buffer(stream, stream->bufsz);
+		if (err < stream->bufsz) {
+			if (err > 0) {
+				total += buffer_data(stream, ptr, writesz);
 			}
+			return total / size;
+		}
+	}
 
-			stream->bufpos -= nl - stream->buffer + 1;
-			memmove(stream->buffer, nl + 1, stream->bufpos);
+	/*
+	 * Note that at this point, either the buffer is empty with potentially more data to be written,
+	 * or the buffer still contains data but there's nothing left to write.
+	 */
+	if (stream->bufpos == 0) {
+		/* write full blocks directly to the file */
+		if (writesz >= stream->bufsz) {
+			bytes = (writesz / stream->bufsz) * stream->bufsz;
+			err = write_data(stream, ptr, bytes);
+			if (err > 0) {
+				ptr += err;
+				writesz -= err;
+				total += err;
+			}
+			if (err < bytes) {
+				if (err > 0) {
+					total += buffer_data(stream, ptr, writesz);
+				}
+				return total / size;
+			}
 		}
 
-		return nmemb;
+		/* write full lines in line-buffered mode directly to the file */
+		if (writesz > 0 && (stream->flags & F_LINE) != 0) {
+			nl = memrchr(ptr, '\n', writesz);
+			if (nl != NULL) {
+				bytes = nl - (const char *)ptr + 1;
+				err = write_data(stream, ptr, bytes);
+				if (err > 0) {
+					ptr += err;
+					writesz -= err;
+					total += err;
+				}
+				if (err < bytes) {
+					if (err > 0) {
+						total += buffer_data(stream, ptr, writesz);
+					}
+					return total / size;
+				}
+			}
+		}
+
+		/* write the remaining bytes to the empty buffer */
+		total += buffer_data(stream, ptr, writesz);
+	}
+	else {
+		/* write full lines from the buffer in line-buffered mode */
+		if (stream->bufpos > 0 && (stream->flags & F_LINE) != 0) {
+			nl = memrchr(stream->buffer, '\n', stream->bufpos);
+			if (nl != NULL) {
+				write_buffer(stream, nl - (const char *)stream->buffer + 1);
+			}
+		}
 	}
 
-	/* flush buffer and write to file */
-	if ((err = full_write(stream->fd, stream->buffer, stream->bufpos)) == -1) {
-		return 0;
-	}
-
-	stream->bufpos = 0;
-
-	if ((err = full_write(stream->fd, ptr, writesz)) == -1) {
-		return 0;
-	}
-
-	return nmemb;
+	return total / size;
 }
 
 
@@ -568,33 +764,6 @@ char *fgets(char *str, int n, FILE *stream)
 }
 
 
-static int __fflush_one(FILE *stream)
-{
-	int ret = 0;
-
-	if ((stream->flags & F_WRITING) != 0) {
-		if (stream->bufpos != 0) {
-			if (full_write(stream->fd, stream->buffer, stream->bufpos) < 0) {
-				ret = -1;
-			}
-			else {
-				stream->bufpos = 0;
-			}
-		}
-	}
-	else {
-		if (lseek(stream->fd, (off_t)stream->bufpos - stream->bufeof, SEEK_CUR) < 0) {
-			ret = -1;
-		}
-		else {
-			stream->bufpos = stream->bufeof = stream->bufsz;
-		}
-	}
-
-	return ret;
-}
-
-
 static int __fflush_unlocked(FILE *stream, int lock)
 {
 	int ret = 0;
@@ -609,7 +778,7 @@ static int __fflush_unlocked(FILE *stream, int lock)
 				}
 				if ((iter->flags & F_WRITING) != 0) {
 					if (__fflush_one(iter) < 0) {
-						ret = -1;
+						ret = EOF;
 					}
 				}
 				if (lock != 0) {
@@ -621,7 +790,9 @@ static int __fflush_unlocked(FILE *stream, int lock)
 		mutexUnlock(file_common.lock);
 	}
 	else {
-		ret = __fflush_one(stream);
+		if (__fflush_one(stream) < 0) {
+			ret = EOF;
+		}
 	}
 
 	return ret;
@@ -651,33 +822,71 @@ int fflush(FILE *stream)
 }
 
 
-static off_t fseektell_unlocked(FILE *stream, off_t offset, int whence)
+static off_t fseek_unlocked(FILE *stream, off_t offset, int whence)
 {
-	fflush_unlocked(stream);
-	stream->flags &= ~F_EOF;
+	int err;
+
+	err = __fflush_one(stream);
+	if (err < 0) {
+		return -1;
+	}
+
 	return lseek(stream->fd, offset, whence);
-}
-
-
-int fseek_unlocked(FILE *stream, long offset, int whence)
-{
-	return (int)fseektell_unlocked(stream, offset, whence);
 }
 
 
 int fseek(FILE *stream, long offset, int whence)
 {
-	int ret;
+	off_t off;
+
 	mutexLock(stream->lock);
-	ret = fseek_unlocked(stream, offset, whence);
+	off = fseek_unlocked(stream, offset, whence);
+	if (off != (off_t)-1) {
+		stream->flags &= ~F_EOF;
+	}
 	mutexUnlock(stream->lock);
-	return ret >= 0 ? 0 : -1;
+
+	return (off != (off_t)-1) ? 0 : -1;
 }
 
 
-long int ftell_unlocked(FILE *stream)
+int fseeko(FILE *stream, off_t offset, int whence)
 {
-	return (long int)fseektell_unlocked(stream, 0, SEEK_CUR);
+	off_t off;
+
+	mutexLock(stream->lock);
+	off = fseek_unlocked(stream, offset, whence);
+	if (off != (off_t)-1) {
+		stream->flags &= ~F_EOF;
+	}
+	mutexUnlock(stream->lock);
+
+	return (off != (off_t)-1) ? 0 : -1;
+}
+
+
+static off_t ftell_unlocked(FILE *stream)
+{
+	off_t off;
+
+	off = lseek(stream->fd, 0, SEEK_CUR);
+	if (off == (off_t)-1) {
+		return -1;
+	}
+
+	if (stream->buffer != NULL) {
+		/* adjust the offset based on buffered data */
+		if ((stream->flags & F_WRITING) != 0) {
+			off += stream->bufpos;
+		}
+		else {
+			if (stream->bufpos != stream->bufeof) {
+				off -= stream->bufeof - stream->bufpos;
+			}
+		}
+	}
+
+	return off;
 }
 
 
@@ -685,15 +894,9 @@ long int ftell(FILE *stream)
 {
 	long int ret;
 	mutexLock(stream->lock);
-	ret = ftell_unlocked(stream);
+	ret = (long int)ftell_unlocked(stream);
 	mutexUnlock(stream->lock);
 	return ret;
-}
-
-
-off_t ftello_unlocked(FILE *stream)
-{
-	return fseektell_unlocked(stream, 0, SEEK_CUR);
 }
 
 
@@ -701,7 +904,7 @@ off_t ftello(FILE *stream)
 {
 	off_t ret;
 	mutexLock(stream->lock);
-	ret = ftello_unlocked(stream);
+	ret = ftell_unlocked(stream);
 	mutexUnlock(stream->lock);
 	return ret;
 }
@@ -788,27 +991,28 @@ int putchar(int c)
 }
 
 
-int ungetc_unlocked(int c, FILE *stream)
+static int ungetc_unlocked(int c, FILE *stream)
 {
-	/* TODO: The file-position indicator is decremented by each successful call to ungetc(); */
-	if (c == EOF) {
+	if (c == EOF || stream->buffer == NULL) {
 		return EOF;
 	}
 
-	/* flush write buffer if writing */
-	if (stream->flags & F_WRITING) {
-		if (fflush(stream) < 0) {
+	/* flush the write buffer if currently writing */
+	if ((stream->flags & F_WRITING) != 0) {
+		if (__fflush_one(stream) < 0) {
 			return EOF;
 		}
-
 		stream->flags &= ~F_WRITING;
+		stream->bufpos = stream->bufeof = stream->bufsz;
 	}
 
-	if (!stream->bufpos) {
+	if (stream->bufpos > 0) {
+		stream->buffer[--stream->bufpos] = c;
+	}
+	else {
 		return EOF;
 	}
 
-	stream->buffer[--stream->bufpos] = c;
 	stream->flags &= ~F_EOF;
 	return c;
 }
@@ -912,22 +1116,6 @@ int getchar(void)
 void rewind(FILE *file)
 {
 	fseek(file, 0, SEEK_SET);
-}
-
-
-int fseeko_unlocked(FILE *stream, off_t offset, int whence)
-{
-	return (int)fseektell_unlocked(stream, offset, whence);
-}
-
-
-int fseeko(FILE *stream, off_t offset, int whence)
-{
-	int ret;
-	mutexLock(stream->lock);
-	ret = fseeko_unlocked(stream, offset, whence);
-	mutexUnlock(stream->lock);
-	return (ret >= 0) ? 0 : -1;
 }
 
 
