@@ -22,6 +22,9 @@
 WRAP_ERRNO_DEF(int, munmap, (void *vadddr, size_t size), (vadddr, size))
 
 
+WRAP_ERRNO_DEF(int, mprotect, (void *vaddr, size_t len, int prot), (vaddr, len, prot))
+
+
 extern int sys_mmap(void **vaddr, size_t size, int prot, int flags, int fildes, off_t offs);
 
 
