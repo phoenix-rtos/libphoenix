@@ -48,68 +48,92 @@ WRAP_ERRNO_DEF(int, dup2, (int fildes, int fildes2), (fildes, fildes2))
 WRAP_ERRNO_DEF(int, fsync, (int fildes), (fildes))
 
 
-ssize_t __safe_write(int fd, const void *buff, size_t size)
+ssize_t __safe_write(int fd, const void *buf, size_t size)
 {
-	size_t todo = size;
+	size_t left = size;
 	ssize_t wlen = 0;
-	const char *ptr = buff;
+	const char *ptr = buf;
 
-	while (todo != 0) {
-		wlen = write(fd, ptr, todo);
+	while (left > 0) {
+		wlen = write(fd, ptr, left);
 		if (wlen > 0) {
-			todo -= wlen;
+			left -= wlen;
 			ptr += wlen;
 		}
-		else if (wlen < 0) {
-			if ((errno == EINTR) || (errno == EAGAIN)) {
-				continue;
-			}
-			break;
+		else if (wlen == 0) {
+			/* Undefined behavior: write() returning 0, treat it as an I/O error */
+			errno = EIO;
+			return -1;
+		}
+		else if (errno == EINTR || errno == EAGAIN) {
+			/* Retry on interrupt or non-blocking case */
+			continue;
 		}
 		else {
-			/* Undefined behaviour (wlen==0) */
-			errno = EIO;
-			break;
+			return -1;
 		}
 	}
 
-	if (wlen < 0) {
+	return size;
+}
+
+
+ssize_t __safe_write_nb(int fd, const void *buf, size_t size)
+{
+	ssize_t wlen;
+
+	do {
+		wlen = write(fd, buf, size);
+	} while (wlen < 0 && errno == EINTR);
+
+	if (wlen == 0) {
+		/* Undefined behavior: write() returning 0, treat it as an I/O error */
+		errno = EIO;
 		return -1;
 	}
 
-	return size - todo;
+	return wlen;
 }
 
 
 ssize_t __safe_read(int fd, void *buf, size_t size)
 {
 	ssize_t rlen = 0;
-	size_t todo = size;
+	size_t left = size;
 	char *ptr = buf;
 
-	while (todo > 0) {
-		rlen = read(fd, ptr, todo);
+	while (left > 0) {
+		rlen = read(fd, ptr, left);
 		if (rlen > 0) {
-			todo -= rlen;
+			left -= rlen;
 			ptr += rlen;
 		}
 		else if (rlen == 0) {
 			/* EOF */
 			break;
 		}
-		else if ((errno == EINTR) || (errno == EAGAIN)) {
+		else if (errno == EINTR || errno == EAGAIN) {
+			/* Retry on interrupt or non-blocking case */
 			continue;
 		}
 		else {
-			break;
+			return -1;
 		}
 	}
 
-	if (rlen < 0) {
-		return -1;
-	}
+	return size - left;
+}
 
-	return size - todo;
+
+ssize_t __safe_read_nb(int fd, void *buf, size_t size)
+{
+	ssize_t rlen;
+
+	do {
+		rlen = read(fd, buf, size);
+	} while (rlen < 0 && errno == EINTR);
+
+	return rlen;
 }
 
 
