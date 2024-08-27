@@ -45,6 +45,9 @@ static struct {
 } atexit_common = { .head = &((struct atexit_node) {}) };
 
 
+extern void __cxa_thread_atexit_init(void);
+
+
 /* Initialise atexit_common structure before main */
 void _atexit_init(void)
 {
@@ -52,6 +55,8 @@ void _atexit_init(void)
 	memset(atexit_common.head, 0, sizeof(struct atexit_node));
 	atexit_common.idx = 0;
 	atexit_common.newestNode = atexit_common.head;
+
+	__cxa_thread_atexit_init();
 }
 
 
