@@ -39,6 +39,7 @@ LOCAL_INSTALL_PATH := $(or $(LOCAL_INSTALL_PATH),$(DEFAULT_INSTALL_PATH_SO))
 
 install-shared: $(PREFIX_SO)$(REALNAME) $(PREFIX_ROOTFS)$(LOCAL_INSTALL_PATH)/$(REALNAME) install-shared-libs
 
+
 $(PREFIX_ROOTFS)$(LOCAL_INSTALL_PATH)/$(REALNAME): $(PREFIX_SO)$(REALNAME)
 	$(INSTALL_FS)
 
@@ -60,3 +61,33 @@ install-shared-libs: $(PREFIX_SO)$(REALNAME) install-libs
 			fi \
 		done \
 	)
+
+# During toolchain build shared toolchain libs are not yet ready.
+ifneq ($(TOOLCHAIN_BUILD),y)
+
+install-shared: rootfs-install-shared-toolchain-libs install-shared-toolchain-libs
+
+TOOLCHAIN_LIBS_PATH := $(shell $(CC) --print-sysroot)/lib/$(MULTILIB_DIR)
+
+rootfs-install-shared-toolchain-libs install-shared-toolchain-libs: TOOLCHAIN_LIBS_PATH := $(TOOLCHAIN_LIBS_PATH)
+
+
+# libstdc++ version differs depending on compilers version.
+LIBSTDCXX=$(shell find $(TOOLCHAIN_LIBS_PATH) -regex '.*/libstdc\+\+\.so\.[0-9]+\.[0-9]+' -exec basename {} \; | head -n 1)
+LIBSTDCXX_MAJOR=$(shell echo $(LIBSTDCXX) | sed "s/\.[0-9]\+$//")
+
+
+rootfs-install-shared-toolchain-libs: $(PREFIX_ROOTFS)$(LOCAL_INSTALL_PATH)/$(REALNAME)
+	$(SIL)cp $(TOOLCHAIN_LIBS_PATH)/$(LIBSTDCXX) $(PREFIX_ROOTFS)$(LOCAL_INSTALL_PATH)
+	$(SIL)cp $(TOOLCHAIN_LIBS_PATH)/libgcc_s.so.1 $(PREFIX_ROOTFS)$(LOCAL_INSTALL_PATH)
+
+
+install-shared-toolchain-libs: install-shared-libs
+	$(SIL)ln -sf $(TOOLCHAIN_LIBS_PATH)/$(LIBSTDCXX) $(LIBC_INSTALL_DIR)
+	$(SIL)ln -sf $(TOOLCHAIN_LIBS_PATH)/libgcc_s.so.1 $(LIBC_INSTALL_DIR)
+	$(SIL)(cd $(LIBC_INSTALL_DIR) && \
+		ln -sf $(LIBSTDCXX) $(LIBSTDCXX_MAJOR) && ln -sf $(LIBSTDCXX) libstdc++.so && \
+		ln -sf libgcc_s.so.1 libgcc_s.so \
+	)
+
+endif
