@@ -52,8 +52,12 @@ int beginthreadex(void (*start)(void *), unsigned int priority, void *stack, uns
 }
 
 
+void __cxa_thread_atexit_run(void);
+
+
 __attribute__((noreturn)) void endthread(void)
 {
+	__cxa_thread_atexit_run();
 	_rtld_tls_free_curr();
 	endthreadsvc();
 }
