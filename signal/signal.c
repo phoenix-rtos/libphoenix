@@ -337,8 +337,9 @@ int sigfillset(sigset_t *set)
 
 int sigaddset(sigset_t *set, int signo)
 {
-	if (set == NULL || signo >= NSIG)
-		return -1;
+	if ((set == NULL) || (signo >= NSIG)) {
+		return SET_ERRNO(-EINVAL);
+	}
 
 	*set |= 1 << signo;
 	return 0;
@@ -353,8 +354,9 @@ int sigismember(const sigset_t *set, int signum)
 
 int sigemptyset(sigset_t *set)
 {
-	if (set == NULL)
-		return -1;
+	if (set == NULL) {
+		return SET_ERRNO(-EINVAL);
+	}
 
 	memset(set, 0, sizeof(sigset_t));
 	return 0;
@@ -369,8 +371,9 @@ int sigisemptyset(sigset_t *set)
 
 int sigdelset(sigset_t *set, int signum)
 {
-	if (set == NULL || signum >= NSIG)
-		return -1;
+	if ((set == NULL) || (signum >= NSIG)) {
+		return SET_ERRNO(-EINVAL);
+	}
 
 	*set &= ~(1 << signum);
 	return 0;
