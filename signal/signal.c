@@ -331,7 +331,12 @@ int sigsuspend(const sigset_t *sigmask)
 
 int sigfillset(sigset_t *set)
 {
-	return -ENOSYS;
+	if (set == NULL) {
+		return SET_ERRNO(-EINVAL);
+	}
+
+	memset(set, ~0, sizeof(sigset_t));
+	return 0;
 }
 
 
@@ -365,7 +370,15 @@ int sigemptyset(sigset_t *set)
 
 int sigisemptyset(sigset_t *set)
 {
-	return -ENOSYS;
+	sigset_t empty;
+
+	if (set == NULL) {
+		return SET_ERRNO(-EINVAL);
+	}
+
+	(void)sigemptyset(&empty);
+
+	return (memcmp(set, &empty, sizeof(sigset)) == 0);
 }
 
 
