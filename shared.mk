@@ -39,9 +39,10 @@ LOCAL_INSTALL_PATH := $(or $(LOCAL_INSTALL_PATH),$(DEFAULT_INSTALL_PATH_SO))
 
 install-shared: $(PREFIX_SO)$(REALNAME) $(PREFIX_ROOTFS)$(LOCAL_INSTALL_PATH)/$(REALNAME) install-shared-libs
 
-
+# Install and strip binary
 $(PREFIX_ROOTFS)$(LOCAL_INSTALL_PATH)/$(REALNAME): $(PREFIX_SO)$(REALNAME)
 	$(INSTALL_FS)
+	$(STRIP) $(PREFIX_ROOTFS)$(LOCAL_INSTALL_PATH)/$(REALNAME)
 
 install-shared-libs: $(PREFIX_SO)$(REALNAME) install-libs
 	$(SIL)(cd $(LIBC_INSTALL_DIR) && \
@@ -78,8 +79,8 @@ LIBSTDCXX_MAJOR=$(shell echo $(LIBSTDCXX) | sed "s/\.[0-9]\+$//")
 
 
 rootfs-install-shared-toolchain-libs: $(PREFIX_ROOTFS)$(LOCAL_INSTALL_PATH)/$(REALNAME)
-	$(SIL)cp $(TOOLCHAIN_LIBS_PATH)/$(LIBSTDCXX) $(PREFIX_ROOTFS)$(LOCAL_INSTALL_PATH)
-	$(SIL)cp $(TOOLCHAIN_LIBS_PATH)/libgcc_s.so.1 $(PREFIX_ROOTFS)$(LOCAL_INSTALL_PATH)
+	$(SIL)$(STRIP) $(TOOLCHAIN_LIBS_PATH)/$(LIBSTDCXX) -o $(PREFIX_ROOTFS)$(LOCAL_INSTALL_PATH)/$(LIBSTDCXX)
+	$(SIL)$(STRIP) $(TOOLCHAIN_LIBS_PATH)/libgcc_s.so.1 -o $(PREFIX_ROOTFS)$(LOCAL_INSTALL_PATH)/libgcc_s.so.1
 
 
 install-shared-toolchain-libs: install-shared-libs
