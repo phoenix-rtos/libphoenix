@@ -30,7 +30,11 @@
 .type _setjmp, %function
 _setjmp:
 	mv a1, zero
+#if __pic__ == 0
 	j sigsetjmp
+#else
+	tail sigsetjmp
+#endif
 .size _setjmp, .-_setjmp
 
 
@@ -38,7 +42,11 @@ _setjmp:
 .type setjmp, %function
 setjmp:
 	li a1, 1
+#if __pic__ == 0
 	j sigsetjmp
+#else
+	tail sigsetjmp
+#endif
 .size setjmp, .-setjmp
 
 
