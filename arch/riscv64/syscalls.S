@@ -54,7 +54,11 @@ sym: \
 .globl vfork;
 .type vfork, %function;
 vfork:
+#if __pic__ == 0
 	j vforksvc
+#else
+	tail vforksvc
+#endif
 .size vfork, .-vfork
 
 
