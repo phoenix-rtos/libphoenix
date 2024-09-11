@@ -30,31 +30,17 @@
 #define __STRNCPY
 #define __MEMMOVE
 
+
 #if __ARM_PCS_VFP || (__VFP_FP__ && !__SOFTFP__)
 #if __ARM_FP & 8
 #define __IEEE754_SQRT
-
-static inline double __ieee754_sqrt(double x)
-{
-	/* clang-format off */
-	__asm__ volatile ("vsqrt.f64 %P0, %P1" : "=w"(x) : "w"(x));
-	/* clang-format on */
-
-	return x;
-}
+#define __ieee754_sqrt(x) ({ double a = (x); __asm__ volatile ("vsqrt.f64 %P0, %P1" : "=w"(a) : "w"(a)); a; })
 #endif
 
 #define __IEEE754_SQRTF
-
-static inline float __ieee754_sqrtf(float x)
-{
-	/* clang-format off */
-	__asm__ volatile ("vsqrt.f32 %0, %1" : "=t"(x) : "t"(x));
-	/* clang-format on */
-
-	return x;
-}
+#define __ieee754_sqrtf(x) ({ float a = (x); __asm__ volatile ("vsqrt.f32 %0, %1" : "=t"(a) : "t"(a)); a; })
 #endif
+
 
 #define _PAGE_SIZE 0x200
 #define SIZE_PAGE  _Pragma("GCC warning \"'SIZE_PAGE' is deprecated. Use _PAGE_SIZE from arch.h or PAGE_SIZE from limits.h (POSIX only)\"") _PAGE_SIZE
