@@ -76,8 +76,6 @@ double sqrt(double x)
 	}
 
 #ifdef __IEEE754_SQRT
-	double __ieee754_sqrt(double x);
-
 	return __ieee754_sqrt(x);
 #else
 	/* Use reciprocal square root method: */
@@ -120,8 +118,6 @@ double sqrt(double x)
 float sqrtf(float x)
 {
 #ifdef __IEEE754_SQRTF
-	float __ieee754_sqrtf(float x);
-
 	if (x < 0.0f) {
 		errno = EDOM;
 		return -NAN;
