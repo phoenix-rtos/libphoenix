@@ -54,7 +54,12 @@ sym: \
 .globl vfork;
 .type vfork, %function;
 vfork:
+#if __pic__ == 0
 	j vforksvc
+#else
+	auipc t0, %pcrel_hi(vforksvc)
+	jr    t0, %pcrel_lo(vfork)
+#endif
 .size vfork, .-vfork
 
 

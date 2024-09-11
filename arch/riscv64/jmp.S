@@ -29,16 +29,28 @@
 .globl _setjmp
 .type _setjmp, %function
 _setjmp:
+#if __pic__ == 0
 	mv a1, zero
 	j sigsetjmp
+#else
+	auipc t0, %pcrel_hi(sigsetjmp)
+	mv a1, zero
+	jr  t0, %pcrel_lo(setjmp)
+#endif
 .size _setjmp, .-_setjmp
 
 
 .globl setjmp
 .type setjmp, %function
 setjmp:
+#if __pic__ == 0
 	li a1, 1
-	j sigsetjmp
+	j  sigsetjmp
+#else
+	auipc t0, %pcrel_hi(sigsetjmp)
+	li    a1, 1
+	jr    t0, %pcrel_lo(setjmp)
+#endif
 .size setjmp, .-setjmp
 
 
