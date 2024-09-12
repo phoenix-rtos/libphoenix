@@ -112,8 +112,19 @@ _longjmp:
 .type sigsetjmp, #function
 sigsetjmp:
 	cmp %o1, 0
-	bne setjmp
+	bne 1f
 	nop
+#if __pic__ == 0
 	ba _setjmp
+#else
+	jmp _setjmp
+#endif
+	nop
+1:
+#if __pic__ == 0
+	ba setjmp
+#else
+	jmp setjmp
+#endif
 	nop
 .size sigsetjmp, .-sigsetjmp
