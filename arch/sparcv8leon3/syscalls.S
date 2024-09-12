@@ -37,7 +37,11 @@ sym: \
 .globl vfork
 .type vfork, #function
 vfork:
+#if __pic__ == 0
 	ba vforksvc
+#else
+	jmp vforksvc
+#endif
 	nop
 .size vfork, .-vfork
 
