@@ -35,11 +35,7 @@ sym: \
 
 
 .globl vfork
-.type vfork, #function
-vfork:
-	ba vforksvc
-	nop
-.size vfork, .-vfork
+vfork = vforksvc
 
 
 #define SYSCALLS_LIBC(name) \
