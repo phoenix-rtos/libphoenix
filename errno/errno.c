@@ -15,13 +15,15 @@
 
 #include <sys/rb.h>
 #include <sys/threads.h>
+#include <sys/tls.h>
 #include <errno.h>
 #include <arch.h>
 
 
-#ifdef __LIBPHOENIX_ARCH_TLS_SUPPORTED
+#ifdef __LIBPHOENIX_ARCH_USE_TLS
 
 static __thread int __errno_tls;
+static int __errno_singlethread;
 
 #else
 
@@ -45,7 +47,7 @@ static int errno_cmp(rbnode_t *n1, rbnode_t *n2)
 
 int *__errno_location(void)
 {
-#ifndef __LIBPHOENIX_ARCH_TLS_SUPPORTED
+#ifndef __LIBPHOENIX_ARCH_USE_TLS
 	struct __errno_t *e, r;
 	r.tid = gettid();
 
@@ -58,14 +60,15 @@ int *__errno_location(void)
 
 	return &errno_global;
 #else
-	return &__errno_tls;
+	/* Errno maybe called before TLS is initialized(malloc) */
+	return (__isthreaded == 0) ? &__errno_singlethread : &__errno_tls;
 #endif
 }
 
 
 void _errno_new(struct __errno_t *e)
 {
-#ifndef __LIBPHOENIX_ARCH_TLS_SUPPORTED
+#ifndef __LIBPHOENIX_ARCH_USE_TLS
 	e->no = 0;
 	e->tid = gettid();
 
@@ -78,7 +81,7 @@ void _errno_new(struct __errno_t *e)
 
 void _errno_remove(struct __errno_t *e)
 {
-#ifndef __LIBPHOENIX_ARCH_TLS_SUPPORTED
+#ifndef __LIBPHOENIX_ARCH_USE_TLS
 	mutexLock(errno_common.lock);
 	lib_rbRemove(&errno_common.tree, &e->linkage);
 	mutexUnlock(errno_common.lock);
@@ -88,7 +91,7 @@ void _errno_remove(struct __errno_t *e)
 
 void _errno_init(void)
 {
-#ifndef __LIBPHOENIX_ARCH_TLS_SUPPORTED
+#ifndef __LIBPHOENIX_ARCH_USE_TLS
 	mutexCreate(&errno_common.lock);
 	lib_rbInit(&errno_common.tree, errno_cmp, NULL);
 #endif

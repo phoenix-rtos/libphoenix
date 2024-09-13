@@ -72,12 +72,25 @@ extern int main(int argc, char **argv);
 
 char **environ;
 const char *argv_progname;
+char **auxvStart; /* char** instead of void* to make iteration easier and don't waste any stack space. */
 
 
 __attribute__((noreturn)) void _startc(void (*cleanup)(void), int argc, char **argv, char **env)
 {
 	environ = env;
 	argv_progname = *argv;
+
+	if (env == NULL) {
+		auxvStart = argv;
+	}
+	else {
+		auxvStart = env;
+	}
+
+	while ((*auxvStart) != NULL) {
+		auxvStart++;
+	}
+	auxvStart++;
 
 	_libc_init();
 
