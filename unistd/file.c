@@ -101,15 +101,23 @@ ssize_t __safe_read(int fd, void *buf, size_t size)
 			continue;
 		}
 		else {
-			break;
+			return -1;
 		}
 	}
 
-	if (rlen < 0) {
-		return -1;
-	}
-
 	return size - todo;
+}
+
+
+ssize_t __safe_read_nb(int fd, void *buf, size_t size)
+{
+	ssize_t rlen;
+
+	do {
+		rlen = read(fd, buf, size);
+	} while (rlen < 0 && errno == EINTR);
+
+	return rlen;
 }
 
 
