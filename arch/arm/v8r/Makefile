@@ -6,4 +6,4 @@
 # %LICENSE%
 #
 
-OBJS += $(addprefix $(PREFIX_O)arch/arm/v8r/, syscalls.o reboot.o)
+OBJS += $(addprefix $(PREFIX_O)arch/arm/v8r/, syscalls.o reboot.o tls.o)

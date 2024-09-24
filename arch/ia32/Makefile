@@ -5,5 +5,5 @@
 # Author: Pawel Pisarczyk
 #
 
-OBJS += $(addprefix $(PREFIX_O)arch/ia32/, syscalls.o jmp.o signal.o string.o reboot.o)
+OBJS += $(addprefix $(PREFIX_O)arch/ia32/, syscalls.o jmp.o signal.o string.o reboot.o tls.o)
 CRT0_OBJS += $(addprefix $(PREFIX_O)arch/ia32/, crt0.o)

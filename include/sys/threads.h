@@ -18,15 +18,22 @@
 
 #include <sys/types.h>
 #include <sys/rb.h>
+#include <sys/rb.h>
+#include <sys/tls.h>
 #include <stddef.h>
 #include <phoenix/sysinfo.h>
 #include <phoenix/signal.h>
 #include <phoenix/threads.h>
 #include <phoenix/time.h>
+#include <stdlib.h>
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+
+extern int __isthreaded;
 
 
 typedef struct {
@@ -70,11 +77,21 @@ extern int spawnSyspage(const char *imap, const char *dmap, const char *name, ch
 extern int threadJoin(int tid, time_t timeout);
 
 
+extern int beginthreadexsvc(void (*start)(void *), unsigned int priority, void *stack, unsigned int stacksz, void *arg, handle_t *id, void *tcb);
+
+
+__attribute__((noreturn)) extern void endthreadsvc(void);
+
+
+__attribute__((noreturn)) static inline void endthread(void)
+{
+	__tls_release();
+
+	endthreadsvc();
+}
+
+
 extern int beginthreadex(void (*start)(void *), unsigned int priority, void *stack, unsigned int stacksz, void *arg, handle_t *id);
-
-
-__attribute__((noreturn))
-extern void endthread(void);
 
 
 static inline int beginthread(void (*start)(void *), unsigned int priority, void *stack, unsigned int stacksz, void *arg)
