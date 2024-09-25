@@ -51,6 +51,11 @@ typedef struct {
 	volatile int initialized;
 } pthread_mutex_t;
 
+/* TODO */
+typedef int pthread_rwlock_t;
+
+typedef int pthread_rwlockattr_t;
+
 
 typedef struct lockAttr pthread_mutexattr_t;
 
