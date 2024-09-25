@@ -297,6 +297,9 @@ extern int ttyname_r(int fildes, char *name, size_t namesize);
 extern int pause(void);
 
 
+extern int chroot(const char *path);
+
+
 extern char *optarg;
 
 
