@@ -1340,6 +1340,57 @@ void pthread_cleanup_pop(int execute)
 }
 
 
+/* FIXME: rwlocks are yet to be implemented, that breaks shared_mutex in cpp. */
+int pthread_rwlock_rdlock(pthread_rwlock_t *rwlock)
+{
+	(void)rwlock;
+	return ENOSYS;
+}
+
+
+int pthread_rwlock_tryrdlock(pthread_rwlock_t *rwlock)
+{
+	(void)rwlock;
+	return ENOSYS;
+}
+
+
+int pthread_rwlock_trywrlock(pthread_rwlock_t *rwlock)
+{
+	(void)rwlock;
+	return ENOSYS;
+}
+
+
+int pthread_rwlock_wrlock(pthread_rwlock_t *rwlock)
+{
+	(void)rwlock;
+	return ENOSYS;
+}
+
+
+int pthread_rwlock_unlock(pthread_rwlock_t *rwlock)
+{
+	(void)rwlock;
+	return ENOSYS;
+}
+
+
+int pthread_rwlock_destroy(pthread_rwlock_t *rwlock)
+{
+	(void)rwlock;
+	return ENOSYS;
+}
+
+
+int pthread_rwlock_init(pthread_rwlock_t *__restrict__ rwlock, const pthread_rwlockattr_t *__restrict__ attr)
+{
+	(void)rwlock;
+	(void)attr;
+	return ENOSYS;
+}
+
+
 void _pthread_init(void)
 {
 	mutexCreate(&pthread_common.pthread_key_lock);
