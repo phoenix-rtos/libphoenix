@@ -33,8 +33,8 @@
 
 extern int sys_open(const char *filename, int oflag, ...);
 extern int sys_mkfifo(const char *filename, mode_t mode);
-extern int sys_link(const char *path1, const char *path2);
-extern int sys_unlink(const char *path);
+extern int sys_link(const char *path1, size_t len1, const char *path2, size_t len2);
+extern int sys_unlink(const char *path, size_t len);
 extern int sys_pipe(int fildes[2]);
 extern int sys_fstat(int fd, struct stat *buf);
 extern int sys_lseek(int fildes, off_t *offset, int whence);
@@ -170,16 +170,19 @@ int link(const char *oldpath, const char *newpath)
 	int err;
 
 	/* resolve_last_symlink = 0 -> we should link symlink instead of target */
-	if ((oldcanonical = resolve_path(oldpath, NULL, 0, 0)) == NULL)
+	oldcanonical = resolve_path(oldpath, NULL, 0, 0);
+	if (oldcanonical == NULL) {
 		return -1; /* errno set by resolve_path */
+	}
 
 	/* allow_missing_leaf = 1 -> we should be creating new link */
-	if ((newcanonical = resolve_path(newpath, NULL, 1, 1)) == NULL) {
+	newcanonical = resolve_path(newpath, NULL, 1, 1);
+	if (newcanonical == NULL) {
 		free(oldcanonical);
 		return -1; /* errno set by resolve_path */
 	}
 
-	err = sys_link(oldcanonical, newcanonical);
+	err = sys_link(oldcanonical, strlen(oldcanonical), newcanonical, strlen(newcanonical));
 	free(oldcanonical);
 	free(newcanonical);
 
@@ -194,11 +197,11 @@ int unlink(const char *path)
 
 	/* resolve_last_symlink = 0 -> we should delete symlink instead of target file */
 	canonical = resolve_path(path, NULL, 0, 0);
-
-	if (canonical == NULL)
+	if (canonical == NULL) {
 		return -1; /* errno set by resolve_path */
+	}
 
-	err = sys_unlink(canonical);
+	err = sys_unlink(canonical, strlen(canonical));
 	free(canonical);
 	return SET_ERRNO(err);
 }
