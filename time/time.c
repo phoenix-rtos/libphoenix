@@ -162,7 +162,7 @@ static int epochDaysToYears(int days, int *yearDay)
 	/* Move day 0 from 1970-01-01 to 2000-02-29. 2000-02-29 closest date when all periods restart.
 	 * Algorithm also works correctly when days < 0.
 	 */
-	int year = 2000, leapDay, fullPeriods;
+	int year = 2000, leapDay = 0, fullPeriods;
 	days -= 11016;
 
 	static const struct {
