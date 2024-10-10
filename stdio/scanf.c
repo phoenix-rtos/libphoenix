@@ -123,8 +123,9 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 	nread = 0;
 	base = 0;
 	for (;;) {
+		int convType = CT_NONE;
 		c = *fmt++;
-		if (c == 0) {
+		if (c == '\0') {
 			return (nassigned);
 		}
 
@@ -156,6 +157,10 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 		flags = 0;
 		for (;;) {
 			c = *fmt++;
+			if (c == '\0') {
+				return nassigned;
+			}
+
 			if (c == '%') {
 				if (*inr <= 0) {
 					return (nconversions != 0 ? nassigned : -1);
@@ -236,23 +241,23 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 			 */
 			switch (c) {
 				case 'd':
-					c = CT_INT;
+					convType = CT_INT;
 					base = 10;
 					break;
 
 				case 'i':
-					c = CT_INT;
+					convType = CT_INT;
 					base = 0;
 					break;
 
 				case 'o':
-					c = CT_INT;
+					convType = CT_INT;
 					flags |= UNSIGNED;
 					base = 8;
 					break;
 
 				case 'u':
-					c = CT_INT;
+					convType = CT_INT;
 					flags |= UNSIGNED;
 					base = 10;
 					break;
@@ -260,7 +265,7 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 				case 'X':
 				case 'x':
 					flags |= PFXOK; /* enable 0x prefixing */
-					c = CT_INT;
+					convType = CT_INT;
 					flags |= UNSIGNED;
 					base = 16;
 					break;
@@ -273,28 +278,28 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 				case 'e':
 				case 'f':
 				case 'g':
-					c = CT_FLOAT;
+					convType = CT_FLOAT;
 					break;
 
 
 				case 's':
-					c = CT_STRING;
+					convType = CT_STRING;
 					break;
 
 				case '[':
 					fmt = __sccl(ccltab, fmt);
 					flags |= NOSKIP;
-					c = CT_CCL;
+					convType = CT_CCL;
 					break;
 
 				case 'c':
 					flags |= NOSKIP;
-					c = CT_CHAR;
+					convType = CT_CHAR;
 					break;
 
 				case 'p':
 					flags |= POINTER | PFXOK | UNSIGNED;
-					c = CT_INT;
+					convType = CT_INT;
 					base = 16;
 					break;
 
@@ -321,17 +326,17 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 					else {
 						*va_arg(ap, int *) = nread;
 					}
-					c = CT_NONE;
 					break;
+
 				default:
-					c = CT_NONE;
-					/* TODO: Handle this */
-					break;
+					/* Character not a conversion specifier; end parsing */
+					return nassigned;
 			}
 
 			break;
 		}
-		if (c == '%') {
+
+		if (convType == CT_NONE) {
 			continue;
 		}
 
@@ -354,7 +359,7 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 		/*
 		 * Do the conversion.
 		 */
-		switch (c) {
+		switch (convType) {
 			case CT_CHAR:
 				if (width == 0) {
 					width = 1;
@@ -682,8 +687,6 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 				nconversions++;
 				break;
 
-			case CT_NONE:
-				break;
 			default:
 				break;
 		}
