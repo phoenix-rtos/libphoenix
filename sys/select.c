@@ -46,14 +46,29 @@ int select(int nfds, fd_set *rd, fd_set *wr, fd_set *ex, struct timeval *to)
 	struct pollfd *pfd;
 	time_t timeout;
 	size_t i, n;
-	int err;
+	int rv;
+
+	if ((nfds < 0) || (nfds > FD_SETSIZE)) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	if ((to != NULL) && ((to->tv_usec < 0) || (to->tv_usec > 999999))) {
+		errno = EINVAL;
+		return -1;
+	}
 
 	for (n = i = 0; i < nfds; ++i)
 		if (SFD_ISSET(i, rd) || SFD_ISSET(i, wr) || SFD_ISSET(i, ex))
 			++n;
 
-	if (!n)
-		return usleep(poll_timeout(to));
+	rv = poll_timeout(to);
+	timeout = rv < 0 ? 0 : (time_t)rv;
+
+	if (n == 0) {
+		rv = usleep(timeout);
+		return rv < 0 ? -1 : 0;
+	}
 
 	pfd = calloc(n, sizeof(*pfd));
 	if (!pfd) {
@@ -76,22 +91,19 @@ int select(int nfds, fd_set *rd, fd_set *wr, fd_set *ex, struct timeval *to)
 		++n;
 	}
 
-	if (to) {
-		if (to->tv_sec < INT_MAX / 1000) {
-			timeout = ((to->tv_usec + 999) / 1000) + to->tv_sec * 1000;
-			if (timeout > INT_MAX)
-				timeout = -1;
-		} else
-			timeout = -1;
-	} else
-		timeout = -1;
+	rv = poll(pfd, n, timeout);
 
-	err = poll(pfd, n, timeout);
+	for (i = 0; i < n; ++i) {
+		if ((pfd[i].revents & POLLNVAL) != 0) {
+			rv = -EBADF;
+			break;
+		}
+	}
 
-	if (err < 0) {
+	if (rv < 0) {
 		if (pfd)
 			free(pfd);
-		return err;
+		return SET_ERRNO(rv);
 	}
 
 	if (rd)
