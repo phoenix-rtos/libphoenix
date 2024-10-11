@@ -179,7 +179,9 @@ int memcmp(const void *s1, const void *s2, size_t count)
 
 #ifndef __STRLEN
 #define __STRLEN
-size_t strlen(const char *s)
+/* FIXME: long-standing bug in gcc https://gcc.gnu.org/bugzilla/show_bug.cgi?id=102725
+ *        it occurs in strlen causing inf loop, can be avoided if all platform implement strlen in asm. */
+__attribute__((optimize("-fno-tree-loop-distribute-patterns"))) size_t strlen(const char *s)
 {
 	unsigned int k;
 
