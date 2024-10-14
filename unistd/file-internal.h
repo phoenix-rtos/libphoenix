@@ -20,10 +20,18 @@
 #include <sys/types.h>
 
 
-ssize_t __safe_write(int fd, const void *buff, size_t size);
+ssize_t __safe_write(int fd, const void *buf, size_t size);
+
+
+/* non-blocking variant - returns on EAGAIN */
+ssize_t __safe_write_nb(int fd, const void *buf, size_t size);
 
 
 ssize_t __safe_read(int fd, void *buf, size_t size);
+
+
+/* non-blocking variant - returns on EAGAIN */
+ssize_t __safe_read_nb(int fd, void *buf, size_t size);
 
 
 int __safe_open(const char *path, int oflag, mode_t mode);
