@@ -28,8 +28,8 @@ SHARED_LDFLAGS += $(TARGET_PIC_FLAG) -shared # Common shared lib flags
 SHARED_LDFLAGS += -z text                    # Tell linker to abort if .text contains relocations
 SHARED_LDFLAGS += $(LDFLAGS_PREFIX)-soname,$(SONAME)
 
-
-$(PREFIX_SO)$(REALNAME): LDFLAGS:=$(LDFLAGS) $(SHARED_LDFLAGS)
+_LDFLAGS := $(filter-out $(LDFLAGS_PREFIX)--version-script="$(hide.map)" , $(LDFLAGS))
+$(PREFIX_SO)$(REALNAME): LDFLAGS:=$(_LDFLAGS) $(SHARED_LDFLAGS)
 
 $(PREFIX_SO)$(REALNAME): $(OBJS)
 	$(LINK)
