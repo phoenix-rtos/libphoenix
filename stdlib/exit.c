@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-extern void _atexit_call(void);
+extern void __cxa_finalize(void *);
 extern void sys_exit(int) __attribute__((noreturn));
 
 
@@ -34,7 +34,7 @@ void _Exit(int status)
 
 void exit(int status)
 {
-	_atexit_call();
+	__cxa_finalize(NULL);
 	fflush(NULL);
 	_exit(status);
 	for(;;);
