@@ -122,7 +122,6 @@ extern int fgetpos(FILE *stream, fpos_t *pos);
 
 /* Opens the filename pointed to by filename using the given mode. */
 extern FILE *fopen(const char *filename, const char *mode);
-extern FILE *fopen_unlocked(const char *filename, const char *mode);
 
 
 /* Associates a stream with existing file descriptor fd. */
@@ -146,9 +145,7 @@ extern int fileno_unlocked(FILE *stream);
  * to seek from the given whence position.
  */
 extern int fseek(FILE *stream, long int offset, int whence);
-extern int fseek_unlocked(FILE *stream, long int offset, int whence);
 extern int fseeko(FILE *stream, off_t offset, int whence);
-extern int fseeko_unlocked(FILE *stream, off_t offset, int whence);
 
 
 /*
@@ -160,9 +157,7 @@ extern int fsetpos(FILE *stream, const fpos_t *pos);
 
 /* Returns the current file position of the given stream. */
 extern long int ftell(FILE *stream);
-extern long int ftell_unlocked(FILE *stream);
 extern off_t ftello(FILE *stream);
-extern off_t ftello_unlocked(FILE *stream);
 
 
 /* Writes data from the array pointed to by ptr to the given stream. */
@@ -349,7 +344,6 @@ extern int puts(const char *str);
 
 /* Pushes the character char (an unsigned char) onto the specified stream so that the next character is read. */
 extern int ungetc(int c, FILE *stream);
-extern int ungetc_unlocked(int c, FILE *stream);
 
 
 /* Prints a descriptive error message to stderr. First the string str is printed followed by a colon and then a space. */
