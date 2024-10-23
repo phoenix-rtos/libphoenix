@@ -50,6 +50,7 @@
  * project basis.
  * Disabled for now as TLS consumes too much
  * memory to be advantageous on some targets. */
-// #define __LIBPHOENIX_ARCH_TLS_SUPPORTED
+#define __LIBPHOENIX_ARCH_TLS_VARIANT_I
+#define __LIBPHOENIX_ARCH_USE_TLS
 
 #endif
