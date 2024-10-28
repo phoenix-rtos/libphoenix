@@ -23,6 +23,8 @@
 #include <arch/armv7m/setjmp.h>
 #elif defined(__ARM_ARCH_8R__)
 #include <arch/armv8r/setjmp.h>
+#elif defined(__aarch64__)
+#include <arch/aarch64/setjmp.h>
 #elif defined(__riscv) && (__riscv_xlen == 64)
 #include <arch/riscv64/setjmp.h>
 #elif defined(__sparc__)

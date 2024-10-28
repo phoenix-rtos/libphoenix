@@ -10,6 +10,8 @@
 #include <arch/armv8r/arch.h>
 #elif defined(__ARM_ARCH_8M_BASE__) || defined(__ARM_ARCH_8M_MAIN__)
 #include <arch/armv8m/arch.h>
+#elif defined(__aarch64__)
+#include <arch/aarch64/arch.h>
 #elif defined(__riscv) && (__riscv_xlen == 64)
 #include <arch/riscv64/arch.h>
 #elif defined(__sparc__)
