@@ -36,6 +36,8 @@ all: $(LIB_TARGETS)
 
 ifneq (,$(findstring arm,$(TARGET_SUFF)))
   include arch/arm/Makefile
+else ifneq (,$(findstring aarch64,$(TARGET_SUFF)))
+  include arch/aarch64/Makefile
 else
   include arch/$(TARGET_SUFF)/Makefile
 endif
