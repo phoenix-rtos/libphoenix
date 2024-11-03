@@ -27,9 +27,9 @@ extern void _init(void);
 
 
 #ifdef __FDPIC__
-/* First entry in init_array is a function pointer instead on function descriptor pointer on GCC. */
+/* First entry in init_array and fini_array is a function pointer instead on function descriptor pointer on GCC. */
 /* Use current FDPIC to call it. */
-__attribute__((optimize("-O0"))) static void _init_array_fdpic_call0(void *addr) {
+__attribute__((optimize("-O0"))) static void _init_fini_array_fdpic_call0(void *addr) {
 	register void *r9 asm("r9");
 	void *desc[2] = { addr, r9 };
 	void (*fn)(void) = (void (*)(void))desc;
@@ -59,7 +59,7 @@ __attribute__((noinline)) static void _init_array(void)
 		/* However how did it work before on different archs? */
 		if (i == 0) {
 			/* This hack is so ugly that GCC on higher optimization levels has problems with it. */
-			_init_array_fdpic_call0(__init_array_start[0]);
+			_init_fini_array_fdpic_call0(__init_array_start[0]);
 		} else {
 			__init_array_start[i]();
 		}
@@ -83,7 +83,17 @@ static void _fini_array(void)
 
 	sz = __fini_array_end - __fini_array_start;
 	for (i = sz; i > 0; i--) {
+#ifdef __FDPIC__
+		/* FIXME: Same as in _init_array */
+		if (i == 1) {
+			/* This hack is so ugly that GCC on higher optimization levels has problems with it. */
+			_init_fini_array_fdpic_call0(__fini_array_start[0]);
+		} else {
+			__fini_array_start[i - 1]();
+		}
+#else
 		__fini_array_start[i - 1]();
+#endif
 	}
 
 	/* FIXME: change compilation settings to make access to _fini() */

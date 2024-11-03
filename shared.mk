@@ -14,7 +14,11 @@ VERSION=3.2.1
 MAJOR_VERSION=$(word 1, $(subst ., ,$(VERSION)))
 
 LIBNAME=libphoenix.so
+ifeq ($(HAVE_MMU), y)
 SONAME=$(LIBNAME).$(MAJOR_VERSION)
+else
+SONAME="syspage:libphoenix"
+endif
 REALNAME=$(LIBNAME).$(VERSION)
 
 LIB_TARGETS += $(PREFIX_SO)$(REALNAME)
