@@ -1115,7 +1115,8 @@ int getchar(void)
 
 void rewind(FILE *file)
 {
-	fseek(file, 0, SEEK_SET);
+	fseek(file, 0L, SEEK_SET);
+	file->flags &= ~F_ERROR;
 }
 
 
