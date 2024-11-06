@@ -532,10 +532,10 @@ static inline ssize_t write_buffer(FILE *stream, size_t writesz)
 		if (err < writesz) {
 			/* EAGAIN */
 			stream->flags |= F_ERROR;
+		}
 
-			if (err > 0) {
-				memmove(stream->buffer, stream->buffer + err, stream->bufpos);
-			}
+		if (err > 0 && stream->bufpos > 0) {
+			memmove(stream->buffer, stream->buffer + err, stream->bufpos);
 		}
 	}
 	else {
