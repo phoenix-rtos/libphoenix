@@ -197,6 +197,11 @@ double atan(double x)
 
 double atan2(double y, double x)
 {
+	if ((isnan(y) != 0) || (isnan(x) != 0)) {
+		errno = EDOM;
+		return NAN;
+	}
+
 	if (x > 0.0) {
 		return atan(y / x);
 	}

@@ -14,6 +14,9 @@
  */
 
 #include <stdint.h>
+#include <errno.h>
+#include <math.h>
+#include <float.h>
 #include "common.h"
 
 
@@ -131,6 +134,10 @@ double quickPow(double x, int e)
 			x *= x;
 			eabs >>= 1;
 		}
+	}
+
+	if (res > DBL_MAX) {
+		errno = ERANGE;
 	}
 
 	return res;
