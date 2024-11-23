@@ -19,7 +19,7 @@
 #include "common.h"
 
 
-double frexp(double x, int* exp)
+double frexp(double x, int *exp)
 {
 	conv_t *conv = (conv_t *)&x;
 
@@ -125,7 +125,7 @@ double log10(double x)
 }
 
 
-double modf(double x, double* intpart)
+double modf(double x, double *intpart)
 {
 	conv_t *conv = (conv_t *)&x;
 	double tmp = x;
@@ -134,10 +134,10 @@ double modf(double x, double* intpart)
 
 	if (exp > 52) {
 		*intpart = x;
-		return (conv->i.sign? -0.0 : 0.0);
+		return (conv->i.sign ? -0.0 : 0.0);
 	}
 	else if (exp < 0) {
-		*intpart = conv->i.sign? -0.0 : 0.0;
+		*intpart = conv->i.sign ? -0.0 : 0.0;
 		return x;
 	}
 
@@ -160,7 +160,7 @@ double modf(double x, double* intpart)
 	return x;
 }
 
-float modff(float x, float* intpart)
+float modff(float x, float *intpart)
 {
 	double ret, tmp;
 

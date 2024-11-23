@@ -173,7 +173,7 @@ double atan(double x)
 {
 	double res = 1.0, h, a;
 	int i, s;
-	
+
 	s = (x < 0.0) ? -1 : 1;
 	x *= (double)s;
 	h = x / 2;
