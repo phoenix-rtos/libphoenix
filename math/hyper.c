@@ -18,19 +18,21 @@
 
 double cosh(double x)
 {
-	if (x == INFINITY || x == -INFINITY)
+	if ((x == INFINITY) || (x == -INFINITY)) {
 		return INFINITY;
+	}
 
-	return (exp(x) + exp(-x)) / 2;
+	return ((exp(x) + exp(-x)) / 2.0);
 }
 
 
 double sinh(double x)
 {
-	if (x == INFINITY || x == -INFINITY)
+	if ((x == INFINITY) || (x == -INFINITY)) {
 		return x;
+	}
 
-	return (exp(x) - exp(-x)) / 2;
+	return ((exp(x) - exp(-x)) / 2.0);
 }
 
 
@@ -38,5 +40,5 @@ double tanh(double x)
 {
 	/* cosh is never equal to zero */
 
-	return sinh(x) / cosh(x);
+	return (sinh(x) / cosh(x));
 }

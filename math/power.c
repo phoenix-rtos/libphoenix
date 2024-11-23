@@ -27,20 +27,22 @@ double pow(double base, double exponent)
 	double res = 1.0;
 	int s = 1;
 
-	if (base == 0.0 || base == -0.0) {
-		if (exponent == 0.0 || exponent == -0.0) {
+	if ((base == 0.0) || (base == -0.0)) {
+		if ((exponent == 0.0) || (exponent == -0.0)) {
 			return 1.0;
 		}
 		else if (exponent < 0.0) {
-			if (base == 0.0)
+			if (base == 0.0) {
 				return INFINITY;
-			else if (base == -0.0)
+			}
+			else if (base == -0.0) {
 				return -INFINITY;
+			}
 		}
 
 		return 0.0;
 	}
-	else if (exponent == 0.0 || exponent == -0.0) {
+	else if ((exponent == 0.0) || (exponent == -0.0)) {
 		return 1.0;
 	}
 
@@ -54,8 +56,9 @@ double pow(double base, double exponent)
 		base = -base;
 	}
 
-	if (isInteger(exponent) && exponent <= INT_MAX && exponent >= INT_MIN)
+	if (isInteger(exponent) && (exponent <= INT_MAX) && (exponent >= INT_MIN)) {
 		return quickPow(base, (int)exponent);
+	}
 
 	exponent *= log(base);
 	res = s * exp(exponent);
@@ -71,7 +74,7 @@ double sqrt(double x)
 		return -NAN;
 	}
 
-	if (x == 0.0 || x == -0.0) {
+	if ((x == 0.0) || (x == -0.0)) {
 		return x;
 	}
 
@@ -85,7 +88,7 @@ double sqrt(double x)
 	conv_t *init = (conv_t *)&xn;
 
 	/* +Infinity : */
-	if (init->i.mantisa == 0 && init->i.exponent == 0x7FF) {
+	if ((init->i.mantisa == 0) && (init->i.exponent == 0x7FF)) {
 		return x;
 	}
 
@@ -107,10 +110,10 @@ double sqrt(double x)
 
 	/* Reciprocal sqare root iters (avoiding division): */
 	for (int i = 0; i < 4; ++i) {
-		xn = xn * (1.5 -  0.5 * x * xn * xn);
+		xn = xn * (1.5 -  (0.5 * x * xn * xn));
 	}
 
-	return xn * x;
+	return (xn * x);
 #endif
 }
 
@@ -123,7 +126,7 @@ float sqrtf(float x)
 		return -NAN;
 	}
 
-	if (x == 0.0f || x == -0.0f) {
+	if ((x == 0.0f) || (x == -0.0f)) {
 		return x;
 	}
 
