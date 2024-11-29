@@ -214,13 +214,16 @@ static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, 
 		const size_t readlink_max_len = p - path;
 
 		/* (hackish) save some messsaging by not calling lstat, but directly readlink() and checking error code */
+		int errsave = errno;
 		ssize_t symlink_len = _readlink_abs(result, path, readlink_max_len);
 
 		if (symlink_len < 0) {
 			if (errno == EINVAL) { /* not a symlink */
+				errno = errsave;
 				continue;
 			}
 			else if ((errno == ENOENT) && (is_leaf != 0) && (allow_missing_leaf != 0)) { /* non-esixting leaf */
+				errno = errsave;
 				break;
 			}
 			else {
@@ -485,10 +488,6 @@ static ssize_t _readlink_abs(const char *path, char *buf, size_t bufsiz)
 	ret = msgSend(oid.port, &msg);
 	if (ret != EOK) {
 		return SET_ERRNO(ret);
-	}
-
-	if (msg.o.err < 0) {
-		return SET_ERRNO(msg.o.err);
 	}
 
 	if (msg.o.err < 0) {
