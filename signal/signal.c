@@ -76,7 +76,7 @@ static void (*_signal_getdefault(int sig))(int)
 		case SIGTRAP:
 		case SIGABRT: /* And SIGIOT */
 		case SIGEMT:
-		case SIGFPE: /* Should be handled by the kernel? */
+		case SIGFPE:  /* Should be handled by the kernel? */
 		case SIGKILL: /* Should kill the process before handler is ever invoked */
 		case SIGBUS:
 		case SIGSEGV:
@@ -89,6 +89,8 @@ static void (*_signal_getdefault(int sig))(int)
 		case SIGXFSZ:
 		case SIGVTALRM:
 		case SIGPROF:
+		case SIGUSR1:
+		case SIGUSR2:
 			return _signal_terminate;
 
 		case SIGURG:
@@ -100,8 +102,6 @@ static void (*_signal_getdefault(int sig))(int)
 		case SIGTTOU: /* TODO: Stop process. Should be handled by the kernel? */
 		case SIGWINCH:
 		case SIGINFO:
-		case SIGUSR1:
-		case SIGUSR2:
 			return _signal_ignore;
 
 		default:
@@ -128,7 +128,7 @@ unsigned int _signal_handler(int phxsig)
 	int sig;
 	unsigned int oldmask;
 
-	if (phxsig < 0 || phxsig >= NSIG) {
+	if ((phxsig < 0) || (phxsig >= NSIG)) {
 		/* Don't know what to do, ignore it */
 		return signalMask(0U, 0U);
 	}
@@ -161,10 +161,12 @@ int kill(pid_t pid, int sig)
 
 int killpg(pid_t pgrp, int sig)
 {
-	if (!pgrp)
+	if (!pgrp) {
 		pgrp = -getpgrp();
-	else
+	}
+	else {
 		pgrp = -pgrp;
+	}
 
 	return SET_ERRNO(sys_tkill(pgrp, 0, _signals_posix2phx[sig]));
 }
@@ -175,12 +177,12 @@ void (*signal(int signum, void (*handler)(int)))(int)
 	sighandler_t t;
 	unsigned int oldmask;
 
-	if (signum <= 0 || signum >= NSIG) {
+	if ((signum <= 0) || (signum >= NSIG)) {
 		(void)SET_ERRNO(-EINVAL);
 		return SIG_ERR;
 	}
 
-	if (!_signal_ismutable(signum)) {
+	if (_signal_ismutable(signum) == 0) {
 		(void)SET_ERRNO(-EINVAL);
 		return SIG_ERR;
 	}
@@ -191,22 +193,28 @@ void (*signal(int signum, void (*handler)(int)))(int)
 
 	t = signal_common.sightab[signum];
 
-	if (handler == SIG_DFL)
+	if (handler == SIG_DFL) {
 		signal_common.sightab[signum] = _signal_getdefault(signum);
-	else if (handler == SIG_IGN)
+	}
+	else if (handler == SIG_IGN) {
 		signal_common.sightab[signum] = _signal_ignore;
-	else
+	}
+	else {
 		signal_common.sightab[signum] = handler;
+	}
 
 	signalMask(oldmask, 0xffffffffUL);
 	mutexUnlock(signal_common.lock);
 
-	if (t == _signal_ignore)
+	if (t == _signal_ignore) {
 		return SIG_IGN;
-	else if (t == _signal_getdefault(signum))
+	}
+	else if (t == _signal_getdefault(signum)) {
 		return SIG_DFL;
-	else
+	}
+	else {
 		return t;
+	}
 }
 
 
@@ -216,17 +224,21 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *oact)
 	unsigned int oldmask;
 	int i;
 
-	if (sig <= 0 || sig >= NSIG)
+	if ((sig <= 0) || (sig >= NSIG)) {
 		return SET_ERRNO(-EINVAL);
+	}
 
 	if (oact != NULL) {
 		mutexLock(signal_common.lock);
-		if (signal_common.sightab[sig] == _signal_ignore)
+		if (signal_common.sightab[sig] == _signal_ignore) {
 			oact->sa_handler = (sighandler_t)SIG_IGN;
-		else if (signal_common.sightab[sig] == _signal_getdefault(sig))
+		}
+		else if (signal_common.sightab[sig] == _signal_getdefault(sig)) {
 			oact->sa_handler = (sighandler_t)SIG_DFL;
-		else
+		}
+		else {
 			oact->sa_handler = signal_common.sightab[sig];
+		}
 
 		oact->sa_mask = signal_common.sigset[sig];
 		oact->sa_flags = 0; /* TODO: flags */
@@ -234,27 +246,33 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *oact)
 	}
 
 	if (act != NULL) {
-		if (!_signal_ismutable(sig))
+		if (!_signal_ismutable(sig)) {
 			return SET_ERRNO(-EINVAL);
+		}
 
 		/* Mask signal before change */
 		mutexLock(signal_common.lock);
 		oldmask = signalMask(1UL << _signals_posix2phx[sig], 0xffffffffUL);
 
-		if (act->sa_handler == (sighandler_t)SIG_IGN)
+		if (act->sa_handler == (sighandler_t)SIG_IGN) {
 			signal_common.sightab[sig] = _signal_ignore;
-		else if (act->sa_handler == (sighandler_t)SIG_DFL)
+		}
+		else if (act->sa_handler == (sighandler_t)SIG_DFL) {
 			signal_common.sightab[sig] = _signal_getdefault(sig);
-		else
+		}
+		else {
 			signal_common.sightab[sig] = act->sa_handler;
-
-		for (i = 0, signal_common.sigset[sig] = 0; i < NSIG; ++i) {
-			if (act->sa_mask & (1UL << i))
-				signal_common.sigset[sig] |= 1UL << _signals_posix2phx[i];
 		}
 
-		if (!(act->sa_flags & SA_NODEFER))
+		for (i = 0, signal_common.sigset[sig] = 0; i < NSIG; ++i) {
+			if (act->sa_mask & (1UL << i)) {
+				signal_common.sigset[sig] |= 1UL << _signals_posix2phx[i];
+			}
+		}
+
+		if (!(act->sa_flags & SA_NODEFER)) {
 			signal_common.sigset[sig] |= 1UL << _signals_posix2phx[sig];
+		}
 
 		signal_common.sigset[sig] = act->sa_mask;
 
@@ -262,8 +280,9 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *oact)
 		mutexUnlock(signal_common.lock);
 	}
 
-	if (oact == NULL && act == NULL)
+	if ((oact == NULL) && (act == NULL)) {
 		return SET_ERRNO(-EINVAL);
+	}
 
 	return EOK;
 }
@@ -272,16 +291,22 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *oact)
 int sigprocmask(int how, const sigset_t *set, sigset_t *oldset)
 {
 	int i;
-	unsigned int phxv = 0, mask = 0, old;
+	unsigned int phxv = 0u, mask = 0u, old;
+
+	if ((set == NULL) && (oldset == NULL)) {
+		return EOK;
+	}
 
 	if (set != NULL) {
-		if (*set & (1UL << SIGKILL))
-			return SET_ERRNO(-EINVAL);
-
 		for (i = 0, phxv = 0; i < NSIG; ++i) {
-			if (*set & (1UL << i))
-				phxv |= 1UL << _signals_posix2phx[i];
+			if (*set & (1UL << i)) {
+				phxv |= (1UL << _signals_posix2phx[i]);
+			}
 		}
+
+		/* These signals cannot be blocked */
+		phxv &= ~(1UL << SIGKILL);
+		phxv &= ~(1UL << SIGSTOP);
 
 		if (how == SIG_BLOCK) {
 			mask = phxv;
@@ -303,14 +328,12 @@ int sigprocmask(int how, const sigset_t *set, sigset_t *oldset)
 
 	if (oldset != NULL) {
 		memset(oldset, 0, sizeof(sigset_t));
-		for (i = 0, phxv = 0; i < NSIG; ++i) {
-			if (old & (1UL << i))
-				(*oldset) |= 1UL << _signals_phx2posix[i];
+		for (i = 0; i < NSIG; ++i) {
+			if (old & (1UL << i)) {
+				(*oldset) |= (1UL << _signals_phx2posix[i]);
+			}
 		}
 	}
-
-	if (set == NULL && oldset == NULL)
-		return SET_ERRNO(-EINVAL);
 
 	return EOK;
 }
@@ -318,14 +341,15 @@ int sigprocmask(int how, const sigset_t *set, sigset_t *oldset)
 
 int sigsuspend(const sigset_t *sigmask)
 {
-	unsigned int phxv = 0, i;
+	unsigned int phxv = 0u, i;
 
 	for (i = 0, phxv = 0; i < NSIG; ++i) {
-		if (*sigmask & (1UL << i))
+		if (*sigmask & (1UL << i)) {
 			phxv |= 1UL << _signals_posix2phx[i];
+		}
 	}
 
-	return signalSuspend(phxv);
+	return SET_ERRNO(signalSuspend(phxv));
 }
 
 
@@ -342,17 +366,21 @@ int sigfillset(sigset_t *set)
 
 int sigaddset(sigset_t *set, int signo)
 {
-	if ((set == NULL) || (signo >= NSIG)) {
+	if ((set == NULL) || (signo >= NSIG) || (signo < 0)) {
 		return SET_ERRNO(-EINVAL);
 	}
 
-	*set |= 1 << signo;
+	*set |= (1 << signo);
 	return 0;
 }
 
 
 int sigismember(const sigset_t *set, int signum)
 {
+	if ((set == NULL) || (signum >= NSIG) || (signum < 0)) {
+		return SET_ERRNO(-EINVAL);
+	}
+
 	return !!(*set & (1 << signum));
 }
 
@@ -384,7 +412,7 @@ int sigisemptyset(sigset_t *set)
 
 int sigdelset(sigset_t *set, int signum)
 {
-	if ((set == NULL) || (signum >= NSIG)) {
+	if ((set == NULL) || (signum >= NSIG) || (signum < 0)) {
 		return SET_ERRNO(-EINVAL);
 	}
 
