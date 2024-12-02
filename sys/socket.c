@@ -42,7 +42,7 @@ WRAP_ERRNO_DEF(int, listen, (int socket, int backlog), (socket, backlog))
 WRAP_ERRNO_DEF(ssize_t, recvfrom, (int socket, void *message, size_t length, int flags, struct sockaddr *src_addr, socklen_t *src_len), (socket, message, length, flags, src_addr, src_len))
 WRAP_ERRNO_DEF(ssize_t, sendto, (int socket, const void *message, size_t length, int flags, const struct sockaddr *dest_addr, socklen_t dest_len), (socket, message, length, flags, dest_addr, dest_len))
 WRAP_ERRNO_DEF(int, socket, (int domain, int type, int protocol), (domain, type, protocol))
-WRAP_ERRNO_DEF(int, socketpair, (int domain, int type, int protocol, int *sv), (domain, type, protocol, sv))
+WRAP_ERRNO_DEF(int, socketpair, (int domain, int type, int protocol, int sv[2]), (domain, type, protocol, sv))
 WRAP_ERRNO_DEF(int, shutdown, (int socket, int how), (socket, how))
 WRAP_ERRNO_DEF(int, setsockopt, (int socket, int level, int optname, const void *optval, socklen_t optlen), (socket, level, optname, optval, optlen))
 
