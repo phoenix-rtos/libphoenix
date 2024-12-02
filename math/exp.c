@@ -19,17 +19,23 @@
 #include "common.h"
 
 
-double frexp(double x, int* exp)
+double frexp(double x, int *exp)
 {
 	conv_t *conv = (conv_t *)&x;
-
 	*exp = 0;
 
-	if (x == 0.0 || x == -0.0)
-		return x;
+	if (isnan(x) != 0) {
+		errno = EDOM;
+		return NAN;
+	}
 
-	if (conv->i.exponent == 0)
+	if ((x == 0.0) || (x == -0.0)) {
+		return x;
+	}
+
+	if (conv->i.exponent == 0) {
 		normalizeSub(&x, exp);
+	}
 
 	*exp += conv->i.exponent - 1022;
 	conv->i.exponent = 1022;
@@ -43,11 +49,18 @@ double ldexp(double x, int exp)
 	conv_t *conv = (conv_t *)&x;
 	int exponent = 0;
 
-	if (x == 0.0 || x == -0.0)
-		return x;
+	if (isnan(x) != 0) {
+		errno = EDOM;
+		return NAN;
+	}
 
-	if (conv->i.exponent == 0)
+	if ((x == 0.0) || (x == -0.0)) {
+		return x;
+	}
+
+	if (conv->i.exponent == 0) {
 		normalizeSub(&x, &exponent);
+	}
 
 	exponent += conv->i.exponent + exp;
 
@@ -75,11 +88,11 @@ double log(double x)
 	conv_t *conv = (conv_t *)&tmp;
 	int exp = 0, i;
 
-	if (x < 0) {
+	if ((isnan(x) != 0) || (x < 0.0)) {
 		errno = EDOM;
 		return NAN;
 	}
-	else if (x == 0) {
+	else if (x == 0.0) {
 		errno = ERANGE;
 		return -HUGE_VAL;
 	}
@@ -91,48 +104,54 @@ double log(double x)
 
 	exp = conv->i.exponent - 1022;
 
-	if (conv->i.exponent == 0)
+	if (conv->i.exponent == 0) {
 		normalizeSub(&tmp, &exp);
+	}
 
 	conv->i.exponent = 1022;
 
 	tmp = (tmp - 1.0) / (tmp + 1.0);
 
-	for (i = 1, res = 0, pow = tmp * tmp; i < 16; ++i) {
-		res += tmp / (2 * i - 1);
+	for (i = 1, res = 0.0, pow = tmp * tmp; i < 16; ++i) {
+		res += tmp / ((2 * i) - 1);
 		tmp *= pow;
 	}
 
-	return (2 * res) + (exp / M_LOG2E);
+	return ((2.0 * res) + (exp / M_LOG2E));
 }
 
 
 double log2(double x)
 {
-	return log(x) / M_LN2;
+	return (log(x) / M_LN2);
 }
 
 
 /* Uses log10(x) = ln(x) / ln(10) identity */
 double log10(double x)
 {
-	return log(x) / M_LN10;
+	return (log(x) / M_LN10);
 }
 
 
-double modf(double x, double* intpart)
+double modf(double x, double *intpart)
 {
 	conv_t *conv = (conv_t *)&x;
 	double tmp = x;
 	int exp = conv->i.exponent - 1023;
 	uint64_t m, mask = 0xfffffffffffffLL;
 
+	if (isnan(x) != 0) {
+		errno = EDOM;
+		return NAN;
+	}
+
 	if (exp > 52) {
 		*intpart = x;
-		return conv->i.sign? -0.0 : 0.0;
+		return (conv->i.sign ? -0.0 : 0.0);
 	}
 	else if (exp < 0) {
-		*intpart = conv->i.sign? -0.0 : 0.0;
+		*intpart = conv->i.sign ? -0.0 : 0.0;
 		return x;
 	}
 
@@ -143,8 +162,9 @@ double modf(double x, double* intpart)
 	m = conv->i.mantisa;
 	m &= mask >> exp;
 
-	if (m == 0)
+	if (m == 0u) {
 		return 0.0;
+	}
 
 	conv->i.mantisa = m & mask;
 	normalizeSub(&x, &exp);
@@ -154,7 +174,7 @@ double modf(double x, double* intpart)
 	return x;
 }
 
-float modff(float x, float* intpart)
+float modff(float x, float *intpart)
 {
 	double ret, tmp;
 
@@ -170,8 +190,15 @@ double exp(double x)
 	double res, resi, powx, e, factorial;
 	int i;
 
-	if (x > 710.0)
+	if (isnan(x) != 0) {
+		errno = EDOM;
+		return NAN;
+	}
+
+	if (x > 709.79) {
+		errno = ERANGE;
 		return HUGE_VAL;
+	}
 
 	/* Get floor of exponent */
 	x = modf(x, &e);
@@ -185,14 +212,15 @@ double exp(double x)
 	res = 1.0;
 
 	for (i = 2; i < 13; ++i) {
-		if (powx == 0.0 || powx == -0.0)
+		if ((powx == 0.0) || (powx == -0.0)) {
 			break;
+		}
 		res += powx / factorial;
 		factorial *= i;
 		powx *= x;
 	}
 
-	return res * resi;
+	return (res * resi);
 }
 
 
@@ -200,10 +228,16 @@ double ceil(double x)
 {
 	double ipart, fpart;
 
+	if (isnan(x) != 0) {
+		errno = EDOM;
+		return NAN;
+	}
+
 	fpart = modf(x, &ipart);
 
-	if (x > 0 && fpart + x != x)
+	if ((x > 0.0) && ((fpart + x) != x)) {
 		ipart += 1.0;
+	}
 
 	return ipart;
 }
@@ -213,10 +247,16 @@ double floor(double x)
 {
 	double ipart, fpart;
 
+	if (isnan(x) != 0) {
+		errno = EDOM;
+		return NAN;
+	}
+
 	fpart = modf(x, &ipart);
 
-	if (x < 0 && fpart + x != x)
+	if ((x < 0.0) && ((fpart + x) != x)) {
 		ipart -= 1.0;
+	}
 
 	return ipart;
 }
@@ -226,11 +266,13 @@ double fmod(double number, double denom)
 {
 	double result, tquot;
 
-	if (denom == 0.0 || denom == -0.0)
+	if ((denom == 0.0) || (denom == -0.0)) {
 		return NAN;
+	}
 
-	if (denom == INFINITY || denom == -INFINITY)
+	if ((denom == INFINITY) || (denom == -INFINITY)) {
 		return number;
+	}
 
 	modf(number / denom, &tquot);
 	result = tquot * denom;
@@ -245,10 +287,12 @@ double round(double x)
 
 	frac = modf(x, &ret);
 
-	if (frac >= 0.5)
+	if (frac >= 0.5) {
 		ret += 1.0;
-	else if (frac <= -0.5)
+	}
+	else if (frac <= -0.5) {
 		ret -= 1.0;
+	}
 
 	return ret;
 }
