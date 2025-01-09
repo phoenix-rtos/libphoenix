@@ -148,10 +148,12 @@ extern double sqrt(double x);
 
 /* Rounds x upward, returning the smallest integral value that is not less than x. */
 extern double ceil(double x);
+extern float ceilf(float x);
 
 
 /* Rounds x downward, returning the largest integral value that is not greater than x. */
 extern double floor(double x);
+extern float floorf(float x);
 
 
 /* Returns the floating-point remainder of numer/denom (rounded towards zero). */
@@ -160,10 +162,12 @@ extern double fmod(double numer, double denom);
 
 /* Return the integral value nearest to x */
 extern double round(double x);
+extern float roundf(float x);
 
 
 /* Rounds x toward zero, returning the nearest integral value that is not larger in magnitude than x. */
 extern double trunc(double x);
+extern float truncf(float x);
 
 
 /* Miscellaneous */
@@ -171,6 +175,7 @@ extern double trunc(double x);
 
 /* Returns the absolute value of x: |x|. */
 extern double fabs(double x);
+extern float fabsf(float x);
 
 
 /* C99 extensions */
@@ -191,12 +196,7 @@ float logf(float x);
 float log10f(float x);
 float powf(float base, float exponent);
 float sqrtf(float x);
-float roundf(float x);
-float ceilf(float x);
-float floorf(float x);
 float fmodf(float num, float denom);
-float truncf(float x);
-float fabsf(float x);
 
 
 #define cosf(x)              ((float)cos(x))
@@ -215,12 +215,7 @@ float fabsf(float x);
 #define logf(x)              ((float)log(x))
 #define log10f(x)            ((float)log10(x))
 #define powf(base, exponent) ((float)pow(base, exponent))
-#define roundf(x)            ((float)round(x))
-#define ceilf(x)             ((float)ceil(x))
-#define floorf(x)            ((float)floor(x))
 #define fmodf(num, denom)    ((float)fmod(num, denom))
-#define truncf(x)            ((float)trunc(x))
-#define fabsf(x)             ((float)fabs(x))
 
 
 #ifdef __cplusplus
