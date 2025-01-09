@@ -293,13 +293,13 @@ int sigprocmask(int how, const sigset_t *set, sigset_t *oldset)
 	int i;
 	unsigned int phxv = 0u, mask = 0u, old;
 
-	if (set != NULL) {
-		if (*set & (1UL << SIGKILL)) {
-			return SET_ERRNO(-EINVAL);
-		}
+	if ((set == NULL) && (oldset == NULL)) {
+		return EOK;
+	}
 
-		for (i = 0, phxv = 0u; i < NSIG; ++i) {
-			if (*set & (1UL << i)) {
+	if (set != NULL) {
+		for (i = 0; i < NSIG; ++i) {
+			if ((*set & (1UL << i)) && (_signal_ismutable(i) != 0)) {
 				phxv |= (1UL << _signals_posix2phx[i]);
 			}
 		}
@@ -324,15 +324,11 @@ int sigprocmask(int how, const sigset_t *set, sigset_t *oldset)
 
 	if (oldset != NULL) {
 		memset(oldset, 0, sizeof(sigset_t));
-		for (i = 0, phxv = 0u; i < NSIG; ++i) {
+		for (i = 0; i < NSIG; ++i) {
 			if (old & (1UL << i)) {
 				(*oldset) |= (1UL << _signals_phx2posix[i]);
 			}
 		}
-	}
-
-	if (set == NULL && oldset == NULL) {
-		return SET_ERRNO(-EINVAL);
 	}
 
 	return EOK;
@@ -349,7 +345,7 @@ int sigsuspend(const sigset_t *sigmask)
 		}
 	}
 
-	return signalSuspend(phxv);
+	return SET_ERRNO(signalSuspend(phxv));
 }
 
 
@@ -366,7 +362,7 @@ int sigfillset(sigset_t *set)
 
 int sigaddset(sigset_t *set, int signo)
 {
-	if ((set == NULL) || (signo >= NSIG)) {
+	if ((set == NULL) || (signo >= NSIG) || (signo < 0)) {
 		return SET_ERRNO(-EINVAL);
 	}
 
@@ -377,6 +373,10 @@ int sigaddset(sigset_t *set, int signo)
 
 int sigismember(const sigset_t *set, int signum)
 {
+	if ((set == NULL) || (signum >= NSIG) || (signum < 0)) {
+		return SET_ERRNO(-EINVAL);
+	}
+
 	return !!(*set & (1 << signum));
 }
 
@@ -408,7 +408,7 @@ int sigisemptyset(sigset_t *set)
 
 int sigdelset(sigset_t *set, int signum)
 {
-	if ((set == NULL) || (signum >= NSIG)) {
+	if ((set == NULL) || (signum >= NSIG) || (signum < 0)) {
 		return SET_ERRNO(-EINVAL);
 	}
 
