@@ -232,6 +232,9 @@ double exp(double x)
 
 double ceil(double x)
 {
+#ifdef __IEEE754_CEIL
+	return __ieee754_ceil(x);
+#else
 	double ipart, fpart;
 
 	if (isnan(x) != 0) {
@@ -245,11 +248,25 @@ double ceil(double x)
 	}
 
 	return ipart;
+#endif
+}
+
+
+float ceilf(float x)
+{
+#ifdef __IEEE754_CEILF
+	return __ieee754_ceilf(x);
+#else
+	return (float)ceil(x);
+#endif
 }
 
 
 double floor(double x)
 {
+#ifdef __IEEE754_FLOOR
+	return __ieee754_floor(x);
+#else
 	double ipart, fpart;
 
 	if (isnan(x) != 0) {
@@ -263,6 +280,17 @@ double floor(double x)
 	}
 
 	return ipart;
+#endif
+}
+
+
+float floorf(float x)
+{
+#ifdef __IEEE754_FLOORF
+	return __ieee754_floorf(x);
+#else
+	return (float)floor(x);
+#endif
 }
 
 
@@ -287,6 +315,9 @@ double fmod(double number, double denom)
 
 double round(double x)
 {
+#ifdef __IEEE754_ROUND
+	return __ieee754_round(x);
+#else
 	double ret, frac;
 
 	frac = modf(x, &ret);
@@ -299,24 +330,63 @@ double round(double x)
 	}
 
 	return ret;
+#endif
+}
+
+
+float roundf(float x)
+{
+#ifdef __IEEE754_ROUNDF
+	return __ieee754_roundf(x);
+#else
+	return (float)round(x);
+#endif
 }
 
 
 double trunc(double x)
 {
+#ifdef __IEEE754_TRUNC
+	return __ieee754_trunc(x);
+#else
 	double ret;
 
 	modf(x, &ret);
 
 	return ret;
+#endif
+}
+
+
+float truncf(float x)
+{
+#ifdef __IEEE754_TRUNCF
+	return __ieee754_truncf(x);
+#else
+	return (float)trunc(x);
+#endif
 }
 
 
 double fabs(double x)
 {
+#ifdef __IEEE754_FABS
+	return __ieee754_fabs(x);
+#else
 	conv_t *conv = (conv_t *)&x;
 
 	conv->i.sign = 0;
 
 	return x;
+#endif
+}
+
+
+float fabsf(float x)
+{
+#ifdef __IEEE754_FABSF
+	return __ieee754_fabsf(x);
+#else
+	return (float)fabs(x);
+#endif
 }
