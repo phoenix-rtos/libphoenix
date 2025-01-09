@@ -76,7 +76,7 @@ static void (*_signal_getdefault(int sig))(int)
 		case SIGTRAP:
 		case SIGABRT: /* And SIGIOT */
 		case SIGEMT:
-		case SIGFPE: /* Should be handled by the kernel? */
+		case SIGFPE:  /* Should be handled by the kernel? */
 		case SIGKILL: /* Should kill the process before handler is ever invoked */
 		case SIGBUS:
 		case SIGSEGV:
@@ -89,6 +89,8 @@ static void (*_signal_getdefault(int sig))(int)
 		case SIGXFSZ:
 		case SIGVTALRM:
 		case SIGPROF:
+		case SIGUSR1:
+		case SIGUSR2:
 			return _signal_terminate;
 
 		case SIGURG:
@@ -100,8 +102,6 @@ static void (*_signal_getdefault(int sig))(int)
 		case SIGTTOU: /* TODO: Stop process. Should be handled by the kernel? */
 		case SIGWINCH:
 		case SIGINFO:
-		case SIGUSR1:
-		case SIGUSR2:
 			return _signal_ignore;
 
 		default:
