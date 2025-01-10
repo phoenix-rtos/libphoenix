@@ -21,25 +21,26 @@ void normalizeSub(double *x, int *exp)
 {
 	conv_t *conv = (conv_t *)x;
 
-	if (conv->i.mantisa == 0)
+	if (conv->i.mantisa == 0) {
 		return;
+	}
 
-	while (!(conv->i.mantisa & 0xffffff0000000LL)) {
+	while ((conv->i.mantisa & 0xffffff0000000LL) == 0) {
 		conv->i.mantisa <<= 24;
 		*exp -= 24;
 	}
 
-	while (!(conv->i.mantisa & 0xff00000000000LL)) {
+	while ((conv->i.mantisa & 0xff00000000000LL) == 0) {
 		conv->i.mantisa <<= 8;
 		*exp -= 8;
 	}
 
-	while (!(conv->i.mantisa & 0xf000000000000LL)) {
+	while ((conv->i.mantisa & 0xf000000000000LL) == 0) {
 		conv->i.mantisa <<= 4;
 		*exp -= 4;
 	}
 
-	while (!(conv->i.mantisa & 0x8000000000000LL)) {
+	while ((conv->i.mantisa & 0x8000000000000LL) == 0) {
 		conv->i.mantisa <<= 1;
 		*exp -= 1;
 	}
@@ -89,8 +90,9 @@ void createSub(double *x, int exp)
 		++exp;
 	}
 
-	if (conv->i.mantisa == 0)
+	if (conv->i.mantisa == 0) {
 		*x = 0.0;
+	}
 }
 
 
@@ -99,29 +101,33 @@ double quickPow(double x, int e)
 	double res;
 	unsigned int eabs;
 
-	if (e == 0)
+	if (e == 0) {
 		return 1.0;
-	else if (e == 1)
+	}
+	else if (e == 1) {
 		return x;
+	}
 
 	res = 1.0;
 
 	if (e < 0) {
-		eabs = -e;
+		eabs = (unsigned int)(-e);
 
-		while (eabs != 0) {
-			if (eabs & 1)
+		while (eabs != 0u) {
+			if (eabs & 1u) {
 				res /= x;
+			}
 			x *= x;
 			eabs >>= 1;
 		}
 	}
 	else {
-		eabs = e;
+		eabs = (unsigned int)e;
 
-		while (eabs != 0) {
-			if (eabs & 1)
+		while (eabs != 0u) {
+			if (eabs & 1u) {
 				res *= x;
+			}
 			x *= x;
 			eabs >>= 1;
 		}
@@ -135,15 +141,17 @@ int isInteger(double x)
 {
 	conv_t *conv = (conv_t *)&x;
 	int exp = conv->i.exponent - 1023;
-	uint64_t mask = 0xfffffffffffffLL;
+	uint64_t mask = 0xfffffffffffffULL;
 	uint64_t m;
 
-	if (exp > 52)
+	if (exp > 52) {
 		return 1;
-	else if (exp < 0)
+	}
+	else if (exp < 0) {
 		return 0;
+	}
 
 	m = conv->i.mantisa & ~(mask >> exp);
 
-	return m == conv->i.mantisa;
+	return (m == conv->i.mantisa);
 }

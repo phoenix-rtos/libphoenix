@@ -27,15 +27,19 @@ double cos(double x)
 	x = fmod(x, 2.0 * M_PI);
 
 	/* Normalize further to -PI < x < PI */
-	if (x > M_PI)
-		x -= 2 * M_PI;
-	else if (x < -M_PI)
-		x += 2 * M_PI;
+	if (x > M_PI) {
+		x -= 2.0 * M_PI;
+	}
+	else if (x < -M_PI) {
+		x += 2.0 * M_PI;
+	}
 
-	if (x > M_PI_2)
+	if (x > M_PI_2) {
 		return -sin(x - M_PI_2);
-	else if (x < -M_PI_2)
+	}
+	else if (x < -M_PI_2) {
 		return sin(x + M_PI_2);
+	}
 
 	res = 1.0;
 	xpow = x * x;
@@ -43,13 +47,15 @@ double cos(double x)
 	factorial = 2.0;
 
 	for (i = 0; i < 10; ++i) {
-		if (i & 1)
+		if (i & 1) {
 			res += xn / factorial;
-		else
+		}
+		else {
 			res -= xn / factorial;
+		}
 
 		xn *= xpow;
-		factorial = factorial * (2 * i + 3) * (2 * i + 4);
+		factorial = factorial * ((2 * i) + 3) * ((2 * i) + 4);
 	}
 
 	return res;
@@ -66,15 +72,19 @@ double sin(double x)
 	x = fmod(x, 2.0 * M_PI);
 
 	/* Normalize further to -PI < x < PI */
-	if (x > M_PI)
+	if (x > M_PI) {
 		x -= 2 * M_PI;
-	else if (x < -M_PI)
+	}
+	else if (x < -M_PI) {
 		x += 2 * M_PI;
+	}
 
-	if (x > M_PI_2)
+	if (x > M_PI_2) {
 		return cos(x - M_PI_2);
-	else if (x < -M_PI_2)
+	}
+	else if (x < -M_PI_2) {
 		return -cos(x + M_PI_2);
+	}
 
 	res = x;
 	xpow = x * x;
@@ -82,13 +92,15 @@ double sin(double x)
 	factorial = 6.0;
 
 	for (i = 0; i < 10; ++i) {
-		if (i & 1)
+		if (i & 1) {
 			res += xn / factorial;
-		else
+		}
+		else {
 			res -= xn / factorial;
+		}
 
 		xn *= xpow;
-		factorial = factorial * (2 * i + 4) * (2 * i + 5);
+		factorial = factorial * ((2 * i) + 4) * ((2 * i) + 5);
 	}
 
 	return res;
@@ -99,8 +111,9 @@ double tan(double x)
 {
 	double c = cos(x);
 
-	if (c > 0.0 || c < 0.0)
-		return sin(x) / c;
+	if ((c > 0.0) || (c < 0.0)) {
+		return (sin(x) / c);
+	}
 
 	errno = EDOM;
 	return NAN;
@@ -113,7 +126,7 @@ double acos(double x)
 	double xa = 0, xb = M_PI, ya, yb, t;
 	int i;
 
-	if (x > 1.0 || x < -1.0) {
+	if ((x > 1.0) || (x < -1.0)) {
 		errno = EDOM;
 		return NAN;
 	}
@@ -124,10 +137,11 @@ double acos(double x)
 
 		t = ya - yb;
 
-		if (t == 0.0 || t == -0.0)
+		if ((t == 0.0) || (t == -0.0)) {
 			break;
+		}
 
-		t = (ya * xb - yb * xa) / t;
+		t = ((ya * xb) - (yb * xa)) / t;
 		xa = xb;
 		xb = t;
 	}
@@ -158,42 +172,48 @@ static const double atan_xi[] = { -0.1080549487073437, 0.1080549487073437, -0.31
 double atan(double x)
 {
 	double res = 1.0, h, a;
-	int i, s = (x < 0.0) ? -1 : 1;
-
-	x *= s;
+	int i, s;
+	
+	s = (x < 0.0) ? -1 : 1;
+	x *= (double)s;
 	h = x / 2;
 
-	if (x <= 0.0)
+	if (x <= 0.0) {
 		return 0.0;
-
-	if (x > 1.0)
-		return (M_PI_2 - atan(1.0 / x)) * s;
-
-	for (i = 0, res = 0.0; i < sizeof(atan_wi) / sizeof(atan_wi[0]); ++i) {
-		a = h * atan_xi[i] + h;
-		res += atan_wi[i] / (a * a + 1);
 	}
 
-	return res * h * s;
+	if (x > 1.0) {
+		return ((M_PI_2 - atan(1.0 / x)) * (double)s);
+	}
+
+	for (i = 0, res = 0.0; i < sizeof(atan_wi) / sizeof(atan_wi[0]); ++i) {
+		a = (h * atan_xi[i]) + h;
+		res += atan_wi[i] / ((a * a) + 1);
+	}
+
+	return (res * h * (double)s);
 }
 
 
 double atan2(double y, double x)
 {
-	if (x > 0) {
+	if (x > 0.0) {
 		return atan(y / x);
 	}
-	else if (x < 0) {
-		if (y >= 0)
+	else if (x < 0.0) {
+		if (y >= 0.0) {
 			return atan(y / x) + M_PI;
+		}
 
 		return atan(y / x) - M_PI;
 	}
 
-	if (y > 0)
+	if (y > 0.0) {
 		return M_PI_2;
-	else if (y < 0)
+	}
+	else if (y < 0.0) {
 		return -M_PI_2;
+	}
 
 	errno = EDOM;
 	return NAN;
