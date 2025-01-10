@@ -110,7 +110,7 @@ double sqrt(double x)
 
 	/* Reciprocal sqare root iters (avoiding division): */
 	for (int i = 0; i < 4; ++i) {
-		xn = xn * (1.5 -  (0.5 * x * xn * xn));
+		xn = xn * (1.5 - (0.5 * x * xn * xn));
 	}
 
 	return (xn * x);
