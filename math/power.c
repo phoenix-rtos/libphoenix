@@ -15,6 +15,7 @@
 
 #include <arch.h> /* Needed for __ieee754_sqrt */
 #include <math.h>
+#include <float.h>
 #include <limits.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -27,11 +28,16 @@ double pow(double base, double exponent)
 	double res = 1.0;
 	int s = 1;
 
+	if ((base == 1.0) || (exponent == 0.0) || (exponent == -0.0)) {
+		return 1.0;
+	}
+
+	if ((isnan(base) != 0) || (isnan(exponent) != 0)) {
+		return NAN;
+	}
+
 	if ((base == 0.0) || (base == -0.0)) {
-		if ((exponent == 0.0) || (exponent == -0.0)) {
-			return 1.0;
-		}
-		else if (exponent < 0.0) {
+		if (exponent < 0.0) {
 			if (base == 0.0) {
 				return INFINITY;
 			}
@@ -42,9 +48,6 @@ double pow(double base, double exponent)
 
 		return 0.0;
 	}
-	else if ((exponent == 0.0) || (exponent == -0.0)) {
-		return 1.0;
-	}
 
 	if (base < 0.0) {
 		if (!isInteger(exponent)) {
@@ -52,7 +55,7 @@ double pow(double base, double exponent)
 			return NAN;
 		}
 
-		s = (fmod(exponent, 2) > 0.0) ? -1 : 1;
+		s = (int)((fmod(exponent, 2) > 0.0) ? -1 : 1);
 		base = -base;
 	}
 
@@ -61,7 +64,12 @@ double pow(double base, double exponent)
 	}
 
 	exponent *= log(base);
-	res = s * exp(exponent);
+	res = (double)s * exp(exponent);
+
+	/* ia32 use 80-bit extended precision registers so isinf() may not be true */
+	if ((isinf(res) != 0) || (fabs(res) > DBL_MAX)) {
+		errno = ERANGE;
+	}
 
 	return res;
 }

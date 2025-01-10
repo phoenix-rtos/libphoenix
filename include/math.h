@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+#define MATH_ERRNO       1
+#define MATH_ERREXCEPT   2
+#define math_errhandling (MATH_ERRNO)
+
 #define FP_NAN       0
 #define FP_INFINITE  1
 #define FP_ZERO      2

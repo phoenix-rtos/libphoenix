@@ -23,6 +23,14 @@ double frexp(double x, int *exp)
 {
 	conv_t *conv = (conv_t *)&x;
 
+	if (isnan(x) != 0) {
+		return NAN;
+	}
+
+	if (isinf(x) != 0) {
+		return x;
+	}
+
 	*exp = 0;
 
 	if ((x == 0.0) || (x == -0.0)) {
@@ -44,6 +52,10 @@ double ldexp(double x, int exp)
 {
 	conv_t *conv = (conv_t *)&x;
 	int exponent = 0;
+
+	if (isnan(x) != 0) {
+		return NAN;
+	}
 
 	if ((x == 0.0) || (x == -0.0)) {
 		return x;
@@ -79,7 +91,10 @@ double log(double x)
 	conv_t *conv = (conv_t *)&tmp;
 	int exp = 0, i;
 
-	if (x < 0.0) {
+	if (isnan(x) != 0) {
+		return NAN;
+	}
+	else if (x < 0.0) {
 		errno = EDOM;
 		return NAN;
 	}
@@ -132,6 +147,10 @@ double modf(double x, double *intpart)
 	int exp = conv->i.exponent - 1023;
 	uint64_t m, mask = 0xfffffffffffffLL;
 
+	if (isnan(x) != 0) {
+		return NAN;
+	}
+
 	if (exp > 52) {
 		*intpart = x;
 		return (conv->i.sign ? -0.0 : 0.0);
@@ -176,7 +195,13 @@ double exp(double x)
 	double res, resi, powx, e, factorial;
 	int i;
 
-	if (x > 710.0) {
+	if (isnan(x) != 0) {
+		return NAN;
+	}
+
+	/* Values of x greater than 709.79 will cause overflow, returning INFINITY */
+	if (x > 709.79) {
+		errno = ERANGE;
 		return HUGE_VAL;
 	}
 
@@ -208,6 +233,10 @@ double ceil(double x)
 {
 	double ipart, fpart;
 
+	if (isnan(x) != 0) {
+		return NAN;
+	}
+
 	fpart = modf(x, &ipart);
 
 	if ((x > 0.0) && ((fpart + x) != x)) {
@@ -221,6 +250,10 @@ double ceil(double x)
 double floor(double x)
 {
 	double ipart, fpart;
+
+	if (isnan(x) != 0) {
+		return NAN;
+	}
 
 	fpart = modf(x, &ipart);
 

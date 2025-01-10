@@ -14,6 +14,9 @@
  */
 
 #include <stdint.h>
+#include <errno.h>
+#include <math.h>
+#include <float.h>
 #include "common.h"
 
 
@@ -131,6 +134,11 @@ double quickPow(double x, int e)
 			x *= x;
 			eabs >>= 1;
 		}
+	}
+
+	/* ia32 use 80-bit extended precision registers so isinf() may not be true */
+	if ((isinf(res) != 0) || (fabs(res) > DBL_MAX)) {
+		errno = ERANGE;
 	}
 
 	return res;

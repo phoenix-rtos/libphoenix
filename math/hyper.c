@@ -14,25 +14,53 @@
  */
 
 #include <math.h>
+#include <float.h>
+#include <errno.h>
 
 
 double cosh(double x)
 {
+	double y;
+
+	if (isnan(x) != 0) {
+		return NAN;
+	}
+
 	if ((x == INFINITY) || (x == -INFINITY)) {
 		return INFINITY;
 	}
 
-	return ((exp(x) + exp(-x)) / 2.0);
+	/* Make sure exp(x) is not infinity */
+	if (x < 709.78) {
+		return ((exp(x) + exp(-x)) / 2.0);
+	}
+	else {
+		y = cosh(x / 2.0);
+		return ((2.0 * y * y) - 1.0);
+	}
 }
 
 
 double sinh(double x)
 {
+	double y;
+
+	if (isnan(x) != 0) {
+		return NAN;
+	}
+
 	if ((x == INFINITY) || (x == -INFINITY)) {
 		return x;
 	}
 
-	return ((exp(x) - exp(-x)) / 2.0);
+	/* Ensure exp(x) does not overflow. Values of x less than 709.78 are guaranteed to be safe. */
+	if (x < 709.78) {
+		return ((exp(x) - exp(-x)) / 2.0);
+	}
+	else {
+		y = sinh(x / 3.0);
+		return ((3.0 * y) + (4.0 * y * y * y));
+	}
 }
 
 

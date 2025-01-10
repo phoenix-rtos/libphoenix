@@ -109,14 +109,21 @@ double sin(double x)
 
 double tan(double x)
 {
-	double c = cos(x);
+	double c;
 
-	if ((c > 0.0) || (c < 0.0)) {
-		return (sin(x) / c);
+	if (isinf(x) != 0) {
+		errno = EDOM;
+		return NAN;
 	}
 
-	errno = EDOM;
-	return NAN;
+	c = cos(x);
+
+	if (c != 0.0) {
+		return (sin(x) / c);
+	}
+	else {
+		return 0.0;
+	}
 }
 
 
@@ -197,6 +204,10 @@ double atan(double x)
 
 double atan2(double y, double x)
 {
+	if ((isnan(y) != 0) || (isnan(x) != 0)) {
+		return NAN;
+	}
+
 	if (x > 0.0) {
 		return atan(y / x);
 	}
@@ -215,6 +226,5 @@ double atan2(double y, double x)
 		return -M_PI_2;
 	}
 
-	errno = EDOM;
-	return NAN;
+	return 0.0;
 }
