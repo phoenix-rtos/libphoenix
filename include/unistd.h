@@ -57,6 +57,7 @@ extern "C" {
 #define _POSIX_PRIO_IO              -1 /* Async IO not implemented. */
 #define _POSIX_SYNC_IO              -1 /* Sync IO not implemented. */
 #define _POSIX_TIMESTAMP_RESOLUTION -1 /* FS timestamps have a resolution up to a second. */
+#define _POSIX_VDISABLE             '\0'
 
 
 extern long sysconf(int name);
@@ -188,7 +189,7 @@ extern int access(const char *pathname, int mode);
 extern char *getcwd(char *buf, size_t size);
 
 
-extern int getopt(int argc, char * const argv[], const char *optstring);
+extern int getopt(int argc, char *const argv[], const char *optstring);
 
 
 extern int close(int fildes);

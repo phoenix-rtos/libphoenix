@@ -53,8 +53,6 @@ typedef int tcflag_t;
 
 #define NCCS 		17
 
-#define _POSIX_VDISABLE '\0'
-
 
 struct termios {
 	tcflag_t  c_iflag;
