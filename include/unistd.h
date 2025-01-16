@@ -51,6 +51,8 @@ extern "C" {
 #define _SC_PAGESIZE   4
 #define _SC_PAGE_SIZE  _SC_PAGESIZE /* spec. 1170 compatibility */
 
+#define _POSIX_VDISABLE '\0'
+
 
 extern long sysconf(int name);
 
