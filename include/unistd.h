@@ -59,8 +59,38 @@ extern "C" {
 #define _POSIX_TIMESTAMP_RESOLUTION -1 /* FS timestamps have a resolution up to a second. */
 #define _POSIX_VDISABLE             '\0'
 
+#define _PC_FILESIZEBITS         0
+#define _PC_LINK_MAX             1
+#define _PC_MAX_CANON            2
+#define _PC_MAX_INPUT            3
+#define _PC_PATH_MAX             4
+#define _PC_PIPE_BUF             5
+#define _PC_2_SYMLINKS           6
+#define _PC_ALLOC_SIZE_MIN       7
+#define _PC_REC_INCR_XFER_SIZE   8
+#define _PC_REC_MAX_XFER_SIZE    9
+#define _PC_REC_MIN_XFER_SIZE    10
+#define _PC_REC_XFER_ALIGN       11
+#define _PC_SYMLINK_MAX          12
+#define _PC_TEXTDOMAIN_MAX       13
+#define _PC_CHOWN_RESTRICTED     14
+#define _PC_NO_TRUNC             15
+#define _PC_VDISABLE             16
+#define _PC_ASYNC_IO             17
+#define _PC_FALLOC               18
+#define _PC_PRIO_IO              19
+#define _PC_SYNC_IO              20
+#define _PC_TIMESTAMP_RESOLUTION 21
+#define _PC_NAME_MAX             22
+
 
 extern long sysconf(int name);
+
+
+extern long pathconf(const char *path, int name);
+
+
+extern long fpathconf(int fildes, int name);
 
 
 /* NOTE: Legacy from SUSv2, new applications should use sysconf(_SC_PAGESIZE) */
