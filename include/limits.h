@@ -31,4 +31,6 @@
 #include <sys/syslimits.h>
 #include <phoenix/limits.h>
 
+#include <posix/limits.h>
+
 #endif
