@@ -5,8 +5,8 @@
  *
  * statvfs
  *
- * Copyright 2022 Phoenix Systems
- * Author: Lukasz Kosinski
+ * Copyright 2022, 2025 Phoenix Systems
+ * Author: Lukasz Kosinski, Hubert Badocha
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -23,6 +23,9 @@
 #include <sys/statvfs.h>
 
 
+extern int sys_statvfs(const char *path, int fd, struct statvfs *buf);
+
+
 int statvfs(const char *path, struct statvfs *buf)
 {
 	char *canonical = resolve_path(path, NULL, 1, 0);
@@ -30,42 +33,17 @@ int statvfs(const char *path, struct statvfs *buf)
 		/* errno set by resolve_path() */
 		return -1;
 	}
+	int res = sys_statvfs(canonical, -1, buf);
 
-	oid_t oid, dev;
-	if (lookup(canonical, &oid, &dev) < 0) {
-		free(canonical);
-		return SET_ERRNO(-ENOENT);
-	}
 	free(canonical);
 
-	/* Detect mountpoint */
-	if (oid.port != dev.port) {
-		msg_t msg = {
-			.type = mtGetAttr,
-			.oid = oid,
-			.i.attr.type = atMode
-		};
+	return set_errno(res);
+}
 
-		if ((msgSend(oid.port, &msg) < 0) || (msg.o.err < 0)) {
-			return SET_ERRNO(-EIO);
-		}
 
-		if (S_ISDIR(msg.o.attr.val)) {
-			oid = dev;
-		}
-	}
+int fstatvfs(int fildes, struct statvfs *buf)
+{
+	int res = sys_statvfs(NULL, fildes, buf);
 
-	memset(buf, 0, sizeof(struct statvfs));
-
-	msg_t msg = {
-		.type = mtStat,
-		.o.data = buf,
-		.o.size = sizeof(struct statvfs)
-	};
-
-	if (msgSend(oid.port, &msg) < 0) {
-		return SET_ERRNO(-EIO);
-	}
-
-	return SET_ERRNO(msg.o.err);
+	return set_errno(res);
 }
