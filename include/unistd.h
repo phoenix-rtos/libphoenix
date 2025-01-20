@@ -51,6 +51,13 @@ extern "C" {
 #define _SC_PAGESIZE   4
 #define _SC_PAGE_SIZE  _SC_PAGESIZE /* spec. 1170 compatibility */
 
+#define _POSIX_NO_TRUNC             1
+#define _POSIX_ASYNC_IO             -1 /* Async IO not implemented. */
+#define _POSIX_FALLOC               -1 /* posix_fallocate not implemented. */
+#define _POSIX_PRIO_IO              -1 /* Async IO not implemented. */
+#define _POSIX_SYNC_IO              -1 /* Sync IO not implemented. */
+#define _POSIX_TIMESTAMP_RESOLUTION -1 /* FS timestamps have a resolution up to a second. */
+
 
 extern long sysconf(int name);
 
