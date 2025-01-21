@@ -23,6 +23,8 @@
 #include <phoenix/arch/sparcv8leon/gr712rc/gr712rc.h>
 #elif defined(__CPU_GENERIC)
 #include <phoenix/arch/sparcv8leon/generic/generic.h>
+#elif defined(__CPU_GR740)
+#include <phoenix/arch/sparcv8leon/gr740/gr740.h>
 #else
 #error "Unsupported TARGET"
 #endif
