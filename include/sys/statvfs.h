@@ -17,6 +17,7 @@
 #define _LIBPHOENIX_SYS_STATVFS_H_
 
 #include <sys/types.h>
+#include <phoenix/posix-statvfs.h>
 
 
 #ifdef __cplusplus
@@ -29,23 +30,8 @@ extern "C" {
 #define ST_NOSUID (1 << 1) /* Ignore S_ISUID and S_ISGID file mode bits */
 
 
-struct statvfs
-{
-	unsigned long f_bsize;   /* Filesystem block size */
-	unsigned long f_frsize;  /* Fundamental filesystem block size */
-	fsblkcnt_t f_blocks;     /* Number of blocks on filesystem (in f_frsize units) */
-	fsblkcnt_t f_bfree;      /* Number of free blocks */
-	fsblkcnt_t f_bavail;     /* Number of free blocks available to non-privileged process */
-	fsfilcnt_t f_files;      /* Number of inodes */
-	fsfilcnt_t f_ffree;      /* Number of free inodes */
-	fsfilcnt_t f_favail;     /* Number of free inodes available to non-privileged process */
-	unsigned long f_fsid;    /* Filesystem ID */
-	unsigned long f_flag;    /* Filesystem flags */
-	unsigned long f_namemax; /* Maximum filename length */
-};
-
-
 extern int statvfs(const char *path, struct statvfs *buf);
+extern int fstatvfs(int fildes, struct statvfs *buf);
 
 
 #ifdef __cplusplus

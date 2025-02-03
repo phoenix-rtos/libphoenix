@@ -23,9 +23,6 @@
 #include <phoenix/types.h>
 
 
-typedef unsigned long long fsblkcnt_t;
-typedef unsigned long long fsfilcnt_t;
-
 typedef int clock_t;
 typedef int clockid_t;
 
