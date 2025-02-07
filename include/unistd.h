@@ -259,6 +259,9 @@ extern int ttyname_r(int fildes, char *name, size_t namesize);
 extern int pause(void);
 
 
+int chroot(const char *path);
+
+
 extern char *optarg;
 
 
