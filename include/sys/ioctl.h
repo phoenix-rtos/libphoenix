@@ -56,6 +56,9 @@ extern "C" {
 #define FIONBIO  _IOW('f', 126, unsigned long)
 
 
+#define KIOEN _IOV('k', 0, unsigned int)
+
+
 int ioctl(int fd, unsigned long cmd, ...);
 
 
