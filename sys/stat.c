@@ -161,7 +161,7 @@ int lstat(const char *path, struct stat *buf)
 }
 
 
-int creat(const char *pathname, int mode)
+int creat(const char *pathname, mode_t mode)
 {
 	return open(pathname, O_WRONLY | O_CREAT | O_TRUNC, mode);
 }
