@@ -148,6 +148,7 @@ double modf(double x, double *intpart)
 	uint64_t m, mask = 0xfffffffffffffLL;
 
 	if (isnan(x) != 0) {
+		*intpart = NAN;
 		return NAN;
 	}
 
