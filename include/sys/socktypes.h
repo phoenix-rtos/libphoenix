@@ -20,4 +20,7 @@
 
 typedef size_t socklen_t;
 
+/* NOTE: Define to make mbedtls recognise socklen_t is defined. */
+#define _SOCKLEN_T
+
 #endif
