@@ -14,6 +14,25 @@
  */
 
 #include <sys/reboot.h>
+
+#if defined(LIBPHOENIX_MULTILIB)
+
+
+int reboot(int magic)
+{
+	return -1;
+}
+
+
+int reboot_reason(uint32_t *val)
+{
+	return -1;
+}
+
+
+#else
+
+
 #include <sys/platform.h>
 
 #if defined(__CPU_STM32L4X6)
@@ -55,3 +74,5 @@ int reboot_reason(uint32_t *val)
 	*val = pctl.reboot.reason;
 	return 0;
 }
+
+#endif
