@@ -24,8 +24,21 @@ extern void _init_array(void);
 extern void _pthread_init(void);
 
 
-void _libc_init(void)
+static int _libc_initialized;
+
+
+/* _libc_init is called twice once explicitly in crt0 and once during constructor handling.
+ * If libc is linked statically first it is called explicitly and then during constructor handling.
+ * If libc is linked dynamically first it is called by the constructor handling mechanism in dynamic linker,
+ * to allow constructors from other objects to call libc functions.
+ */
+__attribute__((constructor)) void _libc_init(void)
 {
+	if (_libc_initialized != 0) {
+		return;
+	}
+	_libc_initialized = 1;
+
 	_atexit_init();
 	_errno_init();
 	_malloc_init();
