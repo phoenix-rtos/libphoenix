@@ -14,6 +14,25 @@
  */
 
 #include <sys/reboot.h>
+
+#if defined(LIBPHOENIX_MULTILIB)
+
+
+int reboot(int magic)
+{
+	return -1;
+}
+
+
+int reboot_reason(uint32_t *val)
+{
+	return -1;
+}
+
+
+#else
+
+
 #include <sys/platform.h>
 #if defined(__CPU_MPS3AN536)
 #include <phoenix/arch/armv8r/mps3an536/mps3an536.h>
@@ -40,3 +59,5 @@ int reboot_reason(uint32_t *val)
 
 	return 0;
 }
+
+#endif

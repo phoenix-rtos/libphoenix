@@ -34,6 +34,13 @@ LIB_TARGETS := $(PREFIX_A)libphoenix.a $(PREFIX_A)crt0.o
 
 all: $(LIB_TARGETS)
 
+ifeq ($(TARGET_SUBFAMILY),multilib)
+  LIBPHOENIX_MULTILIB := y
+  CPPFLAGS += -DLIBPHOENIX_MULTILIB
+else
+  LIBPHOENIX_MULTILIB := n
+endif
+
 ifneq (,$(findstring arm,$(TARGET_SUFF)))
   include arch/arm/Makefile
 else ifneq (,$(findstring aarch64,$(TARGET_SUFF)))

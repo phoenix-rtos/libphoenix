@@ -37,8 +37,10 @@
 #define __ieee754_sqrt(x) ({ double a = (x); __asm__ volatile ("vsqrt.f64 %P0, %P1" : "=w"(a) : "w"(a)); a; })
 #endif
 
+#if __ARM_FP & 4
 #define __IEEE754_SQRTF
 #define __ieee754_sqrtf(x) ({ float a = (x); __asm__ volatile ("vsqrt.f32 %0, %1" : "=t"(a) : "t"(a)); a; })
+#endif
 #endif
 
 
