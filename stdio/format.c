@@ -102,9 +102,9 @@ struct buffer {
 
 struct bigdouble {
 	/* Stored number */
-	bignum_t num;
+	__bignum_t num;
 	/* Helper values */
-	bignum_t helper1;
+	__bignum_t helper1;
 	uint64_t firstIntegerBit;
 };
 
@@ -167,13 +167,13 @@ static inline int32_t format_doubleGetExponent(uint64_t num64)
 
 static int format_bigdoubleInit(struct bigdouble *bd, const size_t size)
 {
-	int res = bignum_init(&bd->num, size, 0);
+	int res = __bignum_init(&bd->num, size, 0);
 	if (res != 0) {
 		return res;
 	}
-	res = bignum_init(&bd->helper1, size, 0);
+	res = __bignum_init(&bd->helper1, size, 0);
 	if (res != 0) {
-		bignum_destroy(&bd->num);
+		__bignum_destroy(&bd->num);
 		return res;
 	}
 	bd->firstIntegerBit = 0;
@@ -183,16 +183,16 @@ static int format_bigdoubleInit(struct bigdouble *bd, const size_t size)
 
 static void format_bigdoubleDestroy(struct bigdouble *bd)
 {
-	bignum_destroy(&bd->num);
-	bignum_destroy(&bd->helper1);
+	__bignum_destroy(&bd->num);
+	__bignum_destroy(&bd->helper1);
 }
 
 
-static int format_bigdoubleIntegerPart(const struct bigdouble *bd, bignum_t *result)
+static int format_bigdoubleIntegerPart(const struct bigdouble *bd, __bignum_t *result)
 {
-	int res = bignum_copy(result, &bd->num);
+	int res = __bignum_copy(result, &bd->num);
 	if (res == 0) {
-		bignum_shiftr(result, bd->firstIntegerBit);
+		__bignum_shiftr(result, bd->firstIntegerBit);
 	}
 	return res;
 }
@@ -200,8 +200,8 @@ static int format_bigdoubleIntegerPart(const struct bigdouble *bd, bignum_t *res
 
 static void format_bigdoubleCutIntegerPart(struct bigdouble *result)
 {
-	const size_t firstIntegerIndex = result->firstIntegerBit / BIGNUM_DATA_BITS;
-	const size_t fracMask = (1LLU << (result->firstIntegerBit % BIGNUM_DATA_BITS)) - 1;
+	const size_t firstIntegerIndex = result->firstIntegerBit / __BIGNUM_DATA_BITS;
+	const size_t fracMask = (1LLU << (result->firstIntegerBit % __BIGNUM_DATA_BITS)) - 1;
 	if (firstIntegerIndex < result->num.len) {
 		result->num.data[firstIntegerIndex] &= fracMask;
 		result->num.len = firstIntegerIndex + 1;
@@ -220,7 +220,7 @@ static int format_bigdoubleLoad(struct bigdouble *result, double val)
 	if (res != 0) {
 		return res;
 	}
-	bignum_zero(&result->num);
+	__bignum_zero(&result->num);
 	if ((isSubnormalOrZero != 0) && (mantissa == 0)) {
 		/* val == 0 */
 		result->firstIntegerBit = 0;
@@ -228,9 +228,9 @@ static int format_bigdoubleLoad(struct bigdouble *result, double val)
 	}
 	/* val != 0 */
 	mantissa |= (isSubnormalOrZero != 0 ? 0LLU : 1LLU) << DOUBLE_EXP_SHIFT;
-	result->num.data[0] = mantissa & BIGNUM_DATA_MASK;
-	mantissa >>= BIGNUM_DATA_BITS;
-	res = bignum_push(&result->num, (bignum_data_t)mantissa);
+	result->num.data[0] = mantissa & __BIGNUM_DATA_MASK;
+	mantissa >>= __BIGNUM_DATA_BITS;
+	res = __bignum_push(&result->num, (__bignum_data_t)mantissa);
 	if (res != 0) {
 		format_bigdoubleDestroy(result);
 		return res;
@@ -241,7 +241,7 @@ static int format_bigdoubleLoad(struct bigdouble *result, double val)
 	/* Check if there is no fractional part */
 	if (DOUBLE_EXP_SHIFT < exp) {
 		result->firstIntegerBit = 0;
-		res = bignum_shiftl(&result->num, exp - DOUBLE_EXP_SHIFT);
+		res = __bignum_shiftl(&result->num, exp - DOUBLE_EXP_SHIFT);
 	}
 	else {
 		result->firstIntegerBit = DOUBLE_EXP_SHIFT - exp;
@@ -335,13 +335,13 @@ static int format_sprintfDecimalForm(struct buffer *buff, struct bigdouble *bd, 
 	/* Integer part */
 	length = 0;
 	do {
-		bignum_div(&bd->helper1, &remainder, 10);
+		__bignum_div(&bd->helper1, &remainder, 10);
 		ret = format_bufferAddChar(buff, smallDigits[remainder]);
 		if (ret < 0) {
 			return ret;
 		}
 		length += 1;
-	} while (bignum_cmp(&bd->helper1, 0) != 0);
+	} while (__bignum_cmp(&bd->helper1, 0) != 0);
 	format_bufferReverse(buff->data, *startOffset, *startOffset + length);
 
 	/* Frac part */
@@ -352,7 +352,7 @@ static int format_sprintfDecimalForm(struct buffer *buff, struct bigdouble *bd, 
 		}
 	}
 	for (i = 0; i < precision; ++i) {
-		ret = bignum_mul(&bd->num, 10);
+		ret = __bignum_mul(&bd->num, 10);
 		if (ret < 0) {
 			return ret;
 		}
@@ -367,7 +367,7 @@ static int format_sprintfDecimalForm(struct buffer *buff, struct bigdouble *bd, 
 		}
 	}
 	/* Rounding */
-	ret = bignum_mul(&bd->num, 10);
+	ret = __bignum_mul(&bd->num, 10);
 	if (ret < 0) {
 		return ret;
 	}
@@ -549,23 +549,23 @@ static int format_sprintfScientificForm(struct buffer *buff, struct bigdouble *b
 	format_bigdoubleCutIntegerPart(bd);
 
 	/* Integer part */
-	if (bignum_cmp(&bd->helper1, 0) != 0) {
+	if (__bignum_cmp(&bd->helper1, 0) != 0) {
 		expIsPositive = 1;
 		do {
-			bignum_div(&bd->helper1, &remainder, 10);
+			__bignum_div(&bd->helper1, &remainder, 10);
 			ret = format_bufferAddChar(buff, smallDigits[remainder]);
 			if (ret < 0) {
 				return DOUBLE_EXP_INVALID + ret;
 			}
 			exp += 1;
-		} while (bignum_cmp(&bd->helper1, 0) != 0);
+		} while (__bignum_cmp(&bd->helper1, 0) != 0);
 		format_bufferReverse(buff->data, *startOffset, exp + *startOffset);
 		exp--;
 	}
 	else {
 		expIsPositive = 0;
 		do {
-			ret = bignum_mul(&bd->num, 10);
+			ret = __bignum_mul(&bd->num, 10);
 			if (ret < 0) {
 				return DOUBLE_EXP_INVALID + ret;
 			}
@@ -584,7 +584,7 @@ static int format_sprintfScientificForm(struct buffer *buff, struct bigdouble *b
 	}
 
 	for (i = 0; i <= precision; ++i) {
-		ret = bignum_mul(&bd->num, 10);
+		ret = __bignum_mul(&bd->num, 10);
 		if (ret < 0) {
 			return DOUBLE_EXP_INVALID + ret;
 		}
@@ -835,7 +835,7 @@ static int format_sprintfDouble(void *ctx, feedfunc feed, double d, uint32_t fla
 			format_bigdoubleDestroy(&bd);
 			return ret;
 		}
-		ret = bignum_copy(&bd_backup.num, &bd.num);
+		ret = __bignum_copy(&bd_backup.num, &bd.num);
 		if (ret < 0) {
 			format_bigdoubleDestroy(&bd_backup);
 			format_bufferDestroy(&buff);
