@@ -17,6 +17,8 @@
 #include <sys/platform.h>
 #if defined(__CPU_ZYNQMP)
 #include <phoenix/arch/armv7r/zynqmp/zynqmp.h>
+#elif defined(__CPU_TDA4VM)
+#include <phoenix/arch/armv7r/tda4vm/tda4vm.h>
 #else
 #error "Unsupported TARGET"
 #endif
