@@ -218,11 +218,7 @@ void __ubsan_handle_nonnull_return_v1(struct nonnull_return_data *data, struct s
 }
 
 
-#if __GCC_VERSION < 60000
-void __ubsan_handle_nonnull_arg(struct nonnull_arg_data *data, size_t arg_no)
-#else
 void __ubsan_handle_nonnull_arg(struct nonnull_arg_data *data)
-#endif
 {
 	ubsan_print(&data->loc, "non-null argument is null");
 }
