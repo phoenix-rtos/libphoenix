@@ -23,7 +23,7 @@
 #define __MEMCPY
 #define __MEMSET
 
-#if (!__SOFTFP__)
+#ifndef __SOFTFP__
 #define __IEEE754_SQRT
 
 static inline double __ieee754_sqrt(double x)

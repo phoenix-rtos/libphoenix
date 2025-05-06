@@ -28,7 +28,7 @@
 #define __STRCPY
 #define __STRNCPY
 
-#if (!_SOFT_FLOAT)
+#ifndef _SOFT_FLOAT
 #define __IEEE754_SQRT
 
 static inline double __ieee754_sqrt(double x)
