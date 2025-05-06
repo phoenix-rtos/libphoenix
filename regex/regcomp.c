@@ -35,6 +35,9 @@
 
 #ifndef _NO_REGEX
 
+/* phoenix: define dead code guard correctly to prevent -Wundef errors */
+#define used 0
+
 #if defined(LIBC_SCCS) && !defined(lint)
 static char sccsid[] = "@(#)regcomp.c	8.5 (Berkeley) 3/20/94";
 #endif /* LIBC_SCCS and not lint */
