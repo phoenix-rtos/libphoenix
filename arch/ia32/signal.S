@@ -24,8 +24,7 @@ _signal_trampoline:
 	call _signal_handler
 
 	addl $4, %esp
-	/* Put old mask on stack */
-	push %eax
+	/* oldmask is now on top of the stack */
 	/* cpu context *, eip, esp on stack */
 	call sigreturn
 .size _signal_trampoline, .-_signal_trampoline

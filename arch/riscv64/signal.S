@@ -24,10 +24,10 @@ _signal_trampoline:
 	lw a0, (sp)
 	call _signal_handler
 
-	/* Old signal mask in a0 */
-	ld a1, 8(sp)  /* cpu context * */
-	ld a2, 16(sp) /* sepc */
-	ld a3, 24(sp) /* sp */
-	addi sp, sp, 32
+	lw a0, 8(sp)  /* old signal mask */
+	ld a1, 16(sp) /* cpu context * */
+	ld a2, 24(sp) /* sepc */
+	ld a3, 32(sp) /* sp */
+	addi sp, sp, 40
 	call sigreturn
 .size _signal_trampoline, .-_signal_trampoline
