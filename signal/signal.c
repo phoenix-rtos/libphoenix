@@ -136,7 +136,8 @@ unsigned int _signal_handler(int phxsig)
 	/* Received Phoenix signal, need to convert it to POSIX signal */
 	sig = _signals_phx2posix[phxsig];
 
-	oldmask = signalMask(signal_common.sigset[sig], 0xffffffffUL);
+	/* POSIX: sa_mask should be ORed with current process signal mask */
+	signalMask(signal_common.sigset[sig], signal_common.sigset[sig]);
 
 	/* Invoke handler */
 	(signal_common.sightab[sig])(sig);
@@ -240,7 +241,15 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *oact)
 			oact->sa_handler = signal_common.sightab[sig];
 		}
 
-		oact->sa_mask = signal_common.sigset[sig];
+		/* convert phx signals to POSIX */
+		oact->sa_mask = 0;
+		for (i = 0; i < NSIG; ++i) {
+			if (signal_common.sigset[sig] & (1UL << i)) {
+				/* FIXME: support SA_NODEFER correctly (do not modify sa_mask when installing handler) */
+				oact->sa_mask |= 1UL << _signals_phx2posix[i];
+			}
+		}
+
 		oact->sa_flags = 0; /* TODO: flags */
 		mutexUnlock(signal_common.lock);
 	}
@@ -273,8 +282,6 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *oact)
 		if ((act->sa_flags & SA_NODEFER) == 0) {
 			signal_common.sigset[sig] |= 1UL << _signals_posix2phx[sig];
 		}
-
-		signal_common.sigset[sig] = act->sa_mask;
 
 		signalMask(oldmask, 0xffffffffUL);
 		mutexUnlock(signal_common.lock);
