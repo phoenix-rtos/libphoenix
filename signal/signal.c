@@ -123,14 +123,13 @@ static int _signal_ismutable(int sig)
 }
 
 
-unsigned int _signal_handler(int phxsig)
+void _signal_handler(int phxsig)
 {
 	int sig;
-	unsigned int oldmask;
 
 	if ((phxsig < 0) || (phxsig >= NSIG)) {
 		/* Don't know what to do, ignore it */
-		return signalMask(0U, 0U);
+		return;
 	}
 
 	/* Received Phoenix signal, need to convert it to POSIX signal */
@@ -142,9 +141,7 @@ unsigned int _signal_handler(int phxsig)
 	/* Invoke handler */
 	(signal_common.sightab[sig])(sig);
 
-	/* Mask restored by sigreturn */
-
-	return oldmask;
+	/* oldmask kept on stack and restored by sigreturn */
 }
 
 
