@@ -339,7 +339,7 @@ int sigsuspend(const sigset_t *sigmask)
 {
 	unsigned int phxv = 0u, i;
 
-	for (i = 0, phxv = 0u; i < NSIG; ++i) {
+	for (i = 0; i < NSIG; ++i) {
 		if (*sigmask & (1UL << i)) {
 			phxv |= (1UL << _signals_posix2phx[i]);
 		}
@@ -366,7 +366,7 @@ int sigaddset(sigset_t *set, int signo)
 		return SET_ERRNO(-EINVAL);
 	}
 
-	*set |= (1 << signo);
+	*set |= (1UL << signo);
 	return 0;
 }
 
@@ -377,7 +377,7 @@ int sigismember(const sigset_t *set, int signum)
 		return SET_ERRNO(-EINVAL);
 	}
 
-	return !!(*set & (1 << signum));
+	return !!(*set & (1UL << signum));
 }
 
 
@@ -412,7 +412,7 @@ int sigdelset(sigset_t *set, int signum)
 		return SET_ERRNO(-EINVAL);
 	}
 
-	*set &= ~(1 << signum);
+	*set &= ~(1UL << signum);
 	return 0;
 }
 
