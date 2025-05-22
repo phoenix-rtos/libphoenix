@@ -20,13 +20,14 @@
 .globl _signal_trampoline
 .type _signal_trampoline, %function
 _signal_trampoline:
-	/* Signal number, cpu_context * */
+	/* Signal number, oldmask - keep stack aligned to 8 */
 	pop {r0,r4}
 	blx _signal_handler
 
-	/* Old signal mask in r0 */
-	mov r1, r4
-	pop {r2,r3} /* pc, sp */
-	/* psr on stack */
+	mov r0, r4        /* move oldmask to r0 */
+	pop {r1,r2,r3,r4} /* cpu_context_t *, pc, psp, psr */
+
+	/* put psr back on stack, keep aligned to 8 (r5 as padding value) */
+	push {r4,r5}
 	bl sigreturn
 .size _signal_trampoline, .-_signal_trampoline
