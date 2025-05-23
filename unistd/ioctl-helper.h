@@ -19,13 +19,14 @@
 #include <unistd.h>
 
 
-/* serialize the request's structure into out_ptr. allocates memory in special cases to be
-   freed by ioctlspecial_unpack, does nothing for normal cases */
+/* serialize the request's structure into out_ptr.
+   allocates memory in special cases to be freed by
+   ioctl_deserialize, does nothing for all other cases */
 int ioctl_serialize(unsigned long request, void *ioctl_val, void **out_ptr, size_t *out_size);
 
 
 /* deserialize the request's structure from in_ptr back into ioctl_val.
-   deallocates memory if it was allocated in ioctl_pack */
+   deallocates memory if it was allocated by ioctl_serialize */
 void ioctl_deserialize(unsigned long request, void *ioctl_val, void *in_ptr, size_t size);
 
 
