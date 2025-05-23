@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <phoenix/ethtool.h>
 
 #include "ioctl-helper.h"
 
@@ -25,7 +26,8 @@
 #define IS_SPECIAL_IOCTL(request) ( \
 		(request == SIOCGIFCONF) || \
 		(request == SIOCADDRT) || \
-		(request == SIOCDELRT))
+		(request == SIOCDELRT) || \
+		(request == SIOCETHTOOL))
 
 
 typedef struct {
@@ -110,6 +112,63 @@ static int ioctl_unpackStructWithSubptrs(void **packed, size_t *packed_size, voi
 }
 
 
+static inline int ioctl_ethtool(struct ifreq *ifr, void **packed, size_t *packed_size, ioctl_op_t op)
+{
+	size_t ethtool_size;
+	void *ethtool = ifr->ifr_data;
+
+	if (ethtool == NULL) {
+		return -EINVAL;
+	}
+
+	/* first field of every ethtool struct is always uint32_t cmd */
+	uint32_t cmd = *((uint32_t *)ethtool);
+
+	switch (cmd) {
+		case ETHTOOL_GSET:
+		case ETHTOOL_SSET:
+			ethtool_size = sizeof(struct ethtool_cmd);
+			break;
+
+		case ETHTOOL_TEST: {
+			struct ethtool_test *test = ethtool;
+			ethtool_size = sizeof(*test) + (test->len * sizeof(test->data[0]));
+			break;
+		}
+
+		case ETHTOOL_GSTRINGS: {
+			struct ethtool_gstrings *gstrings = ethtool;
+			ethtool_size = sizeof(*gstrings) + (gstrings->len * ETH_GSTRING_LEN);
+			break;
+		}
+
+		case ETHTOOL_GSSET_INFO: {
+			struct ethtool_sset_info *sset = ethtool;
+			ethtool_size = sizeof(*sset) + (__builtin_popcountll(sset->sset_mask) * sizeof(sset->data[0]));
+			break;
+		}
+
+		case ETHTOOL_GLOOPBACK:
+		case ETHTOOL_SLOOPBACK:
+			ethtool_size = sizeof(struct ethtool_value);
+			break;
+
+		case ETHTOOL_GLINKSETTINGS:
+		case ETHTOOL_SLINKSETTINGS: {
+			struct ethtool_link_settings *settings = ethtool;
+			ethtool_size = sizeof(*settings) + (settings->link_mode_masks_nwords * sizeof(settings->link_mode_masks[0]));
+			break;
+		}
+
+		default:
+			return -EOPNOTSUPP;
+	}
+
+	const subptr_info_t info = { .size = ethtool_size, .offset = __builtin_offsetof(struct ifreq, ifr_data) };
+	return op(packed, packed_size, ifr, sizeof(*ifr), &info, 1);
+}
+
+
 static inline int ioctl_rtEntry(struct rtentry *rt, void **packed, size_t *packed_size, ioctl_op_t op)
 {
 	size_t rt_dev_size = 0;
@@ -176,6 +235,10 @@ int ioctl_serialize(unsigned long request, void *ioctl_val, void **packed, size_
 			ret = ioctl_ifconf(ioctl_val, packed, packed_size, ioctl_packStructWithSubptrs);
 			break;
 
+		case SIOCETHTOOL:
+			ret = ioctl_ethtool(ioctl_val, packed, packed_size, ioctl_packStructWithSubptrs);
+			break;
+
 		default:
 			*packed = ioctl_val;
 			*packed_size = IOCPARM_LEN(request);
@@ -200,6 +263,10 @@ void ioctl_deserialize(unsigned long request, void *ioctl_val, void *packed)
 
 		case SIOCGIFCONF:
 			(void)ioctl_ifconf(ioctl_val, &packed, NULL, ioctl_unpackStructWithSubptrs);
+			break;
+
+		case SIOCETHTOOL:
+			(void)ioctl_ethtool(ioctl_val, &packed, NULL, ioctl_unpackStructWithSubptrs);
 			break;
 
 		default:

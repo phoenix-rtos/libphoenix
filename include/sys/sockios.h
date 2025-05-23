@@ -54,4 +54,6 @@
 #define SIOCADDRT			_IOW(SOCK_IOC_TYPE, 0x44, struct rtentry)	/* add routing table entry */
 #define SIOCDELRT			_IOW(SOCK_IOC_TYPE, 0x45, struct rtentry)	/* delete routing table entry */
 
-#endif // LIBPHOENIX_SYS_SOCKIOS_H
+#define SIOCETHTOOL			_IOWR(SOCK_IOC_TYPE, 0x46, struct ifreq)	/* ethtool interface */
+
+#endif /* LIBPHOENIX_SYS_SOCKIOS_H */
