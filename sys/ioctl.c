@@ -20,11 +20,7 @@
 #include <sys/minmax.h>
 #include <string.h>
 
-/* SIOCGIFCONF handling */
 #include <sys/socket.h>
-#include <sys/sockios.h>
-#include <net/if.h>
-#include <stdlib.h>
 
 
 const void *ioctl_unpack(msg_t *msg, unsigned long *request, id_t *id)
@@ -47,7 +43,7 @@ const void *ioctl_unpackEx(msg_t *msg, unsigned long *request, id_t *id, void **
 		*id = msg->oid.id;
 	}
 
-	size = IOCPARM_LEN(ioctl->request);
+	size = ioctl->size;
 
 	if ((ioctl->request & IOC_IN) != 0) {
 		if (size <= (sizeof(msg->i.raw) - sizeof(ioctl_in_t))) {
@@ -61,31 +57,6 @@ const void *ioctl_unpackEx(msg_t *msg, unsigned long *request, id_t *id, void **
 		/* the data is passed by value instead of pointer */
 		size = min(size, sizeof(void *));
 		(void)memcpy(&data, ioctl->data, size);
-	}
-
-	/* ioctl special case: arg is structure with pointer - has to be custom-packed into message */
-	if (ioctl->request == SIOCGIFCONF) {
-		struct ifconf *ifc = (struct ifconf *)data;
-		if (ifc->ifc_len > 0) {
-			ifc->ifc_buf = msg->o.data;
-		}
-	}
-	else if ((ioctl->request == SIOCADDRT) || (ioctl->request == SIOCDELRT)) {
-		/* input data is read only so we have allocate the in_data if
-		 * we want to change it. TODO: find better place to allocate and free
-		 * message */
-		struct rtentry *rt = malloc(msg->i.size);
-		if (rt == NULL) {
-			return NULL;
-		}
-		(void)memcpy(rt, msg->i.data, msg->i.size);
-		rt->rt_dev = malloc(msg->o.size);
-		if (rt->rt_dev == NULL) {
-			free(rt);
-			return NULL;
-		}
-		(void)memcpy(rt->rt_dev, msg->o.data, msg->o.size);
-		data = (void *)rt;
 	}
 	else {
 	}
