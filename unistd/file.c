@@ -29,6 +29,7 @@
 #include <termios.h>
 
 #include "posix/utils.h"
+#include "ioctl-helper.h"
 
 
 extern int sys_open(const char *filename, int oflag, ...);
@@ -542,20 +543,37 @@ int fcntl(int fd, int cmd, ...)
 }
 
 
-extern int sys_ioctl(int fildes, unsigned long request, void *val);
+extern int sys_ioctl(int fildes, unsigned long request, void *val, size_t size);
 
 
 int ioctl(int fildes, unsigned long request, ...)
 {
 	va_list ap;
 	void *val;
+	void *val_packed;
+	size_t size;
+	int ret;
 
 	/* FIXME: handle varargs properly */
 	va_start(ap, request);
 	val = va_arg(ap, void *);
 	va_end(ap);
 
-	return SET_ERRNO(sys_ioctl(fildes, request, val));
+	ret = ioctl_serialize(request, val, &val_packed, &size);
+	if (ret < 0) {
+		/* frees val_packed internally on error */
+		return SET_ERRNO(ret);
+	}
+
+	ret = sys_ioctl(fildes, request, val_packed, size);
+	if (ret < 0) {
+		ioctl_free(request, val_packed);
+		return SET_ERRNO(ret);
+	}
+
+	ioctl_deserialize(request, val, val_packed);
+
+	return SET_ERRNO(ret);
 }
 
 
