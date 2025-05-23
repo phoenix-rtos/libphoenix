@@ -27,6 +27,10 @@ extern "C" {
 #endif
 
 
+/* convenience macro to get sub-pointer `field` in a packed ioctl structure that is read-only */
+#define IOC_GET_PTR_FIELD(request, subptr, val, field) ioctl_getPointerField(request, subptr, val, __builtin_offsetof(typeof(*val), field))
+
+
 #define IOCPARM_MASK   0x3fff
 #define IOCPARM_LEN(x) (((x) >> 16) & IOCPARM_MASK)
 #define IOCBASECMD(x)  ((x) & ~(IOCPARM_MASK << 16))
@@ -75,6 +79,9 @@ static inline pid_t ioctl_getSenderPid(const msg_t *msg)
 
 
 void ioctl_setResponse(msg_t *msg, unsigned long request, int err, const void *data);
+
+
+int ioctl_getPointerField(unsigned long request, void **subptr, void *val, size_t offset);
 
 
 #ifdef __cplusplus
