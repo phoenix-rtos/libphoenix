@@ -29,6 +29,7 @@
 #include <termios.h>
 
 #include "posix/utils.h"
+#include "ioctl-helper.h"
 
 
 extern ssize_t sys_read(int fildes, void *buf, size_t nbyte, off_t offset);
@@ -644,20 +645,53 @@ int fcntl(int fd, int cmd, ...)
 }
 
 
-extern int sys_ioctl(int fildes, unsigned long request, void *val);
+extern int sys_ioctl(int fildes, unsigned long request, void *val, size_t size);
 
 
 int ioctl(int fildes, unsigned long request, ...)
 {
 	va_list ap;
 	void *val;
+	void *packed;
+	size_t size = IOCPARM_LEN(request);
+	int ret;
 
-	/* FIXME: handle varargs properly */
-	va_start(ap, request);
-	val = va_arg(ap, void *);
-	va_end(ap);
+	if ((request & IOC_INOUT) != 0 || size > 0) {
+		/* assume `args` is one structure passed by pointer */
+		va_start(ap, request);
+		val = va_arg(ap, void *);
+		va_end(ap);
+	}
+	else {
+		val = NULL;
+	}
 
-	return SET_ERRNO(sys_ioctl(fildes, request, val));
+	if ((request & IOC_NESTED) != 0) {
+		ret = ioctl_serialize(request, val, &packed, &size);
+		if (ret < 0) {
+			ioctl_free(request, packed);
+			return SET_ERRNO(ret);
+		}
+
+		if (packed != NULL) {
+			ret = sys_ioctl(fildes, request, packed, size);
+		}
+		else {
+			ret = sys_ioctl(fildes, request, val, size);
+		}
+
+		if (ret < 0) {
+			ioctl_free(request, packed);
+			return SET_ERRNO(ret);
+		}
+
+		ioctl_deserialize(request, val, packed);
+
+		return SET_ERRNO(ret);
+	}
+	else {
+		return SET_ERRNO(sys_ioctl(fildes, request, val, size));
+	}
 }
 
 
