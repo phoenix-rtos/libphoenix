@@ -20,11 +20,12 @@
 .globl _signal_trampoline
 .type _signal_trampoline, %function
 _signal_trampoline:
-	ldr x0, [sp], 8 /* signal number */
+	/* Signal number, oldmask - keep stack aligned to 16 */
+	ldp x0, x19, [sp], #0x10
 	bl _signal_handler
 
-	ldp x0, x1, [sp], #0x10 /* oldmask, cpu_context_t *  */
-	ldp x2, x3, [sp], #0x10 /* pc, sp */
-	ldr x4, [sp], #0x10 /* psr, skip padding at the end */
+	mov x0, x19             /* move oldmask to x0 */
+	ldp x1, x2, [sp], #0x10 /* cpu_context_t *, pc */
+	ldp x3, x4, [sp], #0x10 /* sp, psr */
 	bl sigreturn
 .size _signal_trampoline, .-_signal_trampoline
