@@ -96,6 +96,11 @@ static inline ssize_t ioctl_packEthtool(const struct ifreq *ifr, void **out_ptr,
 			ethtool_struct_size = ETHTOOL_STRUCT_SIZE_LEN_DATA_NAMES_LEN_OP(struct ethtool_sset_info, ethtool_struct, sset_mask, data, __builtin_popcountll);
 			break;
 
+		case ETHTOOL_GLOOPBACK:
+		case ETHTOOL_SLOOPBACK:
+			ethtool_struct_size = sizeof(struct ethtool_value);
+			break;
+
 		case ETHTOOL_GLINKSETTINGS:
 		case ETHTOOL_SLINKSETTINGS:
 			ethtool_struct_size = ETHTOOL_STRUCT_SIZE_LEN_DATA_NAMES(struct ethtool_link_settings, ethtool_struct, link_mode_masks_nwords, link_mode_masks);

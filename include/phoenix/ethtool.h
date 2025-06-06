@@ -27,6 +27,8 @@
 #define ETHTOOL_GSSET_INFO    0x00000037
 #define ETHTOOL_GLINKSETTINGS 0x0000004c
 #define ETHTOOL_SLINKSETTINGS 0x0000004d
+#define ETHTOOL_GLOOPBACK     0x0000004e
+#define ETHTOOL_SLOOPBACK     0x0000004f
 
 #define ETH_MDIO_SUPPORTS_C22 1
 #define ETH_MDIO_SUPPORTS_C45 2
@@ -137,6 +139,10 @@
 #define ETH_TP_MDI         0x01
 #define ETH_TP_MDI_X       0x02
 #define ETH_TP_MDI_AUTO    0x03
+
+#define ETH_PHY_LOOPBACK_DISABLED   0x0
+#define ETH_PHY_LOOPBACK_ENABLED    0x1
+#define ETH_PHY_LOOPBACK_SET_FAILED 0xff
 
 
 enum {
@@ -249,6 +255,11 @@ struct ethtool_test {
 	uint32_t reserved;
 	uint32_t len;
 	uint64_t data[];
+};
+
+struct ethtool_value {
+	uint32_t cmd;
+	uint32_t data;
 };
 
 struct ethtool_link_settings {
