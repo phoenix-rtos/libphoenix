@@ -20,6 +20,8 @@
 #include <phoenix/arch/armv8m/nrf/91/nrf9160.h>
 #elif defined(__CPU_MCXN94X)
 #include <phoenix/arch/armv8m/mcx/n94x/mcxn94x.h>
+#elif defined(__CPU_STM32N6)
+#include <phoenix/arch/armv8m/stm32/n6/stm32n6.h>
 #else
 #error "Unsupported TARGET"
 #endif
