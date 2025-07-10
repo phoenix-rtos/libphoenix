@@ -430,14 +430,16 @@ int pthread_cancel(pthread_t thread)
 {
 	int err = 0, id;
 	pthread_ctx *ctx = (pthread_ctx *)thread;
+	pthread_t self;
 
 	if (ctx == NULL) {
 		err = -ESRCH;
 	}
 	else {
+		self = pthread_self();
 		mutexLock(pthread_common.pthread_list_lock);
 		_pthread_ctx_get(ctx);
-		if (thread == pthread_self()) {
+		if (thread == self) {
 			if (ctx->cancelstate == PTHREAD_CANCEL_ENABLE) {
 				_pthread_ctx_put(ctx);
 				pthread_exit((void *)PTHREAD_CANCELED);
