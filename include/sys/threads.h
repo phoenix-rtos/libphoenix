@@ -155,7 +155,7 @@ extern int condBroadcast(handle_t h);
 extern int resourceDestroy(handle_t h);
 
 
-extern int signalHandle(void (*handler)(void), unsigned mask, unsigned mmask);
+extern int signalAction(int signal, const struct sigaction *act, struct sigaction *oact, void (*trampoline)(void));
 
 
 extern int signalPost(int pid, int tid, int signal);
