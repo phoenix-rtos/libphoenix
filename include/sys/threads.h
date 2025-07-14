@@ -162,7 +162,7 @@ int condBroadcast(handle_t h);
 int resourceDestroy(handle_t h);
 
 
-int signalHandle(void (*handler)(void));
+int signalAction(int signal, const struct sigaction *act, struct sigaction *oact, void (*trampoline)(void));
 
 
 int signalPost(int pid, int tid, int signal);
