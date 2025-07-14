@@ -20,14 +20,15 @@
 .globl _signal_trampoline
 .type _signal_trampoline, %function
 _signal_trampoline:
-	/* Get signal number from stack */
+	/* Get signal number and handler address from stack */
 	lw a0, (sp)
-	call _signal_handler
+	ld a1, 8(sp)
+	jalr ra, a1, 0
 
-	lw a0, 8(sp)  /* old signal mask */
-	ld a1, 16(sp) /* cpu context * */
-	ld a2, 24(sp) /* sepc */
-	ld a3, 32(sp) /* sp */
-	addi sp, sp, 40
+	lw a0, 16(sp)  /* old signal mask */
+	ld a1, 24(sp) /* cpu context * */
+	ld a2, 32(sp) /* sepc */
+	ld a3, 40(sp) /* sp */
+	addi sp, sp, 48
 	call sigreturn
 .size _signal_trampoline, .-_signal_trampoline
