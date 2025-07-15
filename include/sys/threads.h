@@ -29,6 +29,30 @@ extern "C" {
 #endif
 
 
+extern void _uresource_init(void);
+
+
+extern int mutexUnlock(handle_t m);
+
+
+extern int mutexTry(handle_t m);
+
+
+#define phMutexLock(m) mutexLock((m))
+
+
+extern int resourceDestroy(handle_t r);
+
+
+extern int condBroadcast(handle_t h);
+
+
+extern int condSignal(handle_t h);
+
+
+#define phCondWait(c, m, t) condWait((c), (m), (t))
+
+
 typedef struct {
 	handle_t mutex;
 	handle_t cond;
@@ -89,31 +113,16 @@ extern int threadsinfo(int n, threadinfo_t *info);
 extern int priority(int priority);
 
 
-extern int phMutexCreate(handle_t *h, const struct lockAttr *attr);
-
-
 extern int mutexCreate(handle_t *h);
 
 
-static inline int mutexCreateWithAttr(handle_t *h, const struct lockAttr *attr)
-{
-	return phMutexCreate(h, attr);
-}
-
-
-extern int phMutexLock(handle_t h);
+extern int mutexCreateWithAttr(handle_t *h, const struct lockAttr *attr);
 
 
 extern int mutexLock(handle_t h);
 
 
 extern int mutexLock2(handle_t h1, handle_t h2);
-
-
-extern int mutexTry(handle_t h);
-
-
-extern int mutexUnlock(handle_t h);
 
 
 extern int semaphoreCreate(semaphore_t *s, unsigned int v);
@@ -128,31 +137,13 @@ extern int semaphoreUp(semaphore_t *s);
 extern int semaphoreDone(semaphore_t *s);
 
 
-extern int phCondCreate(handle_t *h, const struct condAttr *attr);
-
-
 extern int condCreate(handle_t *h);
 
 
-static inline int condCreateWithAttr(handle_t *h, const struct condAttr *attr)
-{
-	return phCondCreate(h, attr);
-}
+extern int condCreateWithAttr(handle_t *h, const struct condAttr *attr);
 
 
 extern int condWait(handle_t h, handle_t m, time_t timeout);
-
-
-extern int phCondWait(handle_t h, handle_t m, time_t timeout);
-
-
-extern int condSignal(handle_t h);
-
-
-extern int condBroadcast(handle_t h);
-
-
-extern int resourceDestroy(handle_t h);
 
 
 extern int signalHandle(void (*handler)(void), unsigned mask, unsigned mmask);
