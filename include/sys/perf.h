@@ -21,10 +21,10 @@ extern "C" {
 #endif
 
 
-extern int perf_start(perf_mode_t mode, unsigned pid);
+extern int perf_start(perf_mode_t mode, unsigned flags, void *arg);
 
 
-extern int perf_read(perf_mode_t mode, void *buffer, size_t bufsz);
+extern int perf_read(perf_mode_t mode, void *buffer, size_t bufsz, int chan);
 
 
 extern int perf_stop(perf_mode_t mode);
