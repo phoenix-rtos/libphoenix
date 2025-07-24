@@ -19,7 +19,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <ctype.h>
-#include <math.h>
+// #include <math.h>
 #include <errno.h>
 #include <float.h>
 #include <limits.h>
@@ -71,7 +71,7 @@ static const char *floatparse_wsin(const char *str, int *sign, long double *resu
 			str += 5;
 		}
 
-		*result = (*sign) * INFINITY;
+		*result = (*sign) * __builtin_inff();
 		*sign = 0;
 		return str;
 	}
@@ -97,7 +97,7 @@ static const char *floatparse_wsin(const char *str, int *sign, long double *resu
 			}
 		}
 
-		*result = NAN;
+		*result = __builtin_nanf("");
 		*sign = 0;
 		return str;
 	}
@@ -268,7 +268,7 @@ static long double mul_exp10(long double in, int64_t exp)
 
 #if LDBL_MAX_10_EXP < (1 << POW10_LOOKUPS)
 	if (exp >= (1 << POW10_LOOKUPS)) {
-		return negative ? 0 : INFINITY;
+		return negative ? 0 : __builtin_inf();
 	}
 #endif
 
@@ -285,7 +285,7 @@ static long double mul_exp10(long double in, int64_t exp)
 	}
 
 #if LDBL_MAX_10_EXP >= (1 << POW10_LOOKUPS)
-	if ((exp == 0) || (in == 0) || isinf(in)) {
+	if ((exp == 0) || (in == 0) || __builtin_isinf_sign(in)) {
 		return in;
 	}
 
@@ -435,7 +435,7 @@ static const char *floatparse_number(const char *str, bool hex, uint8_t type, ch
 			result = 0;
 		}
 		else if (total_exp > exp_max) {
-			result = INFINITY;
+			result = __builtin_inff();
 		}
 		else if (hex) {
 			result = mul_exp2(result, total_exp);
@@ -505,18 +505,18 @@ static long double strto_any(const char *__restrict str, char **__restrict endpt
 	switch (type) {
 		case TYPE_ID_FLT: {
 			float cast = (float)result;
-			range_error = isinf(cast) || ((result != 0.0l) && (cast == 0.0f));
+			range_error = __builtin_isinf_sign(cast) || ((result != 0.0l) && (cast == 0.0f));
 			break;
 		}
 
 		case TYPE_ID_DBL: {
 			double cast = (double)result;
-			range_error = isinf(cast) || ((result != 0.0l) && (cast == 0.0));
+			range_error = __builtin_isinf_sign(cast) || ((result != 0.0l) && (cast == 0.0));
 			break;
 		}
 
 		default:
-			range_error = isinf(result);
+			range_error = __builtin_isinf_sign(result);
 			break;
 	}
 
