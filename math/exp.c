@@ -33,7 +33,7 @@ double frexp(double x, int *exp)
 
 	*exp = 0;
 
-	if ((x == 0.0) || (x == -0.0)) {
+	if (x == 0.0) {
 		return x;
 	}
 
@@ -57,7 +57,7 @@ double ldexp(double x, int exp)
 		return NAN;
 	}
 
-	if ((x == 0.0) || (x == -0.0)) {
+	if (x == 0.0) {
 		return x;
 	}
 
@@ -104,6 +104,9 @@ double log(double x)
 	}
 	else if (x == 1.0) {
 		return 0.0;
+	}
+	else if (isinf(x) != 0) {
+		return x;
 	}
 
 	tmp = x;
@@ -298,11 +301,16 @@ double fmod(double number, double denom)
 {
 	double result, tquot;
 
-	if ((denom == 0.0) || (denom == -0.0)) {
+	if ((denom == 0.0) || (isinf(number) != 0)) {
+		errno = EDOM;
 		return NAN;
 	}
 
-	if ((denom == INFINITY) || (denom == -INFINITY)) {
+	if ((denom != 0.0) && (number == 0.0) && (signbit(number) != 0)) {
+		return number;
+	}
+
+	if (isinf(denom) != 0) {
 		return number;
 	}
 
