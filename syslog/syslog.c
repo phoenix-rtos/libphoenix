@@ -20,6 +20,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <syslog.h>
+#include <errno.h>
 
 
 #ifndef PATH_LOG
@@ -34,6 +35,7 @@ static struct {
 	const char *ident;
 
 	int open;
+	int connected;
 	int logfd;
 	int logmask;
 	int logopt;
@@ -46,16 +48,32 @@ static struct {
 	char buf[MAX_LOG_SIZE];
 } syslog_common;
 
+extern const char *argv_progname;
+
 
 void closelog(void)
 {
-	if (syslog_common.open)
+	if (syslog_common.open) {
 		close(syslog_common.logfd);
+	}
 
 	syslog_common.open = 0;
+	syslog_common.connected = 0;
 }
 
-extern const char *argv_progname;
+
+static void connectlog(void)
+{
+	int err;
+
+	if (syslog_common.open != 0) {
+		err = connect(syslog_common.logfd, (struct sockaddr *)&syslog_common.addr, syslog_common.addrlen);
+		if (err == 0) {
+			syslog_common.connected = 1;
+		}
+	}
+}
+
 
 void openlog(const char *ident, int logopt, int facility)
 {
@@ -73,6 +91,10 @@ void openlog(const char *ident, int logopt, int facility)
 			syslog_common.addrlen = SUN_LEN(&syslog_common.addr);
 			syslog_common.logfd = socket(AF_UNIX, SOCK_DGRAM | SOCK_NONBLOCK, 0);
 			syslog_common.open = syslog_common.logfd != -1;
+		}
+
+		if (syslog_common.open != 0 && syslog_common.connected == 0) {
+			connectlog();
 		}
 	}
 
@@ -102,8 +124,13 @@ void vsyslog(int priority, const char *format, va_list ap)
 	if ((1 << LOG_PRI(priority)) & syslog_common.logmask)
 		return;
 
-	if (!syslog_common.open)
+	if (syslog_common.open == 0) {
 		openlog(syslog_common.ident, syslog_common.logopt | LOG_NDELAY, syslog_common.configured ? syslog_common.facility : LOG_USER);
+	}
+
+	if (syslog_common.open != 0 && syslog_common.connected == 0) {
+		connectlog();
+	}
 
 	if (LOG_FAC(priority) == 0)
 		priority |= syslog_common.facility;
@@ -119,11 +146,15 @@ void vsyslog(int priority, const char *format, va_list ap)
 	size_t len = min(prefix_size + cnt, MAX_LOG_SIZE - 1);
 	syslog_common.buf[len] = '\0';
 
-	if (syslog_common.open)
-		err = sendto(syslog_common.logfd, syslog_common.buf, len + 1, 0, (struct sockaddr *)&syslog_common.addr, syslog_common.addrlen);
+	if (syslog_common.connected != 0) {
+		err = send(syslog_common.logfd, syslog_common.buf, len + 1, 0);
+		if (err < 0 && errno != EAGAIN) {
+			syslog_common.connected = 0;
+		}
+	}
 
 	/* output to stderr if logging device is not available */
-	if (syslog_common.logopt & LOG_PERROR || !syslog_common.open || err < 0) {
+	if (syslog_common.logopt & LOG_PERROR || syslog_common.connected == 0 || err < 0) {
 		if (syslog_common.buf[len - 1] != '\n')
 			syslog_common.buf[len] = '\n';
 		write(STDERR_FILENO, syslog_common.buf + prefix_size, len - prefix_size + 1);
