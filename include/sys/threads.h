@@ -28,6 +28,26 @@
 extern "C" {
 #endif
 
+extern int __mutexUnlock(handle_t m);
+#define mutexUnlock(m) __mutexUnlock((m))
+
+extern int __mutexTry(handle_t m);
+#define mutexTry(m) __mutexTry((m))
+
+#define phMutexLock(m) mutexLock((m))
+
+extern void _uresource_init(void);
+
+extern int __resourceDestroy(handle_t r);
+#define resourceDestroy(r) __resourceDestroy((r))
+
+extern int __condBroadcast(handle_t h);
+#define condBroadcast(h) __condBroadcast((h))
+
+extern int __condSignal(handle_t h);
+#define condSignal(h) __condSignal((h))
+
+#define phCondWait(c, m, t) condWait((c), (m), (t))
 
 typedef struct {
 	handle_t mutex;
@@ -73,8 +93,7 @@ extern int threadJoin(int tid, time_t timeout);
 extern int beginthreadex(void (*start)(void *), unsigned int priority, void *stack, unsigned int stacksz, void *arg, handle_t *id);
 
 
-__attribute__((noreturn))
-extern void endthread(void);
+__attribute__((noreturn)) extern void endthread(void);
 
 
 static inline int beginthread(void (*start)(void *), unsigned int priority, void *stack, unsigned int stacksz, void *arg)
@@ -89,31 +108,20 @@ extern int threadsinfo(int n, threadinfo_t *info);
 extern int priority(int priority);
 
 
-extern int phMutexCreate(handle_t *h, const struct lockAttr *attr);
-
-
 extern int mutexCreate(handle_t *h);
 
 
 static inline int mutexCreateWithAttr(handle_t *h, const struct lockAttr *attr)
 {
-	return phMutexCreate(h, attr);
+	(void)attr;
+	return mutexCreate(h);
 }
-
-
-extern int phMutexLock(handle_t h);
 
 
 extern int mutexLock(handle_t h);
 
 
 extern int mutexLock2(handle_t h1, handle_t h2);
-
-
-extern int mutexTry(handle_t h);
-
-
-extern int mutexUnlock(handle_t h);
 
 
 extern int semaphoreCreate(semaphore_t *s, unsigned int v);
@@ -128,31 +136,17 @@ extern int semaphoreUp(semaphore_t *s);
 extern int semaphoreDone(semaphore_t *s);
 
 
-extern int phCondCreate(handle_t *h, const struct condAttr *attr);
-
-
 extern int condCreate(handle_t *h);
 
 
 static inline int condCreateWithAttr(handle_t *h, const struct condAttr *attr)
 {
-	return phCondCreate(h, attr);
+	(void)attr;
+	return condCreate(h);
 }
 
 
 extern int condWait(handle_t h, handle_t m, time_t timeout);
-
-
-extern int phCondWait(handle_t h, handle_t m, time_t timeout);
-
-
-extern int condSignal(handle_t h);
-
-
-extern int condBroadcast(handle_t h);
-
-
-extern int resourceDestroy(handle_t h);
 
 
 extern int signalHandle(void (*handler)(void), unsigned mask, unsigned mmask);

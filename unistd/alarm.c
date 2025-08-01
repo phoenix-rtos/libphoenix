@@ -30,8 +30,7 @@ static struct {
 } alarm_common;
 
 
-__attribute__((noreturn))
-static void alarm_thread(void *arg)
+__attribute__((noreturn)) static void alarm_thread(void *arg)
 {
 	time_t now;
 	long long int sleep;
@@ -64,7 +63,7 @@ unsigned int alarm(unsigned int seconds)
 	if (!alarm_common.tid) {
 		mutexCreate(&alarm_common.lock);
 		condCreate(&alarm_common.cond);
-		beginthreadex(alarm_thread, priority(-1), alarm_common.stack, sizeof(alarm_common.stack), NULL, &alarm_common.tid);
+		beginthreadex(alarm_thread, priority(-1), alarm_common.stack, sizeof(alarm_common.stack), NULL, (handle_t *)&alarm_common.tid);
 	}
 
 	mutexLock(alarm_common.lock);
