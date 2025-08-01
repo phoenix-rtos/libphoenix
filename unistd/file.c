@@ -31,6 +31,8 @@
 #include "posix/utils.h"
 
 
+extern ssize_t sys_read(int fildes, void *buf, size_t nbyte, off_t offset);
+extern ssize_t sys_write(int fildes, const void *buf, size_t nbyte, off_t offset);
 extern int sys_open(const char *filename, int oflag, ...);
 extern int sys_mkfifo(const char *filename, mode_t mode);
 extern int sys_link(const char *path1, const char *path2);
@@ -39,13 +41,23 @@ extern int sys_pipe(int fildes[2]);
 extern int sys_fstat(int fd, struct stat *buf);
 extern int sys_lseek(int fildes, off_t *offset, int whence);
 
-WRAP_ERRNO_DEF(ssize_t, read, (int fildes, void *buf, size_t nbyte), (fildes, buf, nbyte))
-WRAP_ERRNO_DEF(ssize_t, write, (int fildes, const void *buf, size_t nbyte), (fildes, buf, nbyte))
 WRAP_ERRNO_DEF(int, close, (int fildes), (fildes))
 WRAP_ERRNO_DEF(int, ftruncate, (int fildes, off_t length), (fildes, length))
 WRAP_ERRNO_DEF(int, dup, (int fildes), (fildes))
 WRAP_ERRNO_DEF(int, dup2, (int fildes, int fildes2), (fildes, fildes2))
 WRAP_ERRNO_DEF(int, fsync, (int fildes), (fildes))
+
+
+ssize_t read(int fildes, void *buf, size_t nbyte)
+{
+	return SET_ERRNO(sys_read(fildes, buf, nbyte, -1));
+}
+
+
+ssize_t write(int fildes, const void *buf, size_t nbyte)
+{
+	return SET_ERRNO(sys_write(fildes, buf, nbyte, -1));
+}
 
 
 ssize_t __safe_write(int fd, const void *buf, size_t size)
