@@ -20,6 +20,7 @@
 #include <sys/threads.h>
 #include <sys/wait.h>
 #include <sys/time.h>
+#include <pthread.h>
 
 
 static struct {
@@ -57,6 +58,12 @@ static void alarm_thread(void *arg)
 }
 
 
+static void alarm_spawnThread(void)
+{
+	beginthreadex(alarm_thread, priority(-1), alarm_common.stack, sizeof(alarm_common.stack), NULL, &alarm_common.tid);
+}
+
+
 unsigned int alarm(unsigned int seconds)
 {
 	time_t now, previous;
@@ -64,7 +71,8 @@ unsigned int alarm(unsigned int seconds)
 	if (!alarm_common.tid) {
 		mutexCreate(&alarm_common.lock);
 		condCreate(&alarm_common.cond);
-		beginthreadex(alarm_thread, priority(-1), alarm_common.stack, sizeof(alarm_common.stack), NULL, &alarm_common.tid);
+		alarm_spawnThread();
+		pthread_atfork(NULL, NULL, alarm_spawnThread);
 	}
 
 	mutexLock(alarm_common.lock);
