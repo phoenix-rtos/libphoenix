@@ -85,5 +85,5 @@ unsigned int alarm(unsigned int seconds)
 	mutexUnlock(alarm_common.lock);
 	condSignal(alarm_common.cond);
 
-	return previous ? (previous - now) / (1000 * 1000) : 0;
+	return (previous && previous > now) ? (previous - now + (1000 * 1000 - 1)) / (1000 * 1000) : 0;
 }
