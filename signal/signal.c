@@ -85,7 +85,7 @@ int sigprocmask(int how, const sigset_t *set, sigset_t *oldset)
 
 	if (set != NULL) {
 		if (how == SIG_BLOCK) {
-			mask = 0xffffffffUL;
+			mask = 0xffffffffU;
 			mmask = *set;
 		}
 		else if (how == SIG_UNBLOCK) {
@@ -94,7 +94,7 @@ int sigprocmask(int how, const sigset_t *set, sigset_t *oldset)
 		}
 		else if (how == SIG_SETMASK) {
 			mask = *set;
-			mmask = 0xffffffffUL;
+			mmask = 0xffffffffU;
 		}
 		else {
 			return SET_ERRNO(-EINVAL);
@@ -133,7 +133,7 @@ int sigaddset(sigset_t *set, int signo)
 		return SET_ERRNO(-EINVAL);
 	}
 
-	*set |= (1UL << signo);
+	*set |= (1U << signo);
 	return 0;
 }
 
@@ -144,7 +144,7 @@ int sigismember(const sigset_t *set, int signum)
 		return SET_ERRNO(-EINVAL);
 	}
 
-	return !!(*set & (1UL << signum));
+	return !!(*set & (1U << signum));
 }
 
 
@@ -179,6 +179,6 @@ int sigdelset(sigset_t *set, int signum)
 		return SET_ERRNO(-EINVAL);
 	}
 
-	*set &= ~(1UL << signum);
+	*set &= ~(1U << signum);
 	return 0;
 }
