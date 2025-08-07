@@ -187,7 +187,7 @@ void (*signal(int signum, void (*handler)(int)))(int)
 
 	/* Mask signal before change */
 	mutexLock(signal_common.lock);
-	oldmask = signalMask(1UL << _signals_posix2phx[signum], 0xffffffffUL);
+	oldmask = signalMask(1UL << _signals_posix2phx[signum], 1UL << _signals_posix2phx[signum]);
 
 	t = signal_common.sightab[signum];
 
@@ -258,7 +258,7 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *oact)
 
 		/* Mask signal before change */
 		mutexLock(signal_common.lock);
-		oldmask = signalMask(1UL << _signals_posix2phx[sig], 0xffffffffUL);
+		oldmask = signalMask(1UL << _signals_posix2phx[sig], 1UL << _signals_posix2phx[sig]);
 
 		if (act->sa_handler == (sighandler_t)SIG_IGN) {
 			signal_common.sightab[sig] = _signal_ignore;
