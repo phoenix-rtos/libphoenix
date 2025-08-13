@@ -26,6 +26,7 @@
 #include <sys/stat.h>
 #include <sys/file.h>
 #include <posix/utils.h>
+#include <fcntl.h>
 
 
 static struct {
@@ -347,101 +348,191 @@ char *realpath(const char *path, char *resolved_path)
 }
 
 
-struct dirent *readdir(DIR *s)
+struct dirent *readdir(DIR *dirp)
 {
-	if (s->dirent == NULL) {
-		if ((s->dirent = calloc(1, sizeof(struct dirent) + NAME_MAX + 1)) == NULL)
-			return NULL;
+	if (dirp == NULL) {
+		errno = EBADF;
+		return NULL;
+	}
+
+	if (dirp->dirent == NULL) {
+		dirp->dirent = calloc(1, sizeof(struct dirent) + NAME_MAX + 1);
+		if (dirp->dirent == NULL) {
+			return NULL; /* errno set by calloc() */
+		}
 	}
 
 	msg_t msg = {
 		.type = mtReaddir,
-		.oid = s->oid,
-		.i.readdir.offs = s->pos,
-		.o.data = s->dirent,
+		.oid = dirp->oid,
+		.i.readdir.offs = dirp->pos,
+		.o.data = dirp->dirent,
 		.o.size = sizeof(struct dirent) + NAME_MAX + 1
 	};
 
-	if (msgSend(s->oid.port, &msg) < 0) {
-		free(s->dirent);
-		s->dirent = NULL;
-		return NULL; /* EIO */
-	}
-
-	if (msg.o.err < 0) {
-		free(s->dirent);
-		s->dirent = NULL;
+	if (msgSend(dirp->oid.port, &msg) < 0) {
+		free(dirp->dirent);
+		dirp->dirent = NULL;
+		errno = EIO;
 		return NULL;
 	}
 
-	s->pos += s->dirent->d_reclen;
+	if (msg.o.err < 0) {
+		free(dirp->dirent);
+		dirp->dirent = NULL;
+		/* Any other errors should be set, ENOENT signals
+		 * end of a directory stream
+		 */
+		if (msg.o.err != -ENOENT) {
+			errno = -msg.o.err;
+		}
+		return NULL;
+	}
 
-	return s->dirent;
+	dirp->pos += dirp->dirent->d_reclen;
+
+	return dirp->dirent;
 }
 
 
 DIR *opendir(const char *dirname)
 {
 	char *canonical_name = resolve_path(dirname, NULL, 1, 0);
-	DIR *s = calloc(1, sizeof(DIR));
+	DIR *dirp = calloc(1, sizeof(DIR));
 
-	if ((canonical_name == NULL) || (s == NULL)) {
+	if ((canonical_name == NULL) || (dirp == NULL)) {
 		free(canonical_name);
-		free(s);
+		free(dirp);
 		return NULL; /* errno set by resolve_path */
 	}
 
-	if (!dirname[0] || (safe_lookup(canonical_name, NULL, &s->oid) < 0)) {
+	if (!dirname[0] || (safe_lookup(canonical_name, NULL, &dirp->oid) < 0)) {
 		free(canonical_name);
-		free(s);
+		free(dirp);
 		errno = ENOENT;
-		return NULL; /* ENOENT */
+		return NULL;
 	}
 
 	free(canonical_name);
-	s->dirent = NULL;
+	dirp->dirent = NULL;
+	/* Following field is only valid in fdopendir */
+	dirp->fd = -1;
 
 	msg_t msg = {
 		.type = mtGetAttr,
-		.oid = s->oid,
+		.oid = dirp->oid,
 		.i.attr.type = atType,
 	};
 
-	if ((msgSend(s->oid.port, &msg) < 0) || (msg.o.err < 0)) {
-		free(s);
-		errno = EIO;
-		return NULL; /* EIO */
-	}
-
-	if (msg.o.attr.val != otDir) {
-		free(s);
-		errno = ENOTDIR;
-		return NULL; /* ENOTDIR */
-	}
-
-	memset(&msg, 0, sizeof(msg));
-	msg.type = mtOpen;
-	msg.oid = s->oid;
-	msg.i.openclose.flags = 0;
-
-	if (msgSend(s->oid.port, &msg) < 0) {
-		free(s);
-		errno = EIO;
-		return NULL; /* EIO */
-	}
-
-	if (msg.o.err < 0) {
-		free(s);
+	if ((msgSend(dirp->oid.port, &msg) < 0) || (msg.o.err < 0)) {
+		free(dirp);
 		errno = EIO;
 		return NULL;
 	}
 
-	return s;
+	if (msg.o.attr.val != otDir) {
+		free(dirp);
+		errno = ENOTDIR;
+		return NULL;
+	}
+
+	memset(&msg, 0, sizeof(msg));
+	msg.type = mtOpen;
+	msg.oid = dirp->oid;
+	msg.i.openclose.flags = 0;
+
+	if (msgSend(dirp->oid.port, &msg) < 0 || (msg.o.err < 0)) {
+		free(dirp);
+		errno = EIO;
+		return NULL;
+	}
+
+	return dirp;
+}
+
+
+/*
+ * FIXME: fstat() does not return proper OIDs for directories mounted under
+ * a different filesystem.
+ */
+DIR *fdopendir(int fd)
+{
+	DIR *dirp;
+	struct stat statbuf;
+	int flags;
+	off_t pos;
+
+	flags = fcntl(fd, F_GETFL);
+	if (flags < 0) {
+		return NULL; /* errno set by fcntl() */
+	}
+	if ((flags & O_RDONLY) == 0) {
+		errno = EBADF;
+		return NULL;
+	}
+
+	pos = lseek(fd, 0, SEEK_CUR);
+	if (pos == (off_t)-1) {
+		return NULL; /* errno set by lseek() */
+	}
+
+	if (fstat(fd, &statbuf) < 0) {
+		return NULL; /* errno set by fstat() */
+	}
+
+	if (!S_ISDIR(statbuf.st_mode)) {
+		errno = ENOTDIR;
+		return NULL;
+	}
+
+	dirp = calloc(1, sizeof(DIR));
+	if (dirp == NULL) {
+		return NULL; /* errno set by calloc() */
+	}
+	dirp->oid.port = statbuf.st_dev;
+	dirp->oid.id = statbuf.st_ino;
+	dirp->fd = fd;
+	dirp->dirent = NULL;
+	dirp->pos = pos;
+
+	if (fcntl(fd, F_SETFD, FD_CLOEXEC) < 0) {
+		free(dirp);
+		return NULL; /* errno set by fcntl() */
+	}
+
+	return dirp;
+}
+
+
+void seekdir(DIR *dirp, long loc)
+{
+	if (dirp == NULL) {
+		errno = EBADF;
+		return;
+	}
+
+	dirp->pos = (off_t)loc;
+}
+
+
+long telldir(DIR *dirp)
+{
+	if (dirp == NULL) {
+		errno = EBADF;
+		return -1;
+	}
+
+	return (long)dirp->pos;
 }
 
 
 void rewinddir(DIR *dirp)
 {
+	if (dirp == NULL) {
+		errno = EBADF;
+		return;
+	}
+
 	dirp->pos = 0;
 }
 
@@ -450,13 +541,23 @@ int closedir(DIR *dirp)
 {
 	int ret = 0;
 
-	msg_t msg = {
-		.type = mtClose,
-		.oid = dirp->oid
-	};
+	if (dirp == NULL) {
+		return SET_ERRNO(-EBADF);
+	}
 
-	if ((msgSend(dirp->oid.port, &msg) < 0) || (msg.o.err < 0)) {
-		ret = -1;
+	if (dirp->fd >= 0) {
+		ret = close(dirp->fd);
+	}
+	else {
+		msg_t msg = {
+			.type = mtClose,
+			.oid = dirp->oid
+		};
+
+		if ((msgSend(dirp->oid.port, &msg) < 0) || (msg.o.err < 0)) {
+			errno = EIO;
+			ret = -1;
+		}
 	}
 
 	free(dirp->dirent);
