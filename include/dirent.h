@@ -53,6 +53,11 @@ extern struct dirent *readdir(DIR *s);
 
 extern DIR *opendir(const char *dirname);
 
+extern DIR *fdopendir(int filedes);
+
+extern void seekdir(DIR *dirp, long loc);
+
+extern long telldir(DIR *dirp);
 
 extern void rewinddir(DIR *dirp);
 
