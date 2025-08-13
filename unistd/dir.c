@@ -26,6 +26,7 @@
 #include <sys/stat.h>
 #include <sys/file.h>
 #include <posix/utils.h>
+#include <fcntl.h>
 
 
 static struct {
@@ -437,6 +438,69 @@ DIR *opendir(const char *dirname)
 	}
 
 	return s;
+}
+
+
+DIR *fdopendir(int fd)
+{
+	DIR *s;
+	struct stat statbuf;
+	int fd_flags;
+
+	fd_flags = fcntl(fd, F_GETFL);
+	if (fd_flags < 0) {
+		return NULL;
+	}
+	if ((fd_flags & O_RDONLY) == 0) {
+		errno = EBADF;
+		return NULL; /* EBADF */
+	}
+
+	if (fstat(fd, &statbuf) < 0) {
+		return NULL;
+	}
+
+	msg_t msg = {
+		.type = mtGetAttr,
+		.oid = { .port = statbuf.st_dev, .id = statbuf.st_ino },
+		.i.attr.type = atType,
+	};
+
+	if ((msgSend(statbuf.st_dev, &msg) < 0) || (msg.o.err < 0)) {
+		errno = EIO;
+		return NULL; /* EIO */
+	}
+
+	if (msg.o.attr.val != otDir) {
+		errno = ENOTDIR;
+		return NULL; /* ENOTDIR */
+	}
+
+	if (fcntl(fd, F_SETFD, FD_CLOEXEC) < 0) {
+		return NULL;
+	}
+
+	s = calloc(1, sizeof(DIR));
+	if (s == NULL) {
+		errno = ENOMEM;
+		return NULL;
+	}
+	s->oid = msg.oid;
+	s->dirent = NULL;
+
+	return s;
+}
+
+
+void seekdir(DIR *dirp, long loc)
+{
+	dirp->pos = loc;
+}
+
+
+long telldir(DIR *dirp)
+{
+	return dirp->pos;
 }
 
 
