@@ -26,6 +26,7 @@
 #include <sys/stat.h>
 #include <sys/file.h>
 #include <posix/utils.h>
+#include <fcntl.h>
 
 
 static struct {
@@ -437,6 +438,60 @@ DIR *opendir(const char *dirname)
 	}
 
 	return s;
+}
+
+
+DIR *fdopendir(int filedes)
+{
+	DIR *s = calloc(1, sizeof(DIR));
+	struct stat statbuf;
+
+	if (s == NULL) {
+		errno = ENOMEM;
+		return NULL;
+	}
+
+	if (fstat(filedes, &statbuf) < 0) {
+		free(s);
+		return NULL; /* fstat sets EBADF */
+	}
+
+	s->oid.port = statbuf.st_dev;
+	s->oid.id = statbuf.st_ino;
+	s->dirent = NULL;
+
+	msg_t msg = {
+		.type = mtGetAttr,
+		.oid = s->oid,
+		.i.attr.type = atType,
+	};
+
+	if ((msgSend(s->oid.port, &msg) < 0) || (msg.o.err < 0)) {
+		free(s);
+		errno = EIO;
+		return NULL; /* EIO */
+	}
+
+	if (msg.o.attr.val != otDir) {
+		free(s);
+		errno = ENOTDIR;
+		return NULL; /* ENOTDIR */
+	}
+
+	fcntl(filedes, F_SETFD, FD_CLOEXEC);
+
+	return s;
+}
+
+
+void seekdir(DIR *dirp, long loc)
+{
+	dirp->pos = loc;
+}
+
+long telldir(DIR *dirp)
+{
+	return dirp->pos;
 }
 
 
