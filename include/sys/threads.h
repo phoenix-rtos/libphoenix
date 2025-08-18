@@ -165,7 +165,7 @@ int resourceDestroy(handle_t h);
 int signalAction(int signal, const struct sigaction *act, struct sigaction *oact, void (*trampoline)(void));
 
 
-int signalPost(int pid, int tid, int signal);
+int sys_tkill(int pid, int tid, int signal);
 
 
 int signalReturn(int signal);
