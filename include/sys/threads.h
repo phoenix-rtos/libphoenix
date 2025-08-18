@@ -158,7 +158,7 @@ extern int resourceDestroy(handle_t h);
 extern int signalAction(int signal, const struct sigaction *act, struct sigaction *oact, void (*trampoline)(void));
 
 
-extern int signalPost(int pid, int tid, int signal);
+extern int sys_tkill(int pid, int tid, int signal);
 
 
 extern int signalReturn(int signal);
