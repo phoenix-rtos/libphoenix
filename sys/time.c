@@ -118,15 +118,25 @@ int stime(const time_t *t)
 
 int settimeofday(const struct timeval *tv, void *tz)
 {
-	time_t t;
+	/* NOTE: tz is ignored here */
 
-	/* TODO: Set errno if failed */
-	gettime(&t, NULL);
+	if ((tv->tv_usec < 0) || (tv->tv_usec >= (1000 * 1000))) {
+		return SET_ERRNO(-EINVAL);
+	}
 
-	/* TODO: Set errno if failed */
-	settime(tv->tv_usec + tv->tv_sec * 1000 * 1000 - t);
+	time_t bootTimeUs;
+	gettime(&bootTimeUs, NULL);
 
-	return 0;
+	/* TODO: define max allowed time value to ensure conversions will not overflow */
+	time_t epochTimeUs = tv->tv_usec + tv->tv_sec * 1000 * 1000;
+
+	/* time of boot needs to be after UNIX epoch */
+	if (bootTimeUs > epochTimeUs) {
+		return SET_ERRNO(-EINVAL);
+	}
+
+	settime(epochTimeUs - bootTimeUs);
+	return EOK;
 }
 
 
