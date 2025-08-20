@@ -28,7 +28,8 @@ double pow(double base, double exponent)
 	double res = 1.0;
 	int s = 1;
 
-	if ((base == 1.0) || (exponent == 0.0) || (exponent == -0.0)) {
+	if ((base == 1.0) || (exponent == 0.0) ||
+			((base == -1.0) && (isinf(exponent) != 0))) {
 		return 1.0;
 	}
 
@@ -36,17 +37,34 @@ double pow(double base, double exponent)
 		return NAN;
 	}
 
-	if ((base == 0.0) || (base == -0.0)) {
-		if (exponent < 0.0) {
-			if (base == 0.0) {
-				return INFINITY;
+	if ((isinf(base) != 0) && (exponent != 0.0)) {
+		if (signbit(base) != 0) {
+			if (exponent < 0.0) {
+				return (fmod(fabs(exponent), 2.0) == 1.0) ? -0.0 : 0.0;
 			}
-			else if (base == -0.0) {
-				return -INFINITY;
+			else {
+				return (fmod(fabs(exponent), 2.0) == 1.0) ? -INFINITY : INFINITY;
 			}
 		}
+		else {
+			return (exponent < 0.0) ? 0.0 : INFINITY;
+		}
+	}
 
-		return 0.0;
+	if (base == 0.0) {
+		if ((fmod(fabs(exponent), 2.0) == 1.0)) {
+			if (exponent > 0.0) {
+				return base;
+			}
+			else {
+				errno = ERANGE;
+				return (signbit(base) != 0) ? -HUGE_VAL : HUGE_VAL;
+			}
+		}
+		else if (exponent < 0.0) {
+			errno = ERANGE;
+			return HUGE_VAL;
+		}
 	}
 
 	if (base < 0.0) {
@@ -77,12 +95,16 @@ double pow(double base, double exponent)
 
 double sqrt(double x)
 {
-	if (x < 0.0) {
-		errno = EDOM;
-		return -NAN;
+	if (isnan(x) != 0) {
+		return NAN;
 	}
 
-	if ((x == 0.0) || (x == -0.0)) {
+	if (x < 0.0) {
+		errno = EDOM;
+		return NAN;
+	}
+
+	if ((x == 0.0) || (x == INFINITY)) {
 		return x;
 	}
 
@@ -129,12 +151,16 @@ double sqrt(double x)
 float sqrtf(float x)
 {
 #ifdef __IEEE754_SQRTF
-	if (x < 0.0f) {
-		errno = EDOM;
-		return -NAN;
+	if (isnan(x) != 0) {
+		return NAN;
 	}
 
-	if ((x == 0.0f) || (x == -0.0f)) {
+	if (x < 0.0f) {
+		errno = EDOM;
+		return NAN;
+	}
+
+	if ((x == 0.0f) || (x == INFINITY)) {
 		return x;
 	}
 
