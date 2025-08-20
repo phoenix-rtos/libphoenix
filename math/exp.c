@@ -21,8 +21,6 @@
 
 double frexp(double x, int *exp)
 {
-	conv_t *conv = (conv_t *)&x;
-
 	if (isnan(x) != 0) {
 		return NAN;
 	}
@@ -31,11 +29,12 @@ double frexp(double x, int *exp)
 		return x;
 	}
 
-	*exp = 0;
-
-	if ((x == 0.0) || (x == -0.0)) {
+	if (x == 0.0) {
 		return x;
 	}
+
+	conv_t *conv = (conv_t *)&x;
+	*exp = 0;
 
 	if (conv->i.exponent == 0) {
 		normalizeSub(&x, exp);
@@ -50,16 +49,16 @@ double frexp(double x, int *exp)
 
 double ldexp(double x, int exp)
 {
-	conv_t *conv = (conv_t *)&x;
-	int exponent = 0;
-
 	if (isnan(x) != 0) {
 		return NAN;
 	}
 
-	if ((x == 0.0) || (x == -0.0)) {
+	if (x == 0.0) {
 		return x;
 	}
+
+	conv_t *conv = (conv_t *)&x;
+	int exponent = 0;
 
 	if (conv->i.exponent == 0) {
 		normalizeSub(&x, &exponent);
@@ -104,6 +103,9 @@ double log(double x)
 	}
 	else if (x == 1.0) {
 		return 0.0;
+	}
+	else if (isinf(x) != 0) {
+		return x;
 	}
 
 	tmp = x;
@@ -218,7 +220,7 @@ double exp(double x)
 	res = 1.0;
 
 	for (i = 2; i < 13; ++i) {
-		if ((powx == 0.0) || (powx == -0.0)) {
+		if (powx == 0.0) {
 			break;
 		}
 		res += powx / factorial;
@@ -298,11 +300,17 @@ double fmod(double number, double denom)
 {
 	double result, tquot;
 
-	if ((denom == 0.0) || (denom == -0.0)) {
+	if (isnan(number) != 0 || isnan(denom) != 0) {
 		return NAN;
 	}
 
-	if ((denom == INFINITY) || (denom == -INFINITY)) {
+	if ((denom == 0.0) || (isinf(number) != 0)) {
+		errno = EDOM;
+		return NAN;
+	}
+
+	if (((number == 0.0) && (denom != 0.0)) ||
+			((isinf(number) == 0) && (isinf(denom) != 0))) {
 		return number;
 	}
 
@@ -319,6 +327,10 @@ double round(double x)
 	return __ieee754_round(x);
 #else
 	double ret, frac;
+
+	if (isnan(x) != 0) {
+		return NAN;
+	}
 
 	frac = modf(x, &ret);
 
@@ -351,6 +363,10 @@ double trunc(double x)
 #else
 	double ret;
 
+	if (isnan(x) != 0) {
+		return NAN;
+	}
+
 	modf(x, &ret);
 
 	return ret;
@@ -373,8 +389,11 @@ double fabs(double x)
 #ifdef __IEEE754_FABS
 	return __ieee754_fabs(x);
 #else
-	conv_t *conv = (conv_t *)&x;
+	if (isnan(x) != 0) {
+		return NAN;
+	}
 
+	conv_t *conv = (conv_t *)&x;
 	conv->i.sign = 0;
 
 	return x;

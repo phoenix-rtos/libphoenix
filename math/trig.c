@@ -23,6 +23,15 @@ double cos(double x)
 	int i;
 	double res, xn, xpow, factorial;
 
+	if (isnan(x) != 0) {
+		return NAN;
+	}
+
+	if (isinf(x) != 0) {
+		errno = EDOM;
+		return NAN;
+	}
+
 	/* Normalize argument to -2*PI < x < 2*PI */
 	x = fmod(x, 2.0 * M_PI);
 
@@ -68,6 +77,19 @@ double sin(double x)
 	int i;
 	double res, xn, xpow, factorial;
 
+	if (isnan(x) != 0) {
+		return NAN;
+	}
+
+	if (isinf(x) != 0) {
+		errno = EDOM;
+		return NAN;
+	}
+
+	if (x == 0.0) {
+		return x;
+	}
+
 	/* Normalize argument to -2*PI < x < 2*PI */
 	x = fmod(x, 2.0 * M_PI);
 
@@ -111,6 +133,10 @@ double tan(double x)
 {
 	double c;
 
+	if (isnan(x) != 0) {
+		return NAN;
+	}
+
 	if (isinf(x) != 0) {
 		errno = EDOM;
 		return NAN;
@@ -133,6 +159,10 @@ double acos(double x)
 	double xa = 0, xb = M_PI, ya, yb, t;
 	int i;
 
+	if (isnan(x) != 0) {
+		return NAN;
+	}
+
 	if ((x > 1.0) || (x < -1.0)) {
 		errno = EDOM;
 		return NAN;
@@ -144,7 +174,7 @@ double acos(double x)
 
 		t = ya - yb;
 
-		if ((t == 0.0) || (t == -0.0)) {
+		if (t == 0.0) {
 			break;
 		}
 
@@ -160,6 +190,14 @@ double acos(double x)
 /* Calculates value of arc sine using asin(x) = pi/2 - acos(x) relationship. */
 double asin(double x)
 {
+	if (isnan(x) != 0) {
+		return NAN;
+	}
+
+	if (x == 0.0) {
+		return x;
+	}
+
 	return M_PI_2 - acos(x);
 }
 
@@ -181,12 +219,16 @@ double atan(double x)
 	double res = 1.0, h, a;
 	int i, s;
 
+	if (isnan(x) != 0) {
+		return NAN;
+	}
+
 	s = (x < 0.0) ? -1 : 1;
 	x *= (double)s;
 	h = x / 2;
 
-	if (x <= 0.0) {
-		return 0.0;
+	if (x == 0.0) {
+		return x;
 	}
 
 	if (x > 1.0) {
@@ -206,6 +248,35 @@ double atan2(double y, double x)
 {
 	if ((isnan(y) != 0) || (isnan(x) != 0)) {
 		return NAN;
+	}
+
+	if (y == 0.0) {
+		if (x < 0.0 || signbit(x) != 0) {
+			// x is negative or -0.0
+			return (signbit(y) != 0) ? -M_PI : M_PI;
+		}
+		else {
+			// x is positive or +0.0
+			return y;
+		}
+	}
+
+	if ((isinf(y) != 0) && (isinf(x) != 0)) {
+		int sy = signbit(y);
+		int sx = signbit(x);
+
+		if ((sy == 0) && (sx != 0)) {
+			return M_PI_4 * 3;
+		}
+		else if ((sy != 0) && (sx != 0)) {
+			return -M_PI_4 * 3;
+		}
+		else if ((sy == 0) && (sx == 0)) {
+			return M_PI_4;
+		}
+		else if ((sy != 0) && (sx == 0)) {
+			return -M_PI_4;
+		}
 	}
 
 	if (x > 0.0) {
