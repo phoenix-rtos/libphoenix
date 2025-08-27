@@ -60,6 +60,26 @@ ssize_t write(int fildes, const void *buf, size_t nbyte)
 }
 
 
+ssize_t pread(int fildes, void *buf, size_t nbyte, off_t offset)
+{
+	if (offset < 0) {
+		errno = EINVAL;
+		return -1;
+	}
+	return SET_ERRNO(sys_read(fildes, buf, nbyte, offset));
+}
+
+
+ssize_t pwrite(int fildes, const void *buf, size_t nbyte, off_t offset)
+{
+	if (offset < 0) {
+		errno = EINVAL;
+		return -1;
+	}
+	return SET_ERRNO(sys_write(fildes, buf, nbyte, offset));
+}
+
+
 ssize_t __safe_write(int fd, const void *buf, size_t size)
 {
 	size_t left = size;
