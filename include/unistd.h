@@ -187,6 +187,12 @@ extern ssize_t read(int fildes, void *buf, size_t nbyte);
 extern ssize_t write(int fildes, const void *buf, size_t nbyte);
 
 
+extern ssize_t pread(int fildes, void *buf, size_t nbyte, off_t offset);
+
+
+extern ssize_t pwrite(int fildes, const void *buf, size_t nbyte, off_t offset);
+
+
 extern int dup(int fildes);
 
 
