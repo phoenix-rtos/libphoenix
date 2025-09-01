@@ -136,9 +136,10 @@ enum {
 #define	B19200		14
 #define	B38400		15
 #define	B57600		16
-#define	B115200		17
-#define	B230400		18
-#define	B460800		19
+#define	B100000		17
+#define	B115200		18
+#define	B230400		19
+#define	B460800		20
 
 
 /* c_cflag */
