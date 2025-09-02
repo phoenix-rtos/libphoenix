@@ -86,6 +86,9 @@ static inline int beginthread(void (*start)(void *), unsigned int priority, void
 extern int threadsinfo(int n, threadinfo_t *info);
 
 
+extern time_t getThreadCpuTime(void);
+
+
 extern int priority(int priority);
 
 

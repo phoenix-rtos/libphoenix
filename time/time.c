@@ -21,6 +21,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <limits.h>
+#include <sys/threads.h>
 
 
 char *tzname[2];
@@ -91,26 +92,31 @@ time_t time(time_t *tp)
 
 int clock_gettime(clockid_t clk_id, struct timespec *tp)
 {
-	time_t now, offs;
+	time_t time, offs;
 
 	if (tp == NULL) {
 		errno = EINVAL;
 		return -1;
 	}
 
-	if (clk_id != CLOCK_REALTIME && clk_id != CLOCK_MONOTONIC && clk_id != CLOCK_MONOTONIC_RAW) {
+	if (clk_id != CLOCK_REALTIME && clk_id != CLOCK_MONOTONIC && clk_id != CLOCK_MONOTONIC_RAW && clk_id != CLOCK_THREAD_CPUTIME_ID) {
 		errno = EINVAL;
 		return -1;
 	}
 
-	gettime(&now, &offs);
+	if (clk_id == CLOCK_THREAD_CPUTIME_ID) {
+		time = (unsigned int)getThreadCpuTime();
+	}
+	else {
+		gettime(&time, &offs);
+		if (clk_id == CLOCK_REALTIME) {
+			time += offs;
+		}
+	}
 
-	if (clk_id == CLOCK_REALTIME)
-		now += offs;
-
-	tp->tv_sec = now / (1000 * 1000);
-	now -= tp->tv_sec * 1000 * 1000;
-	tp->tv_nsec = now * 1000;
+	tp->tv_sec = time / (1000 * 1000);
+	time -= tp->tv_sec * 1000 * 1000;
+	tp->tv_nsec = time * 1000;
 
 	return EOK;
 }
