@@ -17,6 +17,7 @@
 #include "bignum.h"
 
 #include <sys/minmax.h>
+#include <ctype.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -42,7 +43,6 @@
 #define FLAG_16BIT                     0x10000
 #define FLAG_LONG_DOUBLE               0x20000
 
-/* clang-format off */
 #define GET_UNSIGNED(number, flags, args) \
 	do { \
 		if (((flags) & FLAG_8BIT) != 0) { \
@@ -77,19 +77,8 @@
 	} while (0)
 
 
-#define GET_DOUBLE(number, flags, args) \
-	do { \
-		if (((flags)&FLAG_LONG_DOUBLE) != 0) { \
-			(number) = (double)va_arg((args), long double); \
-		} \
-		else { \
-			(number) = (double)va_arg((args), double); \
-		} \
-	} while (0)
-
 #define BIGDOUBLE_DEFAULT_SIZE 4
 
-/* clang-format on */
 union double_u64 {
 	double d;
 	uint64_t u;
@@ -1017,7 +1006,6 @@ int format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 	uint32_t flags, minFieldWidth;
 	int precision, length;
 	char c, fmt;
-	double doubleNumber;
 	int ret = 0;
 	for (;;) {
 		fmt = *format++;
@@ -1230,43 +1218,31 @@ int format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 				GET_SIGNED(number, flags, args);
 				format_sprintf_num(ctx, feed, number, flags, minFieldWidth, precision);
 				break;
+
 			case 'A':
-				flags |= FLAG_LARGE_DIGITS;
-			case 'a':
-				GET_DOUBLE(doubleNumber, flags, args);
-				ret = format_sprintfDouble(ctx, feed, doubleNumber, flags, minFieldWidth, precision, 'a');
-				if (ret < 0) {
-					return ret;
-				}
-				break;
 			case 'E':
-				flags |= FLAG_LARGE_DIGITS;
-			case 'e':
-				GET_DOUBLE(doubleNumber, flags, args);
-				ret = format_sprintfDouble(ctx, feed, doubleNumber, flags, minFieldWidth, precision, 'e');
-				if (ret < 0) {
-					return ret;
-				}
-				break;
+			case 'F':
 			case 'G':
 				flags |= FLAG_LARGE_DIGITS;
-			case 'g':
-				flags |= FLAG_NO_TRAILING_ZEROS;
-				GET_DOUBLE(doubleNumber, flags, args);
-				ret = format_sprintfDouble(ctx, feed, doubleNumber, flags, minFieldWidth, precision, 'g');
-				if (ret < 0) {
-					return ret;
-				}
-				break;
-			case 'F':
-				flags |= FLAG_LARGE_DIGITS;
+				/* fallthrough */
+			case 'a':
+			case 'e':
 			case 'f':
-				GET_DOUBLE(doubleNumber, flags, args);
-				ret = format_sprintfDouble(ctx, feed, doubleNumber, flags, minFieldWidth, precision, 'f');
+			case 'g': {
+				double doubleNumber;
+				if ((flags & FLAG_LONG_DOUBLE) != 0) {
+					/* NOTE: support for long double is incomplete */
+					doubleNumber = (double)va_arg((args), long double);
+				}
+				else {
+					doubleNumber = (double)va_arg((args), double);
+				}
+				ret = format_sprintfDouble(ctx, feed, doubleNumber, flags, minFieldWidth, precision, tolower(fmt));
 				if (ret < 0) {
 					return ret;
 				}
 				break;
+			}
 			case '%':
 				feed(ctx, '%');
 				break;
