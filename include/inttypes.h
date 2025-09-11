@@ -60,6 +60,48 @@ extern "C" {
 #define PRIi64 _PRI_64 "i"
 #define PRIo64 _PRI_64 "o"
 
+#define PRIdLEAST8 PRId8
+#define PRIuLEAST8 PRIu8
+#define PRIxLEAST8 PRIx8
+#define PRIXLEAST8 PRIX8
+#define PRIiLEAST8 PRIi8
+#define PRIoLEAST8 PRIo8
+
+#define PRIdLEAST16 PRId16
+#define PRIuLEAST16 PRIu16
+#define PRIxLEAST16 PRIx16
+#define PRIXLEAST16 PRIX16
+#define PRIiLEAST16 PRIi16
+#define PRIoLEAST16 PRIo16
+
+#define PRIdLEAST32 PRId32
+#define PRIuLEAST32 PRIu32
+#define PRIxLEAST32 PRIx32
+#define PRIXLEAST32 PRIX32
+#define PRIiLEAST32 PRIi32
+#define PRIoLEAST32 PRIo32
+
+#define PRIdLEAST64 PRId64
+#define PRIuLEAST64 PRIu64
+#define PRIxLEAST64 PRIx64
+#define PRIXLEAST64 PRIX64
+#define PRIiLEAST64 PRIi64
+#define PRIoLEAST64 PRIo64
+
+#define PRIdMAX _PRI_64 "d"
+#define PRIiMAX _PRI_64 "i"
+#define PRIoMAX _PRI_64 "o"
+#define PRIuMAX _PRI_64 "u"
+#define PRIxMAX _PRI_64 "x"
+#define PRIXMAX _PRI_64 "X"
+
+#define PRIdPTR _PRI_PTR "d"
+#define PRIuPTR _PRI_PTR "u"
+#define PRIxPTR _PRI_PTR "x"
+#define PRIXPTR _PRI_PTR "X"
+#define PRIiPTR _PRI_PTR "i"
+#define PRIoPTR _PRI_PTR "o"
+
 #define SCNd8 _SCN_8 "d"
 #define SCNu8 _SCN_8 "u"
 #define SCNx8 _SCN_8 "x"
