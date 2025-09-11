@@ -110,7 +110,7 @@ typedef __u64 uintmax_t;
 #define _SCN_16  "h"
 #define _SCN_32  ""
 #define _SCN_64  "l"
-#define _PRI_PTR ""
+#define _PRI_PTR "l"
 
 #define _SCN_LEAST8  _SCN_8
 #define _SCN_LEAST16 _SCN_16
