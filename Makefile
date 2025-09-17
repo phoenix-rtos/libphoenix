@@ -25,6 +25,10 @@ endif
 
 CFLAGS += -Iinclude -fno-builtin-malloc
 
+# FIXME: Find a proper way to provide different versions of libphoenix to projects
+ifdef LIBPHOENIX_IO_NO_FLOAT
+CFLAGS += -DIO_NO_FLOAT
+endif
 
 OBJS :=
 # crt0.o should have all necessary initialization + call to main()

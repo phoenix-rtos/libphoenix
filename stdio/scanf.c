@@ -630,6 +630,7 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 				break;
 
 			case CT_FLOAT: {
+#ifndef IO_NO_FLOAT
 				union {
 					float f;
 					double d;
@@ -686,6 +687,9 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 				}
 
 				break;
+#else
+				return (nconversions != 0 ? nassigned : -1);
+#endif
 			}
 
 			default:
