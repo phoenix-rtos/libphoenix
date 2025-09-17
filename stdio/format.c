@@ -112,6 +112,54 @@ static const char smallDigits[] = "0123456789abcdef";
 static const char largeDigits[] = "0123456789ABCDEF";
 
 
+static void format_printBuffer(void *ctx, feedfunc feed, uint32_t flags, int minFieldWidth, const char *start, const char *end, char sign)
+{
+	const int digits_cnt = start > end ? start - end : end - start;
+	int pad_len = minFieldWidth - digits_cnt - (sign ? 1 : 0);
+	/* If FLAG_ZERO and FLAG_MINUS both appear, then FLAG_ZERO is ignored */
+	if ((flags & FLAG_MINUS) != 0) {
+		flags &= ~FLAG_ZERO;
+	}
+
+	/* pad, if needed */
+	if ((pad_len > 0) && ((flags & FLAG_MINUS) == 0) && ((flags & FLAG_ZERO) == 0)) {
+		while (pad_len-- > 0) {
+			feed(ctx, ' ');
+		}
+	}
+
+	if (sign != 0) {
+		feed(ctx, sign);
+	}
+
+	/* pad, if needed */
+	if ((pad_len > 0) && ((flags & FLAG_MINUS) == 0) && ((flags & FLAG_ZERO) != 0)) {
+		while (pad_len-- > 0) {
+			feed(ctx, '0');
+		}
+	}
+
+	/* copy */
+	if (start > end) {
+		while ((--start) >= end) {
+			feed(ctx, *start);
+		}
+	}
+	else {
+		while (start < end) {
+			feed(ctx, *start++);
+		}
+	}
+
+	/* pad, if needed */
+	if ((pad_len > 0) && ((flags & FLAG_MINUS) != 0)) {
+		while (pad_len-- > 0) {
+			feed(ctx, ' ');
+		}
+	}
+}
+
+
 static inline int format_bufferInit(struct buffer *buff, size_t size)
 {
 	char *data = malloc(size);
@@ -247,54 +295,6 @@ static int format_bigdoubleLoad(struct bigdouble *result, double val)
 		result->firstIntegerBit = DOUBLE_EXP_SHIFT - exp;
 	}
 	return res;
-}
-
-
-static void format_printBuffer(void *ctx, feedfunc feed, uint32_t flags, int minFieldWidth, const char *start, const char *end, char sign)
-{
-	const int digits_cnt = start > end ? start - end : end - start;
-	int pad_len = minFieldWidth - digits_cnt - (sign ? 1 : 0);
-	/* If FLAG_ZERO and FLAG_MINUS both appear, then FLAG_ZERO is ignored */
-	if ((flags & FLAG_MINUS) != 0) {
-		flags &= ~FLAG_ZERO;
-	}
-
-	/* pad, if needed */
-	if ((pad_len > 0) && ((flags & FLAG_MINUS) == 0) && ((flags & FLAG_ZERO) == 0)) {
-		while (pad_len-- > 0) {
-			feed(ctx, ' ');
-		}
-	}
-
-	if (sign != 0) {
-		feed(ctx, sign);
-	}
-
-	/* pad, if needed */
-	if ((pad_len > 0) && ((flags & FLAG_MINUS) == 0) && ((flags & FLAG_ZERO) != 0)) {
-		while (pad_len-- > 0) {
-			feed(ctx, '0');
-		}
-	}
-
-	/* copy */
-	if (start > end) {
-		while ((--start) >= end) {
-			feed(ctx, *start);
-		}
-	}
-	else {
-		while (start < end) {
-			feed(ctx, *start++);
-		}
-	}
-
-	/* pad, if needed */
-	if ((pad_len > 0) && ((flags & FLAG_MINUS) != 0)) {
-		while (pad_len-- > 0) {
-			feed(ctx, ' ');
-		}
-	}
 }
 
 
