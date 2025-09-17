@@ -80,17 +80,20 @@ ssize_t pwrite(int fildes, const void *buf, size_t nbyte, off_t offset)
 }
 
 
-ssize_t __safe_write(int fd, const void *buf, size_t size)
+static ssize_t __safe_write_general(int fd, const void *buf, size_t size, off_t offset)
 {
 	size_t left = size;
 	ssize_t wlen = 0;
 	const char *ptr = buf;
 
 	while (left > 0) {
-		wlen = write(fd, ptr, left);
+		wlen = SET_ERRNO(sys_write(fd, ptr, left, offset));
 		if (wlen > 0) {
 			left -= wlen;
 			ptr += wlen;
+			if (offset >= 0) {
+				offset += wlen;
+			}
 		}
 		else if (wlen == 0) {
 			/* Undefined behavior: write() returning 0, treat it as an I/O error */
@@ -110,12 +113,28 @@ ssize_t __safe_write(int fd, const void *buf, size_t size)
 }
 
 
-ssize_t __safe_write_nb(int fd, const void *buf, size_t size)
+ssize_t __safe_write(int fd, const void *buf, size_t size)
+{
+	return __safe_write_general(fd, buf, size, -1);
+}
+
+
+ssize_t __safe_pwrite(int fd, const void *buf, size_t size, off_t offset)
+{
+	if (offset < 0) {
+		errno = EINVAL;
+		return -1;
+	}
+	return __safe_write_general(fd, buf, size, offset);
+}
+
+
+static ssize_t __safe_write_nb_general(int fd, const void *buf, size_t size, off_t offset)
 {
 	ssize_t wlen;
 
 	do {
-		wlen = write(fd, buf, size);
+		wlen = SET_ERRNO(sys_write(fd, buf, size, offset));
 	} while (wlen < 0 && errno == EINTR);
 
 	if (wlen == 0) {
@@ -128,17 +147,36 @@ ssize_t __safe_write_nb(int fd, const void *buf, size_t size)
 }
 
 
-ssize_t __safe_read(int fd, void *buf, size_t size)
+ssize_t __safe_write_nb(int fd, const void *buf, size_t size)
+{
+	return __safe_write_nb_general(fd, buf, size, -1);
+}
+
+
+ssize_t __safe_pwrite_nb(int fd, const void *buf, size_t size, off_t offset)
+{
+	if (offset < 0) {
+		errno = EINVAL;
+		return -1;
+	}
+	return __safe_write_nb_general(fd, buf, size, offset);
+}
+
+
+static ssize_t __safe_read_general(int fd, void *buf, size_t size, off_t offset)
 {
 	ssize_t rlen = 0;
 	size_t left = size;
 	char *ptr = buf;
 
 	while (left > 0) {
-		rlen = read(fd, ptr, left);
+		rlen = SET_ERRNO(sys_read(fd, ptr, left, offset));
 		if (rlen > 0) {
 			left -= rlen;
 			ptr += rlen;
+			if (offset >= 0) {
+				offset += rlen;
+			}
 		}
 		else if (rlen == 0) {
 			/* EOF */
@@ -157,15 +195,47 @@ ssize_t __safe_read(int fd, void *buf, size_t size)
 }
 
 
-ssize_t __safe_read_nb(int fd, void *buf, size_t size)
+ssize_t __safe_read(int fd, void *buf, size_t size)
+{
+	return __safe_read_general(fd, buf, size, -1);
+}
+
+
+ssize_t __safe_pread(int fd, void *buf, size_t size, off_t offset)
+{
+	if (offset < 0) {
+		errno = EINVAL;
+		return -1;
+	}
+	return __safe_read_general(fd, buf, size, offset);
+}
+
+
+static ssize_t __safe_read_nb_general(int fd, void *buf, size_t size, off_t offset)
 {
 	ssize_t rlen;
 
 	do {
-		rlen = read(fd, buf, size);
+		rlen = SET_ERRNO(sys_read(fd, buf, size, offset));
 	} while (rlen < 0 && errno == EINTR);
 
 	return rlen;
+}
+
+
+ssize_t __safe_read_nb(int fd, void *buf, size_t size)
+{
+	return __safe_read_nb_general(fd, buf, size, -1);
+}
+
+
+ssize_t __safe_pread_nb(int fd, void *buf, size_t size, off_t offset)
+{
+	if (offset < 0) {
+		errno = EINVAL;
+		return -1;
+	}
+	return __safe_read_nb_general(fd, buf, size, offset);
 }
 
 
