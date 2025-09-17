@@ -23,15 +23,29 @@
 ssize_t __safe_write(int fd, const void *buf, size_t size);
 
 
+ssize_t __safe_pwrite(int fd, const void *buf, size_t size, off_t offset);
+
+
 /* non-blocking variant - returns on EAGAIN */
 ssize_t __safe_write_nb(int fd, const void *buf, size_t size);
+
+
+/* non-blocking variant - returns on EAGAIN */
+ssize_t __safe_pwrite_nb(int fd, const void *buf, size_t size, off_t offset);
 
 
 ssize_t __safe_read(int fd, void *buf, size_t size);
 
 
+ssize_t __safe_pread(int fd, void *buf, size_t size, off_t offset);
+
+
 /* non-blocking variant - returns on EAGAIN */
 ssize_t __safe_read_nb(int fd, void *buf, size_t size);
+
+
+/* non-blocking variant - returns on EAGAIN */
+ssize_t __safe_pread_nb(int fd, void *buf, size_t size, off_t offset);
 
 
 int __safe_open(const char *path, int oflag, mode_t mode);
