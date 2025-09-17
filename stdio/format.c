@@ -77,26 +77,6 @@
 	} while (0)
 
 
-#define BIGDOUBLE_DEFAULT_SIZE 4
-
-union double_u64 {
-	double d;
-	uint64_t u;
-};
-
-struct buffer {
-	char *data;
-	size_t len, size;
-};
-
-struct bigdouble {
-	/* Stored number */
-	bignum_t num;
-	/* Helper values */
-	bignum_t helper1;
-	uint64_t firstIntegerBit;
-};
-
 static const char smallDigits[] = "0123456789abcdef";
 static const char largeDigits[] = "0123456789ABCDEF";
 
@@ -147,6 +127,29 @@ static void format_printBuffer(void *ctx, feedfunc feed, uint32_t flags, int min
 		}
 	}
 }
+
+
+#ifndef IO_NO_FLOAT
+
+#define BIGDOUBLE_DEFAULT_SIZE 4
+
+union double_u64 {
+	double d;
+	uint64_t u;
+};
+
+struct buffer {
+	char *data;
+	size_t len, size;
+};
+
+struct bigdouble {
+	/* Stored number */
+	bignum_t num;
+	/* Helper values */
+	bignum_t helper1;
+	uint64_t firstIntegerBit;
+};
 
 
 static inline int format_bufferInit(struct buffer *buff, size_t size)
@@ -857,6 +860,7 @@ static int format_sprintfDouble(void *ctx, feedfunc feed, double d, uint32_t fla
 	format_bigdoubleDestroy(&bd);
 	return ret;
 }
+#endif /* IO_NO_FLOAT */
 
 
 static void format_sprintf_num(void *ctx, feedfunc feed, uint64_t num64, uint32_t flags, int minFieldWidth, int precision)
@@ -1229,6 +1233,7 @@ int format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 			case 'e':
 			case 'f':
 			case 'g': {
+#ifndef IO_NO_FLOAT
 				double doubleNumber;
 				if ((flags & FLAG_LONG_DOUBLE) != 0) {
 					/* NOTE: support for long double is incomplete */
@@ -1242,6 +1247,18 @@ int format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 					return ret;
 				}
 				break;
+#else
+				if ((flags & FLAG_LONG_DOUBLE) != 0) {
+					/* NOTE: support for long double is incomplete */
+					va_arg((args), long double);
+				}
+				else {
+					va_arg((args), double);
+				}
+				feed(ctx, '%');
+				feed(ctx, fmt);
+				break;
+#endif
 			}
 			case '%':
 				feed(ctx, '%');
