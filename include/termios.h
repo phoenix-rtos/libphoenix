@@ -197,6 +197,9 @@ struct winsize {
 #define TIOCNOTTY  _IO('t', 0x22)
 #define TIOCGSID   _IOR('t', 0x29, pid_t)
 
+/* Phoenix-RTOS custom termios API ioctls */
+#define TCSETBR _IOV('t', 0xFF, int)
+
 /* tcflush */
 enum { TCIFLUSH,
 	TCOFLUSH,
