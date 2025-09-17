@@ -117,28 +117,32 @@ enum {
 	FF1 = 1 << 28,
 };
 
-/* baud rate */
-/* these need to be define's as various programs test them in preprocessor macros */
+
+/**
+ * baud rate macros with values corresponding to actual bps
+ * those macro values must fit into speed_t type
+ * these need to be define's as various programs test them in preprocessor macros
+ */
 #define B0      0
-#define B50     1
-#define B75     2
-#define B110    3
-#define B134    4
-#define B150    5
-#define B200    6
-#define B300    7
-#define B600    8
-#define B1200   9
-#define B1800   10
-#define B2400   11
-#define B4800   12
-#define B9600   13
-#define B19200  14
-#define B38400  15
-#define B57600  16
-#define B115200 17
-#define B230400 18
-#define B460800 19
+#define B50     50
+#define B75     75
+#define B110    110
+#define B134    134
+#define B150    150
+#define B200    200
+#define B300    300
+#define B600    600
+#define B1200   1200
+#define B1800   1800
+#define B2400   2400
+#define B4800   4800
+#define B9600   9600
+#define B19200  19200
+#define B38400  38400
+#define B57600  57600
+#define B115200 115200
+#define B230400 230400
+#define B460800 460800
 
 
 /* c_cflag */
