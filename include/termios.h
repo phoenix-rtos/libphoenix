@@ -33,35 +33,35 @@ typedef int tcflag_t;
 
 /* c_cc characters */
 /* these need to be define's as various programs test them in preprocessor macros */
-#define VINTR 		0
-#define VQUIT 		1
-#define VERASE 		2
-#define VKILL 		3
-#define VEOF 		4
-#define VTIME 		5
-#define VMIN 		6
-#define VSTART 		7
-#define VSTOP 		8
-#define VSUSP 		9
-#define VEOL 		10
-#define VREPRINT 	11
-#define VDISCARD 	12
-#define VWERASE 	13
-#define VLNEXT 		14
-#define VERASE2 	15
-#define VEOL2 		16
+#define VINTR    0
+#define VQUIT    1
+#define VERASE   2
+#define VKILL    3
+#define VEOF     4
+#define VTIME    5
+#define VMIN     6
+#define VSTART   7
+#define VSTOP    8
+#define VSUSP    9
+#define VEOL     10
+#define VREPRINT 11
+#define VDISCARD 12
+#define VWERASE  13
+#define VLNEXT   14
+#define VERASE2  15
+#define VEOL2    16
 
-#define NCCS 		17
+#define NCCS 17
 
 
 struct termios {
-	tcflag_t  c_iflag;
-	tcflag_t  c_oflag;
-	tcflag_t  c_cflag;
-	tcflag_t  c_lflag;
-	cc_t      c_cc[NCCS];
-	speed_t   c_ispeed;
-	speed_t   c_ospeed;
+	tcflag_t c_iflag;
+	tcflag_t c_oflag;
+	tcflag_t c_cflag;
+	tcflag_t c_lflag;
+	cc_t c_cc[NCCS];
+	speed_t c_ispeed;
+	speed_t c_ospeed;
 };
 
 
@@ -119,60 +119,62 @@ enum {
 
 /* baud rate */
 /* these need to be define's as various programs test them in preprocessor macros */
-#define	B0 		0
-#define	B50		1
-#define	B75		2
-#define	B110		3
-#define	B134		4
-#define	B150		5
-#define	B200		6
-#define	B300		7
-#define	B600		8
-#define	B1200		9
-#define	B1800		10
-#define	B2400		11
-#define	B4800		12
-#define	B9600		13
-#define	B19200		14
-#define	B38400		15
-#define	B57600		16
-#define	B115200		17
-#define	B230400		18
-#define	B460800		19
+#define B0      0
+#define B50     1
+#define B75     2
+#define B110    3
+#define B134    4
+#define B150    5
+#define B200    6
+#define B300    7
+#define B600    8
+#define B1200   9
+#define B1800   10
+#define B2400   11
+#define B4800   12
+#define B9600   13
+#define B19200  14
+#define B38400  15
+#define B57600  16
+#define B115200 17
+#define B230400 18
+#define B460800 19
 
 
 /* c_cflag */
 enum {
-	CS5 = 0, CS6, CS7, CS8,
+	CS5 = 0,
+	CS6,
+	CS7,
+	CS8,
 	CSIZE = 3,
 
 	CSTOPB = 1 << 3,
-	CREAD  = 1 << 4,
+	CREAD = 1 << 4,
 	PARENB = 1 << 5,
 	PARODD = 1 << 6,
-	HUPCL  = 1 << 7,
+	HUPCL = 1 << 7,
 	CLOCAL = 1 << 8,
 };
 
 
 /* c_lflag */
 enum {
-	ECHO    = 1 << 0,
-	ECHOE   = 1 << 1,
-	ECHOK   = 1 << 2,
-	ECHONL  = 1 << 3,
-	ICANON  = 1 << 4,
-	IEXTEN  = 1 << 5,
-	ISIG    = 1 << 6,
-	NOFLSH  = 1 << 7,
-	TOSTOP  = 1 << 8,
-	XCASE   = 1 << 9,
+	ECHO = 1 << 0,
+	ECHOE = 1 << 1,
+	ECHOK = 1 << 2,
+	ECHONL = 1 << 3,
+	ICANON = 1 << 4,
+	IEXTEN = 1 << 5,
+	ISIG = 1 << 6,
+	NOFLSH = 1 << 7,
+	TOSTOP = 1 << 8,
+	XCASE = 1 << 9,
 	ECHOCTL = 1 << 10,
-	ECHOKE  = 1 << 11,
+	ECHOKE = 1 << 11,
 };
 
-struct winsize
-{
+struct winsize {
 	unsigned short ws_row;
 	unsigned short ws_col;
 	unsigned short ws_xpixel;
@@ -180,29 +182,36 @@ struct winsize
 };
 
 /* ioctls */
-#define TCGETS      _IOR('t', 0x1, struct termios)
-#define TCSETS      _IOW('t', 0x2, struct termios)
-#define TCSETSW     _IOW('t', 0x3, struct termios)
-#define TCSETSF     _IOW('t', 0x4, struct termios)
-#define TCFLSH      _IOV('t', 0x5, int)
-#define TCDRAIN     _IO('t', 0x6)
-#define TCSBRK      _IOV('t', 0x9, int)
-#define TIOCSCTTY   _IOV('t', 0xE, int)
-#define TIOCGPGRP   _IOR('t', 0xF, pid_t)
-#define TIOCSPGRP   _IOW('t', 0x10, pid_t)
-#define TIOCGWINSZ  _IOR('t', 0x13, struct winsize)
-#define TIOCSWINSZ  _IOW('t', 0x14, struct winsize)
-#define TIOCNOTTY   _IO('t', 0x22)
-#define TIOCGSID    _IOR('t', 0x29, pid_t)
+#define TCGETS     _IOR('t', 0x1, struct termios)
+#define TCSETS     _IOW('t', 0x2, struct termios)
+#define TCSETSW    _IOW('t', 0x3, struct termios)
+#define TCSETSF    _IOW('t', 0x4, struct termios)
+#define TCFLSH     _IOV('t', 0x5, int)
+#define TCDRAIN    _IO('t', 0x6)
+#define TCSBRK     _IOV('t', 0x9, int)
+#define TIOCSCTTY  _IOV('t', 0xE, int)
+#define TIOCGPGRP  _IOR('t', 0xF, pid_t)
+#define TIOCSPGRP  _IOW('t', 0x10, pid_t)
+#define TIOCGWINSZ _IOR('t', 0x13, struct winsize)
+#define TIOCSWINSZ _IOW('t', 0x14, struct winsize)
+#define TIOCNOTTY  _IO('t', 0x22)
+#define TIOCGSID   _IOR('t', 0x29, pid_t)
 
 /* tcflush */
-enum { TCIFLUSH, TCOFLUSH, TCIOFLUSH };
+enum { TCIFLUSH,
+	TCOFLUSH,
+	TCIOFLUSH };
 
 /* tcsetattr */
-enum { TCSANOW, TCSADRAIN, TCSAFLUSH };
+enum { TCSANOW,
+	TCSADRAIN,
+	TCSAFLUSH };
 
 /* tcflow */
-enum { TCIOFF, TCION, TCOOFF, TCOON };
+enum { TCIOFF,
+	TCION,
+	TCOOFF,
+	TCOON };
 
 
 int tcgetattr(int fildes, struct termios *termios_p);
