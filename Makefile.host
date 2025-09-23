@@ -18,7 +18,7 @@ LIBNAME := libphoenix.a
 CFLAGS := -I$(INCLUDE_HOST) -fno-builtin-malloc $(CFLAGS)
 
 HEADERS := $(patsubst $(INCLUDE_HOST)%,$(PREFIX_H)%,$(shell find $(INCLUDE_HOST) -name '*.h' 2>/dev/null))
-OBJS := sys/rb.o sys/list.o posix/idtree.o
+OBJS := sys/rb.o sys/list.o posix/idtree.o src_host/sys/msg.o
 OBJS := $(patsubst %,$(PREFIX_O)%,$(OBJS))
 
 
