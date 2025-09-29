@@ -77,10 +77,7 @@ __attribute__((noreturn))
 extern void endthread(void);
 
 
-static inline int beginthread(void (*start)(void *), unsigned int priority, void *stack, unsigned int stacksz, void *arg)
-{
-	return beginthreadex(start, priority, stack, stacksz, arg, NULL);
-}
+extern int beginthread(void (*start)(void *), unsigned int priority, void *stack, unsigned int stacksz, void *arg);
 
 
 extern int threadsinfo(int n, threadinfo_t *info);

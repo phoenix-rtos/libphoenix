@@ -15,6 +15,7 @@
 
 #include <sys/threads.h>
 #include <errno.h>
+#include <stdlib.h>
 
 
 int mutexCreate(handle_t *h)
@@ -78,4 +79,42 @@ int mutexLock2(handle_t m1, handle_t m2)
 	}
 
 	return EOK;
+}
+
+
+typedef struct {
+	void *arg;
+	void (*start)(void *);
+} wrapperArgs_t;
+
+
+static void wrapper(void *arg)
+{
+	wrapperArgs_t *ctx = (wrapperArgs_t *)arg;
+
+	ctx->start(ctx->arg);
+
+	free(ctx);
+	endthread();
+}
+
+
+int beginthread(void (*start)(void *), unsigned int priority, void *stack, unsigned int stacksz, void *arg)
+{
+	wrapperArgs_t *ctx;
+	int ret;
+
+	ctx = malloc(sizeof(wrapperArgs_t));
+	if (ctx == NULL) {
+		return -ENOMEM;
+	}
+	ctx->start = start;
+	ctx->arg = arg;
+
+	ret = beginthreadex(wrapper, priority, stack, stacksz, ctx, NULL);
+	if (ret < 0) {
+		free(ctx);
+	}
+
+	return ret;
 }
