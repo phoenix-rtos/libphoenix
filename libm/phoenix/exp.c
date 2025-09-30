@@ -47,6 +47,12 @@ double frexp(double x, int *exp)
 }
 
 
+float frexpf(float x, int *exp)
+{
+	return (float)frexp((double)x, exp);
+}
+
+
 double ldexp(double x, int exp)
 {
 	if (isnan(x) != 0) {
@@ -81,6 +87,12 @@ double ldexp(double x, int exp)
 	}
 
 	return x;
+}
+
+
+float ldexpf(float x, int exp)
+{
+	return (float)ldexp((double)x, exp);
 }
 
 
@@ -129,6 +141,12 @@ double log(double x)
 }
 
 
+float logf(float x)
+{
+	return (float)log((double)x);
+}
+
+
 double log2(double x)
 {
 	return (log(x) / M_LN2);
@@ -139,6 +157,12 @@ double log2(double x)
 double log10(double x)
 {
 	return (log(x) / M_LN10);
+}
+
+
+float log10f(float x)
+{
+	return (float)log10((double)x);
 }
 
 
@@ -232,6 +256,12 @@ double exp(double x)
 }
 
 
+float expf(float x)
+{
+	return (float)exp((double)x);
+}
+
+
 double ceil(double x)
 {
 #ifdef __IEEE754_CEIL
@@ -318,6 +348,12 @@ double fmod(double number, double denom)
 	result = tquot * denom;
 
 	return number - result;
+}
+
+
+float fmodf(float x, float y)
+{
+	return (float)fmod((double)x, (double)y);
 }
 
 

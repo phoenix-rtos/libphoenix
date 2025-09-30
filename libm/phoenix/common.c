@@ -19,7 +19,6 @@
 #include <float.h>
 #include "common.h"
 
-
 void normalizeSub(double *x, int *exp)
 {
 	conv_t *conv = (conv_t *)x;

@@ -58,7 +58,7 @@ CFLAGS += -Ilibm/libmcs/libm/include
 # TODO: Separate math library implementation from libphoenix
 
 # Build for libmcs
-ifeq ($(USE_LIBMCS), y)
+ifeq ($(LIBM_USE_LIBMCS), y)
   ifeq ($(LIBM_WANT_COMPLEX), y)
     CPPFLAGS += -DLIBM_WANT_COMPLEX
     OBJS += $(addprefix $(PREFIX_O), $(patsubst %.c,%.o,$(wildcard libm/libmcs/libm/complexd/internal/*.c)))
