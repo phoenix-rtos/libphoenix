@@ -5,7 +5,6 @@
 extern "C"{
 #endif
 
-#include "config.h"
 #include "internal_config.h"
 
 /*
