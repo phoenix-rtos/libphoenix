@@ -1,0 +1,35 @@
+clog
+~~~~
+
+.. c:autodoc:: complexd/clogd.c
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+Implement based on :ref:`atan2`, and :ref:`log`.
+
+.. Here there be dragons. (TODO)
+
+Requirements
+^^^^^^^^^^^^
+
+* REQ-ML-7300
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/complex.h
+* libm/complexd/clogd.c
+* libm/complexf/clogf.c
+
+References
+^^^^^^^^^^
+
+* :ref:`atan2`
+* :ref:`cabs`
+* :ref:`cacosh`
+* :ref:`casin`
+* :ref:`cimag`
+* :ref:`CMPLX`
+* :ref:`creal`
+* :ref:`log`

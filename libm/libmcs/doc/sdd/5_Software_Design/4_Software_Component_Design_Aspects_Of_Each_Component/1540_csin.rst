@@ -1,0 +1,41 @@
+csin
+~~~~
+
+.. c:autodoc:: complexd/csind.c
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+Implement based on :ref:`cos` and :ref:`sin`.
+
+.. Here there be dragons. (TODO)
+
+Requirements
+^^^^^^^^^^^^
+
+* REQ-ML-6400
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/complex.h
+* libm/complexd/csind.c
+* libm/complexd/internal/ctrigd.h
+* libm/complexd/internal/ctrigd.c
+* libm/complexf/csinf.c
+* libm/complexf/internal/ctrigf.h
+* libm/complexf/internal/ctrigf.c
+
+References
+^^^^^^^^^^
+
+* :numref:`Tbl. %s <List of math constants>`
+* :ref:`cimag`
+* :ref:`CMPLX`
+* :ref:`cos`
+* :ref:`cosh`
+* :ref:`creal`
+* :ref:`exp`
+* :ref:`fabs`
+* :ref:`sin`
+* :ref:`sinh`
