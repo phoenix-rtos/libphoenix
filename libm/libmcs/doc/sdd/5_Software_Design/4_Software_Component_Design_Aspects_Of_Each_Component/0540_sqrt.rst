@@ -1,0 +1,124 @@
+sqrt
+~~~~
+
+.. c:autodoc:: mathd/sqrtd.c
+
+Special cases
+^^^^^^^^^^^^^
+
++--------------------------+--------------------------+
+| x                        | Result                   |
++==========================+==========================+
+| :math:`<0`               | :math:`qNaN`             |
++--------------------------+--------------------------+
+| :math:`±0`               | :math:`x`                |
++--------------------------+--------------------------+
+| :math:`-Inf`             | :math:`qNaN`             |
++--------------------------+--------------------------+
+| :math:`+Inf`             | :math:`+Inf`             |
++--------------------------+--------------------------+
+| :math:`NaN`              | :math:`qNaN`             |
++--------------------------+--------------------------+
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+The approach is to first work on special values and then use mostly bit-fiddling for the calculation.
+
+#. For :math:`x` is :math:`NaN`, return :math:`qNaN`.
+#. For :math:`x` is positive infinity, return positive infinity.
+#. For :math:`x` is negative infinity, return :math:`qNaN`. [#]_
+#. For :math:`x` is a zero, return the zero with the same sign.
+#. For :math:`x` is negative, return :math:`qNaN`.
+#. Given :math:`x` find :math:`y` and integer :math:`k` such that the formula
+
+   .. math::
+      :label: formula_sqrt_1
+
+      y &= x \cdot 2 ^ {-2k} \\
+      \Leftrightarrow \qquad \sqrt{x} &= 2^{k} \cdot \sqrt{y}
+
+   with :math:`y \in [1.0, 4.0)` [#]_ \\
+   holds true. [#]_
+#. Compute the square root bit by bit [#]_:
+
+   #. Let :math:`q_i` be :math:`\sqrt{y}` truncated to :math:`i` bit after the binary point (:math:`q_0 = 1`), then
+
+      .. math::
+         :label: formula_sqrt_2
+
+         y_i = 2 ^ {i+1} \cdot (y - q_i^2)
+
+   #. To compute :math:`q_{i+1}` from :math:`q_i`, check whether
+
+      .. math::
+         :label: formula_sqrt_3
+
+         (q_i + 2^{-(i+1)})^2 <= y
+
+      is false, if yes :math:`q_{i+1} = q_i`, else :math:`q_{i+1} = q_i + 2^{-(i+1)}`.
+   #. With :math:`s_i = 2 q_i` formula :math:numref:`formula_sqrt_3` is equivalent to [#]_
+
+      .. math::
+         :label: formula_sqrt_4
+
+         s_i + 2^{-(i+1)} <= y_i
+
+   #. With formula :math:numref:`formula_sqrt_4` one can compute :math:`s_i` and :math:`y_i` with the following recurrence formula:
+
+      If formula :math:numref:`formula_sqrt_4` is false:
+
+      .. math::
+         :label: formula_sqrt_5
+
+         s_{i+1} = s_i \wedge y_{i+1} = y_i
+
+      otherwise:
+
+      .. math::
+         :label: formula_sqrt_6
+
+         s_{i+1} = s_i + 2^{-i} \wedge y_{i+1} = y_i - s_i - 2^{-(i+1)}
+
+#. When done with computing the 53-bit result in the previous step, compute another bit. Use this bit added to the remainder to correctly round the calculated square root.
+#. Use formula :math:numref:`formula_sqrt_1` to return :math:`y` to :math:`x`.
+#. Return :math:`x`.
+
+.. [#] The first three steps can be combined by checking that :math:`x` is not finite and returning :math:`x \cdot x + x`, which returns the correct value for all three cases
+.. [#] With this trick one can ensure that :math:`\sqrt{y}` truncates to :math:`1`.
+.. [#] Take special care with subnormal numbers.
+.. [#] As shown in John von Neumann's *First Draft of a Report on the EDVAC* in section 10.1.
+.. [#] Since the left hand side of this formula only contains :math:`i+2` bits it is not necessary to do a full (53-bit) comparison.
+
+Requirements
+^^^^^^^^^^^^
+
+* REQ-ML-0700
+* REQ-ML-0710
+* REQ-ML-0720
+* REQ-ML-0730
+* REQ-ML-0740
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/math.h
+* libm/mathd/sqrtd.c
+* libm/mathf/sqrtf.c
+
+References
+^^^^^^^^^^
+
+* :ref:`acos`
+* :ref:`acosh`
+* :ref:`asin`
+* :ref:`asinh`
+* :ref:`csqrt`
+* :ref:`hypot`
+* :ref:`j0`
+* :ref:`j1`
+* :ref:`jn`
+* :ref:`pow`
+* :ref:`y0`
+* :ref:`y1`
+* :ref:`yn`

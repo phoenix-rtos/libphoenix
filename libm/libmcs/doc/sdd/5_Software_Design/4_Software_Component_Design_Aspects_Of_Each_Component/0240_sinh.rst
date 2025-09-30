@@ -1,0 +1,55 @@
+sinh
+~~~~
+
+.. c:autodoc:: mathd/sinhd.c
+
+Special cases
+^^^^^^^^^^^^^
+
++--------------------------+--------------------------+
+| x                        | Result                   |
++==========================+==========================+
+| :math:`±0`               | :math:`x`                |
++--------------------------+--------------------------+
+| :math:`±Inf`             | :math:`x`                |
++--------------------------+--------------------------+
+| :math:`NaN`              | :math:`qNaN`             |
++--------------------------+--------------------------+
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+Implement based on :math:`sinh(x) = \frac{e^x-e^{-x}}{2}` using :ref:`exp` and :ref:`expm1`:
+
+#. Reduce to positive as :math:`sinh(-x) = -sinh(x)`
+#. For :math:`0 <= x <=  22`: :math:`sinh(x) = \frac{expm1(x) + \frac{expm1(x)}{exp(x)}}{2}`
+#. For :math:`22 <= x`: :math:`sinh(x) = \frac{exp(x)}{2}`
+
+Requirements
+^^^^^^^^^^^^
+
+* REQ-ML-2100
+* REQ-ML-2110
+* REQ-ML-2120
+* REQ-ML-2140
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/math.h
+* libm/mathd/sinhd.c
+* libm/mathf/sinhf.c
+
+References
+^^^^^^^^^^
+
+* :ref:`__ccoshsinh <internal_ctrig>`
+* :ref:`ccos`
+* :ref:`ccosh`
+* :ref:`csin`
+* :ref:`csinh`
+* :ref:`ctan`
+* :ref:`ctanh`
+* :ref:`exp`
+* :ref:`expm1`
+* :ref:`fabs`

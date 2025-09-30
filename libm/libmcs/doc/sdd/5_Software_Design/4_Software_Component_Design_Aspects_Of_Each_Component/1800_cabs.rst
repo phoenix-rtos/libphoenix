@@ -1,0 +1,33 @@
+cabs
+~~~~
+
+.. c:autodoc:: complexd/cabsd.c
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+Implement based on :ref:`hypot`.
+
+.. Here there be dragons. (TODO)
+
+Requirements
+^^^^^^^^^^^^
+
+* REQ-ML-7400
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/complex.h
+* libm/complexd/cabsd.c
+* libm/complexf/cabsf.c
+
+References
+^^^^^^^^^^
+
+* :ref:`cimag`
+* :ref:`clog`
+* :ref:`cpow`
+* :ref:`creal`
+* :ref:`csqrt`
+* :ref:`hypot`

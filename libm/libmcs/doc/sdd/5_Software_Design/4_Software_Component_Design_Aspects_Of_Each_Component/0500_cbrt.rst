@@ -1,0 +1,42 @@
+cbrt
+~~~~
+
+.. c:autodoc:: mathd/cbrtd.c
+
+Special cases
+^^^^^^^^^^^^^
+
++--------------------------+--------------------------+
+| x                        | Result                   |
++==========================+==========================+
+| :math:`±0`               | :math:`x`                |
++--------------------------+--------------------------+
+| :math:`±Inf`             | :math:`x`                |
++--------------------------+--------------------------+
+| :math:`NaN`              | :math:`qNaN`             |
++--------------------------+--------------------------+
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+Implement based on the Newton-Raphson method.
+
+.. Here there be dragons. (TODO)
+
+Requirements
+^^^^^^^^^^^^
+
+* REQ-ML-2300
+* REQ-ML-2310
+* REQ-ML-2320
+* REQ-ML-2340
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/math.h
+* libm/mathd/cbrtd.c
+* libm/mathf/cbrtf.c
+
+References
+^^^^^^^^^^

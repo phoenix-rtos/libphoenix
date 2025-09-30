@@ -1,0 +1,66 @@
+fmod
+~~~~
+
+.. c:autodoc:: mathd/fmodd.c
+
+Special cases
+^^^^^^^^^^^^^
+
++-----------------------------+-----------------------------+-----------------------------+
+| x                           | y                           | Result                      |
++=============================+=============================+=============================+
+| :math:`\in \mathbb{F}`      | :math:`±0`                  | :math:`qNaN`                |
++-----------------------------+-----------------------------+-----------------------------+
+| :math:`±Inf`                | :math:`\in \mathbb{F}`      | :math:`qNaN`                |
++-----------------------------+-----------------------------+-----------------------------+
+| :math:`±0`                  | :math:`\neq ±0`             | :math:`x`                   |
++-----------------------------+-----------------------------+-----------------------------+
+| :math:`\neq ±Inf`           | :math:`±Inf`                | :math:`x`                   |
++-----------------------------+-----------------------------+-----------------------------+
+| :math:`NaN`                 | :math:`\in \mathbb{F}`      | :math:`qNaN`                |
++-----------------------------+-----------------------------+-----------------------------+
+| :math:`\in \mathbb{F}`      | :math:`NaN`                 | :math:`qNaN`                |
++-----------------------------+-----------------------------+-----------------------------+
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+The approach is to first work on special values and overflows, then use :ref:`sqrt` for the calculation.
+
+#. All return values mentioned hereafter shall have the same sign as :math:`x` at this point.
+#. If :math:`x` is not finite, or :math:`y` is :math:`NaN` or zero, return :math:`NaN`.
+#. If :math:`|x| < |y|`, return :math:`x`.
+#. If :math:`|x|` equals :math:`|y|`, return a zero.
+#. Remove the sign bits from :math:`x` and :math:`y`.
+#. Extract the binary exponents of :math:`x` and :math:`y` into :math:`ix` and :math:`iy` respectively.\footnote{Take care with subnormals.}
+#. Normalize :math:`x` and :math:`y` by replacing their exponent with :math:`1`.\footnote{Subnormal :math:`x` or :math:`y` instead need to be shifted left until the exponent is :math:`1`.}
+#. Loop for :math:`ix - iy` steps, add an additional step if :math:`x` is :math:`> y` at the end:
+
+   #. Set :math:`x` to :math:`x - y`.
+   #. If :math:`x` is :math:`0`, return a zero.
+
+#. If the exponent of :math:`x` is :math:`< 1`, normalize :math:`x` by shifting left until the exponent is :math:`1`. While doing so decrease :math:`iy` once for every necessary shifting step.
+#. Set :math:`iy` as the new exponent of :math:`x`.\footnote{If :math:`iy` is :math:`<= -1023` (this means the result is subnormal), :math:`x` needs to be shifted right while increasing :math:`iy` for every step until :math:`iy` is :math:`-1022`.}
+#. Return :math:`x`.
+
+Requirements
+^^^^^^^^^^^^
+
+* REQ-ML-1100
+* REQ-ML-1120
+* REQ-ML-1121
+* REQ-ML-1122
+* REQ-ML-1130
+* REQ-ML-1131
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/math.h
+* libm/mathd/fmodd.c
+* libm/mathf/fmodf.c
+
+References
+^^^^^^^^^^
+
+* :ref:`remainder`
