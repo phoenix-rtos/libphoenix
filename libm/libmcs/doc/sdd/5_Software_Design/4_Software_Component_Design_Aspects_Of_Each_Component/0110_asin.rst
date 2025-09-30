@@ -1,0 +1,136 @@
+asin
+~~~~
+
+.. c:autodoc:: mathd/asind.c
+
+Special cases
+^^^^^^^^^^^^^
+
++--------------------------+--------------------------+
+| x                        | Result                   |
++==========================+==========================+
+| :math:`±0`               | :math:`x`                |
++--------------------------+--------------------------+
+| :math:`\notin [-1, 1]`   | :math:`qNaN`             |
++--------------------------+--------------------------+
+| :math:`±Inf`             | :math:`qNaN`             |
++--------------------------+--------------------------+
+| :math:`NaN`              | :math:`qNaN`             |
++--------------------------+--------------------------+
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+The approach is to first work on special values and then use rational approximation for the calculation.
+
+Use the following constants as calculation/return values:
+
+* :math:`\frac{\pi}{2} \approx pio2_{hi} + pio2_{lo}`
+* :math:`pio2_{hi} =` ``0x3FF921FB54442D18 (0x3FC90FDB)``
+* :math:`pio2_{lo} =` ``0x3C91A62633145C07 (0xC08BE05E)``
+* :math:`pio4_{hi} = \frac{pio2_{hi}}{2} =` ``0x3FE921FB54442D18 (0x3F490FDB)``
+* :math:`P0 =` ``0x3FC5555555555555 (0x3E2AAAAB)``
+* :math:`P1 =` ``0xBFD4D61203EB6F7D (0xBEA6B090)``
+* :math:`P2 =` ``0x3FC9C1550E884455 (0x3E4E0AA8)``
+* :math:`P3 =` ``0xBFA48228B5688F3B (0xBD241146)``
+* :math:`P4 =` ``0x3F49EFE07501B288 (0x3A4F7F04)``
+* :math:`P5 =` ``0x3F023DE10DFDF709 (0x3811EF08)``
+* :math:`Q1 =` ``0xC0033A271C8A2D4B (0xC019D139)``
+* :math:`Q2 =` ``0x40002AE59C598AC8 (0x4001572D)``
+* :math:`Q3 =` ``0xBFE6066C1B8D0159 (0xBF303361)``
+* :math:`Q4 =` ``0x3FB3B8C5B12E9282 (0x3D9DC62E)``
+
+#. For :math:`x` is ``NaN``, return ``qNaN``.
+#. For :math:`|x| > 1`, return ``qNaN``.
+#. For :math:`|x|` is :math:`1`, return :math:`x \cdot pio2_{hi} + x \cdot pio2_{lo}`.
+#. For :math:`|x| < 2^{-57}`, return :math:`pio2_{hi} + pio2_{lo}`.
+#. All the following return values shall have the same sign as the input value.
+#. For :math:`|x| < 0.5` [#]_:
+
+   #. Use the identity
+
+      .. math::
+         :label: formula_asin_1
+
+         sin^{-1}(x) &= x + \frac{1}{2} \frac{x^3}{3} + \frac{1 \cdot 3}{2 \cdot 4} \frac{x^5}{5} + ... \\
+                     &= \sum\limits_{i=0}^{\infty} \frac{\binom{2i}{i} \cdot x^{2i+1}}{4^i \cdot (2i+1)}
+
+      to approximate ``asin`` as:
+
+      .. math::
+         :label: formula_asin_2
+
+         asin(x) &= x + x \cdot x^2 \cdot R(x^2) \nonumber \\
+         R(x^2)  &= \frac{asin(x)-x}{x^3}
+
+   #. :math:`R(x^2)` can be rationally approximated with [#]_:
+
+      .. math::
+         :label: formula_asin_3
+
+         t &= x^2 \\
+         R(t) &\sim \frac{P0 \cdot t + P1 \cdot t^2 + P2 \cdot t^3 + P3 \cdot t^4 + P4 \cdot t^5 + P5 \cdot t^6}{1 + Q1 \cdot t + Q2 \cdot t^2 + Q3 \cdot t^3 + Q4 \cdot t^4}
+
+      The error of this approximation is smaller than :math:`2^{-58.75}`.
+   #. Return :math:`x + x \cdot R(t)`.
+
+#. Use the identity (set :math:`x = |x|`, use :ref:`fabs` to calculate the absolute value [#]_)
+
+   .. math::
+      :label: formula_asin_4
+
+      sin^{-1}(x) = \frac{\pi}{2} - 2 \cdot sin^{-1}\bigg(\sqrt{\frac{1-x}{2}}\bigg)
+
+   for range reduction purposes.
+#. Let :math:`y = (1-x)`, :math:`z = \frac{y}{2}`, :math:`s = \sqrt{z}`, and split :math:`\frac{\pi}{2}` into :math:`pio2_{hi}` and :math:`pio2_{lo}` for more accuracy, then:
+
+   #. For :math:`|x| >= 0.975` [#]_, return
+
+      .. math::
+         :label: formula_asin_5
+
+         asin(x) &= \frac{\pi}{2} - 2 \cdot (s + s \cdot z \cdot R(z)) \\
+                 &= pio2_{hi} - (2 \cdot (s + s \cdot z \cdot R(z)) - pio2_{lo})
+
+      with
+
+      #. :math:`R(z)` approximated as in :math:numref:`formula_asin_3`.
+      #. Use :ref:`sqrt` to calculate the square root of :math:`z`.
+
+   #. Otherwise, let :math:`pio4_{hi} = \frac{pio2_{hi}}{2}`, :math:`f =` highword of :math:`s` (float: :math:`f =` integer representation of :math:`s` with the last 12 bits masked to 0), :math:`c = \sqrt{z} - f = \frac{z-f^2}{s+f}`, then return
+
+      .. math::
+         :label: formula_asin_6
+
+         asin(x) &= \frac{\pi}{2} - 2 \cdot (s + s \cdot z \cdot R(z)) \\
+                 &= pio4_{hi} + (pio4_{hi} - 2s) - (2 \cdot s \cdot z \cdot R(z) - pio2_{lo}) \\
+                 &= pio4_{hi} - \Big(\big(2 \cdot s \cdot z \cdot R(z) - (pio2_{lo}+2c)\big) - (pio4_{hi} - 2f)\Big)
+
+.. [#] This implementation of ``asin`` is a variation of the algorithm proposed by W. J. Cody, Jr. and W. Waite in *Software Manual for the Elementary Functions*.
+.. [#] Use Horner's method for implementation.
+.. [#] Remember that the final results still have the same sign as the initial :math:`x`!
+.. [#] Use ``highword`` :math:`>=` ``0x3FEF3333`` (float: use integer representation of :math:`x >=` ``0x3F79999A``).
+
+Requirements
+^^^^^^^^^^^^
+
+* REQ-ML-0250
+* REQ-ML-0260
+* REQ-ML-0270
+* REQ-ML-0280
+* REQ-ML-0281
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/math.h
+* libm/mathd/asind.c
+* libm/mathf/asinf.c
+
+References
+^^^^^^^^^^
+
+* :ref:`acos`
+* :ref:`fabs`
+* :ref:`sin`
+* :ref:`sqrt`

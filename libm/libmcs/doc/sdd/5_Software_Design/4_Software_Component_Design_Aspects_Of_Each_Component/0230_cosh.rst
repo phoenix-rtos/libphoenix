@@ -1,0 +1,56 @@
+cosh
+~~~~
+
+.. c:autodoc:: mathd/coshd.c
+
+Special cases
+^^^^^^^^^^^^^
+
++--------------------------+--------------------------+
+| x                        | Result                   |
++==========================+==========================+
+| :math:`±0`               | :math:`1`                |
++--------------------------+--------------------------+
+| :math:`±Inf`             | :math:`+Inf`             |
++--------------------------+--------------------------+
+| :math:`NaN`              | :math:`qNaN`             |
++--------------------------+--------------------------+
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+Implement based on :math:`cosh(x) = \frac{e^x+e^{-x}}{2}` using :ref:`exp` and :ref:`expm1`:
+
+#. Reduce to positive as :math:`cosh(-x) = cosh(x)`
+#. For :math:`0 <= x <= \frac{ln(2)}{2}`: :math:`cosh(x) = 1 + \frac{(exp(x) - 1)^2}{2 \cdot exp(x)}`
+#. For :math:`\frac{ln(2)}{2} <= x <= 22`: :math:`cosh(x) = \frac{exp(x) + \frac{1}{exp(x)}}{2}`
+#. For :math:`22 <= x`: :math:`cosh(x) = \frac{exp(x)}{2}`
+
+Requirements
+^^^^^^^^^^^^
+
+* REQ-ML-2200
+* REQ-ML-2210
+* REQ-ML-2220
+* REQ-ML-2240
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/math.h
+* libm/mathd/coshd.c
+* libm/mathf/coshf.c
+
+References
+^^^^^^^^^^
+
+* :ref:`__ccoshsinh <internal_ctrig>`
+* :ref:`ccos`
+* :ref:`ccosh`
+* :ref:`csin`
+* :ref:`csinh`
+* :ref:`ctan`
+* :ref:`ctanh`
+* :ref:`exp`
+* :ref:`expm1`
+* :ref:`fabs`

@@ -1,0 +1,49 @@
+expm1
+~~~~~
+
+.. c:autodoc:: mathd/expm1d.c
+
+Special cases
+^^^^^^^^^^^^^
+
++--------------------------+--------------------------+
+| x                        | Result                   |
++==========================+==========================+
+| :math:`±0`               | :math:`+0`               |
++--------------------------+--------------------------+
+| :math:`-Inf`             | :math:`-1`               |
++--------------------------+--------------------------+
+| :math:`+Inf`             | :math:`+Inf`             |
++--------------------------+--------------------------+
+| :math:`NaN`              | :math:`qNaN`             |
++--------------------------+--------------------------+
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+Implement based on a rational approximation.
+
+.. Here there be dragons. (TODO)
+
+Requirements
+^^^^^^^^^^^^
+
+* REQ-ML-2500
+* REQ-ML-2510
+* REQ-ML-2520
+* REQ-ML-2540
+* REQ-ML-2550
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/math.h
+* libm/mathd/expm1d.c
+* libm/mathf/expm1f.c
+
+References
+^^^^^^^^^^
+
+* :ref:`cosh`
+* :ref:`sinh`
+* :ref:`tanh`

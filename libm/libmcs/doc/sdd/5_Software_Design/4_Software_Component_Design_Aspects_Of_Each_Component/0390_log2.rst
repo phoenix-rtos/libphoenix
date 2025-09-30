@@ -1,0 +1,50 @@
+log2
+~~~~
+
+.. c:autodoc:: mathd/log2d.c
+
+Special cases
+^^^^^^^^^^^^^
+
++--------------------------+--------------------------+
+| x                        | Result                   |
++==========================+==========================+
+| :math:`<0`               | :math:`qNaN`             |
++--------------------------+--------------------------+
+| :math:`±0`               | :math:`-Inf`             |
++--------------------------+--------------------------+
+| :math:`1`                | :math:`+0`               |
++--------------------------+--------------------------+
+| :math:`+Inf`             | :math:`+Inf`             |
++--------------------------+--------------------------+
+| :math:`NaN`              | :math:`qNaN`             |
++--------------------------+--------------------------+
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+Implement similarly to :ref:`log10` using :ref:`__log1pmf <internal_log>`.
+
+.. Here there be dragons. (TODO)
+
+Requirements
+^^^^^^^^^^^^
+
+* REQ-ML-3300
+* REQ-ML-3310
+* REQ-ML-3320
+* REQ-ML-3330
+* REQ-ML-3340
+* REQ-ML-3350
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/math.h
+* libm/mathd/log2d.c
+* libm/mathf/log2f.c
+
+References
+^^^^^^^^^^
+
+* :ref:`__log1pmf <internal_log>`

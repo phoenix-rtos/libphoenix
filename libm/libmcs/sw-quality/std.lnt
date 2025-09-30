@@ -1,0 +1,6 @@
+//  Gnu C/C++ (version 2.95.3 or later), -si4 -sp4,
+//  Standard lint options
+
+sw-quality/au-misra3.lnt
+sw-quality/co-gcc.lnt
+sw-quality/options.lnt

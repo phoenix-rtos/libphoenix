@@ -1,0 +1,345 @@
+pow
+~~~~~
+
+.. c:autodoc:: mathd/powd.c
+
+Special cases
+^^^^^^^^^^^^^
+
++-------------------------------------------+---------------------------------------------------------------------+------------------------------+
+| :math:`x`                                 | :math:`y`                                                           | Result                       |
++===========================================+=====================================================================+==============================+
+| :math:`<0\ \wedge \neq -Inf`              | :math:`\notin \mathbb{Z}^{*}`                                       | :math:`qNaN`                 |
++-------------------------------------------+---------------------------------------------------------------------+------------------------------+
+| :math:`-0`                                | :math:`\{2k + 1 : k \in \mathbb{Z}_{<0}\}`                          | :math:`-Inf`                 |
++-------------------------------------------+---------------------------------------------------------------------+------------------------------+
+| :math:`-0`                                | :math:`\in \mathbb{F}_{<0} \setminus \{2k + 1 : k \in \mathbb{Z}\}` | :math:`+Inf`                 |
++-------------------------------------------+---------------------------------------------------------------------+------------------------------+
+| :math:`+0`                                | :math:`<0`                                                          | :math:`+Inf`                 |
++-------------------------------------------+---------------------------------------------------------------------+------------------------------+
+| :math:`±0`                                | :math:`\{2k - 1 : k \in \mathbb{Z}_{>0}\}`                          | :math:`x`                    |
++-------------------------------------------+---------------------------------------------------------------------+------------------------------+
+| :math:`±0`                                | :math:`\in \mathbb{F}_{>0} \setminus \{2k - 1 : k \in \mathbb{Z}\}` | :math:`+0`                   |
++-------------------------------------------+---------------------------------------------------------------------+------------------------------+
+| :math:`-1`                                | :math:`±Inf`                                                        | :math:`+1`                   |
++-------------------------------------------+---------------------------------------------------------------------+------------------------------+
+| :math:`+1`                                | :math:`\in \mathbb{F} \setminus \{sNaN\}`                           | :math:`+1`                   |
++-------------------------------------------+---------------------------------------------------------------------+------------------------------+
+| :math:`\in \mathbb{F} \setminus \{sNaN\}` | :math:`±0`                                                          | :math:`+1`                   |
++-------------------------------------------+---------------------------------------------------------------------+------------------------------+
+| :math:`\in ]-1;1[`                        | :math:`-Inf`                                                        | :math:`+Inf`                 |
++-------------------------------------------+---------------------------------------------------------------------+------------------------------+
+| :math:`\notin [-1;1]`                     | :math:`-Inf`                                                        | :math:`+0`                   |
++-------------------------------------------+---------------------------------------------------------------------+------------------------------+
+| :math:`\in ]-1;1[`                        | :math:`+Inf`                                                        | :math:`+0`                   |
++-------------------------------------------+---------------------------------------------------------------------+------------------------------+
+| :math:`\notin [-1;1]`                     | :math:`+Inf`                                                        | :math:`+Inf`                 |
++-------------------------------------------+---------------------------------------------------------------------+------------------------------+
+| :math:`-Inf`                              | :math:`\{2k + 1 : k \in \mathbb{Z}_{<0}\}`                          | :math:`-0`                   |
++-------------------------------------------+---------------------------------------------------------------------+------------------------------+
+| :math:`-Inf`                              | :math:`\in \mathbb{F}_{<0} \setminus \{2k + 1 : k \in \mathbb{Z}\}` | :math:`+0`                   |
++-------------------------------------------+---------------------------------------------------------------------+------------------------------+
+| :math:`-Inf`                              | :math:`\{2k - 1 : k \in \mathbb{Z}_{>0}\}`                          | :math:`-Inf`                 |
++-------------------------------------------+---------------------------------------------------------------------+------------------------------+
+| :math:`-Inf`                              | :math:`\in \mathbb{F}_{>0} \setminus \{2k - 1 : k \in \mathbb{Z}\}` | :math:`+Inf`                 |
++-------------------------------------------+---------------------------------------------------------------------+------------------------------+
+| :math:`+Inf`                              | :math:`<0`                                                          | :math:`+0`                   |
++-------------------------------------------+---------------------------------------------------------------------+------------------------------+
+| :math:`+Inf`                              | :math:`>0`                                                          | :math:`+Inf`                 |
++-------------------------------------------+---------------------------------------------------------------------+------------------------------+
+| :math:`NaN`                               | :math:`\neq ±0`                                                     | :math:`qNaN`                 |
++-------------------------------------------+---------------------------------------------------------------------+------------------------------+
+| :math:`qNaN`                              | :math:`±0`                                                          | :math:`+1`                   |
++-------------------------------------------+---------------------------------------------------------------------+------------------------------+
+| :math:`sNaN`                              | :math:`±0`                                                          | :math:`qNaN`                 |
++-------------------------------------------+---------------------------------------------------------------------+------------------------------+
+| :math:`\neq +1`                           | :math:`NaN`                                                         | :math:`qNaN`                 |
++-------------------------------------------+---------------------------------------------------------------------+------------------------------+
+| :math:`+1`                                | :math:`qNaN`                                                        | :math:`+1`                   |
++-------------------------------------------+---------------------------------------------------------------------+------------------------------+
+| :math:`+1`                                | :math:`sNaN`                                                        | :math:`qNaN`                 |
++-------------------------------------------+---------------------------------------------------------------------+------------------------------+
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+The approach is to first work on special values then use the following approach for the calculation:
+
+#. Compute :math:`log_2(x)`, with increased accuracy.
+#. Find an integral value :math:`n` where :math:`y \cdot log_2(x) = n + m`, and :math:`|m| <= 0.5`.
+#. Then :math:`x^y = 2^n \cdot e^{m \cdot log_2(x)}`.
+
+Use the following constants as calculation values:
+
+* :math:`ln(2) \approx lg2_h + lg2_l \approx lg2`
+* :math:`lg2 =` ``0x3FE62E42FEFA39EF (0x3F317218)``
+* :math:`lg2_h =` ``0x3FE62E4300000000 (0x3F317200)``
+* :math:`lg2_l =` ``0xBE205C610CA86C39 (0x35BFBE8C)``
+* :math:`\frac{1}{ln(2)} \approx invln2_h + invln2_l \approx invln2`
+* :math:`invln2 =` ``0x3FF71547652B82FE (0x3FB8AA3B)``
+* :math:`invln2_h =` ``0x3FF7154760000000 (0x3FB8AA00)``
+* :math:`invln2_l =` ``0x3E54AE0BF85DDF44 (0x36ECA570)``
+* :math:`\frac{2}{3 \cdot ln(2)} \approx cp_h + cp_l \approx cp`
+* :math:`cp =` ``0x3FEEC709DC3A03FD (0x3F76384F)``
+* :math:`cp_h =` ``0x3FEEC709E0000000 (0x3F764000)``
+* :math:`cp_l =` ``0xBE3E2FE0145B01F5 (0xB8F623C6)``
+* :math:`dp_h =` ``0x3FE2B80340000000 (0x3F15C000)``
+* :math:`dp_l =` ``0x3E4CFDEB43CFD006 (0x35D1CFDC)``
+* :math:`L1 =` ``0x3FE3333333333303 (0x3F19999A)``
+* :math:`L2 =` ``0x3FDB6DB6DB6FABFF (0x3EDB6DB7)``
+* :math:`L3 =` ``0x3FD55555518F264D (0x3EAAAAAB)``
+* :math:`L4 =` ``0x3FD17460A91D4101 (0x3E8BA305)``
+* :math:`L5 =` ``0x3FCD864A93C9DB65 (0x3E6C3255)``
+* :math:`L6 =` ``0x3FCA7E284A454EEF (0x3E53f142)``
+* :math:`P1 =` ``0x3FC555555555553E (0x3E2AAAAB)``
+* :math:`P2 =` ``0xBF66C16C16BEBD93 (0xBB360B61)``
+* :math:`P3 =` ``0x3F11566AAF25DE2C (0x388AB355)``
+* :math:`P4 =` ``0xBEBBBD41C5D26BF1 (0xB5DDEA0E)``
+* :math:`P5 =` ``0x3E66376972BEA4D0 (0x3331BB4C)``
+
+#. For :math:`y` is zero, return :math:`1`.
+#. For :math:`x` is :math:`+1` and :math:`y` is ``NaN``, return :math:`1`.
+#. For :math:`x` or :math:`y` is ``NaN``, return the result of a call to :ref:`nan`.
+#. For :math:`x < 0`, determine if :math:`y` is an odd integer as follows (the result shall be saved in the variable :math:`yisint`, it shall be :math:`0` if :math:`y` is not an integer, :math:`1` if it is odd, :math:`2` if it is even):
+
+   #. For ``highword`` of :math:`y >=` ``0x43400000`` (float: integer representation of :math:`y >=` ``0x4B800000``) [#]_, set :math:`yisint` to :math:`2`.
+   #. For :math:`y >= 1`:
+
+      #. For binary exponent :math:`k` of :math:`y > 20`:
+
+         #. Set :math:`j` to the ``lowword`` of :math:`y` shifted right by :math:`(52 - k)`. [#]_
+         #. For :math:`(j` shifted left by :math:`(52 - k))` equals the ``lowword`` of :math:`y` [#]_, set :math:`yisint` to :math:`(2 -` last bit of :math:`j)`.
+
+      #. For the ``lowword`` of :math:`y` is :math:`0`:
+
+         #. Set :math:`j` to the ``highword`` of :math:`y` shifted right by :math:`(20 - k)`.
+         #. For :math:`(j` shifted left by :math:`(20 - k))` equals the ``highword`` of :math:`y`, set :math:`yisint` to :math:`(2 -` last bit of :math:`j)`.
+
+      #. For the float version of this procedure skip the previous two steps and their substeps and replace them with:
+
+         #. Let :math:`k` be the binary exponent of :math:`y`.
+         #. Set :math:`j` to the integer representation of :math:`y` shifted right by :math:`(23 - k)`.
+         #. For :math:`(j` shifted left by :math:`(23 - k))` equals the integer representation of :math:`y`, set :math:`yisint` to :math:`(2 -` last bit of :math:`j)`.
+
+   #. If :math:`yisint` has not yet been set in the earlier steps, set it to :math:`0`.
+
+#. For ``lowword`` of :math:`y` is :math:`0` (float: omit this if-clause, but use its contents) [#]_:
+
+   #. For :math:`y` is infinite:
+
+      #. For :math:`x` is :math:`1`, return :math:`1`.
+      #. For :math:`|x| > 1`:
+
+         #. For :math:`y` is positive, return :math:`y`.
+         #. Return :math:`0`.
+
+      #. Otherwise:
+
+         #. For :math:`y` is positive, return :math:`0`.
+         #. Return :math:`-y`.
+
+   #. For :math:`y` is :math:`1`, return :math:`x`.
+   #. For :math:`y` is :math:`-1`, return :math:`\frac{1}{x}`.
+   #. For :math:`y` is :math:`2`, return :math:`x \cdot x`.
+   #. For :math:`y` is :math:`0.5` and :math:`x` greater than or equal to positive zero, return :math:`\sqrt{x}`, using :ref:`sqrt` to calculate the square root of :math:`x`.
+
+#. Let :math:`ax = |x|`, using :ref:`fabs` to calculate the absolute value of :math:`x`.
+#. For :math:`x` is infinite, a zero, :math:`-1` or :math:`1`:
+
+   #. For :math:`y < 0`, let :math:`z = \frac{1}{|x|} = \frac{1}{ax}`.
+   #. For :math:`x < 0`:
+
+      #. For :math:`yisint` is :math:`0` (:math:`y` is not an integer) and :math:`x` is :math:`-1`, let :math:`z =` ``NaN``.
+      #. For :math:`yisint` is :math:`1` (:math:`y` is an odd integer), let :math:`z = -z`.
+
+   #. Return :math:`z`.
+
+#. For :math:`yisint` is :math:`0` (:math:`y` is not an integer) and :math:`x < 0`, return ``NaN``.
+#. For :math:`yisint` is :math:`1` (:math:`y` is an odd integer) and :math:`x < 0`, set :math:`sn = -1`, otherwise set :math:`sn = +1` (this contains the sign for the final result).
+#. For :math:`|y| > 2^{31}` (float: :math:`|y| > 2^{27}`):
+
+   #. For :math:`|y| > 2^{64}`, as for such high :math:`y` either an under- or overflow is guaranteed (float: omit this step and its substeps):
+
+      #. For :math:`|x| < 1`:
+
+         #. For :math:`y < 0`, return infinity with sign of :math:`sn`.
+         #. Return :math:`0` with sign of :math:`sn`.
+
+      #. Otherwise:
+
+         #. For :math:`y > 0`, return infinity with sign of :math:`sn`.
+         #. Return :math:`0` with sign of :math:`sn`.
+
+   #. For ``highword`` of :math:`|x| <` ``0x3FEFFFFF`` (float: integer representation of :math:`|x| <` ``0x3F7FFFF4``) [#]_:
+
+      #. For :math:`y < 0`, return positive infinity (float: return infinity with sign of :math:`sn`).
+      #. Return :math:`0` (float: return :math:`0` with sign of :math:`sn`).
+
+   #. For ``highword`` of :math:`|x| >` ``0x3FF00000`` (float: integer representation of :math:`|x| >` ``0x3F800007``) [#]_:
+
+      #. For :math:`y > 0`, return positive infinity (float: return infinity with sign of :math:`sn`).
+      #. Return :math:`0` (float: return :math:`0` with sign of :math:`sn`).
+
+   #. Set :math:`t = |x| - 1 = ax - 1`.
+   #. Set :math:`w = t^2 \cdot (\frac{1}{2} - t \cdot (\frac{1}{3} - t \cdot \frac{1}{4}))` which is an approximation for :math:`log(x)` for :math:`x` close to :math:`1`.
+   #. Set :math:`t1 = invln2_{h} \cdot t + (t \cdot invln2_{l} - w \cdot invln2)`, with ``lowword`` masked to :math:`0` (float: with the 12 lowest bits masked to :math:`0`).
+   #. Set :math:`t2 = (t \cdot invln2_{l} - w \cdot invln2) - (t1 - invln2_{h} \cdot t)`.
+
+#. Otherwise:
+
+   #. For :math:`x` is subnormal, scale :math:`x` and :math:`ax` by multiplying them with :math:`2^{53}` (float: :math:`2^{24}`).
+   #. Set :math:`n` to the exponent of the original :math:`x` [#]_.
+   #. Normalize :math:`ix` by setting the exponent to :math:`0` [#]_.
+   #. For :math:`|x| < \sqrt{\frac{3}{2}}` [#]_, set :math:`k` to :math:`0`.
+   #. For :math:`|x| < \sqrt{3}` [#]_, set :math:`k` to :math:`1`.
+   #. If :math:`k` has not been set in the two previous steps, set :math:`k` to :math:`0`, increase :math:`n` by :math:`1`, and decrease the exponent of :math:`ix` by :math:`1`.
+   #. Set the ``highword`` of :math:`ax` to :math:`ix` (float: Set :math:`ax` to :math:`ix`).
+   #. Compute :math:`s = \frac{ax-bp}{ax+bp}`, with :math:`bp = 1+\frac{k}{2}`, with increased accuracy by splitting :math:`s` into :math:`s_{h} + s_{l}` by using the following formulae:
+
+      .. math::
+         :label: formula_pow_1
+
+         s     &= \frac{ax-bp}{ax+bp} \\
+         s_{h} &= highword\ of \bigg(\frac{ax-bp}{ax+bp}\bigg) \\
+         s_{l} &= \frac{1}{ax+bp} \cdot (((ax-bp) - s_{h} \cdot t_{h}) - s_{h} \cdot t_{l})
+
+      with
+
+      #. :math:`t_{h} = ax + bp` with ``lowword`` (float: lowest 12 bits) set to all zeroes.
+      #. :math:`t_{l} = ax - (t_{h}-bp)`.
+
+      For float replace :math:`s_{h}` in formula :math:numref:`formula_pow_1` with :math:`s_{h} = \bigg(\frac{ax-bp}{ax+bp}\bigg)` with the lowest 12 bits set to all zeroes.
+
+   #. Compute the logarithm of :math:`ax` with the following approximation (the theory behind the approximation is similar (smaller polynomial and in range :math:`[\frac{\sqrt{3}}{2}, \sqrt{3}]`) to the one expressed for :ref:`log` and will not be presented here):
+
+      .. math::
+         :label: formula_pow_2
+
+         R(s)   &= s^2 \cdot (L1 + s^2 \cdot (L2 + s^2 \cdot (L3 + s^2 \cdot (L4 + s^2 \cdot (L5 + s^2 \cdot L6))))) \\
+         r      &= s^2 \cdot R(s) + s_{l} \cdot (s_{h} + s) \\
+         t_{h}  &= 3 + s_{h}^2 + r \quad \wedge \quad lowword\ of\ t_{h}\ set\ to\ all\ zeroes \\
+         t_{l}  &= r - ((t_{h} - 3) - s_{h}^2) \\
+         p_{h}  &= s_{h} \cdot t_{h} + (s_{l} \cdot t_{h} + t_{l} \cdot s) \quad \wedge \quad lowword\ of\ p_{h}\ set\ to\ all\ zeroes \\
+         p_{l}  &= (s_{l} \cdot t_{h} + t_{l} \cdot s) - (p_{h} - (s_{h} \cdot t_{h})) \\
+         z_{h}  &= cp_h \cdot p_h \\
+         z_{l}  &= cp_l \cdot p_h + p_l \cdot cp + dp_l \\
+         t1     &= z_h+z_l+dp_h+n \\
+         t2     &= z_l-(((t1-n)-dp_h)-z_h)
+
+      with
+
+      #. :math:`dp_h` and :math:`dp_l` are zero if :math:`k` is zero, otherwise they have the values described at the beginning.
+
+      For float replace :math:`t_{h}` in formula :math:numref:`formula_pow_2` with :math:`t_{h} = 3 + s_{h}^2 + r` with the lowest 12 bits set to all zeroes, and replace :math:`p_{h}` with :math:`p_{h} = s_{h} \cdot t_{h} + (s_{l} \cdot t_{h} + t_{l} \cdot s)` with the lowest 12 bits set to all zeroes.
+
+#. Split :math:`y` into :math:`y1 + y2`:
+
+   #. :math:`y1 = y` with ``lowword`` (float: lowest 12 bits) set to all zeroes.
+   #. :math:`y2 = y - y1`.
+
+#. Calculate :math:`y \cdot log_2(x)` as follows:
+
+   .. math::
+      :label: formula_pow_3
+
+      p_{l}            &= y2 \cdot t1 + y \cdot t2 \\
+      p_{h}            &= y1 \cdot t1 \\
+      y \cdot log_2(x) &= p_l + p_h
+
+#. For :math:`y \cdot log_2(x) >= 1024` (float: :math:`y \cdot log_2(x) >= 128`):
+
+   #. For :math:`y \cdot log_2(x) > 1024` (float: :math:`y \cdot log_2(x) > 128`) return infinity with the sign of :math:`s`.
+   #. For :math:`p_l + ovt > y \cdot log_2(x) - p_h`, with :math:`ovt = 8.0085662595372944372 \cdot 10^{-17}` (float: :math:`ovt = 4.2995665694 \cdot 10^{-8}`) [#]_, return infinity with the sign of :math:`s`.
+
+#. For :math:`y \cdot log_2(x) <= -1075` (float: :math:`y \cdot log_2(x) <= -150`):
+
+   #. For :math:`y \cdot log_2(x) < -1075` (float: :math:`y \cdot log_2(x) < -150`) return zero with the sign of :math:`s`.
+   #. For :math:`p_l <= y \cdot log_2(x) - p_h` return zero with the sign of :math:`s`.
+
+#. Calculate :math:`e^{m \cdot log_2(x)}`:
+
+   #. Set :math:`k =` exponent of :math:`y \cdot log_2(x)`, and :math:`n = 0`.
+   #. For :math:`|y \cdot log_2(x)| > 0.5`:
+
+      #. Set :math:`n = ` ``highword`` (float: integer representation) of :math:`(y \cdot log_2(x) + 0.5)`.
+      #. Set :math:`k =` exponent of :math:`n`.
+      #. Set :math:`t` to a new double (float) with (exponent of :math:`n` including sign) right shifted by :math:`k` as ``highword``, and all zeros as ``lowword`` (float: right shift by :math:`k`).
+      #. Replace the exponent of :math:`n` with :math:`1`, then right shift :math:`n` by :math:`(20-k)` (float: :math:`(23-k)`).
+      #. For :math:`y \cdot log_2(x) < 0` set the sign of :math:`n`.
+      #. Set :math:`p_h = p_h - t`.
+
+   #. Calculate :math:`e^{m \cdot log_2(x)}` with the following approximation (the theory behind the approximation is the one expressed for :ref:`exp` and will not be presented here):
+
+      .. math::
+         :label: formula_pow_4
+
+         t                     &= p_l + p_h \quad \wedge \quad lowword\ of\ t\ set\ to\ all\ zeroes \\
+         z                     &= (t \cdot lg2_h) + ((p_l-(t-p_h)) \cdot lg2 + t \cdot lg2_l) \\
+         w                     &= ((p_l-(t-p_h)) \cdot lg2 + t \cdot lg2_l) - (z - (t \cdot lg2_h)) \\
+         t1                    &= z - z^2 \cdot (P1 + z^2 \cdot (P2 + z^2 \cdot (P3 + z^2 \cdot (P4 + z^2 \cdot P5)))) \\
+         r                     &= \frac{z \cdot t1}{t1-2}-(w+z \cdot w) \\
+         e^{m \cdot log_2(x)}  &= 1 - (r-z)
+
+      For float replace :math:`t` in formula :math:numref:`formula_pow_4` with :math:`t = p_l + p_h` with the lowest 12 bits set to all zeroes.
+
+#. For (exponent of :math:`e^{m \cdot log_2(x)} + n) <= 0`:
+
+   #. Set :math:`z = e^{m \cdot log_2(x)} \cdot 2^n`, using the :ref:`scalbn` function.
+   #. Return :math:`z` with sign of :math:`s`.
+
+#. Set :math:`z = e^{m \cdot log_2(x)}` with exponent set to :math:`n`.
+#. Return :math:`z` with sign of :math:`sn`.
+
+.. [#] This means that :math:`y` can only be even, as the exponent is so high that only integral values that are multiples of :math:`2` are possible.
+.. [#] In this case the lowest bit of :math:`j` is the lowest bit that is in the integer part of :math:`y`.
+.. [#] In this case the lowest :math:`(52 - k)` bits of :math:`y` are :math:`0`, therefore :math:`y` has no fractional part and is integral.
+.. [#] This is used to combine the other special cases for :math:`y`, so that they can be skipped altogether instead of one after another which improves the performance of the 'normal' cases.
+.. [#] This means that :math:`(1-x) >= 2^{-20}`.
+.. [#] This means that :math:`(1-x) <= -2^{-20}`.
+.. [#] This shall be the real binary exponent: subnormals have an exponent :math:`< -1022` (float: :math:`< -128`).
+.. [#] Set the three highest bytes of :math:`ix` to ``0x3FF0`` (float: ``0x3F80``).
+.. [#] This is when (:math:`ix` with exponent masked) :math:`<` ``0x3988E`` (float: :math:`<` ``0x1CC471``).
+.. [#] This is when (:math:`ix` with exponent masked) :math:`<` ``0xBB67A`` (float: :math:`<` ``0x5DB3D7``).
+.. [#] Which equals :math:`-(1024-log_2(overflow+0.5\ ULP))` (float: :math:`-(128-log_2(overflow+0.5\ ULP))`).
+
+Requirements
+^^^^^^^^^^^^
+
+* REQ-ML-0850
+* REQ-ML-0860
+* REQ-ML-0864
+* REQ-ML-0870
+* REQ-ML-0871
+* REQ-ML-0872
+* REQ-ML-0873
+* REQ-ML-0874
+* REQ-ML-0875
+* REQ-ML-0876
+* REQ-ML-0877
+* REQ-ML-0878
+* REQ-ML-0879
+* REQ-ML-0880
+* REQ-ML-0881
+* REQ-ML-0882
+* REQ-ML-0883
+* REQ-ML-0885
+* REQ-ML-0886
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/math.h
+* libm/mathd/powd.c
+* libm/mathf/powf.c
+
+References
+^^^^^^^^^^
+
+* :ref:`cpow`
+* :ref:`exp`
+* :ref:`exp2`
+* :ref:`fabs`
+* :ref:`log`
+* :ref:`nan`
+* :ref:`scalbn`
+* :ref:`sqrt`

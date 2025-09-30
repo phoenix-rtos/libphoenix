@@ -1,0 +1,45 @@
+tanh
+~~~~
+
+.. c:autodoc:: mathd/tanhd.c
+
+Special cases
+^^^^^^^^^^^^^
+
++--------------------------+--------------------------+
+| x                        | Result                   |
++==========================+==========================+
+| :math:`±0`               | :math:`x`                |
++--------------------------+--------------------------+
+| :math:`±Inf`             | :math:`±1`               |
++--------------------------+--------------------------+
+| :math:`NaN`              | :math:`qNaN`             |
++--------------------------+--------------------------+
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+Implement based on :math:`tanh(x) = \frac{e^x-e^{-x}}{e^x+e^{-x}}` using :ref:`expm1`:
+
+#. Reduce to positive as :math:`tanh(-x) = -tanh(x)`
+#. For :math:`0 <= x <=  1`: :math:`tanh(x) = -\frac{t}{t + 2} \wedge t = expm1(-2x)`
+#. For :math:`1 <= x <=  22`: :math:`tanh(x) = 1 - \frac{2}{t + 2} \wedge t = expm1(2x)`
+#. For :math:`22 <= x`: :math:`tanh(x) = 1`
+
+Requirements
+^^^^^^^^^^^^
+
+* REQ-ML-2540
+* REQ-ML-2550
+* REQ-ML-2600
+* REQ-ML-2610
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/math.h
+* libm/mathd/tanhd.c
+* libm/mathf/tanhf.c
+
+References
+^^^^^^^^^^
