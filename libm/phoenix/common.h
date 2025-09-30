@@ -10,7 +10,7 @@
  *
  * This file is part of Phoenix-RTOS.
  *
- * %LICENSE%
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef _LIBPHOENIX_MATH_COMMON_H_

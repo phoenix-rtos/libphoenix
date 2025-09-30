@@ -10,7 +10,7 @@
  *
  * This file is part of Phoenix-RTOS.
  *
- * %LICENSE%
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <math.h>
@@ -38,6 +38,12 @@ double cosh(double x)
 		y = cosh(x / 2.0);
 		return ((2.0 * y * y) - 1.0);
 	}
+}
+
+
+float coshf(float x)
+{
+	return (float)cosh((double)x);
 }
 
 
@@ -72,6 +78,12 @@ double sinh(double x)
 }
 
 
+float sinhf(float x)
+{
+	return (double)sin((double)x);
+}
+
+
 double tanh(double x)
 {
 	if (isnan(x) != 0) {
@@ -87,4 +99,10 @@ double tanh(double x)
 
 	/* cosh is never equal to zero */
 	return (sinh(x) / cosh(x));
+}
+
+
+float tanhf(float x)
+{
+	return (float)tanh((double)x);
 }
