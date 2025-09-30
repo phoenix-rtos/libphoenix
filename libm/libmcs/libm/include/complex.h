@@ -15,7 +15,6 @@
 extern "C"{
 #endif
 
-#include "config.h"
 #include "internal_config.h"
 
 #ifndef __LIBMCS_WANT_COMPLEX
