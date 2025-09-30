@@ -93,6 +93,12 @@ double pow(double base, double exponent)
 }
 
 
+float powf(float x, float exp)
+{
+	return (float)pow((double)x, (double)exp);
+}
+
+
 double sqrt(double x)
 {
 	if (isnan(x) != 0) {
