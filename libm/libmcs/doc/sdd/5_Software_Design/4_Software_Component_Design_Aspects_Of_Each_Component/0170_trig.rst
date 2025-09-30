@@ -1,0 +1,191 @@
+.. _internal_trig:
+
+Internal Trigonometric Functions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. c:autodoc:: mathd/internal/trigd.c
+
+Special cases
+^^^^^^^^^^^^^
+
+The special cases are in the respective external functions :ref:`cos` and :ref:`sin`.
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+``__cos``: The approach is to use a polynomial approximation for the calculation.
+
+Use the following constants as calculation/return values:
+
+* :math:`C1 =` ``0x3FA555555555554C (0x3D2AAAA5)``
+* :math:`C2 =` ``0xBF56C16C16C15177 (0xBAB60615)``
+* :math:`C3 =` ``0x3EFA01A019CB1590 (0x37CCF47C)``
+* :math:`C4 =` ``0xBE927E4F809C52AD``
+* :math:`C5 =` ``0x3E21EE9EBDB4B1C4``
+* :math:`C6 =` ``0xBDA8FAE9BE8838D4``
+
+The cosine is computed by evaluating the following polynomial:
+
+.. math::
+
+   r &= C1 \cdot x^2 + C2 \cdot x^4 + C3 \cdot x^6 + C4 \cdot x^{8} + C5 \cdot x^{10} + C6 \cdot x^{12} \\
+   cos(x+y) &= w + (((1 - w) - hz) + (x^2 \cdot r - x \cdot y))
+
+with:
+
+* :math:`hz = 0.5 \cdot x^2`
+* :math:`w = 1 - hz`
+
+For the float version the polynomial can be shortened to:
+
+.. math::
+
+   r = C1 \cdot x^2 + C2 \cdot x^4 + C3 \cdot x^6
+
+--------------------------
+
+``__sin``: The approach is to use a polynomial approximation for the calculation.
+
+Use the following constants as calculation/return values:
+
+* :math:`S1 =` ``0xBFC5555555555549 (0xBE2AAAAB)``
+* :math:`S2 =` ``0x3F8111111110F8A6 (0x3C0888BB)``
+* :math:`S3 =` ``0xBF2A01A019C161D5 (0xB9502DE1)``
+* :math:`S4 =` ``0x3EC71DE357B1FE7D (0x363E6DBE)``
+* :math:`S5 =` ``0xBE5AE5E68A2B9CEB``
+* :math:`S6 =` ``0x3DE5D93A5ACFD57C``
+
+The sine is computed by evaluating the following polynomial:
+
+.. math::
+
+   r &= S2 \cdot x^3 + S3 \cdot x^5 + S4 \cdot x^7 + S5 \cdot x^{9} + S6 \cdot x^{11} \\
+   sin(x+y) &= x + (S1 \cdot x + ( x \cdot (r - \frac{y}{2}) + y))
+
+For the float version the polynomial can be shortened to:
+
+.. math::
+
+   r = S2 \cdot x^3 + S3 \cdot x^5 + S4 \cdot x^7
+
+--------------------------
+
+``__rem_pio2``: The approach is to use a polynomial approximation for the calculation.
+
+Use the following constants as calculation/return values:
+
+* :math:`invpio2 =` ``0x3FE45F306DC9C883 (0x3F22F984)``, equals the first 53 bit of :math:`\frac{2}{\pi}`
+* :math:`pio2_1 =` ``0x3FF921FB54400000 (0x3FC90F80)``, equals the first 33 bit of :math:`\frac{\pi}{2}`
+* :math:`pio2_{1t} =` ``0x3DD0B4611A626331 (0x37354443)``, equals :math:`\frac{\pi}{2} - pio2_1`
+* :math:`pio2_2 =` ``0x3DD0B4611A600000 (0x37354400)``, equals the second 33 bit of :math:`\frac{\pi}{2}`
+* :math:`pio2_{2t} =` ``0x3BA3198A2E037073 (0x2E85A308)``, equals :math:`\frac{\pi}{2} - (pio2_1 + pio2_2)`
+* :math:`pio2_3 =` ``0x3BA3198A2E000000 (0x2E85A300)``, equals the second 33 bit of :math:`\frac{\pi}{2}`
+* :math:`pio2_{3t} =` ``0x397B839A252049C1 (0x248D3132)``, equals :math:`\frac{\pi}{2} - (pio2_1 + pio2_2 + pio2_3)`
+
+#. For :math:`|x| < \frac{\pi}{4}`, there is no need for reduction: Set :math:`y_0 = x` and :math:`y_1 = 0`, and return :math:`0`.
+#. For :math:`|x| < 3 \cdot \frac{\pi}{4}`, one addition or subtraction of :math:`pio2` is enough:
+
+   #. For :math:`x` is positive:
+
+      #. For ``highword`` of :math:`x` is ``0x3FF921FB`` (this means :math:`x` is close to :math:`\frac{\pi}{2}`) (float: For integer representation of :math:`x`, with the last 17 bit masked off, is ``0x3FC80000``):
+
+         #. Set :math:`y_0 = x - pio2_1 - pio2_2 - pio2_{2t}`.
+         #. Set :math:`y_1 = (x - pio2_1 - pio2_2 - y_0) - pio2_{2t}`.
+
+         Oherwise a less precise :math:`pio2` is sufficient:
+
+         #. Set :math:`y_0 = x - pio2_1 - pio2_{1t}`.
+         #. Set :math:`y_1 = (x - pio2_1 - y_0) - pio2_{1t}`.
+
+      #. Return :math:`1`.
+
+      Otherwise for :math:`x` is negative:
+
+      #. For ``highword`` of :math:`x` is ``0x3FF921FB`` (this means :math:`x` is close to :math:`\frac{\pi}{2}`) (float: For integer representation of :math:`x`, with the last 17 bit masked off, is ``0x3FC80000``):
+
+         #. Set :math:`y_0 = x + pio2_1 + pio2_2 + pio2_{2t}`.
+         #. Set :math:`y_1 = (x + pio2_1 + pio2_2 - y_0) + pio2_{2t}`.
+
+         Oherwise a less precise :math:`pio2` is sufficient:
+
+         #. Set :math:`y_0 = x + pio2_1 + pio2_{1t}`.
+         #. Set :math:`y_1 = (x + pio2_1 - y_0) + pio2_{1t}`.
+
+      #. Return :math:`-1`.
+
+#. For :math:`|x| < 2^{19} \cdot \frac{\pi}{2}` (float: :math:`|x| < 2^{7} \cdot \frac{\pi}{2}`), an addition or subtraction of multiple :math:`pio2` is enough:
+
+   #. :math:`n` shall be an integer. Set :math:`n = |x| \cdot invpio2 + 0.5` (use :ref:`fabs` to calculate the absolute value of :math:`x`).
+   #. Set :math:`r = |x| - n \cdot pio2_1`.
+   #. Set :math:`w = n \cdot pio2_{1t}`.
+   #. Set :math:`y_0 = r - w`.
+   #. Set :math:`i =` exponent bits of :math:`x -` exponent bits of :math:`y_0`.
+   #. For :math:`i > 16` (float: :math:`i > 8`), a second iteration is necessary:
+
+      #. Set :math:`t = r`.
+      #. Set :math:`r = r - n \cdot pio2_{2}`.
+      #. Set :math:`w = n \cdot pio2_{2t} - ((t - r) - n \cdot pio2_{2})`.
+      #. Set :math:`y_0 = r - w`.
+      #. Set :math:`i =` exponent bits of :math:`x -` exponent bits of :math:`y_0`.
+      #. For :math:`i > 49` (float: :math:`i > 25`), a second iteration is necessary:
+
+         #. Set :math:`t = r`.
+         #. Set :math:`r = r - n \cdot pio2_{3}`.
+         #. Set :math:`w = n \cdot pio2_{3t} - ((t - r) - n \cdot pio2_{3})`.
+         #. Set :math:`y_0 = r - w`.
+
+   #. Set :math:`y_1 = (r - y_0) - w`.
+   #. For :math:`x` is negative, negate :math:`y_0` and :math:`y_1`, and return :math:`-n`.
+   #. Return :math:`n`.
+
+#. For :math:`x` is infinite or :math:`NaN`, set both :math:`y_0` and :math:`y_1` to :math:`NaN`, and return :math:`0`.
+#. Set :math:`e0 =` (exponent of :math:`|x|`) :math:`- 23` (float: :math:`e0 =` (exponent of :math:`|x|`) :math:`- 7`).
+#. Set :math:`z = |x|` with exponent set to :math:`e0`.
+#. Create array :math:`tx` for three values.
+#. Set :math:`tx[0] =` integer part of :math:`z`.
+#. Set :math:`z = (z-tx[0]) \cdot 2^{24}` (float: :math:`z = (z-tx[0]) \cdot 2^{8}`).
+#. Set :math:`tx[1] =` integer part of :math:`z`.
+#. Set :math:`z = (z-tx[1]) \cdot 2^{24}` (float: :math:`z = (z-tx[1]) \cdot 2^{8}`).
+#. Set :math:`tx[2] = z`.
+#. Loop over the array :math:`tx` from back to front, break the loop if the element is equal to zero. Set :math:`nx` to the index of the element that caused the break, or :math:`0` if no break was triggered.
+#. Call ``__rem_pio2_internal`` with arguments :math:`tx`, :math:`y`, :math:`e0`, and :math:`nx`. Save the return value in :math:`n`.
+#. For :math:`x` is negative, negate :math:`y_0` and :math:`y_1`, and return :math:`-n`.
+#. Return :math:`n`.
+
+--------------------------
+
+``__rem_pio2_internal``: Use Payne and Hanek's method for range reduction as described in the article *Radian reduction for trigonometric functions* [PH]_. The design of the algorithm is further detailed in [NG]_. As the description in the article is quite extensive it will only be outlined here.
+
+The external range reduction ``__rem_pio2`` will split the angle :math:`x` into an array :math:`x[0]+x[1]+x[2]` where each :math:`x[i]` item contains 24 bits of the original angle, and it will set the unbiased exponent of :math:`x` in :math:`e0`.
+
+The internal range reduction will compute the integer and fractional parts of the angle :math:`q = x/(\frac{\pi}{2}) = x\cdot(\frac{2}{\pi})`. The constant :math:`\frac{2}{\pi}` is stored in high precision in an array containing 24 bit chunks of the constant.
+
+The method is to compute the integer (mod 8) and fraction parts of :math:`x\cdot(\frac{2}{\pi})` without doing the full multiplication. In general the part of the product that are known to be a huge integer (more accurately the integer part that is 0 mod 8) are skipped. Thus the number of operations are independent of the exponent of the input.
+
+.. [PH] *Radian reduction for trigonometric functions* by Mary H. Payne and Robert N. Hanek (https://dl.acm.org/doi/pdf/10.1145/1057600.1057602).
+.. [NG] *ARGUMENT REDUCTION FOR HUGE ARGUMENTS: Good to the Last Bit* by K.C. NG and the members of the FP group of SunPro (https://www.csee.umbc.edu/~phatak/645/supl/Ng-ArgReduction.pdf)
+
+Requirements
+^^^^^^^^^^^^
+
+Internal functions do not directly implement requirements.
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/math.h
+* libm/mathd/internal/trigd.h
+* libm/mathd/internal/trigd.c
+* libm/mathf/internal/trigf.h
+* libm/mathf/internal/trigf.c
+
+References
+^^^^^^^^^^
+
+* :ref:`__lgamma <internal_gamma>`
+* :ref:`cos`
+* :ref:`fabs`
+* :ref:`floor`
+* :ref:`scalbn`
+* :ref:`sin`
+* :ref:`tan`

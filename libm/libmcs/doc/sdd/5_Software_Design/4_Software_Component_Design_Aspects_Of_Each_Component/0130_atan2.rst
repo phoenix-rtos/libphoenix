@@ -1,0 +1,139 @@
+atan2
+~~~~~
+
+.. c:autodoc:: mathd/atan2d.c
+
+Special cases
+^^^^^^^^^^^^^
+
++------------------------+------------------------------+--------------------------+
+| x                      | y                            | Result                   |
++========================+==============================+==========================+
+| :math:`<0`             | :math:`-0`                   | :math:`-\pi`             |
++------------------------+------------------------------+--------------------------+
+| :math:`<0`             | :math:`+0`                   | :math:`+\pi`             |
++------------------------+------------------------------+--------------------------+
+| :math:`-0`             | :math:`-0`                   | :math:`-\pi`             |
++------------------------+------------------------------+--------------------------+
+| :math:`-0`             | :math:`+0`                   | :math:`+\pi`             |
++------------------------+------------------------------+--------------------------+
+| :math:`±0`             | :math:`<0`                   | :math:`-\frac{\pi}{2}`   |
++------------------------+------------------------------+--------------------------+
+| :math:`±0`             | :math:`>0`                   | :math:`+\frac{\pi}{2}`   |
++------------------------+------------------------------+--------------------------+
+| :math:`+0`             | :math:`-0`                   | :math:`-0`               |
++------------------------+------------------------------+--------------------------+
+| :math:`+0`             | :math:`+0`                   | :math:`+0`               |
++------------------------+------------------------------+--------------------------+
+| :math:`>0`             | :math:`-0`                   | :math:`-0`               |
++------------------------+------------------------------+--------------------------+
+| :math:`>0`             | :math:`+0`                   | :math:`+0`               |
++------------------------+------------------------------+--------------------------+
+| :math:`-Inf`           | :math:`<0 \wedge \neq -Inf`  | :math:`-\pi`             |
++------------------------+------------------------------+--------------------------+
+| :math:`-Inf`           | :math:`>0 \wedge \neq +Inf`  | :math:`+\pi`             |
++------------------------+------------------------------+--------------------------+
+| :math:`+Inf`           | :math:`<0 \wedge \neq -Inf`  | :math:`-0`               |
++------------------------+------------------------------+--------------------------+
+| :math:`+Inf`           | :math:`>0 \wedge \neq +Inf`  | :math:`+0`               |
++------------------------+------------------------------+--------------------------+
+| :math:`\neq ±Inf`      | :math:`-Inf`                 | :math:`-\frac{\pi}{2}`   |
++------------------------+------------------------------+--------------------------+
+| :math:`\neq ±Inf`      | :math:`+Inf`                 | :math:`+\frac{\pi}{2}`   |
++------------------------+------------------------------+--------------------------+
+| :math:`-Inf`           | :math:`-Inf`                 | :math:`-\frac{3 \pi}{4}` |
++------------------------+------------------------------+--------------------------+
+| :math:`-Inf`           | :math:`+Inf`                 | :math:`+\frac{3 \pi}{4}` |
++------------------------+------------------------------+--------------------------+
+| :math:`+Inf`           | :math:`-Inf`                 | :math:`-\frac{\pi}{4}`   |
++------------------------+------------------------------+--------------------------+
+| :math:`+Inf`           | :math:`+Inf`                 | :math:`+\frac{\pi}{4}`   |
++------------------------+------------------------------+--------------------------+
+| :math:`NaN`            | :math:`\in \mathbb{F}`       | :math:`qNaN`             |
++------------------------+------------------------------+--------------------------+
+| :math:`\in \mathbb{F}` | :math:`NaN`                  | :math:`qNaN`             |
++------------------------+------------------------------+--------------------------+
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+The approach is to first work on special values and then use :ref:`atan` for the calculation.
+
+Use the following constants as calculation/return values:
+
+* :math:`\pi \approx PI + PI_{lo}`
+* :math:`PI =` ``0x400921FB54442D18 (0x40490FDB)``
+* :math:`PI_{lo} =` ``0x3CA1A62633145C07 (0xB3BBBD2E)``
+* :math:`\frac{\pi}{2} \approx PIo2 =` ``0x3FF921FB54442D18 (0x3FC90FDB)``
+* :math:`\frac{\pi}{4} \approx PIo4 =` ``0x3FE921FB54442D18 (0x3F490FDB)``
+
+#. For :math:`x` or :math:`y` is ``NaN``, return ``qNaN``.
+#. For :math:`x==1.0`, return :ref:`atan`:math:`(\frac{y}{x})`.
+#. Create :math:`m` to contain the sign bits of both input values for later use: :math:`m = 2 \cdot sign_x + sign_y`. :math:`m` can have values from :math:`0` to :math:`3`.
+#. For :math:`y` is zero:
+
+   #. For :math:`m<=1`, return :math:`y`.
+   #. For :math:`m==2`, return :math:`PI`.
+   #. For :math:`m==3` (which is the only remaining option), return :math:`-PI`.
+
+#. For :math:`x` is zero, return :math:`PIo2` with sign of :math:`y`.
+#. For :math:`x` is infinite:
+
+   #. For :math:`y` is infinite:
+
+      #. For :math:`m==0`, return :math:`PIo4`.
+      #. For :math:`m==1`, return :math:`-PIo4`.
+      #. For :math:`m==2`, return :math:`3 \cdot PIo4`.
+      #. For :math:`m==3`, return :math:`-3 \cdot PIo4`.
+
+   #. For :math:`m==0`, return :math:`+0`.
+   #. For :math:`m==1`, return :math:`-0`.
+   #. For :math:`m==2`, return :math:`PI`.
+   #. For :math:`m==3`, return :math:`-PI`.
+
+#. For :math:`y` is infinite, return :math:`PIo2` with sign of :math:`y`.
+#. For :math:`|\frac{y}{x}|>2^{60}` (float: :math:`|\frac{y}{x}|>2^{26}`), create :math:`z = PIo2 + 0.5 \cdot PI_{lo}` and mask off all but the last bit of :math:`m`. Else:
+
+   #. For :math:`\frac{|y|}{x}<-2^{-60}` (float: :math:`\frac{|y|}{x}<-2^{-26}`), create :math:`z = 0` [#]_.
+   #. Else create :math:`z = tan^{-1}|\frac{y}{x}|`, using the procedures :ref:`atan` and :ref:`fabs`.
+
+#. For :math:`m==0`, return :math:`z`.
+#. For :math:`m==1`, return :math:`-z`.
+#. For :math:`m==2`, return :math:`PI - (z - PI_{lo})`.
+#. For :math:`m==3`, return :math:`(z - PI_{lo}) - PI`.
+
+.. [#] This is an optimization which omits the call to :ref:`atan` and :ref:`fabs` as the result is so much smaller than :math:`PI` that the result has no significance to the final result (as :math:`m` can only be :math:`2` or :math:`3` for negative :math:`x`).
+
+Requirements
+^^^^^^^^^^^^
+
+* REQ-ML-0650
+* REQ-ML-0652
+* REQ-ML-0660
+* REQ-ML-0661
+* REQ-ML-0662
+* REQ-ML-0663
+* REQ-ML-0670
+* REQ-ML-0680
+* REQ-ML-0681
+* REQ-ML-0682
+* REQ-ML-0683
+* REQ-ML-0684
+* REQ-ML-0685
+* REQ-ML-0686
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/math.h
+* libm/mathd/atan2d.c
+* libm/mathf/atan2f.c
+
+References
+^^^^^^^^^^
+
+* :ref:`atan`
+* :ref:`carg`
+* :ref:`catan`
+* :ref:`clog`
+* :ref:`fabs`

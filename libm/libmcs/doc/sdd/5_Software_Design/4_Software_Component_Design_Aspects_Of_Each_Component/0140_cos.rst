@@ -1,0 +1,85 @@
+cos
+~~~
+
+.. c:autodoc:: mathd/cosd.c
+
+Special cases
+^^^^^^^^^^^^^
+
++--------------------------+--------------------------+
+| x                        | Result                   |
++==========================+==========================+
+| :math:`±0`               | :math:`1`                |
++--------------------------+--------------------------+
+| :math:`±Inf`             | :math:`qNaN`             |
++--------------------------+--------------------------+
+| :math:`NaN`              | :math:`qNaN`             |
++--------------------------+--------------------------+
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+The ``cos`` functionality is highly similar to the :ref:`sin` function, therefore both of them use the same :ref:`internal_trig`.
+
+The approach is to first work on special values, reduce the range of the input value to :math:`\left[-\frac{\pi}{4},\frac{\pi}{4}\right]` and then use :ref:`__cos <internal_trig>` and :ref:`__sin <internal_trig>` for the actual calculation.
+
+The input value :math:`x` is interpreted in radians.
+
+#. For :math:`x` is :math:`NaN` or infinite, return :math:`qNaN`.
+#. If the input argument is already within the range :math:`\left[-\frac{\pi}{4},\frac{\pi}{4}\right]`:
+
+   #. If the input argument is smaller than :math:`2^{-27}` (float: :math:`2^{-12}`), return :math:`1`.
+   #. Otherwise use :ref:`__cos <internal_trig>`.
+
+#. The input value :math:`x` is reduced to the range :math:`\left[-\frac{\pi}{4},\frac{\pi}{4}\right]` by using the function :ref:`__rem_pio2 <internal_trig>`.
+#. The return value is computed according to the last two bits of the return value :math:`n` of :ref:`__rem_pio2 <internal_trig>` (count :math:`n` of reminded :math:`\frac{\pi}{2}`):
+
++-----------------------------------------+-----------------------------------------+
+| last two bits of :math:`n`              | Return                                  |
++=========================================+=========================================+
+| ``00``                                  | :ref:`__cos <internal_trig>`            |
++-----------------------------------------+-----------------------------------------+
+| ``01``                                  | :math:`-` :ref:`__sin <internal_trig>`  |
++-----------------------------------------+-----------------------------------------+
+| ``10``                                  | :math:`-` :ref:`__cos <internal_trig>`  |
++-----------------------------------------+-----------------------------------------+
+| ``11``                                  | :ref:`__sin <internal_trig>`            |
++-----------------------------------------+-----------------------------------------+
+
+Requirements
+^^^^^^^^^^^^
+
+* REQ-ML-0300
+* REQ-ML-0310
+* REQ-ML-0320
+* REQ-ML-0330
+
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/math.h
+* libm/mathd/cosd.c
+* libm/mathf/cosf.c
+
+References
+^^^^^^^^^^
+
+* :ref:`__cos <internal_trig>`
+* :ref:`__rem_pio2 <internal_trig>`
+* :ref:`__sin <internal_trig>`
+* :ref:`acos`
+* :ref:`ccos`
+* :ref:`ccosh`
+* :ref:`cexp`
+* :ref:`cpow`
+* :ref:`csinh`
+* :ref:`ctan`
+* :ref:`ctanh`
+* :ref:`j0`
+* :ref:`j1`
+* :ref:`jn`
+* :ref:`sin`
+* :ref:`y0`
+* :ref:`y1`
+* :ref:`yn`

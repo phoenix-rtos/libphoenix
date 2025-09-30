@@ -1,0 +1,26 @@
+nan
+~~~
+
+.. c:autodoc:: mathd/nand.c
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+The approach is to return ``0x7FF80000000D067D`` as ``double`` (float: ``0x7FCF067D``). This is a quiet ``NaN`` with the fixed payload ``D067D`` (float: ``F067D``).
+
+Requirements
+^^^^^^^^^^^^
+
+* REQ-ML-4400
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/math.h
+* libm/mathd/nand.c
+* libm/mathf/nanf.c
+
+References
+^^^^^^^^^^
+
+* NAN in :numref:`Tbl. %s <List of math constants>`

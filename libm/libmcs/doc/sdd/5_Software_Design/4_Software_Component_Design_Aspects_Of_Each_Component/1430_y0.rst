@@ -1,0 +1,60 @@
+y0
+~~~
+
+.. c:autodoc:: mathd/y0d.c
+
+Special cases
+^^^^^^^^^^^^^
+
++--------------------------------------+--------------------------------------+
+| x                                    | Result                               |
++======================================+======================================+
+| :math:`-Inf`                         | :math:`qNaN`                         |
++--------------------------------------+--------------------------------------+
+| :math:`<0`                           | :math:`qNaN`                         |
++--------------------------------------+--------------------------------------+
+| :math:`±0`                           | :math:`-Inf`                         |
++--------------------------------------+--------------------------------------+
+| :math:`+Inf`                         | :math:`+0`                           |
++--------------------------------------+--------------------------------------+
+| :math:`NaN`                          | :math:`qNaN`                         |
++--------------------------------------+--------------------------------------+
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+#. Check for special cases and handle them.
+#. For small :math:`x` (:math:`x < 2`):
+
+   #. Since :math:`y0(x) = \frac{2}{\pi} \cdot \Big(j0(x) \cdot \Big(ln\Big(\frac{x}{2}\Big) + Euler\Big) + \frac{x^2}{4} - \cdots\Big)` therefore :math:`y0(x) - \frac{2}{\pi} \cdot j0(x) \cdot ln(x)` is an even function.
+   #. Use :math:`y0(x) = \frac{U(z)}{V(z)} + \frac{2}{\pi} \cdot j0(x) \cdot ln(x) \wedge z = x^2`, and use approximations for :math:`U` and :math:`V`. (For tiny :math:`x` this can be further simplified to :math:`U/V = u0 \wedge j0(x) \approx 1`)
+
+#. For larger :math:`x` use :math:`y0(x) = \sqrt{\frac{2}{\pi x}} \cdot (p0(x) \cdot cos(x0) + q0(x) \cdot sin(x0))`, where :math:`x0 = x - \frac{\pi}{4}`, with :math:`p0` and :math:`q0`. Use asymptotic expansions for :math:`p0` and :math:`q0`.
+#. Make use of the existing trigonometric procedures :ref:`sin` and :ref:`cos` as well as :ref:`sqrt`, but use :math:`cos(x0) = cos(x)cos(\frac{\pi}{4}) + sin(x)sin(\frac{\pi}{4}) = \frac{1}{\sqrt{2}} \cdot (cos(x) + sin(x))` and :math:`sin(x0) = sin(x)cos(\frac{\pi}{4}) - cos(x)sin(\frac{\pi}{4}) = \frac{1}{\sqrt{2}} \cdot (sin(x) - cos(x))` to calculate their values for :math:`x0`. To avoid cancellation, use :math:`sin(x) \pm cos(x) = -\frac{cos(2x)}{(sin(x) \mp cos(x)}` to compute the worse one.
+
+Requirements
+^^^^^^^^^^^^
+
+* REQ-ML-8600
+* REQ-ML-8601
+* REQ-ML-8605
+* REQ-ML-8610
+* REQ-ML-8620
+* REQ-ML-8621
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/math.h
+* libm/mathd/internal/besseld.h
+* libm/mathd/y0d.c
+
+References
+^^^^^^^^^^
+
+* :ref:`cos`
+* :ref:`j0`
+* :ref:`log`
+* :ref:`sin`
+* :ref:`sqrt`
+* :ref:`yn`

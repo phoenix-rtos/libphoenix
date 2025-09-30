@@ -1,0 +1,61 @@
+y1
+~~~
+
+.. c:autodoc:: mathd/y1d.c
+
+Special cases
+^^^^^^^^^^^^^
+
++--------------------------------------+--------------------------------------+
+| x                                    | Result                               |
++======================================+======================================+
+| :math:`-Inf`                         | :math:`qNaN`                         |
++--------------------------------------+--------------------------------------+
+| :math:`<0`                           | :math:`qNaN`                         |
++--------------------------------------+--------------------------------------+
+| :math:`±0`                           | :math:`-Inf`                         |
++--------------------------------------+--------------------------------------+
+| :math:`+Inf`                         | :math:`+0`                           |
++--------------------------------------+--------------------------------------+
+| :math:`NaN`                          | :math:`qNaN`                         |
++--------------------------------------+--------------------------------------+
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+#. Check for special cases and handle them.
+#. If :math:`x` is negative return :math:`NaN`.
+#. For small :math:`x` (:math:`x < 2`):
+
+   #. Since :math:`y1(x) = \frac{2}{\pi} \cdot \Big(j1(x) \cdot \Big(ln\Big(\frac{x}{2}\Big) + Euler\Big) - \frac{1}{x} - \frac{x}{2} + \frac{5x^3}{64} - \cdots\Big)` therefore :math:`y1(x) - \frac{2}{\pi} \cdot j1(x) \cdot ln(x) - \frac{1}{x}` is an odd function.
+   #. Use :math:`y1(x) = x\frac{U(z)}{V(z)} + \frac{2}{\pi} \cdot \Big(j1(x) \cdot ln(x) - \frac{1}{x}\Big) \wedge z = x^2`, and use approximations for :math:`U` and :math:`V`. (For tiny :math:`x` this can be further simplified to :math:`y1(x) = -\frac{2}{\pi x}`)
+
+#. For larger :math:`x` use :math:`y1(x) = \sqrt{\frac{2}{\pi x}} \cdot (p1(x) \cdot sin(x1) + q1(x) \cdot cos(x1))`, where :math:`x1 = x - \frac{3\pi}{4}`, with :math:`p1` and :math:`q1`. Use asymptotic expansions for :math:`p1` and :math:`q1`.
+#. Make use of the existing trigonometric procedures :ref:`sin` and :ref:`cos` as well as :ref:`sqrt`, but use :math:`cos(x1) = cos(x)cos(\frac{3\pi}{4}) + sin(x)sin(\frac{3\pi}{4}) = \frac{1}{\sqrt{2}} \cdot (sin(x) - cos(x))` and :math:`sin(x1) = sin(x)cos(\frac{3\pi}{4}) - cos(x)sin(\frac{3\pi}{4}) = -\frac{1}{\sqrt{2}} \cdot (sin(x) + cos(x))` to calculate their values for :math:`x1`. To avoid cancellation, use :math:`sin(x) \pm cos(x) = -\frac{cos(2x)}{(sin(x) \mp cos(x)}` to compute the worse one.
+
+Requirements
+^^^^^^^^^^^^
+
+* REQ-ML-8630
+* REQ-ML-8631
+* REQ-ML-8635
+* REQ-ML-8640
+* REQ-ML-8650
+* REQ-ML-8651
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/math.h
+* libm/mathd/internal/besseld.h
+* libm/mathd/y1d.c
+
+References
+^^^^^^^^^^
+
+* :ref:`cos`
+* :ref:`j1`
+* :ref:`log`
+* :ref:`sin`
+* :ref:`sqrt`
+* :ref:`yn`

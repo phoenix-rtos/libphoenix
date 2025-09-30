@@ -1,0 +1,49 @@
+jn
+~~~
+
+.. c:autodoc:: mathd/jnd.c
+
+Special cases
+^^^^^^^^^^^^^
+
++--------------------------------------+--------------------------------------+--------------------------------------+
+| n                                    | x                                    | Result                               |
++======================================+======================================+======================================+
+| :math:`\in \mathbb{I}`               | :math:`±Inf`                         | :math:`+0`                           |
++--------------------------------------+--------------------------------------+--------------------------------------+
+| :math:`\in \mathbb{I}`               | :math:`NaN`                          | :math:`qNaN`                         |
++--------------------------------------+--------------------------------------+--------------------------------------+
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+#. Check for special cases and handle them.
+#. For :math:`n` is zero or one use :ref:`j0` and :ref:`j1`.
+#. For :math:`n < x` use forward recursion starting from the values of :math:`j0(x)` and  :math:`j1(x)`.
+#. For :math:`n > x` use a continued fraction approximation to calculate :math:`\frac{j(n,x)}{j(n-1,x)}` and then use backward recursion starting from a supposed value for :math:`j(n,x)`. The resulting value of :math:`j(0,x)` is compared with the actual value to correct the supposed value of :math:`j(n,x)`.
+
+Requirements
+^^^^^^^^^^^^
+
+* REQ-ML-8560
+* REQ-ML-8570
+* REQ-ML-8580
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/math.h
+* libm/mathd/internal/besseld.h
+* libm/mathd/jnd.c
+
+References
+^^^^^^^^^^
+
+* :ref:`cos`
+* :ref:`fabs`
+* :ref:`j0`
+* :ref:`j1`
+* :ref:`log`
+* :ref:`sin`
+* :ref:`sqrt`
+* :ref:`yn`

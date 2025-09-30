@@ -1,0 +1,51 @@
+erfc
+~~~~
+
+.. c:autodoc:: mathd/erfcd.c
+
+Special cases
+^^^^^^^^^^^^^
+
++--------------------------------------+--------------------------------------+
+| x                                    | Result                               |
++======================================+======================================+
+| :math:`±0`                           | :math:`+1`                           |
++--------------------------------------+--------------------------------------+
+| :math:`-Inf`                         | :math:`+2`                           |
++--------------------------------------+--------------------------------------+
+| :math:`+Inf`                         | :math:`+0`                           |
++--------------------------------------+--------------------------------------+
+| :math:`NaN`                          | :math:`qNaN`                         |
++--------------------------------------+--------------------------------------+
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+Implement based on a polynomial approximation.
+
+.. Here there be dragons. (TODO)
+
+Requirements
+^^^^^^^^^^^^
+
+* REQ-ML-3700
+* REQ-ML-3710
+* REQ-ML-3720
+* REQ-ML-3730
+* REQ-ML-3740
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/math.h
+* libm/mathd/erfcd.c
+* libm/mathf/erfcf.c
+* libm/mathd/internal/errorfunctiond.h
+* libm/mathf/internal/errorfunctionf.h
+
+References
+^^^^^^^^^^
+
+* :ref:`erf`
+* :ref:`exp`
+* :ref:`fabs`

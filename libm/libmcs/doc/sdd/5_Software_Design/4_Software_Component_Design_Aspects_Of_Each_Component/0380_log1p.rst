@@ -1,0 +1,53 @@
+log1p
+~~~~~
+
+.. c:autodoc:: mathd/log1pd.c
+
+Special cases
+^^^^^^^^^^^^^
+
++--------------------------+--------------------------+
+| x                        | Result                   |
++==========================+==========================+
+| :math:`<-1`              | :math:`qNaN`             |
++--------------------------+--------------------------+
+| :math:`-1`               | :math:`-Inf`             |
++--------------------------+--------------------------+
+| :math:`±0`               | :math:`x`                |
++--------------------------+--------------------------+
+| :math:`+Inf`             | :math:`+Inf`             |
++--------------------------+--------------------------+
+| :math:`NaN`              | :math:`qNaN`             |
++--------------------------+--------------------------+
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+Implement similarly to :ref:`log10` using :ref:`__log1pmf <internal_log>`.
+
+.. Here there be dragons. (TODO)
+
+Requirements
+^^^^^^^^^^^^
+
+* REQ-ML-3400
+* REQ-ML-3410
+* REQ-ML-3420
+* REQ-ML-3430
+* REQ-ML-3440
+* REQ-ML-3450
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/math.h
+* libm/mathd/log1pd.c
+* libm/mathf/log1pf.c
+
+References
+^^^^^^^^^^
+
+* :ref:`__log1pmf <internal_log>`
+* :ref:`acosh`
+* :ref:`asinh`
+* :ref:`atanh`

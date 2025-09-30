@@ -1,0 +1,37 @@
+ccos
+~~~~
+
+.. c:autodoc:: complexd/ccosd.c
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+Implement based on :ref:`cos` and :ref:`sin`.
+
+.. Here there be dragons. (TODO)
+
+Requirements
+^^^^^^^^^^^^
+
+* REQ-ML-6300
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/complex.h
+* libm/complexd/ccosd.c
+* libm/complexf/ccosf.c
+
+References
+^^^^^^^^^^
+
+* :numref:`Tbl. %s <List of math constants>`
+* :ref:`cimag`
+* :ref:`CMPLX`
+* :ref:`cos`
+* :ref:`cosh`
+* :ref:`creal`
+* :ref:`exp`
+* :ref:`fabs`
+* :ref:`sin`
+* :ref:`sinh`

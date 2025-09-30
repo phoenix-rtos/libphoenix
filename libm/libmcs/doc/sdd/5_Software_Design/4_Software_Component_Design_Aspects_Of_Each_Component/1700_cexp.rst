@@ -1,0 +1,33 @@
+cexp
+~~~~
+
+.. c:autodoc:: complexd/cexpd.c
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+Implement based on :ref:`cos`, :ref:`sin`, and :ref:`exp`.
+
+.. Here there be dragons. (TODO)
+
+Requirements
+^^^^^^^^^^^^
+
+* REQ-ML-7200
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/complex.h
+* libm/complexd/cexpd.c
+* libm/complexf/cexpf.c
+
+References
+^^^^^^^^^^
+
+* :ref:`cimag`
+* :ref:`CMPLX`
+* :ref:`cos`
+* :ref:`creal`
+* :ref:`exp`
+* :ref:`sin`

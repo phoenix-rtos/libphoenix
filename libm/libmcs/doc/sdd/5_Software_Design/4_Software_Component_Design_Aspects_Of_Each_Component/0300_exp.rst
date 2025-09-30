@@ -1,0 +1,100 @@
+exp
+~~~
+
+.. c:autodoc:: mathd/expd.c
+
+Special cases
+^^^^^^^^^^^^^
+
++--------------------------+--------------------------+
+| x                        | Result                   |
++==========================+==========================+
+| :math:`±0`               | :math:`1`                |
++--------------------------+--------------------------+
+| :math:`-Inf`             | :math:`+0`               |
++--------------------------+--------------------------+
+| :math:`+Inf`             | :math:`+Inf`             |
++--------------------------+--------------------------+
+| :math:`NaN`              | :math:`qNaN`             |
++--------------------------+--------------------------+
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+The approach is to first work on special values and then use polynomial approximation for the calculation.
+
+Use the following constants as calculation/return values:
+
+* :math:`P1 =` ``0x3FC555555555553E (0x3E2AAAAB)``
+* :math:`P2 =` ``0xBF66C16C16BEBD93 (0xBB360B61)``
+* :math:`P3 =` ``0x3F11566AAF25DE2C (0x388AB355)``
+* :math:`P4 =` ``0xBEBBBD41C5D26BF1 (0xB5DDEA0E)``
+* :math:`P5 =` ``0x3E66376972BEA4D0 (0x3331BB4C)``
+
+#. For :math:`x` is :math:`NaN`, return :math:`qNaN`. [#]_
+#. For :math:`x` is :math:`+Inf`, return :math:`x`.
+#. For :math:`x` is :math:`-Inf`, return :math:`+0`.
+#. If :math:`e^x` produces an overflow, return positive infinity [#]_, with ``overflow`` exception.
+#. If :math:`e^x` produces an underflow, return :math:`0` [#]_.
+#. For :math:`|x| < 2^{-28}`, return :math:`1`. [#]_
+#. For :math:`|x| > 0.5 \cdot ln(2)`, an argument reduction is necessary. Given :math:`x` find :math:`r` and integer :math:`k` such that the formula
+
+   .. math::
+      :label: formula_exp_1
+
+      x = k \cdot ln(2) + r \wedge |r| <= 0.5 \cdot ln(2)
+
+   holds true. To increase accuracy save :math:`r` using two double precision floating point values.
+#. If no argument reduction was necessary in step 7, :math:`r` equals :math:`x`.
+#. Calculate :math:`e^r` with the following formulae using Horner's method:
+
+   .. math::
+      :label: formula_exp_2
+
+      c = r - P1 \cdot r^2 - P2 \cdot r^4 - P3 \cdot r^6 - P4 \cdot r^8 - P5 \cdot r^{10} \\
+      e^r = 1 - \frac{r \cdot c}{c - 2} - r
+
+#. If no argument reduction was necessary in step 7, return :math:`e^r`.
+#. Use the formula
+
+   .. math::
+      :label: formula_exp_3
+
+      e^x = 2^k \cdot e^r
+
+   to scale back from :math:`r` to :math:`x`, and return the calculated value for :math:`e^x`.
+
+.. [#] For optimization the steps 1 through 5 can be combined in a single if-statement using :math:`|x| >=` the overflow threshold, therefore making the execution time of non-special cases shorter.
+.. [#] This is the case when :math:`x` is :math:`>` ``0x40862E42FEFA39EF`` (:math:`7.09782712893383973096 \cdot 10^2`).
+.. [#] This is the case when :math:`x` is :math:`<` ``0xC0874910D52D3051`` (:math:`-7.45133219101941108420 \cdot 10^2`).
+.. [#] This is faster than the calculation and the result would be indistinguishable from :math:`1` using double precision.
+
+Requirements
+^^^^^^^^^^^^
+
+* REQ-ML-0800
+* REQ-ML-0831
+* REQ-ML-0832
+* REQ-ML-0833
+* REQ-ML-0834
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/math.h
+* libm/mathd/expd.c
+* libm/mathf/expf.c
+
+References
+^^^^^^^^^^
+
+* :ref:`__ccoshsinh <internal_ctrig>`
+* :ref:`ccos`
+* :ref:`cexp`
+* :ref:`cosh`
+* :ref:`cpow`
+* :ref:`csin`
+* :ref:`erf`
+* :ref:`erfc`
+* :ref:`sinh`
+* :ref:`tgamma`

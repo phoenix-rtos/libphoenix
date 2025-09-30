@@ -1,0 +1,138 @@
+log
+~~~
+
+.. c:autodoc:: mathd/logd.c
+
+Special cases
+^^^^^^^^^^^^^
+
++--------------------------+--------------------------+
+| x                        | Result                   |
++==========================+==========================+
+| :math:`<0`               | :math:`qNaN`             |
++--------------------------+--------------------------+
+| :math:`±0`               | :math:`-Inf`             |
++--------------------------+--------------------------+
+| :math:`1`                | :math:`+0`               |
++--------------------------+--------------------------+
+| :math:`+Inf`             | :math:`+Inf`             |
++--------------------------+--------------------------+
+| :math:`NaN`              | :math:`qNaN`             |
++--------------------------+--------------------------+
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+The approach is to first work on special values and then use polynomial approximation for the calculation.
+
+Use the following constants as calculation/return values:
+
+* :math:`L1 =` ``0x3FE5555555555593 (0x3E2AAAAB)``
+* :math:`L2 =` ``0x3FD999999997FA04 (0x3ECCCCCD)``
+* :math:`L3 =` ``0x3FD2492494229359 (0x3E924925)``
+* :math:`L4 =` ``0x3FCC71C51D8E78AF (0x3E638E29)``
+* :math:`L5 =` ``0x3FC7466496CB03DE (0x3E3A3325)``
+* :math:`L6 =` ``0x3FC39A09D078C69F (0x3E1CD04F)``
+* :math:`L7 =` ``0x3FC2F112DF3E5244 (0x3E178897)``
+* :math:`ln(2) \approx Ln2_{hi} + Ln2_{lo}`
+* :math:`Ln2_{hi} =` ``0x3FE62E42FEE00000 (0x3F317180)``
+* :math:`Ln2_{lo} =` ``0x3DEA39EF35793C76 (0x3717F7D1)``
+
+#. For :math:`x` is :math:`NaN` or positive infinity, return :math:`x+x`.
+#. For :math:`x` is a zero, return negative infinity.
+#. For :math:`x` is negative, return :math:`NaN`.
+#. For :math:`x` is subnormal, scale up by multiplying with :math:`2^{54}` (float: :math:`2^{25}`).
+#. Given :math:`x` find :math:`f` and integer :math:`k` such that the formulae [#]_
+
+   .. math::
+      :label: formula_log_1
+
+      x                  &= 2^k \cdot (1 + f)  \\
+      \frac{\sqrt{2}}{2} &< (1 + f) < \sqrt{2}
+
+   hold true [#]_. Decrease :math:`k` by :math:`54` (float: :math:`25`) if :math:`x` was subnormal in the previous step.
+#. Approximate :math:`\log{(1+f)}`:
+
+   #. Let :math:`s` be :math:`\frac{f}{2+f}`, based on:
+
+      .. math::
+         :label: formula_log_2
+
+         \log{(1+f)} &= \log{(1+s)} - \log{(1-s)}  \\
+                     &= 2s + s \cdot \sum\limits_{i=1}^{\infty} \bigg(\frac{2}{2i+1} \cdot s^2\bigg)  \\
+                     &= 2s + s \cdot R(z) \wedge z = 2s
+
+   #. Use the following polynomial to approximate :math:`R(z)`:
+
+      .. math::
+         :label: formula_log_3
+
+         R(z) \sim L1 \cdot s^2 + L2 \cdot s^4 + L3 \cdot s^6 + L4 \cdot s^8 + L5 \cdot s^{10} +L6 \cdot s^{12} + L7 \cdot s^{14}
+
+      The error of this approximation is smaller than or equal to :math:`2^{-58.45}`.
+   #. To ensure that the error of :math:`\log{(1+f)}` is below 1 :ref:`ULP <ABBR>` use the identity:
+
+      .. math::
+         :label: formula_log_4
+
+         2s = f - s \cdot f = f - \frac{f^2}{2} + s \cdot \frac{f^2}{2}
+
+      Therefore if :math:`f` is not too large [#]_:
+
+      .. math::
+         :label: formula_log_5
+
+         \log{(1+f)} = f - s \cdot (f - R)
+
+      Otherwise:
+
+      .. math::
+         :label: formula_log_6
+
+         \log{(1+f)} = f - \bigg(\frac{f^2}{2} - s \cdot \Big(\frac{f^2}{2} - R\Big)\bigg)
+
+#. For :math:`k` is :math:`0`, return :math:`\log{(1+f)}`.
+#. Return (split :math:`ln(2)` into :math:`Ln2_{hi}` and :math:`Ln2_{lo}` for more accuracy)
+
+   .. math::
+      :label: formula_log_7
+
+      \log{(x)}   &= k \cdot Ln2 + \log{(1+f)}  \\
+                  &= k \cdot Ln2_{hi} + (f - (s \cdot (f - R) + k \cdot Ln2_{lo}))  \\
+      \vee \qquad &= k \cdot Ln2_{hi} + \Bigg(f - \bigg(\frac{f^2}{2} - s \cdot \Big(\frac{f^2}{2} - R\Big) + k \cdot Ln2_{lo}\bigg)\Bigg)
+
+   Use the first version if formula :math:numref:`formula_log_5` was used earlier, otherwise use the second one.
+
+.. [#] This implementation of log is a variation of the algorithm proposed by W. J. Cody, JR. and W. Waite in *Software Manual for the Elementary Functions*
+.. [#] Use mantissa part of ``highword`` + ``0x95f64`` (float: integer representation + ``0x95f64 << 3``) to find :math:`k`.
+.. [#] :math:`f` is too large when ``0x6147A`` :math:`<` mantissa part of ``highword`` of :math:`x <` ``0x6B851`` (float: ``0x6147A << 3`` :math:`<` mantissa part of integer representation of :math:`x <` ``0x6B851 << 3``).
+
+Requirements
+^^^^^^^^^^^^
+
+* REQ-ML-0900
+* REQ-ML-0910
+* REQ-ML-0920
+* REQ-ML-0921
+* REQ-ML-0930
+* REQ-ML-0931
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/math.h
+* libm/mathd/logd.c
+* libm/mathf/logf.c
+
+References
+^^^^^^^^^^
+
+* :ref:`__lgamma <internal_gamma>`
+* :ref:`acosh`
+* :ref:`asinh`
+* :ref:`catan`
+* :ref:`clog`
+* :ref:`cpow`
+* :ref:`jn`
+* :ref:`y0`
+* :ref:`y1`

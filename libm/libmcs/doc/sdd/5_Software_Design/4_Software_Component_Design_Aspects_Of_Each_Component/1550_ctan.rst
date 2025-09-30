@@ -1,0 +1,36 @@
+ctan
+~~~~
+
+.. c:autodoc:: complexd/ctand.c
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+Implement based on :ref:`cos`, :ref:`sin`, :ref:`cosh`, and :ref:`sinh`.
+
+.. Here there be dragons. (TODO)
+
+Requirements
+^^^^^^^^^^^^
+
+* REQ-ML-6500
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/complex.h
+* libm/complexd/ctand.c
+* libm/complexf/ctanf.c
+
+References
+^^^^^^^^^^
+
+* :numref:`Tbl. %s <List of math constants>`
+* :ref:`cimag`
+* :ref:`CMPLX`
+* :ref:`cos`
+* :ref:`cosh`
+* :ref:`creal`
+* :ref:`fabs`
+* :ref:`sin`
+* :ref:`sinh`

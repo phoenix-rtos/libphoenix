@@ -1,0 +1,68 @@
+modf
+~~~~
+
+.. c:autodoc:: mathd/modfd.c
+
+Special cases
+^^^^^^^^^^^^^
+
++------------------------------+------------------------------+--------------------------+
+| x                            | :math:`*iptr`                | Result                   |
++==============================+==============================+==========================+
+| :math:`-Inf`                 | :math:`-Inf`                 | :math:`-0`               |
++------------------------------+------------------------------+--------------------------+
+| :math:`+Inf`                 | :math:`+Inf`                 | :math:`+0`               |
++------------------------------+------------------------------+--------------------------+
+| :math:`NaN`                  | :math:`qNaN`                 | :math:`qNaN`             |
++------------------------------+------------------------------+--------------------------+
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+The approach is to first work on special values and then use bit-fiddling tricks.
+
+All the following outputs (both return value and out-pointer) shall have the same sign as the input value.
+
+#. If the argument :math:`*iptr` is a NULL-pointer replace the pointer internally with a valid one. At the end place a NULL-pointer to the out-pointer regardless of what is otherwise stated at that branch. The return value remains unchanged.
+#. Return :math:`qNaN` to both outputs if the input value is :math:`NaN`.
+#. Return a zero if the input value is infinite, and place the infinity to the out-pointer.
+#. If the exponent is :math:`< 20`, the integral part of :math:`x` is in the double's highword:
+
+   #. If the exponent is :math:`< 0`, there is no integral part, return the input and place a zero to the out-pointer.
+   #. If the input is integral, return a zero and place the input value to the out-pointer.
+   #. Return the fractional part of the input and place the integral part to the out-pointer.
+
+#. If the exponent is :math:`> 51`, there is no fractional part, return a zero and place the input value to the out-pointer.
+#. If the input is integral, return a zero and place the input value to the out-pointer.
+#. Return the fractional part of the input and place the integral part to the out-pointer.
+
+For the float version:
+
+#. Same as the first 3 steps as the double version.
+#. If the exponent is :math:`< 23`, there may be a fractional part:
+
+   #. If the exponent is :math:`< 0`, there is no integral part, return the input and place a zero to the out-pointer.
+   #. If the input is integral, return a zero and place the input value to the out-pointer.
+   #. Return the fractional part of the input and place the integral part to the out-pointer.
+
+#. Return a zero and place the input value to the out-pointer.
+
+Requirements
+^^^^^^^^^^^^
+
+* REQ-ML-1200
+* REQ-ML-1201
+* REQ-ML-1210
+* REQ-ML-1211
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/math.h
+* libm/mathd/modfd.c
+* libm/mathf/modff.c
+
+References
+^^^^^^^^^^
+
+* :ref:`isnan`
