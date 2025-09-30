@@ -1,0 +1,47 @@
+exp2
+~~~~
+
+.. c:autodoc:: mathd/exp2d.c
+
+Special cases
+^^^^^^^^^^^^^
+
++--------------------------+--------------------------+
+| x                        | Result                   |
++==========================+==========================+
+| :math:`±0`               | :math:`1`                |
++--------------------------+--------------------------+
+| :math:`-Inf`             | :math:`+0`               |
++--------------------------+--------------------------+
+| :math:`+Inf`             | :math:`+Inf`             |
++--------------------------+--------------------------+
+| :math:`NaN`              | :math:`qNaN`             |
++--------------------------+--------------------------+
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+Implement based on :ref:`pow`.
+
+.. Here there be dragons. (TODO)
+
+Requirements
+^^^^^^^^^^^^
+
+* REQ-ML-3200
+* REQ-ML-3210
+* REQ-ML-3220
+* REQ-ML-3240
+* REQ-ML-3250
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/math.h
+* libm/mathd/exp2d.c
+* libm/mathf/exp2f.c
+
+References
+^^^^^^^^^^
+
+* :ref:`pow`

@@ -1,0 +1,145 @@
+atan
+~~~~
+
+.. c:autodoc:: mathd/atand.c
+
+Special cases
+^^^^^^^^^^^^^
+
++--------------------------+--------------------------+
+| x                        | Result                   |
++==========================+==========================+
+| :math:`±0`               | :math:`x`                |
++--------------------------+--------------------------+
+| :math:`-Inf`             | :math:`-\frac{\pi}{2}`   |
++--------------------------+--------------------------+
+| :math:`+Inf`             | :math:`+\frac{\pi}{2}`   |
++--------------------------+--------------------------+
+| :math:`NaN`              | :math:`qNaN`             |
++--------------------------+--------------------------+
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+The approach is to first work on special values and then use rational approximation for the calculation.
+
+Use the following constants as calculation/return values:
+
+* :math:`tan^{-1}(0.5) \approx atan0.5_{hi} + atan0.5_{lo}`
+* :math:`atan0.5_{hi} =` ``0x3FDDAC670561BB4F (0x3EED6338)``
+* :math:`atan0.5_{lo} =` ``0x3C7A2B7F222F65E2 (0x31AC3769)``
+* :math:`tan^{-1}(1) = \frac{\pi}{4} \approx atan1_{hi} + atan1_{lo}`
+* :math:`atan1_{hi} =` ``0x3FE921FB54442D18 (0x3F490FDA)``
+* :math:`atan1_{lo} =` ``0x3C81A62633145C07 (0x33222168)``
+* :math:`tan^{-1}(1.5) \approx atan1.5_{hi} + atan1.5_{lo}`
+* :math:`atan1.5_{hi} =` ``0x3FEF730BD281F69B (0x3F7B985E)``
+* :math:`atan1.5_{lo} =` ``0x3C7007887AF0CBBD (0x33140FB4)``
+* :math:`\lim\limits_{n \rightarrow \infty}tan^{-1}(n) = \frac{\pi}{2} \approx atanInf_{hi} + atanInf_{lo}`
+* :math:`atanInf_{hi} =` ``0x3FF921FB54442D18 (0x3FC90FDA)``
+* :math:`atanInf_{lo} =` ``0x3C91A62633145C07 (0x33A22168)``
+* :math:`A0 =` ``0x3FD555555555550D (0x3EAAAAAA)``
+* :math:`A1 =` ``0xBFC999999998EBC4 (0xBE4CCCCD)``
+* :math:`A2 =` ``0x3FC24924920083FF (0x3E124925)``
+* :math:`A3 =` ``0xBFBC71C6FE231671 (0xBDE38E38)``
+* :math:`A4 =` ``0x3FB745CDC54C206E (0x3DBA2E6E)``
+* :math:`A5 =` ``0xBFB3B0F2AF749A6D (0xBD9D8795)``
+* :math:`A6 =` ``0x3FB10D66A0D03D51 (0x3D886B35)``
+* :math:`A7 =` ``0xBFADDE2D52DEFD9A (0xBD6EF16B)``
+* :math:`A8 =` ``0x3FA97B4B24760DEB (0x3D4BDA59)``
+* :math:`A9 =` ``0xBFA2B4442C6A6C2F (0xBD15A221)``
+* :math:`A10 =` ``0x3F90AD3AE322DA11 (0x3C8569D7)``
+
+#. For :math:`x` is ``NaN``, return ``qNaN``.
+#. For :math:`|x| > 2^{66}` (float: :math:`|x| > 2^{34}`), return :math:`atanInf_{hi} + atanInf_{lo}` (which represents :math:`\frac{\pi}{2}`) with the sign of :math:`x`.
+#. For :math:`|x| < 2^{-27}`, return :math:`x`.
+#. Use the identity :math:`tan^{-1}(x) = -tan^{-1}(-x)` to reduce :math:`x` to positive.
+#. For :math:`x < \frac{7}{16}` [#]_, use the identity
+
+   .. math::
+      :label: formula_atan_1
+
+      tan^{-1}(x) &= x - \frac{x^3}{3} + \frac{x^5}{5} - \frac{x^7}{7} + ... \\
+                  &= \sum\limits_{i=0}^{\infty} \frac{(-1)^i \cdot x^{2i+1}}{2i+1}
+
+   to approximate ``atan`` rationally as [#]_:
+
+   .. math::
+      :label: formula_atan_2
+
+      atan(x) = & x - x \cdot R(x) \\
+      R(x)    = & A0 \cdot x^2 - A1 \cdot x^4 + A2 \cdot x^6 - A3 \cdot x^8 + A4 \cdot x^{10} - A5 \cdot x^{12} \\
+                &+ A6 \cdot x^{14} - A7 \cdot x^{16} + A8 \cdot x^{18} - A9 \cdot x^{20} + A10 \cdot x^{22}
+
+#. If :math:`x < \frac{11}{16}` [#]_, use the identity :math:`tan^{-1}(x) = tan^{-1}(\frac{1}{2}) + tan^{-1}(\frac{x-\frac{1}{2}}{1+\frac{x}{2}})` to modify the approximation of ``atan`` as in formula :math:numref:`formula_atan_2` to:
+
+   .. math::
+      :label: formula_atan_3
+
+      z       &= \frac{2x - 1}{2 + x} \\
+      atan(x) &= tan^{-1}\Big(\frac{1}{2}\Big) + (z - z \cdot R(z)) \\
+              &= atan0.5_{hi} - ((z \cdot R(z) - atan0.5_{lo}) - z)
+
+#. If :math:`x < \frac{19}{16}` [#]_, use the identity :math:`tan^{-1}(x) = tan^{-1}(1) + tan^{-1}(\frac{x-1}{1+x}) = \frac{\pi}{4} + tan^{-1}(\frac{x-1}{1+x})` to modify the approximation of ``atan`` to:
+
+   .. math::
+      :label: formula_atan_4
+
+      z       &= \frac{x - 1}{x + 1} \\
+      atan(x) &= \frac{\pi}{4} + (z - z \cdot R(z)) \\
+              &= atan1_{hi} - ((z \cdot R(z) - atan1_{lo}) - z)
+
+#. If :math:`x < \frac{39}{16}` [#]_, use the identity :math:`tan^{-1}(x) = tan^{-1}(\frac{3}{2}) + tan^{-1}(\frac{x-\frac{3}{2}}{1+\frac{3}{2}x})` to modify the approximation of ``atan`` to:
+
+   .. math::
+      :label: formula_atan_5
+
+      z       &= \frac{2x-3}{2+3x} \\
+      atan(x) &= tan^{-1}\Big(\frac{3}{2}\Big) + (z - z \cdot R(z)) \\
+              &= atan1.5_{hi} - ((z \cdot R(z) - atan1.5_{lo}) - z)
+
+#. Otherwise (:math:`x >= \frac{39}{16}`), use the identity :math:`tan^{-1}(x) = \lim\limits_{n \rightarrow \infty}(tan^{-1}(n)) + tan^{-1}(-\frac{1}{x}) = \frac{\pi}{2} + tan^{-1}(-\frac{1}{x})` to modify the approximation of ``atan`` to:
+
+   .. math::
+      :label: formula_atan_6
+
+      z       &= -\frac{1}{x} \\
+      atan(x) &= \frac{\pi}{2} + (z - z \cdot R(z)) \\
+              &= atanInf_{hi} - ((z \cdot R(z) - atanInf_{lo}) - z)
+
+#. Return the result of the appropriate approximation, with the sign of the original input value.
+
+.. raw:: html
+
+   <!--
+   TODO: We might need to find out why the specific values were chosen for the range reduction. The
+   k=4*x+0.25 approach seems to want to have a new range every time 4*x+0.25 reaches a new specific
+   integer (2, 3, 5, 10), could be because they are the highest integer values for which x falls
+   below 0.5, 1, 1.5 and 2.
+    -->
+
+.. [#] Test with ``highword`` :math:`<` ``0x3FDC0000``. (float: use integer representation of :math:`x >=` ``0x3EE00000``).
+.. [#] Use Horner's method for implementation.
+.. [#] Test with ``highword`` :math:`<` ``0x3FE60000``. (float: use integer representation of :math:`x >=` ``0x3F300000``).
+.. [#] Test with ``highword`` :math:`<` ``0x3FF30000``. (float: use integer representation of :math:`x >=` ``0x3F980000``).
+.. [#] Test with ``highword`` :math:`<` ``0x40038000``. (float: use integer representation of :math:`x >=` ``0x401C0000``).
+
+Requirements
+^^^^^^^^^^^^
+
+* REQ-ML-0600
+* REQ-ML-0610
+* REQ-ML-0620
+* REQ-ML-0621
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/math.h
+* libm/mathd/atand.c
+* libm/mathf/atanf.c
+
+References
+^^^^^^^^^^
+
+* :ref:`atan2`
+* :ref:`fabs`

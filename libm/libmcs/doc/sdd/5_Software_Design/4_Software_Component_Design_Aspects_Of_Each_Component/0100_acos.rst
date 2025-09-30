@@ -1,0 +1,118 @@
+acos
+~~~~
+
+.. c:autodoc:: mathd/acosd.c
+
+Special cases
+^^^^^^^^^^^^^
+
++--------------------------+--------------------------+
+| x                        | Result                   |
++==========================+==========================+
+| :math:`+1`               | :math:`+0`               |
++--------------------------+--------------------------+
+| :math:`\notin [-1, 1]`   | :math:`qNaN`             |
++--------------------------+--------------------------+
+| :math:`±Inf`             | :math:`qNaN`             |
++--------------------------+--------------------------+
+| :math:`NaN`              | :math:`qNaN`             |
++--------------------------+--------------------------+
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+The approach is to first work on special values and then use rational approximation for the calculation.
+
+The ``acos`` functionality is highly similar to the :ref:`asin` function, therefore it will be heavily referenced here even though it is not called. Assume all mentioned constants that are not expressed here, are taken from :ref:`asin`.
+
+Use the following constants as calculation/return values:
+
+* :math:`\pi \approx PI =` ``0x400921FB54442D18 (0x40490FDA)``
+
+#. For :math:`x` is ``NaN``, return ``qNaN``.
+#. For :math:`|x| > 1`, return ``qNaN``.
+#. For :math:`x` is :math:`1`, return :math:`0`.
+#. For :math:`x` is :math:`-1`, return :math:`PI`.
+#. For :math:`|x| < 2^{-57}`, return :math:`pio2_{hi} + pio2_{lo}`.
+#. All the following return values shall have the same sign as the input value.
+#. The following identity provides the reason ``acos`` and :ref:`asin` are so closely related:
+
+   .. math::
+      :label: formula_acos_1
+
+      cos^{-1}(x)                &= \frac{\pi}{2} - sin^{-1}(x) \\
+      \wedge \qquad cos^{-1}(-x) &= \frac{\pi}{2} + sin^{-1}(x)
+
+   #. For :math:`|x| < 0.5`:
+
+      #. Using the identity shown in formula :math:numref:`formula_acos_1` and converting the approximation of :ref:`asin` shown in formula :math:numref:`formula_asin_2` to approximate ``acos`` as:
+
+      .. math::
+         :label: formula_acos_2
+
+         acos(x) = \frac{\pi}{2} - (x + x \cdot x^2 \cdot R(x^2))
+
+      #. Return [#]_ :math:`pio2_{hi} - (x - (pio2_{lo} - x \cdot R(x^2)))`.
+
+   #. For the following steps use formula :math:numref:`formula_asin_4` to reduce the range.
+   #. For :math:`x <= -0.5`:
+
+      \item With formula :math:numref:`formula_acos_1` and :math:numref:`formula_acos_2`, as well as applying the range reduction, the approximation of ``acos`` changes to:
+
+      .. math::
+         :label: formula_acos_3
+
+         acos(x) &= \pi - 2 \cdot (s + s \cdot z \cdot R(z)) \\
+                 &= PI - 2 \cdot (s+s \cdot z \cdot R(z) - pio2_{lo})
+
+      with
+
+         #. :math:`z = \frac{1-|x|}{2}`
+         #. :math:`s = \sqrt{z}`
+
+      #. Return the result of the approximation.
+
+   #. Otherwise (:math:`x >= 0.5`):
+
+      #. With formula :math:numref:`formula_acos_1` and :math:numref:`formula_acos_2`, as well as applying the range reduction, the approximation of ``acos`` changes to:
+
+      .. math::
+         :label: formula_acos_4
+
+         acos(x) &= \frac{\pi}{2} - \Big(\frac{\pi}{2} - 2 \cdot \big(s + s \cdot z \cdot R(z)\big)\Big) \\
+                 &= 2 \cdot (s + s \cdot z \cdot R(z)) \\
+                 &= 2s + 2s \cdot z \cdot R(z) \\
+                 &= (2f + 2c) + (2s \cdot z \cdot R(z)) \\
+                 &= 2 \cdot (f + (c + s \cdot z \cdot R(z)))
+
+      with
+
+         #. :math:`f =` ``highword`` of :math:`s` (float: :math:`f =` integer representation of :math:`s` with the last 12 bits masked to 0)
+         #. :math:`c = \frac{z-f^2}{s+f}`, which is the correction term for :math:`f` so that :math:`f+c \sim \sqrt{z}`
+
+      #. Return the result of the approximation.
+
+.. [#] Formula :math:numref:`formula_acos_2` with some accuracy improvements
+
+Requirements
+^^^^^^^^^^^^
+
+* REQ-ML-0450
+* REQ-ML-0460
+* REQ-ML-0470
+* REQ-ML-0480
+* REQ-ML-0490
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/math.h
+* libm/mathd/mathd/acosd.c
+* libm/mathf/mathf/acosf.c
+
+References
+^^^^^^^^^^
+
+* :ref:`asin`
+* :ref:`cos`
+* :ref:`sqrt`
