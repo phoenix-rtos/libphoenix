@@ -1,0 +1,51 @@
+fmax
+~~~~
+
+.. c:autodoc:: mathd/fmaxd.c
+
+Special cases
+^^^^^^^^^^^^^
+
++-----------------------------+-----------------------------+-----------------------------+
+| x                           | y                           | Result                      |
++=============================+=============================+=============================+
+| :math:`±0`                  | :math:`±0`                  | :math:`y`                   |
++-----------------------------+-----------------------------+-----------------------------+
+| :math:`NaN`                 | :math:`\neq NaN`            | :math:`y`                   |
++-----------------------------+-----------------------------+-----------------------------+
+| :math:`\neq NaN`            | :math:`NaN`                 | :math:`x`                   |
++-----------------------------+-----------------------------+-----------------------------+
+| :math:`sNaN`                | :math:`Any`                 | :math:`qNaN`                |
++-----------------------------+-----------------------------+-----------------------------+
+| :math:`Any`                 | :math:`sNaN`                | :math:`qNaN`                |
++-----------------------------+-----------------------------+-----------------------------+
+| :math:`NaN`                 | :math:`NaN`                 | :math:`qNaN`                |
++-----------------------------+-----------------------------+-----------------------------+
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+The approach is to first check the arguments for any :math:`NaN` values and then compare the inputs to return the maximum:
+
+#. Return :math:`NaN` if both input values are :math:`NaN`.
+#. Return the remaining value if one of the input values is :math:`NaN`.
+#. If :math:`x > y` return :math:`x`, else return :math:`y`.
+
+Requirements
+^^^^^^^^^^^^
+
+* REQ-ML-1240
+* REQ-ML-1250
+* REQ-ML-1252
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/math.h
+* libm/mathd/fmaxd.c
+* libm/mathf/fmaxf.c
+
+References
+^^^^^^^^^^
+
+* :ref:`fmin`

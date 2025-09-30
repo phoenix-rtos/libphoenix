@@ -1,0 +1,48 @@
+j0
+~~~
+
+.. c:autodoc:: mathd/j0d.c
+
+Special cases
+^^^^^^^^^^^^^
+
++--------------------------------------+--------------------------------------+
+| x                                    | Result                               |
++======================================+======================================+
+| :math:`±Inf`                         | :math:`+0`                           |
++--------------------------------------+--------------------------------------+
+| :math:`NaN`                          | :math:`qNaN`                         |
++--------------------------------------+--------------------------------------+
+
+Mathematical Approach
+^^^^^^^^^^^^^^^^^^^^^
+
+#. Check for special cases and handle them.
+#. Reduce :math:`x` to :math:`|x|` using :ref:`fabs` as :math:`j0(x) = j0(-x)`.
+#. For small :math:`x` (:math:`x < 2`) use :math:`j0(x) = 1 - \frac{x^2}{4} + \frac{x^4}{64} - \cdots`.
+#. For larger :math:`x` use :math:`j0(x) = \sqrt{\frac{2}{\pi x}} \cdot (p0(x) \cdot cos(x0) - q0(x) \cdot sin(x0))`, where :math:`x0 = x - \frac{\pi}{4}`, with :math:`p0` and :math:`q0`. Use asymptotic expansions for :math:`p0` and :math:`q0`.
+#. Make use of the existing trigonometric procedures :ref:`sin` and :ref:`cos` as well as :ref:`sqrt`, but use :math:`cos(x0) = cos(x)cos(\frac{\pi}{4}) + sin(x)sin(\frac{\pi}{4}) = \frac{1}{\sqrt{2}} \cdot (cos(x) + sin(x))` and :math:`sin(x0) = sin(x)cos(\frac{\pi}{4}) - cos(x)sin(\frac{\pi}{4}) = \frac{1}{\sqrt{2}} \cdot (sin(x) - cos(x))` to calculate their values for :math:`x0`. To avoid cancellation, use :math:`sin(x) \pm cos(x) = -\frac{cos(2x)}{(sin(x) \mp cos(x)}` to compute the worse one.
+
+Requirements
+^^^^^^^^^^^^
+
+* REQ-ML-8500
+* REQ-ML-8510
+* REQ-ML-8520
+
+Source Code Files
+^^^^^^^^^^^^^^^^^
+
+* libm/include/math.h
+* libm/mathd/internal/besseld.h
+* libm/mathd/j0d.c
+
+References
+^^^^^^^^^^
+
+* :ref:`cos`
+* :ref:`fabs`
+* :ref:`jn`
+* :ref:`sin`
+* :ref:`sqrt`
+* :ref:`y0`
