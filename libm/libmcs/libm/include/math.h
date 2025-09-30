@@ -5,6 +5,7 @@
 extern "C"{
 #endif
 
+#include "numeric_size_config.h"
 #include "internal_config.h"
 
 /*

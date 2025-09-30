@@ -10,7 +10,7 @@
  *
  * This file is part of Phoenix-RTOS.
  *
- * %LICENSE%
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <arch.h> /* Needed for __ieee754_sqrt */
@@ -90,6 +90,12 @@ double pow(double base, double exponent)
 	}
 
 	return res;
+}
+
+
+float powf(float x, float exp)
+{
+	return (float)pow((double)x, (double)exp);
 }
 
 

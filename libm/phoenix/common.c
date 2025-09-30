@@ -10,7 +10,7 @@
  *
  * This file is part of Phoenix-RTOS.
  *
- * %LICENSE%
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <stdint.h>
@@ -18,7 +18,6 @@
 #include <math.h>
 #include <float.h>
 #include "common.h"
-
 
 void normalizeSub(double *x, int *exp)
 {

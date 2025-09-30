@@ -10,7 +10,7 @@
  *
  * This file is part of Phoenix-RTOS.
  *
- * %LICENSE%
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <math.h>
@@ -64,6 +64,12 @@ double cos(double x)
 	res = res * xpow + 0x1p0;                 /* 1/0!  */
 
 	return res;
+}
+
+
+float cosf(float x)
+{
+	return (float)cos((double)x);
 }
 
 
@@ -121,6 +127,12 @@ double sin(double x)
 }
 
 
+float sinf(float x)
+{
+	return (float)sin((double)x);
+}
+
+
 double tan(double x)
 {
 	double c;
@@ -142,6 +154,12 @@ double tan(double x)
 	else {
 		return 0.0;
 	}
+}
+
+
+float tanf(float x)
+{
+	return (float)tan((double)x);
 }
 
 
@@ -179,6 +197,12 @@ double acos(double x)
 }
 
 
+float acosf(float x)
+{
+	return (float)acos((double)x);
+}
+
+
 /* Calculates value of arc sine using asin(x) = pi/2 - acos(x) relationship. */
 double asin(double x)
 {
@@ -191,6 +215,12 @@ double asin(double x)
 	}
 
 	return M_PI_2 - acos(x);
+}
+
+
+float asinf(float x)
+{
+	return (float)asin((double)x);
 }
 
 
@@ -233,6 +263,12 @@ double atan(double x)
 	}
 
 	return (res * h * (double)s);
+}
+
+
+float atanf(float x)
+{
+	return (float)atan((double)x);
 }
 
 
@@ -290,4 +326,10 @@ double atan2(double y, double x)
 	}
 
 	return 0.0;
+}
+
+
+float atan2f(float y, float x)
+{
+	return (float)atan2((double)y, (double)x);
 }
