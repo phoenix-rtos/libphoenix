@@ -450,6 +450,10 @@ size_t strftime(char *__restrict s, size_t maxsize, const char *__restrict forma
 				memcpy(&time, timeptr, sizeof(struct tm));
 				res = snprintf(s + size, maxsize - size, "%llu", mktime(&time));
 				break;
+			case 'T':
+				res = snprintf(s + size, maxsize - size, "%02u:%02u:%02u",
+						timeptr->tm_hour, timeptr->tm_min, timeptr->tm_sec);
+				break;
 			case 'w':
 				res = snprintf(s + size, maxsize - size, "%u", timeptr->tm_wday < 7 ? timeptr->tm_wday : 7);
 				break;
