@@ -118,8 +118,7 @@ extern const struct in6_addr in6addr_loopback;
 	  (a)->s6_addr32[2] == 0 && (a)->s6_addr32[3] == 0x01000000))
 
 /* Multicast address */
-#define IN6_IS_ADDR_MULTICAST(a) \
-		(((a)->s6_addr[0] == 0xff))
+#define IN6_IS_ADDR_MULTICAST(a) (((a)->s6_addr[0] == 0xff))
 
 /* Unicast link-local address */
 #define IN6_IS_ADDR_LINKLOCAL(a) \
@@ -128,6 +127,12 @@ extern const struct in6_addr in6addr_loopback;
 /* Unicast site-local address */
 #define IN6_IS_ADDR_SITELOCAL(a) \
 		(((a)->s6_addr[0] == 0xfe && (a)->s6_addr[1] == 0xc0))
+
+/* Unicast unique-local address */
+#define IN6_IS_ADDR_ULA(a) (((a)->s6_addr[0] & 0xfe) == 0xfc)
+
+/* Unicast global address */
+#define IN6_IS_ADDR_GLOBAL(a) (((a)->s6_addr[0] >= 0x20 && (a)->s6_addr[0] <= 0x3F))
 
 /* IPv4 mapped address */
 #define IN6_IS_ADDR_V4MAPPED(a) \
