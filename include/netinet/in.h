@@ -129,6 +129,10 @@ extern const struct in6_addr in6addr_loopback;
 #define IN6_IS_ADDR_SITELOCAL(a) \
 		(((a)->s6_addr[0] == 0xfe && (a)->s6_addr[1] == 0xc0))
 
+/* Unicast global address */
+#define IN6_IS_ADDR_GLOBAL(a) \
+		(((a)->s6_addr[0] >= 0x20 && (a)->s6_addr[0] <= 0x3F))
+
 /* IPv4 mapped address */
 #define IN6_IS_ADDR_V4MAPPED(a) \
 		(((a)->s6_addr32[0] == 0 && (a)->s6_addr32[1] == 0 && \
@@ -184,6 +188,5 @@ enum {
 	IPPORT_RESERVED = 0,
 	IPPORT_USERRESERVED = 4096
 };
-
 
 #endif /* _NETINET_IN_H_ */
