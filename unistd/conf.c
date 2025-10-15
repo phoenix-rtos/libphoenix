@@ -158,7 +158,7 @@ long pathconfStatic(int name)
 #endif
 			break;
 		default:
-			errno = -EINVAL;
+			errno = EINVAL;
 			break;
 	}
 	return res;
@@ -194,6 +194,9 @@ long fpathconf(int fildes, int name)
 		case _PC_NAME_MAX:
 			if (fstatvfs(fildes, &stat) == 0) {
 				res = (long)stat.f_namemax;
+			}
+			else if (errno == ENOSYS) {
+				errno = EINVAL;
 			}
 			break;
 		default:
