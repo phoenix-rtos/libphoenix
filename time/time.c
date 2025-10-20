@@ -503,7 +503,7 @@ char *strptime(const char *__restrict buf, const char *__restrict format, struct
 }
 
 
-extern int nsleep(time_t *sec, long *nsec);
+extern int nsleep(time_t *sec, long *nsec, int clockid, int flags);
 
 
 int nanosleep(const struct timespec *req, struct timespec *rem)
@@ -512,7 +512,7 @@ int nanosleep(const struct timespec *req, struct timespec *rem)
 	long nsec = req->tv_nsec;
 	int ret;
 
-	ret = nsleep(&sec, &nsec);
+	ret = nsleep(&sec, &nsec, CLOCK_MONOTONIC, 0);
 
 	if (ret == -EINTR && rem != NULL) {
 		rem->tv_sec = sec;
@@ -520,4 +520,26 @@ int nanosleep(const struct timespec *req, struct timespec *rem)
 	}
 
 	return SET_ERRNO(ret);
+}
+
+
+/* clock_nanosleep() shall return **positive** errors codes directly, without setting errno */
+int clock_nanosleep(clockid_t clock, int flags, const struct timespec *req, struct timespec *rem)
+{
+	time_t sec = req->tv_sec;
+	long nsec = req->tv_nsec;
+
+	if (clock != CLOCK_MONOTONIC) {
+		/* Only CLOCK_MONOTONIC supported for now */
+		return EINVAL;
+	}
+
+	int ret = nsleep(&sec, &nsec, clock, flags);
+
+	if ((ret == -EINTR) && (rem != NULL) && ((flags & TIMER_ABSTIME) == 0)) {
+		rem->tv_sec = sec;
+		rem->tv_nsec = nsec;
+	}
+
+	return -ret; /* ret's either zero or negative */
 }
