@@ -37,6 +37,7 @@ extern "C" {
 
 
 #include <phoenix/posix-timespec.h>
+#include <phoenix/time.h>
 
 
 struct tm {
@@ -119,6 +120,9 @@ extern char *strptime(const char *__restrict buf, const char *__restrict format,
 
 
 extern int nanosleep(const struct timespec *req, struct timespec *rem);
+
+
+extern int clock_nanosleep(clockid_t clock, int flags, const struct timespec *req, struct timespec *rem);
 
 
 #ifdef __cplusplus

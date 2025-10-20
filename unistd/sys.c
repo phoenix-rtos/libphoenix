@@ -27,6 +27,7 @@
 #include <limits.h>
 #include <stdarg.h>
 #include <pthread.h>
+#include <time.h>
 
 
 WRAP_ERRNO_DEF(int, setpgid, (pid_t pid, pid_t pgid), (pid, pgid))
@@ -298,7 +299,7 @@ int execle(const char *path, const char *arg, ...)
 }
 
 
-extern int nsleep(time_t *sec, long *nsec);
+extern int nsleep(time_t *sec, long *nsec, int clockid, int flags);
 
 
 int usleep(useconds_t usecs)
@@ -307,7 +308,7 @@ int usleep(useconds_t usecs)
 	time_t sec = usecs / (1000 * 1000);
 	long nsec = (usecs % (1000 * 1000)) * 1000;
 
-	err = nsleep(&sec, &nsec);
+	err = nsleep(&sec, &nsec, CLOCK_MONOTONIC, 0);
 
 	SET_ERRNO(err);
 
@@ -322,7 +323,7 @@ unsigned sleep(unsigned seconds)
 	long nsec = 0;
 	unsigned unslept;
 
-	err = nsleep(&sec, &nsec);
+	err = nsleep(&sec, &nsec, CLOCK_MONOTONIC, 0);
 	unslept = (err == -EINTR) ? (unsigned)sec : 0;
 
 	return unslept;
