@@ -27,8 +27,13 @@ struct icmp6_hdr {
 		uint32_t icmp6_un_data32[1]; /* type-specific field */
 		uint16_t icmp6_un_data16[2]; /* type-specific field */
 		uint8_t icmp6_un_data8[4];   /* type-specific field */
+		struct {
+			uint16_t id;  /* identifier */
+			uint16_t seq; /* sequence number */
+		} echo;
 	} icmp6_dataun;
 };
+
 
 #define icmp6_data32   icmp6_dataun.icmp6_un_data32
 #define icmp6_data16   icmp6_dataun.icmp6_un_data16
