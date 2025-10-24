@@ -1235,6 +1235,9 @@ int format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 			case 'g': {
 #ifndef IO_NO_FLOAT
 				double doubleNumber;
+				if (fmt == 'g' || fmt == 'G') {
+					flags |= FLAG_NO_TRAILING_ZEROS;
+				}
 				if ((flags & FLAG_LONG_DOUBLE) != 0) {
 					/* NOTE: support for long double is incomplete */
 					doubleNumber = (double)va_arg((args), long double);
