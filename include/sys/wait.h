@@ -30,13 +30,10 @@ enum {
 };
 
 
-extern const int _signals_phx2posix[];
-
-
-#define WTERMSIG(stat_val) (_signals_phx2posix[(stat_val >> 8) & 0x7f])
-#define WEXITSTATUS(stat_val) ((stat_val) & 0xff)
-#define WIFEXITED(stat_val) (WTERMSIG(stat_val) == 0)
-#define WIFSIGNALED(stat_val) (WTERMSIG(stat_val) != 0)
+#define WTERMSIG(stat_val)     ((stat_val >> 8) & 0x7f)
+#define WEXITSTATUS(stat_val)  ((stat_val) & 0xff)
+#define WIFEXITED(stat_val)    (WTERMSIG(stat_val) == 0)
+#define WIFSIGNALED(stat_val)  (WTERMSIG(stat_val) != 0)
 #define WIFSTOPPED(stat_val) 0
 #define WSTOPSIG(stat_val) 0
 #define WIFCONTINUED(stat_val) 0
