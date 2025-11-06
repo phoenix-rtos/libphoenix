@@ -29,9 +29,6 @@ extern "C" {
 #endif
 
 
-extern void mmdump(void);
-
-
 extern void meminfo(meminfo_t *info);
 
 
