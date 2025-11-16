@@ -1,0 +1,74 @@
+cff-version: 1.2.0
+title: LibmCS
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - name: GTD GmbH
+    address: Ravensburger Str. 32a
+    city: Markdorf
+    country: DE
+    post-code: '88677'
+    email: libmcs@gtd-gmbh.de
+    website: 'https://gtd-gmbh.de'
+  - name: ESA European Space Research and Technology Centre
+    address: Keplerlaan 1
+    post-code: '2201'
+    city: Noordwijk
+    country: NL
+    website: 'https://www.esa.int'
+  - given-names: Fabian
+    family-names: Schriever
+    email: fabian.schriever@gtd-gmbh.de
+    affiliation: GTD GmbH
+  - given-names: Christoph
+    family-names: Weiß
+    email: christoph.weiss@gtd-gmbh.de
+    affiliation: GTD GmbH
+  - given-names: Thomas
+    family-names: Wucher
+    email: thomas.wucher@gtd-gmbh.de
+    affiliation: GTD GmbH
+  - given-names: Joan
+    family-names: Roig
+    email: joan.roig@gtd-gmbh.de
+    affiliation: GTD GmbH
+  - given-names: Andoni
+    family-names: Arregui
+    email: andoni.arregui@gtd-gmbh.de
+    affiliation: GTD GmbH
+  - given-names: Andreas
+    family-names: Jung
+    email: Andreas.Jung@esa.int
+    affiliation: ESA European Space Research and Technology Centre
+identifiers:
+  - type: url
+    value: 'https://gtd-gmbh.gitlab.io/libmcs/'
+    description: LibmCS Documentation
+repository-code: 'https://gitlab.com/gtd-gmbh/libmcs'
+url: 'https://gtd-gmbh.de/libmcs/'
+abstract: >-
+  The Mathematical Library for Critical Systems (LibmCS) is
+  an extensively tested and validated mathematical library
+  (libm), which provides predictable accuracy results in all
+  domains. The available wrappers give equal results for
+  auto-coding development approaches and the qualification
+  data package (QDP) supports an automatic qualification
+  according to ECSS E-ST-40 and Q-ST-80 Category B.
+keywords:
+  - Mathematical Library
+  - POSIX
+  - IEEE-754 2019
+  - ISO C18
+  - MISRA-C 2012
+  - ECSS E-ST-40 and Q-ST-80 Category B
+  - x86-64
+  - ARM
+  - RISC-V
+  - SPARC V8
+  - Critical Systems
+  - Embedded Systems
+license: BSD-3-Clause
+version: 1.2.0
+date-released: '2022-11-18'

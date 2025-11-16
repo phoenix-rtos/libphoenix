@@ -1,0 +1,102 @@
+stages:
+    - setup
+    - check
+    - doc
+    - pdf
+    - pages
+
+variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+
+image: $CI_REGISTRY_IMAGE
+
+setup:
+    stage: setup
+    image: docker:stable
+    before_script:
+        - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+    script:
+        - docker build -t $CI_REGISTRY_IMAGE -f Dockerfile .
+        - docker push $CI_REGISTRY_IMAGE
+
+mcdc-check:
+  stage: check
+  image:
+    name: registry.gitlab.com/gtd-gmbh/mcdc-checker/mcdc-checker
+    entrypoint: [""]
+  script:
+    - echo "#define __LIBMCS_WANT_COMPLEX" > ./libm/include/config.h
+    - find -regex ".*\.[ch]" | grep -v "lint\|tgmath.h\|fenv.h" | mcdc_checker -j report.json -
+  artifacts:
+    reports:
+      codequality: report.json
+  allow_failure: true
+  needs: []
+
+code-quality:
+    stage: check
+    image:
+        name: local.gtd-gmbh.de:4567/tools/sqarg
+        entrypoint: [""]
+    script:
+        - ./sw-quality/lint.sh
+    artifacts:
+        reports:
+            codequality: sw-quality/misra-c/report.json
+        paths:
+            - sw-quality/misra-c/
+    needs: []
+
+doc:
+    stage: doc
+    script:
+        - sphinx-build -b html doc/sdd html_sdd 2>&1 | grep -v "duplicate label" | grep -v "documentation comment attached to unexpected cursor"
+        - sphinx-build -b html doc/sum html_sum 2>&1 | grep -v "duplicate label" | grep -v "documentation comment attached to unexpected cursor"
+        - sphinx-build -b latex doc/sdd latex_sdd 2>&1 | grep -v "duplicate label" | grep -v "documentation comment attached to unexpected cursor"
+        - sphinx-build -b latex doc/sum latex_sum 2>&1 | grep -v "duplicate label" | grep -v "documentation comment attached to unexpected cursor"
+        - chmod -R 777 latex_sdd
+        - chmod -R 777 latex_sum
+    artifacts:
+        paths:
+            - html_sdd/
+            - html_sum/
+            - latex_sdd/
+            - latex_sum/
+        expire_in: 30 days
+    needs: ["setup"]
+
+pdf:
+    stage: pdf
+    image: local.gtd-gmbh.de:4567/tools/doge:latest
+    dependencies:
+        - doc
+    script:
+        - cd latex_sdd
+        - make
+        - mv ./libmcs-sdd.pdf ../.
+        - cd ../latex_sum
+        - make
+        - mv ./libmcs-sum.pdf ../.
+    artifacts:
+        paths:
+            - ./*.pdf
+        expire_in: 30 days
+    needs: ["doc"]
+
+pages:
+  stage: pages
+  image:
+    name: pandoc/core:2.16.2
+    entrypoint: [""]
+  dependencies:
+      - doc
+  needs: ["doc"]
+  script:
+    - mkdir public
+    - cp doc/index.html public
+    - pandoc -s -o public/README.html --metadata title="LibmCS Readme" --metadata mainfont="Lato,proxima-nova,Helvetica Neue,Arial,sans-serif" README.md
+    - mv html_sum public/sum
+    - mv html_sdd public/sdd
+  artifacts:
+    paths:
+      - public

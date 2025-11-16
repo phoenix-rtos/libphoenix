@@ -1,0 +1,13 @@
+-rw(*ms) // Disable microsoft keywords huge, far, near etc
+-estring(9051,__asm__) // co-gcc.lnt defines various __asm__ spellings which makes misra complain
+-e830 // Disable additonal location hints for various error messages to reduce logspam
+
+// Output format
+// -------------
+// Vim Quickfix format
+//-"format= %f%(:%l%)%(:%c:%) %t %n: %m\n\n"
+
+// Single line format
+-width(0)   // don't insert line breaks (unlimited output width).
+-"format= %t %n$ %f%($%l%)%($%c$%) %m"
+-h1
