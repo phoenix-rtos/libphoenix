@@ -26,6 +26,7 @@
 #include <sys/stat.h>
 #include <sys/file.h>
 #include <posix/utils.h>
+#include <fcntl.h>
 
 
 static struct {
@@ -349,6 +350,11 @@ char *realpath(const char *path, char *resolved_path)
 
 struct dirent *readdir(DIR *s)
 {
+	if (s == NULL) {
+		errno = EBADF;
+		return NULL;
+	}
+
 	if (s->dirent == NULL) {
 		if ((s->dirent = calloc(1, sizeof(struct dirent) + NAME_MAX + 1)) == NULL)
 			return NULL;
@@ -440,8 +446,79 @@ DIR *opendir(const char *dirname)
 }
 
 
+DIR *fdopendir(int fd)
+{
+	DIR *s;
+	struct stat statbuf;
+	int fd_flags;
+
+	fd_flags = fcntl(fd, F_GETFL);
+	if (fd_flags < 0) {
+		return NULL;
+	}
+	if ((fd_flags & O_RDONLY) == 0) {
+		errno = EBADF;
+		return NULL; /* EBADF */
+	}
+
+	if (fstat(fd, &statbuf) < 0) {
+		return NULL;
+	}
+
+	msg_t msg = {
+		.type = mtGetAttr,
+		.oid = { .port = statbuf.st_dev, .id = statbuf.st_ino },
+		.i.attr.type = atType,
+	};
+
+	if ((msgSend(statbuf.st_dev, &msg) < 0) || (msg.o.err < 0)) {
+		errno = EIO;
+		return NULL; /* EIO */
+	}
+
+	if (msg.o.attr.val != otDir) {
+		errno = ENOTDIR;
+		return NULL; /* ENOTDIR */
+	}
+
+	if (fcntl(fd, F_SETFD, FD_CLOEXEC) < 0) {
+		return NULL;
+	}
+
+	s = calloc(1, sizeof(DIR));
+	if (s == NULL) {
+		errno = ENOMEM;
+		return NULL;
+	}
+	s->oid = msg.oid;
+	s->dirent = NULL;
+
+	return s;
+}
+
+
+void seekdir(DIR *dirp, long loc)
+{
+	assert(dirp != NULL);
+
+	dirp->pos = loc;
+}
+
+
+long telldir(DIR *dirp)
+{
+	if (dirp != NULL) {
+		return -EBADF;
+	}
+
+	return dirp->pos;
+}
+
+
 void rewinddir(DIR *dirp)
 {
+	assert(dirp != NULL);
+
 	dirp->pos = 0;
 }
 
@@ -449,6 +526,10 @@ void rewinddir(DIR *dirp)
 int closedir(DIR *dirp)
 {
 	int ret = 0;
+
+	if (dirp != NULL) {
+		return -EBADF;
+	}
 
 	msg_t msg = {
 		.type = mtClose,
