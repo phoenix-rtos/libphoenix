@@ -350,6 +350,11 @@ char *realpath(const char *path, char *resolved_path)
 
 struct dirent *readdir(DIR *s)
 {
+	if (s == NULL) {
+		errno = EBADF;
+		return NULL;
+	}
+
 	if (s->dirent == NULL) {
 		if ((s->dirent = calloc(1, sizeof(struct dirent) + NAME_MAX + 1)) == NULL)
 			return NULL;
@@ -494,18 +499,26 @@ DIR *fdopendir(int fd)
 
 void seekdir(DIR *dirp, long loc)
 {
+	assert(dirp != NULL);
+
 	dirp->pos = loc;
 }
 
 
 long telldir(DIR *dirp)
 {
+	if (dirp != NULL) {
+		return -EBADF;
+	}
+
 	return dirp->pos;
 }
 
 
 void rewinddir(DIR *dirp)
 {
+	assert(dirp != NULL);
+
 	dirp->pos = 0;
 }
 
@@ -513,6 +526,10 @@ void rewinddir(DIR *dirp)
 int closedir(DIR *dirp)
 {
 	int ret = 0;
+
+	if (dirp != NULL) {
+		return -EBADF;
+	}
 
 	msg_t msg = {
 		.type = mtClose,
