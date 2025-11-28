@@ -22,10 +22,12 @@ extern void _errno_init(void);
 extern void _atexit_init(void);
 extern void _init_array(void);
 extern void _pthread_init(void);
+extern void _uresource_init(void);
 
 
 void _libc_init(void)
 {
+	_uresource_init();
 	_atexit_init();
 	_errno_init();
 	_malloc_init();
