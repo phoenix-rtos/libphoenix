@@ -20,8 +20,9 @@
 #include <net/if.h>
 #include <net/route.h>
 
-#define SOCK_IOC_TYPE	'S'
+#define SOCK_IOC_TYPE 'S'
 
+/* clang-format off */
 /* Socket configuration controls. */
 #define SIOCGIFNAME			_IOWR(SOCK_IOC_TYPE, 0x10, struct ifreq)	/* get name of interface with given index */
 #define SIOCGIFCONF			_IOWR(SOCK_IOC_TYPE, 0x12, struct ifconf)   /* get iface list */
@@ -53,4 +54,6 @@
 #define SIOCADDRT			_IOW(SOCK_IOC_TYPE, 0x44, struct rtentry)	/* add routing table entry */
 #define SIOCDELRT			_IOW(SOCK_IOC_TYPE, 0x45, struct rtentry)	/* delete routing table entry */
 
-#endif // LIBPHOENIX_SYS_SOCKIOS_H
+#define SIOCETHTOOL			_IOWR(SOCK_IOC_TYPE, 0x46, struct ifreq)	/* ethtool interface */
+
+#endif /* LIBPHOENIX_SYS_SOCKIOS_H */
