@@ -49,15 +49,6 @@ extern void _errno_new(struct __errno_t *e);
 extern void _errno_remove(struct __errno_t *e);
 
 
-extern int perf_start(unsigned pid);
-
-
-extern int perf_read(void *buffer, size_t bufsz);
-
-
-extern int perf_finish(void);
-
-
 extern int gettid(void);
 
 
