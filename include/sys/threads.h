@@ -83,7 +83,7 @@ static inline int beginthread(void (*start)(void *), unsigned int priority, void
 }
 
 
-extern int threadsinfo(int n, threadinfo_t *info);
+extern int threadsinfo(int *tid, unsigned int flags, int n, threadinfo_t *info);
 
 
 extern int priority(int priority);
