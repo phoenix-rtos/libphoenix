@@ -26,9 +26,10 @@
 #define CLOCKS_PER_SEC 1000000
 
 
-#define CLOCK_MONOTONIC     0
-#define CLOCK_MONOTONIC_RAW 1
-#define CLOCK_REALTIME      2
+#define CLOCK_MONOTONIC         (0U)
+#define CLOCK_MONOTONIC_RAW     (1U)
+#define CLOCK_REALTIME          (2U)
+#define CLOCK_THREAD_CPUTIME_ID (3U)
 
 
 #ifdef __cplusplus
