@@ -74,7 +74,19 @@ static inline int beginthread(void (*start)(void *), unsigned int priority, void
 }
 
 
-extern int threadsinfo(int n, threadinfo_t *info);
+extern int sys_threadsinfo(int tid, unsigned int flags, int n, threadinfo_t *info);
+
+
+static inline int threadsinfo(int n, unsigned int flags, threadinfo_t *info)
+{
+	return sys_threadsinfo(PH_THREADINFO_THREADS_ALL, flags, n, info);
+}
+
+
+static inline int threadinfo(int tid, unsigned int flags, threadinfo_t *info)
+{
+	return sys_threadsinfo(tid, flags, 1, info);
+}
 
 
 extern int priority(int priority);
