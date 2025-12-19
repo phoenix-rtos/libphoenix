@@ -273,6 +273,12 @@ int pthread_rwlock_destroy(pthread_rwlock_t *rwlock);
 int pthread_rwlock_init(pthread_rwlock_t *__restrict__ rwlock, const pthread_rwlockattr_t *__restrict__ attr);
 
 
+int pthread_getname_np(pthread_t thread, char *name, size_t sz);
+
+
+int pthread_setname_np(pthread_t thread, const char *name);
+
+
 #ifdef __cplusplus
 }
 #endif

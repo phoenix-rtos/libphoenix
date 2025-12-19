@@ -14,6 +14,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 #include <errno.h>
 #include <limits.h>
 #include <sys/list.h>
@@ -1225,6 +1226,33 @@ int pthread_atfork(void (*prepare)(void), void (*parent)(void), void (*child)(vo
 		mutexUnlock(pthread_common.pthread_atfork_lock);
 	}
 	return err;
+}
+
+
+int pthread_getname_np(pthread_t thread, char *name, size_t sz)
+{
+	pthread_ctx *ctx = (pthread_ctx *)thread;
+	threadinfo_t info;
+	int ret, len;
+
+	ret = threadsinfo(ctx->id, PH_THREADINFO_NAME, 1, &info);
+	if (ret != 1) {
+		return -EINVAL;
+	} else {
+	}
+
+	len = min(sz, strlen(info.name) + 1);
+	memcpy(name, info.name, len);
+	name[len] = '\0';
+
+	return EOK;
+}
+
+
+int pthread_setname_np(pthread_t thread, const char *name)
+{
+	pthread_ctx *ctx = (pthread_ctx *)thread;
+	return setthreadname(ctx->id, (char *) name);
 }
 
 
