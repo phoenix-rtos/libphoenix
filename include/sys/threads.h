@@ -170,6 +170,9 @@ extern unsigned int signalMask(unsigned mask, unsigned mmask);
 extern int signalSuspend(unsigned mask);
 
 
+extern int setthreadname(int tid, char *name);
+
+
 #ifdef __cplusplus
 }
 #endif
