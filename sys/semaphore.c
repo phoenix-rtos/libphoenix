@@ -5,7 +5,7 @@
  *
  * Copyright 2012, 2017, 2018, 2026 Phoenix Systems
  * Copyright 2006 Pawel Pisarczyk
- * Author: Pawel Pisarczyk, Aleksander Kaminski, Michał Lach
+ * Author: Pawel Pisarczyk, Aleksander Kaminski, Michal Lach
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
