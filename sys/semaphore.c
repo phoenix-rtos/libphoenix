@@ -5,7 +5,7 @@
  *
  * Copyright 2012, 2017, 2018, 2026 Phoenix Systems
  * Copyright 2006 Pawel Pisarczyk
- * Author: Pawel Pisarczyk, Aleksander Kaminski
+ * Author: Pawel Pisarczyk, Aleksander Kaminski, Michał Lach
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -13,16 +13,43 @@
  */
 
 #include <stdbool.h>
+#include <assert.h>
 #include <sys/time.h>
 #include <errno.h>
 #include <sys/threads.h>
+#include <sys/semaphore.h>
 #include <time.h>
+
+
+int semaphoreCount(semaphore_t *s)
+{
+	int ret = 0;
+
+	if (s == NULL) {
+		return -EINVAL;
+	}
+
+	ret = mutexTry(s->mutex);
+	if (ret != EOK) {
+		ret = 0;
+	}
+	else {
+		ret = s->v;
+		assert(ret >= 0); /* s->v is unsigned, we don't want to overflow */
+		mutexUnlock(s->mutex);
+	}
+
+	return ret;
+}
 
 
 int semaphoreCreate(semaphore_t *s, unsigned int v)
 {
 	static const struct condAttr cAttr = { .clock = PH_CLOCK_MONOTONIC };
 	int err;
+
+	if (s == NULL || v > SEM_VALUE_MAX)
+		return -EINVAL;
 
 	err = mutexCreate(&s->mutex);
 	if (err < 0) {
@@ -65,6 +92,31 @@ int semaphoreDown(semaphore_t *s, time_t timeout)
 	mutexUnlock(s->mutex);
 
 	return err;
+}
+
+
+int semaphoreTryDown(semaphore_t *s)
+{
+	int ret = EOK;
+
+	if (s != NULL) {
+		ret = mutexTry(s->mutex);
+		if (ret != EOK) {
+			return ret;
+		}
+		else if (s->v <= 0) {
+			ret = -EAGAIN;
+		}
+		else {
+			--s->v;
+		}
+	}
+	else {
+		ret = -EINVAL;
+	}
+
+	mutexUnlock(s->mutex);
+	return ret;
 }
 
 
