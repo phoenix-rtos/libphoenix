@@ -8,9 +8,7 @@
  * Copyright 2017, 2018 Phoenix Systems
  * Author: Pawel Pisarczyk, Aleksander Kaminski
  *
- * This file is part of Phoenix-RTOS.
- *
- * %LICENSE%
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef _LIBPHOENIX_SYS_THREADS_H_
@@ -113,10 +111,16 @@ extern int semaphoreCreate(semaphore_t *s, unsigned int v);
 extern int semaphoreDown(semaphore_t *s, time_t timeout);
 
 
+extern int semaphoreTryDown(semaphore_t *s);
+
+
 extern int semaphoreUp(semaphore_t *s);
 
 
 extern int semaphoreDone(semaphore_t *s);
+
+
+extern int semaphoreCount(semaphore_t *s);
 
 
 extern int phCondCreate(handle_t *h, const struct condAttr *attr);
