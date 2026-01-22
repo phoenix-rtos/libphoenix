@@ -79,7 +79,7 @@ int tcdrain(int fd)
 {
 	int ret;
 	do {
-		ret = ioctl(fd, TCDRAIN, 0);
+		ret = ioctl(fd, TCDRAIN);
 	} while (ret < 0 && errno == EINTR);
 
 	return ret;

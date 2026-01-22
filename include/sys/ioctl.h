@@ -27,17 +27,17 @@ extern "C" {
 #endif
 
 
-#define IOCPARM_MASK   0x1fff
+#define IOCPARM_MASK   0x3fff
 #define IOCPARM_LEN(x) (((x) >> 16) & IOCPARM_MASK)
 #define IOCBASECMD(x)  ((x) & ~(IOCPARM_MASK << 16))
 #define IOCGROUP(x)    (((x) >> 8) & 0xff)
 
 
-#define IOC_VOID    0x20000000
+#define IOC_VOID    0x00000000
 #define IOC_OUT     0x40000000
 #define IOC_IN      0x80000000
 #define IOC_INOUT   (IOC_IN | IOC_OUT)
-#define IOC_DIRMASK 0xe0000000
+#define IOC_DIRMASK 0xc0000000
 
 
 #define _IOC(inout, group, num, len) ((unsigned long)(inout | ((len & IOCPARM_MASK) << 16) | ((group) << 8) | (num)))
