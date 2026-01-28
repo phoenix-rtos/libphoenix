@@ -17,6 +17,7 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
+#include <phoenix/ethtool.h>
 
 #include "ioctl-helper.h"
 
@@ -43,6 +44,70 @@ typedef struct {
 
 
 typedef int (*ioctl_op_t)(ioctl_ctx_t *ctx);
+
+
+static int ioctl_ethtool(void *val, size_t *sizeOut)
+{
+	struct ifreq *ifr = val;
+	size_t ethtoolSize;
+	void *ethtool = ifr->ifr_data;
+
+	if (ethtool == NULL) {
+		return -EINVAL;
+	}
+
+	/* first field of every ethtool struct is always uint32_t cmd */
+	uint32_t cmd = *((uint32_t *)ethtool);
+
+	switch (cmd) {
+		case ETHTOOL_GSET:
+		case ETHTOOL_SSET:
+			ethtoolSize = sizeof(struct ethtool_cmd);
+			break;
+
+		case ETHTOOL_TEST: {
+			struct ethtool_test *test = ethtool;
+			ethtoolSize = sizeof(*test) + (test->len * sizeof(test->data[0]));
+			break;
+		}
+
+		case ETHTOOL_GSTRINGS: {
+			struct ethtool_gstrings *gstrings = ethtool;
+			ethtoolSize = sizeof(*gstrings) + (gstrings->len * ETH_GSTRING_LEN);
+			break;
+		}
+
+		case ETHTOOL_GSSET_INFO: {
+			struct ethtool_sset_info *sset = ethtool;
+			ethtoolSize = sizeof(*sset) + (__builtin_popcountll(sset->sset_mask) * sizeof(sset->data[0]));
+			break;
+		}
+
+		case ETHTOOL_GLOOPBACK:
+		case ETHTOOL_SLOOPBACK:
+			ethtoolSize = sizeof(struct ethtool_value);
+			break;
+
+		case ETHTOOL_GLINKSETTINGS:
+		case ETHTOOL_SLINKSETTINGS: {
+			struct ethtool_link_settings *settings = ethtool;
+			ethtoolSize = sizeof(*settings) + (settings->link_mode_masks_nwords * sizeof(settings->link_mode_masks[0]));
+			break;
+		}
+
+		default:
+			return -EOPNOTSUPP;
+	}
+
+	*sizeOut = ethtoolSize;
+	return 0;
+}
+
+
+static const subptr_info_t ethtoolSubptrs[] = { {
+	.offset = __builtin_offsetof(struct ifreq, ifr_data),
+	.getSize = ioctl_ethtool,
+} };
 
 
 static int ioctl_rtentry(void *val, size_t *sizeOut)
@@ -111,6 +176,11 @@ static const struct reqinfo {
 		.request = SIOCDELRT,
 		.subptrs = rtentrySubptrs,
 		.nsubptrs = SIZEOF_ARRAY(rtentrySubptrs),
+	},
+	{
+		.request = SIOCETHTOOL,
+		.subptrs = ethtoolSubptrs,
+		.nsubptrs = SIZEOF_ARRAY(ethtoolSubptrs),
 	},
 };
 
