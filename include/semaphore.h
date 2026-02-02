@@ -16,9 +16,9 @@
 #include <time.h>
 #include <limits.h>
 #include <sys/threads.h>
+#include <sys/semaphore.h>
 
-#define SEM_FAILED    ((sem_t *)0xDAAB0000)
-#define SEM_VALUE_MAX UINT_MAX
+#define SEM_FAILED ((sem_t *)0xDAAB0000)
 
 typedef struct _sem_t {
 	/* clang-format off */
