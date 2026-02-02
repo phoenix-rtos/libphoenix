@@ -78,8 +78,8 @@ static int shebang(const char *path)
 	int fd;
 	char sb[2] = { 0, 0 };
 
-	if ((fd = open(path, O_RDONLY)) < 0)
-		return -1;
+		if ((fd = open(path, O_RDONLY)) < 0)  // is it MISRA?
+		    return -1;
 
 	if ((read(fd, sb, 2) < 0) || sb[0] != '#' || sb[1] != '!') {
 		close(fd);
@@ -110,96 +110,96 @@ int execve(const char *file, char *const argv[], char *const envp[])
 	sys_common.execBuff = calloc(PATH_MAX, sizeof(char));
 	sys_common.filePathBuff = calloc(PATH_MAX, sizeof(char));
 	if (sys_common.execBuff == NULL || sys_common.filePathBuff == NULL) {
-		sys_clear();
+		// sys_clear();
 		return SET_ERRNO(-ENOMEM);
 	}
 
 	interp = sys_common.execBuff;
 
-	if (!strchr(file, '/') && path) {
-		while (*path) {
-			char* delim = strchrnul(path, ':');
+		if (!strchr(file, '/') && path) {
+			while (*path) {
+				char *delim = strchrnul(path, ':');
 
-			int path_len = delim - path;
-			if (path_len + 1 + fileNameLen + 1 <= PATH_MAX) {
-				memcpy(sys_common.filePathBuff, path, path_len);
-				sys_common.filePathBuff[path_len] = '/';
-				memcpy(sys_common.filePathBuff + path_len + 1, file, fileNameLen);
-				sys_common.filePathBuff[path_len + 1 + fileNameLen] = '\0';
+				int path_len = delim - path;
+				if (path_len + 1 + fileNameLen + 1 <= PATH_MAX) {
+					memcpy(sys_common.filePathBuff, path, path_len);
+					sys_common.filePathBuff[path_len] = '/';
+					memcpy(sys_common.filePathBuff + path_len + 1, file, fileNameLen);
+					sys_common.filePathBuff[path_len + 1 + fileNameLen] = '\0';
 
-				/* check if file exists with symlink resolving */
-				sys_common.canonicalPath = resolve_path(sys_common.filePathBuff, NULL, 1, 0);
-				if (sys_common.canonicalPath != NULL) {
-					free(sys_common.canonicalPath);
-					sys_common.canonicalPath = NULL;
-					file = sys_common.filePathBuff;
-					break;
+					/* check if file exists with symlink resolving */
+					sys_common.canonicalPath = resolve_path(sys_common.filePathBuff, NULL, 1, 0);
+					if (sys_common.canonicalPath != NULL) {
+						free(sys_common.canonicalPath);
+						sys_common.canonicalPath = NULL;
+						file = sys_common.filePathBuff;
+						break;
+					}
+				}
+
+				path = delim;
+				if (*path == PATH_DELIM) {
+					path++;
 				}
 			}
+		}
 
-			path = delim;
-			if (*path == PATH_DELIM) {
-				path++;
+		if ((fd = shebang(file)) >= 0) {
+			if (read(fd, sys_common.execBuff, PATH_MAX) < 0) {
+				close(fd);
+				sys_clear();
+				return SET_ERRNO(-EIO);
 			}
-		}
-	}
 
-	if ((fd = shebang(file)) >= 0) {
-		if (read(fd, sys_common.execBuff, PATH_MAX) < 0) {
+			sys_common.execBuff[PATH_MAX - 1] = 0;
+
+			while (*interp == ' ') {
+				++interp;
+			}
+
+			end = interp;
+			while (*end && !isspace(*end)) {
+				++end;
+			}
+			*end = 0;
+			/* TODO: support shebang params */
+
+			while (argv[noargs++] != NULL)
+				;
+
+			sys_common.sbArgs = calloc(noargs + 1, sizeof(char *));
+			if (sys_common.sbArgs == NULL) {
+				close(fd);
+				sys_clear();
+				return SET_ERRNO(-ENOMEM);
+			}
+
+			while (noargs-- > 0) {
+				sys_common.sbArgs[noargs + 1] = argv[noargs];
+			}
+
+			sys_common.sbArgs[0] = interp;
+			sys_common.sbArgs[1] = (char *)file; /* replace first argument in case it was found in path */
+
 			close(fd);
+			file = interp;
+			argv = sys_common.sbArgs;
+		}
+
+		sys_common.canonicalPath = resolve_path(file, NULL, 1, 0);
+		if (sys_common.canonicalPath == NULL) {
 			sys_clear();
-			return SET_ERRNO(-EIO);
+			return -1; /* errno set by resolve_path */
 		}
 
-		sys_common.execBuff[PATH_MAX - 1] = 0;
-
-		while (*interp == ' ') {
-			++interp;
+		/* execute only if it is regular file */
+		err = stat(sys_common.canonicalPath, &buf);
+		if (!err) {
+			/* TODO: check execution bit presence when native chmod is available */
+			err = (S_ISREG(buf.st_mode)) ? exec(sys_common.canonicalPath, argv, envp) : -EACCES;
 		}
 
-		end = interp;
-		while (*end && !isspace(*end)) {
-			++end;
-		}
-		*end = 0;
-		/* TODO: support shebang params */
-
-		while (argv[noargs++] != NULL)
-			;
-
-		sys_common.sbArgs = calloc(noargs + 1, sizeof(char *));
-		if (sys_common.sbArgs == NULL) {
-			close(fd);
-			sys_clear();
-			return SET_ERRNO(-ENOMEM);
-		}
-
-		while (noargs-- > 0) {
-			sys_common.sbArgs[noargs + 1] = argv[noargs];
-		}
-
-		sys_common.sbArgs[0] = interp;
-		sys_common.sbArgs[1] = (char *)file; /* replace first argument in case it was found in path */
-
-		close(fd);
-		file = interp;
-		argv = sys_common.sbArgs;
-	}
-
-	sys_common.canonicalPath = resolve_path(file, NULL, 1, 0);
-	if (sys_common.canonicalPath == NULL) {
 		sys_clear();
-		return -1; /* errno set by resolve_path */
-	}
-
-	/* execute only if it is regular file */
-	err = stat(sys_common.canonicalPath, &buf);
-	if (!err) {
-		/* TODO: check execution bit presence when native chmod is available */
-		err = (S_ISREG(buf.st_mode)) ? exec(sys_common.canonicalPath, argv, envp) : -EACCES;
-	}
-
-	sys_clear();
 
 	return SET_ERRNO(err);
 }
