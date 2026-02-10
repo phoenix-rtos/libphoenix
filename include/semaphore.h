@@ -20,7 +20,7 @@
 
 #define SEM_FAILED ((sem_t *)0xDAAB0000)
 
-typedef struct _sem_t {
+typedef struct {
 	/* clang-format off */
 	enum { smNamed, smUnnamed } type;
 	/* clang-format on */
