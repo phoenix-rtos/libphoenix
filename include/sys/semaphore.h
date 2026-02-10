@@ -16,8 +16,8 @@
 #include <limits.h>
 #include <sys/ioctl.h>
 
-#define SEMAPHORE_PATH      ("/dev/posix/sem/")
-#define SEMCTL_PATH         ("/dev/posix/semctl")
+#define SEMAPHORE_PATH      "/dev/posix/sem/"
+#define SEMCTL_PATH         "/dev/posix/semctl"
 #define SEMAPHORE_MAX_COUNT (128)
 #define SEMAPHORE_NAME_MAX  (NAME_MAX - sizeof(SEMAPHORE_PATH) - 1)
 #define SEM_VALUE_MAX       INT_MAX
