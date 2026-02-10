@@ -84,7 +84,7 @@ static int sem_create_msg(const char *name, int value, oid_t *oid)
 
 	ret = lookup(SEMCTL_PATH, NULL, &semctl);
 	if (ret != EOK) {
-		return ret;
+		return -ENODEV;
 	}
 
 	memset(&msg, 0, sizeof(msg));
