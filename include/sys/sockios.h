@@ -24,7 +24,7 @@
 
 /* Socket configuration controls. */
 #define SIOCGIFNAME			_IOWR(SOCK_IOC_TYPE, 0x10, struct ifreq)	/* get name of interface with given index */
-#define SIOCGIFCONF			_IOWR(SOCK_IOC_TYPE, 0x12, struct ifconf)   /* get iface list */
+#define SIOCGIFCONF			_IOC_NESTED(IOC_INOUT, SOCK_IOC_TYPE, 0x12, struct ifconf)   /* get iface list */
 #define SIOCGIFFLAGS		_IOWR(SOCK_IOC_TYPE, 0x13, struct ifreq)	/* get interface flags */
 #define SIOCSIFFLAGS		_IOW( SOCK_IOC_TYPE, 0x14, struct ifreq)	/* Set interface flags */
 #define SIOCGIFADDR			_IOWR(SOCK_IOC_TYPE, 0x15, struct ifreq)	/* get device address */
@@ -50,7 +50,7 @@
 #define SIOCSIFTXQLEN		_IOWR(SOCK_IOC_TYPE, 0x43, struct ifreq)	/* set the tx queue length */
 
 /* Routing table calls.  */
-#define SIOCADDRT			_IOW(SOCK_IOC_TYPE, 0x44, struct rtentry)	/* add routing table entry */
-#define SIOCDELRT			_IOW(SOCK_IOC_TYPE, 0x45, struct rtentry)	/* delete routing table entry */
+#define SIOCADDRT			_IOC_NESTED(IOC_IN, SOCK_IOC_TYPE, 0x44, struct rtentry)	/* add routing table entry */
+#define SIOCDELRT			_IOC_NESTED(IOC_IN, SOCK_IOC_TYPE, 0x45, struct rtentry)	/* delete routing table entry */
 
 #endif // LIBPHOENIX_SYS_SOCKIOS_H
