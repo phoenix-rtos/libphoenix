@@ -200,6 +200,7 @@ struct winsize {
 #define TIOCSWINSZ _IOW('t', 0x14, struct winsize)
 #define TIOCNOTTY  _IO('t', 0x22)
 #define TIOCGSID   _IOR('t', 0x29, pid_t)
+#define TIOCSHALFD _IOV('t', 0x2a, int)
 
 /* tcflush */
 enum { TCIFLUSH,
