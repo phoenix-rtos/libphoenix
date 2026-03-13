@@ -170,14 +170,13 @@ int fclose(FILE *stream)
 	}
 
 	err = fflush(stream);
-	if (err == EOF) {
-		return EOF;
-	}
 
-	err = __safe_close(stream->fd);
+	if (__safe_close(stream->fd) < 0) {
+		err = EOF;
+	}
 	file_free(stream);
 
-	return (err < 0) ? EOF : 0;
+	return err;
 }
 
 
