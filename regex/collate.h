@@ -54,11 +54,11 @@ extern struct __collate_st_char_pri __collate_char_pri_table[UCHAR_MAX + 1];
 extern struct __collate_st_chain_pri __collate_chain_pri_table[TABLE_SIZE];
 
 __BEGIN_DECLS
-u_char	*__collate_strdup(u_char *);
-u_char	*__collate_substitute(const u_char *);
-int	__collate_load_tables(char *);
-void	__collate_lookup(const u_char *, int *, int *, int *);
-int	__collate_range_cmp(int, int);
+u_char	*__collate_strdup(u_char *s);
+u_char	*__collate_substitute(const u_char *s);
+int	__collate_load_tables(char *encoding);
+void	__collate_lookup(const u_char *t, int *len, int *prim, int *sec);
+int	__collate_range_cmp(int c1, int c2);
 #ifdef COLLATE_DEBUG
 void	__collate_print_tables(void);
 #endif
