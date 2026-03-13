@@ -3,7 +3,7 @@
  *
  * Semaphores
  *
- * Copyright 2012, 2017, 2018 Phoenix Systems
+ * Copyright 2012, 2017, 2018, 2026 Phoenix Systems
  * Copyright 2006 Pawel Pisarczyk
  * Author: Pawel Pisarczyk, Aleksander Kaminski
  *
@@ -12,62 +12,56 @@
  * %LICENSE%
  */
 
+#include <stdbool.h>
 #include <sys/time.h>
 #include <errno.h>
 #include <sys/threads.h>
 #include <time.h>
-#include <sys/resource.h>
 
 
 int semaphoreCreate(semaphore_t *s, unsigned int v)
 {
-	if (s == NULL)
-		return -EINVAL;
+	static const struct condAttr cAttr = { .clock = PH_CLOCK_MONOTONIC };
+	int err;
 
-	if (mutexCreate(&s->mutex) != EOK)
-		return -ENOMEM;
+	err = mutexCreate(&s->mutex);
+	if (err < 0) {
+		return err;
+	}
 
-	if (condCreate(&s->cond) != EOK)
-		return -ENOMEM;
+	err = condCreateWithAttr(&s->cond, &cAttr);
+	if (err < 0) {
+		resourceDestroy(s->mutex);
+		return err;
+	}
 
 	s->v = v;
 
-	return EOK;
+	return 0;
 }
 
 
 int semaphoreDown(semaphore_t *s, time_t timeout)
 {
-	int err = EOK;
-	time_t now, when = 0;
+	time_t deadline = 0;
 
-	if (s == NULL)
-		return -EINVAL;
-
-	if (timeout) {
+	if (timeout != 0) {
+		time_t now;
 		gettime(&now, NULL);
-		when = now + timeout;
+		deadline = now + timeout;
 	}
 
 	mutexLock(s->mutex);
-	for (;;) {
+	int err;
+	do {
 		if (s->v > 0) {
 			--s->v;
+			err = 0;
 			break;
 		}
 
-		if ((err = condWait(s->cond, s->mutex, timeout)) == -ETIME)
-			break;
-
-		if (timeout) {
-			gettime(&now, NULL);
-
-			if (now >= when)
-				timeout = 1;
-			else
-				timeout = when - now;
-		}
-	}
+		err = condWait(s->cond, s->mutex, deadline);
+	} while (err != -ETIME);
 	mutexUnlock(s->mutex);
 
 	return err;
@@ -76,32 +70,27 @@ int semaphoreDown(semaphore_t *s, time_t timeout)
 
 int semaphoreUp(semaphore_t *s)
 {
-	if (s == NULL)
-		return -EINVAL;
-
 	mutexLock(s->mutex);
-
-	condSignal(s->cond);
-
-	if (s->v == (unsigned int)-1) {
-		mutexUnlock(s->mutex);
-		return -EAGAIN;
-	}
-
+	bool wasZero = (s->v == 0);
 	++s->v;
 	mutexUnlock(s->mutex);
 
-	return EOK;
+	/* Phoenix specific - condSignal causes reschedule,
+	 * so signal under mutex causes performance penalty.
+	 * Conditionals are sticky, so there's no race risk.
+	 */
+	if (wasZero) {
+		condSignal(s->cond);
+	}
+
+	return 0;
 }
 
 
 int semaphoreDone(semaphore_t *s)
 {
-	if (s == NULL)
-		return -EINVAL;
-
 	resourceDestroy(s->mutex);
 	resourceDestroy(s->cond);
 
-	return EOK;
+	return 0;
 }
