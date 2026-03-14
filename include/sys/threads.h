@@ -113,10 +113,16 @@ extern int semaphoreCreate(semaphore_t *s, unsigned int v);
 extern int semaphoreDown(semaphore_t *s, time_t timeout);
 
 
+extern int semaphoreTryDown(semaphore_t *s);
+
+
 extern int semaphoreUp(semaphore_t *s);
 
 
 extern int semaphoreDone(semaphore_t *s);
+
+
+extern int semaphoreCount(semaphore_t *s);
 
 
 extern int phCondCreate(handle_t *h, const struct condAttr *attr);
