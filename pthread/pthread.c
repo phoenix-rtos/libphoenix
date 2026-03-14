@@ -455,7 +455,7 @@ int pthread_cancel(pthread_t thread)
 				mutexUnlock(pthread_common.pthread_list_lock);
 				pthread_key_cleanup(ctx);
 				pthread_ctx_put(ctx);
-				err = signalPost(getpid(), id, signal_cancel);
+				err = sys_tkill(getpid(), id, PH_SIGCANCEL);
 			}
 			else {
 				_pthread_ctx_put(ctx);
@@ -1070,7 +1070,7 @@ int pthread_sigmask(int how, const sigset_t *__restrict__ set, sigset_t *__restr
 int pthread_kill(pthread_t thread, int sig)
 {
 	pthread_ctx *ctx = (pthread_ctx *)thread;
-	int ret = -signalPostPosix(getpid(), ctx->id, sig);
+	int ret = -sys_tkill(getpid(), ctx->id, sig);
 	return ret;
 }
 
