@@ -25,6 +25,9 @@ extern "C" {
 extern int create_dev(oid_t *oid, const char *path);
 
 
+extern int destroy_dev(const char *path);
+
+
 extern void splitname(char *path, char **base, char **dir);
 
 
