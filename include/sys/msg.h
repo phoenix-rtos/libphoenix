@@ -35,6 +35,8 @@ extern void portDestroy(uint32_t port);
 
 extern int portRegister(uint32_t port, const char *name, oid_t *oid);
 
+extern int portUnregister(const char *name);
+
 extern int lookup(const char *name, oid_t *file, oid_t *dev);
 
 
