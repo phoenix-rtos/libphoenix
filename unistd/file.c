@@ -634,25 +634,42 @@ int destroy_dev(const char *path)
 
 	oid_t oid, odev;
 	int retry = 0, err;
-	char *canonical_path, *dir, *sep;
+	char *canonical_path, *dir, *sep, *tpathalloc = NULL;
+	const char *tpath = path;
 
 	if (path == NULL) {
 		return -EINVAL;
 	}
 
 	while (lookup("devfs", NULL, &odev) < 0) {
-		if (++retry < 3 || nodevfs != 0) {
+		/* if destroy_dev() is called by anyone started from syspage devfs
+		 * may be not registered yet so we try 3 times until we give up */
+		if (++retry > 3 || nodevfs != 0) {
 			nodevfs = 1;
 
 			if (lookup("/dev", NULL, &odev) < 0) {
-				return -ENOSYS;
-			}
-			else {
-				break;
-			}
-		}
+				/* Looks like we don't have a filesystem.
+				 * Fall back to portUnregister. */
+				if (*path != '/') {
+					/* Move point to /dev */
+					tpathalloc = malloc(strlen(path) + 6);
+					if (tpathalloc == NULL) {
+						return -ENOMEM;
+					}
+					strcpy(tpathalloc, "/dev/");
+					strcpy(tpathalloc + 5, path);
+					tpath = tpathalloc;
+				}
 
-		usleep(100000);
+				err = portUnregister(tpath);
+				free(tpathalloc);
+				return err;
+			}
+			break;
+		}
+		else {
+			usleep(100000);
+		}
 	}
 
 	if (strncmp("/dev/", path, 5) == 0) {
