@@ -188,10 +188,7 @@ static int never = 0;		/* for use in asserts; shuts lint up */
  = #define	REG_DUMP	0200
  */
 int				/* 0 success, otherwise REG_something */
-regcomp(preg, pattern, cflags)
-regex_t *__restrict preg;
-const char *__restrict pattern;
-int cflags;
+regcomp(regex_t *__restrict preg, const char *__restrict pattern, int cflags)
 {
 	struct parse pa;
 	struct re_guts *g;
@@ -306,9 +303,8 @@ int cflags;
  == static void p_ere(struct parse *p, int stop);
  */
 static void
-p_ere(p, stop)
-struct parse *p;
-int stop;			/* character this ERE should end at */
+p_ere(struct parse *p,
+      int stop /* character this ERE should not end at */)
 {
 	char c;
 	sopno prevback = 0;
@@ -352,8 +348,7 @@ int stop;			/* character this ERE should end at */
  == static void p_ere_exp(struct parse *p);
  */
 static void
-p_ere_exp(p)
-struct parse *p;
+p_ere_exp(struct parse *p)
 {
 	char c;
 	sopno pos;
@@ -501,8 +496,7 @@ struct parse *p;
  == static void p_str(struct parse *p);
  */
 static void
-p_str(p)
-struct parse *p;
+p_str(struct parse *p)
 {
 	(void)REQUIRE(MORE(), REG_EMPTY);
 	while (MORE())
@@ -522,10 +516,9 @@ struct parse *p;
  * The amount of lookahead needed to avoid this kludge is excessive.
  */
 static void
-p_bre(p, end1, end2)
-struct parse *p;
-int end1;			/* first terminating character */
-int end2;			/* second terminating character */
+p_bre(struct parse *p,
+      int end1, /* first terminating character */
+      int end2 /* second terminating character */)
 {
 	sopno start = HERE();
 	int first = 1;			/* first subexpression? */
@@ -555,9 +548,8 @@ int end2;			/* second terminating character */
  == static int p_simp_re(struct parse *p, int starordinary);
  */
 static int			/* was the simple RE an unbackslashed $? */
-p_simp_re(p, starordinary)
-struct parse *p;
-int starordinary;		/* is a leading * an ordinary character? */
+p_simp_re(struct parse *p,
+	  int starordinary /* is leading * an ordinary character */)
 {
 	int c;
 	int count;
@@ -673,8 +665,7 @@ int starordinary;		/* is a leading * an ordinary character? */
  == static int p_count(struct parse *p);
  */
 static int			/* the value */
-p_count(p)
-struct parse *p;
+p_count(struct parse *p)
 {
 	int count = 0;
 	int ndigits = 0;
@@ -696,8 +687,7 @@ struct parse *p;
  * no set operations are done.
  */
 static void
-p_bracket(p)
-struct parse *p;
+p_bracket(struct parse *p)
 {
 	cset *cs = allocset(p);
 	int invert = 0;
@@ -770,9 +760,7 @@ struct parse *p;
  == static void p_b_term(struct parse *p, cset *cs);
  */
 static void
-p_b_term(p, cs)
-struct parse *p;
-cset *cs;
+p_b_term(struct parse *p, cset *cs)
 {
 	char c;
 	char start, finish;
@@ -849,9 +837,7 @@ cset *cs;
  == static void p_b_cclass(struct parse *p, cset *cs);
  */
 static void
-p_b_cclass(p, cs)
-struct parse *p;
-cset *cs;
+p_b_cclass(struct parse *p, cset *cs)
 {
 	int c;
 	char *sp = p->next;
@@ -945,9 +931,7 @@ cset *cs;
  * This implementation is incomplete. xxx
  */
 static void
-p_b_eclass(p, cs)
-struct parse *p;
-cset *cs;
+p_b_eclass(struct parse *p, cset *cs)
 {
 	char c;
 
@@ -960,8 +944,7 @@ cset *cs;
  == static char p_b_symbol(struct parse *p);
  */
 static char			/* value of symbol */
-p_b_symbol(p)
-struct parse *p;
+p_b_symbol(struct parse *p)
 {
 	char value;
 
@@ -980,9 +963,7 @@ struct parse *p;
  == static char p_b_coll_elem(struct parse *p, int endc);
  */
 static char			/* value of collating element */
-p_b_coll_elem(p, endc)
-struct parse *p;
-int endc;			/* name ended by endc,']' */
+p_b_coll_elem(struct parse *p, int endc /* name ended by endc,']' */)
 {
 	char *sp = p->next;
 	struct cname *cp;
@@ -1009,8 +990,7 @@ int endc;			/* name ended by endc,']' */
  == static char othercase(int ch);
  */
 static char			/* if no counterpart, return ch */
-othercase(ch)
-int ch;
+othercase(int ch)
 {
 	ch = (uch)ch;
 	assert(isalpha(ch));
@@ -1029,9 +1009,7 @@ int ch;
  * Boy, is this implementation ever a kludge...
  */
 static void
-bothcases(p, ch)
-struct parse *p;
-int ch;
+bothcases(struct parse *p, int ch)
 {
 	char *oldnext = p->next;
 	char *oldend = p->end;
@@ -1055,9 +1033,7 @@ int ch;
  == static void ordinary(struct parse *p, int ch);
  */
 static void
-ordinary(p, ch)
-struct parse *p;
-int ch;
+ordinary(struct parse *p, int ch)
 {
 	cat_t *cap = p->g->categories;
 
@@ -1077,8 +1053,7 @@ int ch;
  * Boy, is this implementation ever a kludge...
  */
 static void
-nonnewline(p)
-struct parse *p;
+nonnewline(struct parse *p)
 {
 	char *oldnext = p->next;
 	char *oldend = p->end;
@@ -1101,11 +1076,10 @@ struct parse *p;
  == static void repeat(struct parse *p, sopno start, int from, int to);
  */
 static void
-repeat(p, start, from, to)
-struct parse *p;
-sopno start;			/* operand from here to end of strip */
-int from;			/* repeated from this number */
-int to;				/* to this number of times (maybe INFINITY) */
+repeat(struct parse *p,
+       sopno start, /* operand from here to end of strip */
+       int from, /* repeated from this number */
+       int to /* to this number of times (maybe INFINITY) */)
 {
 	sopno finish = HERE();
 #	define	N	2
@@ -1173,9 +1147,7 @@ int to;				/* to this number of times (maybe INFINITY) */
  == static int seterr(struct parse *p, int e);
  */
 static int			/* useless but makes type checking happy */
-seterr(p, e)
-struct parse *p;
-int e;
+seterr(struct parse *p, int e)
 {
 	if (p->error == 0)	/* keep earliest error condition */
 		p->error = e;
@@ -1189,8 +1161,7 @@ int e;
  == static cset *allocset(struct parse *p);
  */
 static cset *
-allocset(p)
-struct parse *p;
+allocset(struct parse *p)
 {
 	int no = p->g->ncsets++;
 	size_t nc;
@@ -1244,9 +1215,7 @@ struct parse *p;
  == static void freeset(struct parse *p, cset *cs);
  */
 static void
-freeset(p, cs)
-struct parse *p;
-cset *cs;
+freeset(struct parse *p, cset *cs)
 {
 	int i;
 	cset *top = &p->g->sets[p->g->ncsets];
@@ -1269,9 +1238,7 @@ cset *cs;
  * the same value!
  */
 static int			/* set number */
-freezeset(p, cs)
-struct parse *p;
-cset *cs;
+freezeset(struct parse *p, cset *cs)
 {
 	short h = cs->hash;
 	int i;
@@ -1303,9 +1270,7 @@ cset *cs;
  == static int firstch(struct parse *p, cset *cs);
  */
 static int			/* character; there is no "none" value */
-firstch(p, cs)
-struct parse *p;
-cset *cs;
+firstch(struct parse *p, cset *cs)
 {
 	int i;
 	size_t css = (size_t)p->g->csetsize;
@@ -1322,9 +1287,7 @@ cset *cs;
  == static int nch(struct parse *p, cset *cs);
  */
 static int
-nch(p, cs)
-struct parse *p;
-cset *cs;
+nch(struct parse *p, cset *cs)
 {
 	int i;
 	size_t css = (size_t)p->g->csetsize;
@@ -1343,10 +1306,7 @@ cset *cs;
  ==	char *cp);
  */
 static void
-mcadd(p, cs, cp)
-struct parse *p;
-cset *cs;
-char *cp;
+mcadd(struct parse *p, cset *cs, char *cp)
 {
 	size_t oldend = cs->smultis;
 
@@ -1369,9 +1329,7 @@ char *cp;
  == static void mcsub(cset *cs, char *cp);
  */
 static void
-mcsub(cs, cp)
-cset *cs;
-char *cp;
+mcsub(cset *cs, char *cp)
 {
 	char *fp = mcfind(cs, cp);
 	size_t len = strlen(fp);
@@ -1396,9 +1354,7 @@ char *cp;
  == static int mcin(cset *cs, char *cp);
  */
 static int
-mcin(cs, cp)
-cset *cs;
-char *cp;
+mcin(cset *cs, char *cp)
 {
 	return(mcfind(cs, cp) != NULL);
 }
@@ -1408,9 +1364,7 @@ char *cp;
  == static char *mcfind(cset *cs, char *cp);
  */
 static char *
-mcfind(cs, cp)
-cset *cs;
-char *cp;
+mcfind(cset *cs, char *cp)
 {
 	char *p;
 
@@ -1431,9 +1385,7 @@ char *cp;
  * is deferred.
  */
 static void
-mcinvert(p, cs)
-struct parse *p;
-cset *cs;
+mcinvert(struct parse *p, cset *cs)
 {
 	assert(cs->multis == NULL);	/* xxx */
 }
@@ -1446,9 +1398,7 @@ cset *cs;
  * is deferred.
  */
 static void
-mccase(p, cs)
-struct parse *p;
-cset *cs;
+mccase(struct parse *p, cset *cs)
 {
 	assert(cs->multis == NULL);	/* xxx */
 }
@@ -1458,9 +1408,7 @@ cset *cs;
  == static int isinsets(struct re_guts *g, int c);
  */
 static int			/* predicate */
-isinsets(g, c)
-struct re_guts *g;
-int c;
+isinsets(struct re_guts *g, int c)
 {
 	uch *col;
 	int i;
@@ -1478,10 +1426,7 @@ int c;
  == static int samesets(struct re_guts *g, int c1, int c2);
  */
 static int			/* predicate */
-samesets(g, c1, c2)
-struct re_guts *g;
-int c1;
-int c2;
+samesets(struct re_guts *g, int c1, int c2)
 {
 	uch *col;
 	int i;
@@ -1500,9 +1445,7 @@ int c2;
  == static void categorize(struct parse *p, struct re_guts *g);
  */
 static void
-categorize(p, g)
-struct parse *p;
-struct re_guts *g;
+categorize(struct parse *p, struct re_guts *g)
 {
 	cat_t *cats = g->categories;
 	int c;
@@ -1528,10 +1471,9 @@ struct re_guts *g;
  == static sopno dupl(struct parse *p, sopno start, sopno finish);
  */
 static sopno			/* start of duplicate */
-dupl(p, start, finish)
-struct parse *p;
-sopno start;			/* from here */
-sopno finish;			/* to this less one */
+dupl(struct parse *p,
+     sopno start, /* from here */
+     sopno finish /* to this less one */)
 {
 	sopno ret = HERE();
 	sopno len = finish - start;
@@ -1556,10 +1498,7 @@ sopno finish;			/* to this less one */
  * some changes to the data structures.  Maybe later.
  */
 static void
-doemit(p, op, opnd)
-struct parse *p;
-sop op;
-size_t opnd;
+doemit(struct parse *p, sop op, size_t opnd)
 {
 	/* avoid making error situations worse */
 	if (p->error != 0)
@@ -1582,11 +1521,7 @@ size_t opnd;
  == static void doinsert(struct parse *p, sop op, size_t opnd, sopno pos);
  */
 static void
-doinsert(p, op, opnd, pos)
-struct parse *p;
-sop op;
-size_t opnd;
-sopno pos;
+doinsert(struct parse *p, sop op, size_t opnd, sopno pos)
 {
 	sopno sn;
 	sop s;
@@ -1622,10 +1557,7 @@ sopno pos;
  == static void dofwd(struct parse *p, sopno pos, sop value);
  */
 static void
-dofwd(p, pos, value)
-struct parse *p;
-sopno pos;
-sop value;
+dofwd(struct parse *p, sopno pos, sop value)
 {
 	/* avoid making error situations worse */
 	if (p->error != 0)
@@ -1640,9 +1572,7 @@ sop value;
  == static void enlarge(struct parse *p, sopno size);
  */
 static void
-enlarge(p, size)
-struct parse *p;
-sopno size;
+enlarge(struct parse *p, sopno size)
 {
 	sop *sp;
 
@@ -1663,9 +1593,7 @@ sopno size;
  == static void stripsnug(struct parse *p, struct re_guts *g);
  */
 static void
-stripsnug(p, g)
-struct parse *p;
-struct re_guts *g;
+stripsnug(struct parse *p, struct re_guts *g)
 {
 	g->nstates = p->slen;
 	g->strip = (sop *)realloc((char *)p->strip, p->slen * sizeof(sop));
@@ -1686,9 +1614,7 @@ struct re_guts *g;
  * Note that must and mlen got initialized during setup.
  */
 static void
-findmust(p, g)
-struct parse *p;
-struct re_guts *g;
+findmust(struct parse *p, struct re_guts *g)
 {
 	sop *scan;
 	sop *start = NULL;
@@ -1855,10 +1781,7 @@ struct re_guts *g;
  * re paths.
  */
 static int
-altoffset(scan, offset, mccs)
-sop *scan;
-int offset;
-int mccs;
+altoffset(sop *scan, int offset, int mccs)
 {
 	int largest;
 	int try;
@@ -1935,9 +1858,7 @@ int mccs;
  * the value of the character from the text that was mismatched.
  */
 static void
-computejumps(p, g)
-struct parse *p;
-struct re_guts *g;
+computejumps(struct parse *p, struct re_guts *g)
 {
 	int ch;
 	int mindex;
@@ -1981,9 +1902,7 @@ struct re_guts *g;
  * the search algorithm works.
  */
 static void
-computematchjumps(p, g)
-struct parse *p;
-struct re_guts *g;
+computematchjumps(struct parse *p, struct re_guts *g)
 {
 	int mindex;		/* General "must" iterator */
 	int suffix;		/* Keeps track of matching suffix */
@@ -2057,9 +1976,7 @@ struct re_guts *g;
  == static sopno pluscount(struct parse *p, struct re_guts *g);
  */
 static sopno			/* nesting depth */
-pluscount(p, g)
-struct parse *p;
-struct re_guts *g;
+pluscount(struct parse *p, struct re_guts *g)
 {
 	sop *scan;
 	sop s;
