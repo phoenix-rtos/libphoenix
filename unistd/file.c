@@ -628,6 +628,111 @@ int create_dev(oid_t *oid, const char *path)
 }
 
 
+int destroy_dev(const char *path)
+{
+	static int nodevfs = 0;
+
+	oid_t oid, odev;
+	int retry = 0, err;
+	char *canonical_path, *dir, *sep;
+
+	if (path == NULL) {
+		return -EINVAL;
+	}
+
+	while (lookup("devfs", NULL, &odev) < 0) {
+		if (++retry < 3 || nodevfs != 0) {
+			nodevfs = 1;
+
+			if (lookup("/dev", NULL, &odev) < 0) {
+				return -ENOSYS;
+			}
+			else {
+				break;
+			}
+		}
+
+		usleep(100000);
+	}
+
+	if (strncmp("/dev/", path, 5) == 0) {
+		canonical_path = strdup(path);
+		if (canonical_path == NULL) {
+			return -ENOMEM;
+		}
+	}
+	else {
+		size_t len = 5 + strlen(path) + 1;
+		canonical_path = malloc(len);
+		if (canonical_path == NULL) {
+			return -ENOMEM;
+		}
+		snprintf(canonical_path, len, "/dev/%s", path);
+	}
+
+	if (lookup(canonical_path, NULL, &oid) < 0) {
+		free(canonical_path);
+		return -ENODEV;
+	}
+
+	dir = canonical_path + 5;
+
+	for (;;) {
+		sep = strchr(dir, '/');
+		if (sep == NULL) {
+			break;
+		}
+		*sep = '\0';
+
+		msg_t msg = {
+			.type = mtLookup,
+			.oid = odev,
+			.i.size = strlen(dir) + 1,
+			.i.data = dir,
+		};
+
+		err = msgSend(odev.port, &msg);
+		if (err < 0) {
+			free(canonical_path);
+			return err;
+		}
+
+		if (msg.o.err >= 0) {
+			odev = msg.o.lookup.dev;
+		}
+		else {
+			free(canonical_path);
+			return msg.o.err;
+		}
+
+		do {
+			sep++;
+		} while (*sep == '/');
+		dir = sep;
+	}
+
+	path = dir;
+
+	msg_t msg = {
+		.type = mtUnlink,
+		.oid = odev,
+		.i.ln.oid = oid,
+		.i.data = path,
+		.i.size = strlen(path) + 1,
+	};
+
+	err = msgSend(odev.port, &msg);
+
+	free(canonical_path);
+
+	if (err < 0) {
+		return err;
+	}
+
+	return msg.o.err;
+}
+
+
 extern int sys_fcntl(int fd, int cmd, unsigned val);
 
 
