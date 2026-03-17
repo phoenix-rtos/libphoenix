@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: GTDGmbH
+# Copyright 2024 by GTD GmbH.
+
+# Section PcLint
+[pc-lint]
+# Path to lint file
+lint-file = "sw-quality/misra-c/lint.txt"
+
+# Separation character in lint file
+lint-file-separator = "$"
+
+# Path bend from current working dir to pc lint working dir
+# (lint path files are relative to working dir in lint.exe)
+lint-dir = "."
+
+
+# Export directory and the required type
+export-path = "sw-quality/misra-c"
+export-type = ".md"
+
+# The String merger is a algorithm who try to squeeze list of strings into less
+# by compare and add padding character into different spaces
+[string-merge]
+min-match = 4           # Minimum matching character
+padding-char = '$'      # Padding character, $ is not used in PcLint output strings
+ratio-threshold = 0.7   # difflib.SequenceMatcher ratio threshold
+iteration = 3           # How often is iterated over the result list to find new merges
