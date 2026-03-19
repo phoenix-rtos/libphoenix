@@ -16,6 +16,7 @@
 #ifndef _LIBPHOENIX_POSIX_UTILS_H_
 #define _LIBPHOENIX_POSIX_UTILS_H_
 
+#include <sys/types.h>
 
 #ifdef __cplusplus
 extern "C" {
