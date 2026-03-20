@@ -628,6 +628,118 @@ int create_dev(oid_t *oid, const char *path)
 }
 
 
+int destroy_dev(const char *path)
+{
+	static int nodevfs = 0;
+
+	oid_t oid, odev;
+	int retry = 0, err;
+	char *canonical_path, *dir, *sep, *tpathalloc = NULL;
+	const char *tpath = path;
+
+	if (path == NULL) {
+		return -EINVAL;
+	}
+
+	while (lookup("devfs", NULL, &odev) < 0) {
+		/* if remove_dev() is called by anyone started from syspage devfs
+		 * may be not registered yet so we try 3 times until we give up */
+		if (++retry > 3 || nodevfs != 0) {
+			nodevfs = 1;
+
+			if (lookup("/dev", NULL, &odev) < 0) {
+				/* Looks like we don't have a filesystem.
+				 * Fall back to portUnregister. */
+				if (*path != '/') {
+					/* Move point to /dev */
+					tpathalloc = malloc(strlen(path) + 6);
+					if (tpathalloc == NULL) {
+						return -ENOMEM;
+					}
+					strcpy(tpathalloc, "/dev/");
+					strcat(tpathalloc, path);
+					tpath = tpathalloc;
+				}
+
+				err = portUnregister(tpath);
+				free(tpathalloc);
+				return err;
+			}
+			break;
+		}
+		else {
+			usleep(100000);
+		}
+	}
+
+	if (strncmp("/dev/", path, 5) == 0) {
+		canonical_path = strdup(path);
+	}
+	else {
+		size_t len = 5 + strlen(path) + 1;
+		canonical_path = malloc(len);
+		snprintf(canonical_path, len, "/dev/%s", path);
+	}
+
+	if (lookup(canonical_path, NULL, &oid) < 0) {
+		return -ENODEV;
+	}
+
+	dir = canonical_path + 5;
+
+	for (;;) {
+		sep = strchr(dir, '/');
+		if (sep == NULL) {
+			break;
+		}
+		*sep = '\0';
+
+		msg_t msg;
+		msg.type = mtLookup;
+		msg.oid = odev;
+		msg.i.size = strlen(dir) + 1;
+		msg.i.data = dir;
+
+		err = msgSend(odev.port, &msg);
+		if (err < 0) {
+			free(canonical_path);
+			return err;
+		}
+
+		if (msg.o.err >= 0) {
+			odev = msg.o.lookup.dev;
+		}
+		else {
+			free(canonical_path);
+			return msg.o.err;
+		}
+
+		do {
+			sep++;
+		} while (*sep == '/');
+		dir = sep;
+	}
+
+	path = dir;
+
+	msg_t msg;
+	msg.type = mtUnlink,
+	msg.oid = odev,
+	msg.i.ln.oid = oid,
+	msg.i.data = path,
+	msg.i.size = strlen(path) + 1,
+
+	err = msgSend(odev.port, &msg);
+	if (err < 0) {
+		return err;
+	}
+
+	free(canonical_path);
+
+	return msg.o.err;
+}
+
+
 extern int sys_fcntl(int fd, int cmd, unsigned val);
 
 
