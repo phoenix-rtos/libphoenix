@@ -462,10 +462,6 @@ DIR *fdopendir(int fd)
 	if (fd_flags < 0) {
 		return NULL;
 	}
-	if ((fd_flags & O_RDONLY) == 0) {
-		errno = EBADF;
-		return NULL; /* EBADF */
-	}
 
 	if (fstat(fd, &statbuf) < 0) {
 		return NULL;
