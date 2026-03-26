@@ -48,10 +48,19 @@ struct dirent {
 };
 
 
-extern struct dirent *readdir(DIR *s);
+extern struct dirent *readdir(DIR *dirp);
 
 
 extern DIR *opendir(const char *dirname);
+
+
+extern DIR *fdopendir(int fd);
+
+
+extern void seekdir(DIR *dirp, long loc);
+
+
+extern long telldir(DIR *dirp);
 
 
 extern void rewinddir(DIR *dirp);

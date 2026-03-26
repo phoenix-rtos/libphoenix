@@ -234,8 +234,8 @@ FILE *fdopen(int fd, const char *mode)
 	}
 
 	/* POSIX: check if mode argument is allowed by the file access mode of the FD (not necessarily exactly the same) */
-	fdm &= 0x7;
-	if ((fdm != O_RDWR) && (fdm != (m & 0x7))) {
+	fdm &= O_ACCMODE;
+	if ((fdm != O_RDWR) && (fdm != (m & O_ACCMODE))) {
 		errno = EINVAL;
 		return NULL;
 	}
