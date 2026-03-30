@@ -47,12 +47,12 @@ static int __mktemp(char *templt, int suffixlen)
 		return fd;
 	}
 
-	int rand[6];
+	unsigned int rand[6];
 	ssize_t left = sizeof(rand);
 	do {
 		ssize_t err;
 		do {
-			err = read(fd, rand + sizeof(rand) - left, left);
+			err = read(fd, (unsigned char *)rand + sizeof(rand) - left, left);
 		} while ((err < 0) && (errno == -EINTR));
 
 		if (err <= 0) {
