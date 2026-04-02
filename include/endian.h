@@ -60,6 +60,20 @@ extern "C" {
 #define htobe32(x) (__swap_be__(32))(x)
 #define htobe64(x) (__swap_be__(64))(x)
 
+/* Network byte order conversions (aliases for big-endian conversions) */
+/* Note: ntohs is defined as a function in inet.c, not a macro */
+#include <stdint.h>
+extern uint16_t ntohs(uint16_t netshort);
+#ifndef ntohl
+#define ntohl(x) be32toh(x)
+#endif
+#ifndef htons
+#define htons(x) htobe16(x)
+#endif
+#ifndef htonl
+#define htonl(x) htobe32(x)
+#endif
+
 
 #ifdef __cplusplus
 }

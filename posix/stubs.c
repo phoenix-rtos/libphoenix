@@ -25,6 +25,8 @@
 #include <stdarg.h>
 #include <grp.h>
 #include <stdio.h>
+#include <poll.h>
+#include <signal.h>
 
 
 static struct {
@@ -197,6 +199,39 @@ long ulimit(int __cmd, ...)
 char *gets(char *str)
 {
 	return NULL;
+}
+
+
+int ppoll(struct pollfd *fds, nfds_t nfds, const struct timespec *tmo_p, const sigset_t *sigmask)
+{
+	int timeout;
+
+	(void)sigmask; /* Signal mask handling not implemented */
+
+	if (tmo_p == NULL) {
+		timeout = -1;
+	}
+	else {
+		/* Convert timespec to milliseconds */
+		timeout = (int)(tmo_p->tv_sec * 1000 + tmo_p->tv_nsec / 1000000);
+	}
+
+	return poll(fds, nfds, timeout);
+}
+
+
+int sigaltstack(const stack_t *ss, stack_t *old_ss)
+{
+	/* Stub implementation - alternate signal stack not supported */
+	(void)ss;
+
+	if (old_ss != NULL) {
+		old_ss->ss_sp = NULL;
+		old_ss->ss_size = 0;
+		old_ss->ss_flags = SS_DISABLE;
+	}
+
+	return 0;
 }
 
 char *tmpnam(char *str)

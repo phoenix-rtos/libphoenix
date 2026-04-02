@@ -158,7 +158,9 @@ static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, 
 	char *p = path;   /* p - first byte of remaining unresolved path */
 	int symlinkcnt = 0;
 
-	assert(path && path[0] == '/');
+	if (path == NULL || path[0] != '/') {
+		return SET_ERRNO(-ENOENT);
+	}
 
 	/* path is shifted right to use its's start for symlink resolution */
 	const size_t path_len = strlen(path) + 1; /* including '\0' */

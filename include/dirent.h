@@ -47,6 +47,9 @@ struct dirent {
 	char   d_name[];
 };
 
+/* Indicate that d_namlen field is available */
+#define _DIRENT_HAVE_D_NAMLEN 1
+
 
 extern struct dirent *readdir(DIR *s);
 

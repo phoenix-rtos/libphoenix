@@ -34,9 +34,17 @@ const char *inet_ntop(int af, const void *src,
 int inet_pton(int af, const char *src, void *dst);
 
 uint16_t ntohs(uint16_t netshort);
+
+/* Network byte order conversions - defined in endian.h, provided here for compatibility */
+#ifndef ntohl
 #define ntohl be32toh
+#endif
+#ifndef htons
 #define htons htobe16
+#endif
+#ifndef htonl
 #define htonl htobe32
+#endif
 
 
 #ifdef __cplusplus

@@ -18,6 +18,7 @@
 
 
 #include <sys/types.h>
+#include <stddef.h>
 #include <time.h>
 
 
@@ -108,6 +109,22 @@ struct sigaction {
 	int sa_flags;
 	void (*sa_sigaction) (int, siginfo_t *, void *);
 };
+
+
+/* Alternate signal stack */
+typedef struct {
+	void *ss_sp;
+	size_t ss_size;
+	int ss_flags;
+} stack_t;
+
+#define SS_ONSTACK 1
+#define SS_DISABLE 2
+
+#define MINSIGSTKSZ 2048
+#define SIGSTKSZ    8192
+
+extern int sigaltstack(const stack_t *ss, stack_t *old_ss);
 
 
 extern void (*bsd_signal(int, void (*)(int)))(int);

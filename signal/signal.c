@@ -216,6 +216,16 @@ void (*signal(int signum, void (*handler)(int)))(int)
 }
 
 
+void (*bsd_signal(int signum, void (*handler)(int)))(int)
+{
+	/*
+	 * Our signal() implementation already has BSD-like semantics,
+	 * so we can just call it directly
+	 * */
+	return signal(signum, handler);
+}
+
+
 /* TODO: Handle flags */
 int sigaction(int sig, const struct sigaction *act, struct sigaction *oact)
 {

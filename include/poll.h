@@ -19,6 +19,8 @@
 
 #include <sys/events.h>
 #include <errno.h>
+#include <signal.h>
+#include <time.h>
 
 
 #ifdef __cplusplus
@@ -42,6 +44,8 @@ extern "C" {
 
 
 extern int poll(struct pollfd *fds, nfds_t nfds, int timeout);
+
+extern int ppoll(struct pollfd *fds, nfds_t nfds, const struct timespec *tmo_p, const sigset_t *sigmask);
 
 
 static inline unsigned short eventMaskFromPoll(int pollevmask)

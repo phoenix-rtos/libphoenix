@@ -52,7 +52,11 @@ extern "C" {
 #define EHOSTUNREACH    113
 #define ENOLCK          116
 #define EUCLEAN         117
+#define ESTALE          118
+#define EDQUOT          122
+#define ECANCELED       125
 #define ENOTRECOVERABLE 131
+#define EIDRM           143
 #define ENOTSUP         EOPNOTSUPP
 
 

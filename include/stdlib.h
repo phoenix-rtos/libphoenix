@@ -250,6 +250,10 @@ extern int grantpt(int fd);
 extern int unlockpt(int fd);
 
 
+/* Opens an unused pseudoterminal master device. */
+extern int posix_openpt(int flags);
+
+
 /* Return canonicalized absolute path, to be deallocated with free() */
 extern char *canonicalize_file_name(const char *path);
 
