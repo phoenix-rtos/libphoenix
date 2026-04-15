@@ -186,22 +186,22 @@ struct winsize {
 };
 
 /* ioctls */
-#define TCGETS     _IOR('t', 0x1, struct termios)
-#define TCSETS     _IOW('t', 0x2, struct termios)
-#define TCSETSW    _IOW('t', 0x3, struct termios)
-#define TCSETSF    _IOW('t', 0x4, struct termios)
-#define TCFLSH     _IOV('t', 0x5, int)
-#define TCDRAIN    _IO('t', 0x6)
-#define TCSBRK     _IOV('t', 0x9, int)
-#define TIOCSCTTY  _IOV('t', 0xE, int)
-#define TIOCGPGRP  _IOR('t', 0xF, pid_t)
-#define TIOCSPGRP  _IOW('t', 0x10, pid_t)
-#define TIOCGWINSZ _IOR('t', 0x13, struct winsize)
-#define TIOCSWINSZ _IOW('t', 0x14, struct winsize)
-#define TIOCNOTTY  _IO('t', 0x22)
-#define TIOCGSID   _IOR('t', 0x29, pid_t)
-#define TIOCGHALFD _IOR('t', 0x80, int)
-#define TIOCSHALFD _IOV('t', 0x81, int)
+#define TCGETS     _IOR(TTY_IOC_TYPE, 0x1, struct termios)
+#define TCSETS     _IOW(TTY_IOC_TYPE, 0x2, struct termios)
+#define TCSETSW    _IOW(TTY_IOC_TYPE, 0x3, struct termios)
+#define TCSETSF    _IOW(TTY_IOC_TYPE, 0x4, struct termios)
+#define TCFLSH     _IOV(TTY_IOC_TYPE, 0x5, int)
+#define TCDRAIN    _IO(TTY_IOC_TYPE, 0x6)
+#define TCSBRK     _IOV(TTY_IOC_TYPE, 0x9, int)
+#define TIOCSCTTY  _IOV(TTY_IOC_TYPE, 0xE, int)
+#define TIOCGPGRP  _IOR(TTY_IOC_TYPE, 0xF, pid_t)
+#define TIOCSPGRP  _IOW(TTY_IOC_TYPE, 0x10, pid_t)
+#define TIOCGWINSZ _IOR(TTY_IOC_TYPE, 0x13, struct winsize)
+#define TIOCSWINSZ _IOW(TTY_IOC_TYPE, 0x14, struct winsize)
+#define TIOCNOTTY  _IO(TTY_IOC_TYPE, 0x22)
+#define TIOCGSID   _IOR(TTY_IOC_TYPE, 0x29, pid_t)
+#define TIOCGHALFD _IOR(TTY_IOC_TYPE, 0x80, int)
+#define TIOCSHALFD _IOV(TTY_IOC_TYPE, 0x81, int)
 
 /* tcflush */
 enum { TCIFLUSH,

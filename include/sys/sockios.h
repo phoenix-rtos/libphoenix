@@ -20,8 +20,6 @@
 #include <net/if.h>
 #include <net/route.h>
 
-#define SOCK_IOC_TYPE 'S'
-
 /* Socket configuration controls. */
 #define SIOCGIFNAME    _IOWR(SOCK_IOC_TYPE, 0x10, struct ifreq)                   /* get name of interface with given index */
 #define SIOCGIFCONF    _IOC_NESTED(IOC_INOUT, SOCK_IOC_TYPE, 0x12, struct ifconf) /* get iface list */
