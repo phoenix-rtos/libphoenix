@@ -71,7 +71,6 @@ int connect(int socket, const struct sockaddr *address, socklen_t address_len);
 int bind(int socket, const struct sockaddr *address, socklen_t address_len);
 int listen(int socket, int backlog);
 int accept4(int socket, struct sockaddr *address, socklen_t *address_len, int flags);
-int accept(int socket, struct sockaddr *address, socklen_t *address_len);
 ssize_t sendto(int socket, const void *message, size_t length, int flags, const struct sockaddr *dest_addr, socklen_t dest_len);
 ssize_t sendmsg(int socket, const struct msghdr *msg, int flags) __attribute__((warning("sendmsg() is not fully supported")));
 ssize_t recvfrom(int socket, void *message, size_t length, int flags, struct sockaddr *src_addr, socklen_t *src_len);
@@ -82,6 +81,12 @@ int getsockopt(int socket, int level, int optname, void *optval, socklen_t *optl
 int setsockopt(int socket, int level, int optname, const void *optval, socklen_t optlen);
 int shutdown(int socket, int how);
 int socketpair(int domain, int type, int protocol, int socket_vector[2]);
+
+
+inline int accept(int socket, struct sockaddr *address, socklen_t *address_len)
+{
+	return accept4(socket, address, address_len, 0);
+}
 
 
 inline ssize_t send(int socket, const void *message, size_t length, int flags)
