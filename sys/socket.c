@@ -53,6 +53,11 @@ extern ssize_t sys_sendmsg(int socket, const struct msghdr *msg, int flags);
 
 int h_errno;
 
+/* inline wrappers defined in sys/socket.h */
+extern inline ssize_t send(int socket, const void *message, size_t length, int flags);
+extern inline ssize_t recv(int socket, void *message, size_t length, int flags);
+
+
 static int socksrvcall(msg_t *msg)
 {
 	oid_t oid;
@@ -63,18 +68,6 @@ static int socksrvcall(msg_t *msg)
 	if ((err = msgSend(oid.port, msg)) < 0)
 		return SET_ERRNO(err);
 	return 0;
-}
-
-
-ssize_t send(int socket, const void *message, size_t length, int flags)
-{
-	return sendto(socket, message, length, flags, NULL, 0);
-}
-
-
-ssize_t recv(int socket, void *message, size_t length, int flags)
-{
-	return recvfrom(socket, message, length, flags, NULL, 0);
 }
 
 
