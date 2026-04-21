@@ -226,10 +226,15 @@ static char **argv_gather(const char *arg, va_list args)
 		return NULL;
 
 	argv[argc++] = (char *)arg;
+	if (arg == NULL) {
+		return argv;
+	}
 
 	while ((argv[argc++] = va_arg(args, char *)) != NULL) {
 		if (argc == max) {
-			if ((res = realloc(argv, max *= 2)) == NULL) {
+			max *= 2;
+			res = realloc(argv, max * sizeof(char *));
+			if (res == NULL) {
 				free(argv);
 				return NULL;
 			}
