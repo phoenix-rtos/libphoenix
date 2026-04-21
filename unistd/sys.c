@@ -287,6 +287,14 @@ int execle(const char *path, const char *arg, ...)
 
 	va_start(args, arg);
 	argv = argv_gather(arg, args);
+	va_end(args);
+
+	/* reinitialize args as it could have been invalidated by (partial) consumption by argv_gather */
+	va_start(args, arg);
+	const char *p = arg;
+	while (p != NULL) {
+		p = va_arg(args, const char *);
+	}
 	envp = va_arg(args, char **);
 	va_end(args);
 
