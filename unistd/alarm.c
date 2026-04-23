@@ -61,8 +61,9 @@ static void alarm_thread(void *arg)
 }
 
 
-static void alarm_spawnThread(void)
+static void alarm_initThread(void)
 {
+	alarm_common.wakeup = 0;
 	beginthreadex(alarm_thread, priority(-1), alarm_common.stack, sizeof(alarm_common.stack), NULL, &alarm_common.tid);
 }
 
@@ -71,8 +72,9 @@ static void alarm_init_once(void)
 {
 	mutexCreate(&alarm_common.lock);
 	condCreate(&alarm_common.cond);
-	alarm_spawnThread();
-	pthread_atfork(NULL, NULL, alarm_spawnThread);
+	alarm_initThread();
+	/* There is no need to handle the mutex state during fork(), as Phoenix's mutexes are freed in a child process and no races can happen here */
+	pthread_atfork(NULL, NULL, alarm_initThread);
 }
 
 
