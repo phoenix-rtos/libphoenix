@@ -300,6 +300,7 @@ int system(const char *command)
 	}
 
 	if (pid == 0) {
+		sigprocmask(SIG_SETMASK, &old_mask, NULL);
 		execl("/bin/sh", "sh", "-c", command, NULL);
 		exit(EXIT_FAILURE);
 	}
