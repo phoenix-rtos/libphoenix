@@ -538,7 +538,7 @@ int destroy_dev(const char *path)
 	}
 
 	while (lookup("devfs", NULL, &odev) < 0) {
-		if (++retry < 3 || nodevfs != 0) {
+		if (++retry > 3 || nodevfs != 0) {
 			nodevfs = 1;
 
 			if (lookup("/dev", NULL, &odev) < 0) {
