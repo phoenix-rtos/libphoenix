@@ -455,5 +455,5 @@ void _signals_init(void)
 	mutexCreate(&signal_common.lock);
 
 	/* Register userspace handler */
-	signalHandle(_signal_trampoline, 0, 0xffffffffUL);
+	signalHandle(_signal_trampoline);
 }
