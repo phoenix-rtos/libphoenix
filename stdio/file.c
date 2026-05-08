@@ -734,20 +734,35 @@ int fputc(int c, FILE *stream)
 
 char *fgets_unlocked(char *str, int n, FILE *stream)
 {
+	if (n < 1) {
+		return NULL;
+	}
+
+	if (n == 1) {
+		str[0] = '\0';
+		return str;
+	}
+
 	int c, i = 0;
-	while ((c = fgetc_unlocked(stream)) != EOF) {
-		str[i++] = c;
-		if (c == '\n' || i == n - 1) {
+
+	while (i < n - 1) {
+		c = getc_unlocked(stream);
+		if (c == EOF) {
+			if (i == 0) {
+				return NULL;
+			}
+			break;
+		}
+
+		str[i] = c;
+		i++;
+
+		if (c == '\n') {
 			break;
 		}
 	}
 
-	if (i) {
-		str[i] = 0;
-	}
-	else {
-		return NULL;
-	}
+	str[i] = '\0';
 
 	return str;
 }
@@ -935,6 +950,31 @@ int fileno_unlocked(FILE *stream)
 int getc_unlocked(FILE *stream)
 {
 	return fgetc_unlocked(stream);
+}
+
+
+char *gets(char *str)
+{
+	int c;
+	char *ret;
+	mutexLock(stdin->lock);
+	c = getc_unlocked(stdin);
+	if (c == EOF) {
+		ret = NULL;
+	}
+	else {
+		ret = str;
+		do {
+			if (c == '\n') {
+				break;
+			}
+			*str = c;
+			str++;
+		} while ((c = getc_unlocked(stdin)) != EOF);
+		*str = '\0';
+	}
+	mutexUnlock(stdin->lock);
+	return ret;
 }
 
 
