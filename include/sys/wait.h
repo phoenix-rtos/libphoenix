@@ -17,17 +17,12 @@
 #define _SYS_WAIT_H_
 
 #include <sys/types.h>
+#include <phoenix/posix-wait.h>
 
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-
-enum {
-	WNOHANG = 1 << 0,
-	WUNTRACED = 1 << 1,
-};
 
 
 extern const int _signals_phx2posix[];
