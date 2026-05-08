@@ -147,18 +147,27 @@ void _signal_handler(int phxsig)
 
 int raise(int sig)
 {
+	if (sig < 0 || sig >= NSIG) {
+		return SET_ERRNO(-EINVAL);
+	}
 	return SET_ERRNO(sys_tkill(getpid(), gettid(), _signals_posix2phx[sig]));
 }
 
 
 int kill(pid_t pid, int sig)
 {
+	if (sig < 0 || sig >= NSIG) {
+		return SET_ERRNO(-EINVAL);
+	}
 	return SET_ERRNO(sys_tkill(pid, 0, _signals_posix2phx[sig]));
 }
 
 
 int killpg(pid_t pgrp, int sig)
 {
+	if (sig < 0 || sig >= NSIG) {
+		return SET_ERRNO(-EINVAL);
+	}
 	if (pgrp == 0) {
 		pgrp = -getpgrp();
 	}
@@ -423,6 +432,9 @@ int sigdelset(sigset_t *set, int signum)
 
 int signalPostPosix(int pid, int tid, int signal)
 {
+	if (signal < 0 || signal >= NSIG) {
+		return -EINVAL;
+	}
 	return signalPost(pid, tid, _signals_posix2phx[signal]);
 }
 
