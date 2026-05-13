@@ -17,6 +17,7 @@
 #define _LIBPHOENIX_SIGNAL_H_
 
 
+#include <phoenix/signal.h>
 #include <sys/types.h>
 #include <time.h>
 
@@ -60,8 +61,6 @@ typedef void (*sighandler_t)(int);
 #define SIGINFO   29
 #define SIGUSR1   30
 #define SIGUSR2   31
-
-#define NSIG 32
 
 #define SIG_ERR ((sighandler_t)-1)
 #define SIG_DFL ((sighandler_t)-2)
