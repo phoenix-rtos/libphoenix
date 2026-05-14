@@ -194,11 +194,6 @@ long ulimit(int __cmd, ...)
 	return 0;
 }
 
-char *gets(char *str)
-{
-	return NULL;
-}
-
 char *tmpnam(char *str)
 {
 	return NULL;
