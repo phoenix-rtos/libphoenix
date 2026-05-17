@@ -1,0 +1,34 @@
+#ifndef NUMERIC_SIZE_CONFIG
+#define NUMERIC_SIZE_CONFIG
+
+#if __SIZEOF_DOUBLE__ == 8
+#ifndef LIBMCS_DOUBLE_IS_64BITS
+#define LIBMCS_DOUBLE_IS_64BITS
+#endif
+#else
+#ifndef LIBMCS_DOUBLE_IS_32BITS
+#define LIBMCS_DOUBLE_IS_32BITS
+#endif
+#endif
+
+#if __SIZEOF_LONG_DOUBLE__ == 10
+#ifndef LIBMCS_LONG_DOUBLE_IS_80BITS
+#define LIBMCS_LONG_DOUBLE_IS_80BITS
+#endif
+#else
+#ifndef LIBMCS_LONG_DOUBLE_IS_64BITS
+#define LIBMCS_LONG_DOUBLE_IS_64BITS
+#endif
+#endif
+
+#if __SIZEOF_LONG__ == 8
+#ifndef LIBMCS_LONG_IS_64BITS
+#define LIBMCS_LONG_IS_64BITS
+#endif
+#else
+#ifndef LIBMCS_LONG_IS_32BITS
+#define LIBMCS_LONG_IS_32BITS
+#endif
+#endif
+
+#endif
