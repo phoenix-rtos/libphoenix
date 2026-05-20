@@ -47,6 +47,7 @@ extern "C" {
 #define FOPEN_MAX 16
 #define L_ctermid 11 /* Fit at least /dev/pts/XX */
 #define L_tmpnam  20
+#define P_tmpdir  "/var/tmp"
 #define TMP_MAX   32767
 
 
@@ -193,6 +194,10 @@ extern FILE *tmpfile(void);
 
 /* Generates and returns a valid temporary filename which does not exist. */
 extern char *tmpnam(char *str);
+
+
+/* Generates a pathname that may be used for a temporary file. */
+extern char *tempnam(const char *dir, const char *pfx);
 
 
 /* Sends formatted output to a stream. */
