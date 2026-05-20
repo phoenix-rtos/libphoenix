@@ -46,8 +46,9 @@ extern "C" {
 
 #define FOPEN_MAX 16
 #define L_ctermid 11 /* Fit at least /dev/pts/XX */
-#define L_tmpnam  16
+#define L_tmpnam  20
 #define TMP_MAX   32767
+
 
 typedef off_t fpos_t;
 
