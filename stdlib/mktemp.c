@@ -16,6 +16,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -118,4 +119,22 @@ char *mkdtemp(char *templt)
 		return NULL;
 
 	return templt;
+}
+
+
+char *tmpnam(char *str)
+{
+	static char template[L_tmpnam];
+	int err, tries = 0;
+
+	if (str == NULL) {
+		str = template;
+	}
+
+	do {
+		(void)strcpy(str, "/tmp/fileXXXXXX");
+		err = __mktemp(str, 0);
+	} while ((err < 0) && errno == EEXIST && ++tries < TMP_MAX);
+
+	return (err < 0) ? NULL : str;
 }

@@ -194,10 +194,6 @@ long ulimit(int __cmd, ...)
 	return 0;
 }
 
-char *tmpnam(char *str)
-{
-	return NULL;
-}
 
 int wctomb(char *str, wchar_t wchar)
 {
