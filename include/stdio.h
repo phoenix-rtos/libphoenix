@@ -376,6 +376,11 @@ void _file_init(void);
 
 /* stdio locking functions */
 void flockfile(FILE *stream);
+
+
+int ftrylockfile(FILE *stream);
+
+
 void funlockfile(FILE *stream);
 
 
