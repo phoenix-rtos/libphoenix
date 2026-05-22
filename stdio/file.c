@@ -198,17 +198,22 @@ FILE *fopen(const char *filename, const char *mode)
 	}
 
 	if ((fd = __safe_open(filename, m, DEFFILEMODE)) < 0) {
+		/* errno set by open */
 		return NULL;
 	}
 
 	if ((f = calloc(1, sizeof(FILE))) == NULL) {
+		err = errno;
 		__safe_close(fd);
+		errno = err;
 		return NULL;
 	}
 
 	if ((f->buffer = buffAlloc(BUFSIZ)) == NULL) {
+		err = errno;
 		__safe_close(fd);
 		free(f);
+		errno = err;
 		return NULL;
 	}
 
