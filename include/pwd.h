@@ -36,13 +36,25 @@ struct passwd {
 };
 
 
-extern struct passwd *getpwnam(const char *name);
+struct passwd *getpwnam(const char *name);
 
 
-extern struct passwd *getpwuid(uid_t uid);
+struct passwd *getpwuid(uid_t uid);
 
 
-extern int getpwnam_r(const char *name, struct passwd *pwd, char *buffer, size_t bufsize, struct passwd **result);
+int getpwnam_r(const char *name, struct passwd *pwd, char *buffer, size_t bufsize, struct passwd **result);
+
+
+int getpwuid_r(uid_t uid, struct passwd *pwd, char *buffer, size_t bufsize, struct passwd **result);
+
+
+void endpwent(void);
+
+
+struct passwd *getpwent(void);
+
+
+void setpwent(void);
 
 
 #ifdef __cplusplus
