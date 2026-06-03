@@ -45,12 +45,13 @@ extern int lookup(const char *name, oid_t *file, oid_t *dev);
 
 extern int msgSend(uint32_t port, msg_t *m);
 
-extern int msgPulse(uint32_t port, msg_t *m);
+extern int msgPulse(uint32_t port, uint8_t pulse);
 
 extern int msgRecv(uint32_t port, msg_t *m, msg_rid_t *rid);
 
 extern int msgRespond(uint32_t port, msg_t *m, msg_rid_t rid);
 
+extern int msgRespondAndRecv(uint32_t port, msg_t *m, msg_rid_t *rid);
 
 #ifdef __cplusplus
 }
