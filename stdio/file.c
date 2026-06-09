@@ -938,6 +938,31 @@ int getc_unlocked(FILE *stream)
 }
 
 
+char *gets(char *str)
+{
+	int c;
+	char *ret;
+	mutexLock(stdin->lock);
+	c = getc_unlocked(stdin);
+	if (c == EOF) {
+		ret = NULL;
+	}
+	else {
+		ret = str;
+		do {
+			if (c == '\n') {
+				break;
+			}
+			*str = c;
+			str++;
+		} while ((c = getc_unlocked(stdin)) != EOF);
+		*str = '\0';
+	}
+	mutexUnlock(stdin->lock);
+	return ret;
+}
+
+
 int getc(FILE *stream)
 {
 	int ret;
