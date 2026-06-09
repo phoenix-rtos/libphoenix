@@ -734,20 +734,30 @@ int fputc(int c, FILE *stream)
 
 char *fgets_unlocked(char *str, int n, FILE *stream)
 {
+	if (n < 1) {
+		return NULL;
+	}
+
 	int c, i = 0;
-	while ((c = fgetc_unlocked(stream)) != EOF) {
-		str[i++] = c;
-		if (c == '\n' || i == n - 1) {
+
+	while (i < n - 1) {
+		c = getc_unlocked(stream);
+		if (c == EOF) {
+			if (i == 0) {
+				return NULL;
+			}
+			break;
+		}
+
+		str[i] = c;
+		i++;
+
+		if (c == '\n') {
 			break;
 		}
 	}
 
-	if (i) {
-		str[i] = 0;
-	}
-	else {
-		return NULL;
-	}
+	str[i] = '\0';
 
 	return str;
 }
