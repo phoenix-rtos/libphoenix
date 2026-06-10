@@ -21,6 +21,7 @@
 #include <sys/wait.h>
 #include <sys/time.h>
 #include <pthread.h>
+#include <sys/debug.h>
 
 
 static struct {
@@ -40,7 +41,6 @@ static void alarm_thread(void *arg)
 	time_t now;
 	long long int sleep;
 
-	signalMask(0xffffffff, 0xffffffff);
 	mutexLock(alarm_common.lock);
 
 	for (;;) {
@@ -63,13 +63,20 @@ static void alarm_thread(void *arg)
 
 static void alarm_initThread(void)
 {
+	sigset_t mask, orgMask;
 	alarm_common.wakeup = 0;
+
+	/* ensure alarm thread will inherit sigmask with all signals blocked */
+	sigfillset(&mask);
+	pthread_sigmask(SIG_BLOCK, &mask, &orgMask);
 	beginthreadex(alarm_thread, priority(-1), alarm_common.stack, sizeof(alarm_common.stack), NULL, &alarm_common.tid);
+	pthread_sigmask(SIG_SETMASK, &orgMask, NULL);
 }
 
 
 static void alarm_init_once(void)
 {
+	/* FIXME: handle errors from mutexCreate, condCreate and beginthreadex */
 	mutexCreate(&alarm_common.lock);
 	condCreate(&alarm_common.cond);
 	alarm_initThread();
