@@ -47,6 +47,11 @@ typedef struct {
 } popen_FILE;
 
 
+static const struct lockAttr flockAttr = {
+	.type = PH_LOCK_RECURSIVE
+};
+
+
 FILE *stdin, *stdout, *stderr;
 
 
@@ -185,6 +190,7 @@ FILE *fopen(const char *filename, const char *mode)
 	int m;
 	FILE *f;
 	int fd;
+	int err;
 
 	if ((m = string2mode(mode)) < 0) {
 		errno = EINVAL;
@@ -192,21 +198,33 @@ FILE *fopen(const char *filename, const char *mode)
 	}
 
 	if ((fd = __safe_open(filename, m, DEFFILEMODE)) < 0) {
+		/* errno set by open */
 		return NULL;
 	}
 
 	if ((f = calloc(1, sizeof(FILE))) == NULL) {
+		err = errno;
 		__safe_close(fd);
+		errno = err;
 		return NULL;
 	}
 
 	if ((f->buffer = buffAlloc(BUFSIZ)) == NULL) {
+		err = errno;
 		__safe_close(fd);
 		free(f);
+		errno = err;
 		return NULL;
 	}
 
-	mutexCreate(&f->lock);
+	if ((err = mutexCreateWithAttr(&f->lock, &flockAttr)) < 0) {
+		buffFree(f->buffer, BUFSIZ);
+		__safe_close(fd);
+		free(f);
+		errno = abs(err);
+		return NULL;
+	}
+
 	f->bufsz = BUFSIZ;
 	f->fd = fd;
 	f->mode = m;
@@ -221,7 +239,7 @@ FILE *fopen(const char *filename, const char *mode)
 
 FILE *fdopen(int fd, const char *mode)
 {
-	int m, fdm;
+	int m, fdm, err;
 	FILE *f;
 
 	if ((m = string2mode(mode)) < 0) {
@@ -249,7 +267,14 @@ FILE *fdopen(int fd, const char *mode)
 		return NULL;
 	}
 
-	mutexCreate(&f->lock);
+	mutexCreateWithAttr(&f->lock, &flockAttr);
+	if ((err = mutexCreateWithAttr(&f->lock, &flockAttr)) < 0) {
+		buffFree(f->buffer, BUFSIZ);
+		free(f);
+		errno = abs(err);
+		return NULL;
+	}
+
 	f->bufsz = BUFSIZ;
 	f->fd = fd;
 	f->mode = m;
@@ -1335,7 +1360,7 @@ FILE *popen(const char *command, const char *mode)
 		goto failed;
 	}
 
-	if (mutexCreate(&pf->file.lock) < 0) {
+	if (mutexCreateWithAttr(&pf->file.lock, &flockAttr) < 0) {
 		pf->file.lock = 0;
 		goto failed;
 	}
@@ -1436,16 +1461,16 @@ void _file_init(void)
 	stdout->bufsz = BUFSIZ;
 
 	stdin->bufeof = stdin->bufpos = BUFSIZ;
-	mutexCreate(&stdin->lock);
+	mutexCreateWithAttr(&stdin->lock, &flockAttr);
 
 	stdout->bufpos = 0;
 	stdout->flags = F_WRITING;
-	mutexCreate(&stdout->lock);
+	mutexCreateWithAttr(&stdout->lock, &flockAttr);
 
 	stderr->buffer = NULL;
 	stderr->bufsz = 0;
 	stderr->flags = F_WRITING;
-	mutexCreate(&stderr->lock);
+	mutexCreateWithAttr(&stderr->lock, &flockAttr);
 
 	if (isatty(stdout->fd)) {
 		stdout->flags |= F_LINE;
@@ -1463,11 +1488,19 @@ void _file_init(void)
 
 void flockfile(FILE *file)
 {
+	mutexLock(file->lock);
+}
+
+
+int ftrylockfile(FILE *file)
+{
+	return mutexTry(file->lock);
 }
 
 
 void funlockfile(FILE *file)
 {
+	mutexUnlock(file->lock);
 }
 
 

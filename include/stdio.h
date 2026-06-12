@@ -370,6 +370,11 @@ extern void _file_init(void);
 
 /* stdio locking functions */
 extern void flockfile(FILE *stream);
+
+
+extern int ftrylockfile(FILE *stream);
+
+
 extern void funlockfile(FILE *stream);
 
 
