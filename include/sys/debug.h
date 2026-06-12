@@ -25,6 +25,9 @@ extern "C" {
 extern void debug(const char *s);
 
 
+extern uint64_t bench_entry_exit_time(void);
+
+
 #ifdef __cplusplus
 }
 #endif
