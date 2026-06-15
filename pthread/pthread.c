@@ -513,6 +513,10 @@ __attribute__((noreturn)) void pthread_exit(void *value_ptr)
 
 int pthread_attr_init(pthread_attr_t *attr)
 {
+	if (attr == NULL) {
+		return EINVAL;
+	}
+
 	*attr = pthread_attr_default;
 
 	return 0;
@@ -521,6 +525,10 @@ int pthread_attr_init(pthread_attr_t *attr)
 
 int pthread_attr_destroy(pthread_attr_t *attr)
 {
+	if (attr == NULL) {
+		return EINVAL;
+	}
+
 	return 0;
 }
 
