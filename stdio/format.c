@@ -77,12 +77,22 @@
 	} while (0)
 
 
+#define CHECK_FAIL(ret, condition) \
+	do { \
+		ret = (condition); \
+		if (ret < 0) { \
+			return ret; \
+		} \
+	} while (0)
+
+
 static const char smallDigits[] = "0123456789abcdef";
 static const char largeDigits[] = "0123456789ABCDEF";
 
 
-static void format_printBuffer(void *ctx, feedfunc feed, uint32_t flags, int minFieldWidth, const char *start, const char *end, char sign)
+static int format_printBuffer(void *ctx, feedfunc feed, uint32_t flags, int minFieldWidth, const char *start, const char *end, char sign)
 {
+	int ret = 0;
 	const int digits_cnt = start > end ? start - end : end - start;
 	int pad_len = minFieldWidth - digits_cnt - (sign ? 1 : 0);
 	/* If FLAG_ZERO and FLAG_MINUS both appear, then FLAG_ZERO is ignored */
@@ -93,39 +103,41 @@ static void format_printBuffer(void *ctx, feedfunc feed, uint32_t flags, int min
 	/* pad, if needed */
 	if ((pad_len > 0) && ((flags & FLAG_MINUS) == 0) && ((flags & FLAG_ZERO) == 0)) {
 		while (pad_len-- > 0) {
-			feed(ctx, ' ');
+			CHECK_FAIL(ret, feed(ctx, ' '));
 		}
 	}
 
 	if (sign != 0) {
-		feed(ctx, sign);
+		CHECK_FAIL(ret, feed(ctx, sign));
 	}
 
 	/* pad, if needed */
 	if ((pad_len > 0) && ((flags & FLAG_MINUS) == 0) && ((flags & FLAG_ZERO) != 0)) {
 		while (pad_len-- > 0) {
-			feed(ctx, '0');
+			CHECK_FAIL(ret, feed(ctx, '0'));
 		}
 	}
 
 	/* copy */
 	if (start > end) {
 		while ((--start) >= end) {
-			feed(ctx, *start);
+			CHECK_FAIL(ret, feed(ctx, *start));
 		}
 	}
 	else {
 		while (start < end) {
-			feed(ctx, *start++);
+			CHECK_FAIL(ret, feed(ctx, *start++));
 		}
 	}
 
 	/* pad, if needed */
 	if ((pad_len > 0) && ((flags & FLAG_MINUS) != 0)) {
 		while (pad_len-- > 0) {
-			feed(ctx, ' ');
+			CHECK_FAIL(ret, feed(ctx, ' '));
 		}
 	}
+
+	return 0;
 }
 
 
@@ -207,16 +219,17 @@ static inline int32_t format_doubleGetExponent(uint64_t num64)
 
 static int format_bigdoubleInit(struct bigdouble *bd, const size_t size)
 {
-	int res = __bignum_init(&bd->num, size, 0);
-	if (res != 0) {
-		return res;
-	}
+	int res;
+
+	CHECK_FAIL(res, __bignum_init(&bd->num, size, 0));
+
 	res = __bignum_init(&bd->helper1, size, 0);
-	if (res != 0) {
+	if (res < 0) {
 		__bignum_destroy(&bd->num);
 		return res;
 	}
 	bd->firstIntegerBit = 0;
+
 	return 0;
 }
 
@@ -231,10 +244,13 @@ static void format_bigdoubleDestroy(struct bigdouble *bd)
 static int format_bigdoubleIntegerPart(const struct bigdouble *bd, __bignum_t *result)
 {
 	int res = __bignum_copy(result, &bd->num);
-	if (res == 0) {
-		__bignum_shiftr(result, bd->firstIntegerBit);
+
+	if (res < 0) {
+		return -ENOMEM;
 	}
-	return res;
+	__bignum_shiftr(result, bd->firstIntegerBit);
+
+	return 0;
 }
 
 
@@ -255,11 +271,10 @@ static int format_bigdoubleLoad(struct bigdouble *result, double val)
 	int32_t exp = format_doubleGetExponent(num64);
 	const int isSubnormalOrZero = exp == -1023;
 	uint64_t mantissa = num64 & DOUBLE_MANTISSA_MASK;
-	int res = format_bigdoubleInit(result, BIGDOUBLE_DEFAULT_SIZE);
+	int res;
 
-	if (res != 0) {
-		return res;
-	}
+	CHECK_FAIL(res, format_bigdoubleInit(result, BIGDOUBLE_DEFAULT_SIZE));
+
 	__bignum_zero(&result->num);
 	if ((isSubnormalOrZero != 0) && (mantissa == 0)) {
 		/* val == 0 */
@@ -270,18 +285,26 @@ static int format_bigdoubleLoad(struct bigdouble *result, double val)
 	mantissa |= (isSubnormalOrZero != 0 ? 0LLU : 1LLU) << DOUBLE_EXP_SHIFT;
 	result->num.data[0] = mantissa & __BIGNUM_DATA_MASK;
 	mantissa >>= __BIGNUM_DATA_BITS;
+
 	res = __bignum_push(&result->num, (__bignum_data_t)mantissa);
-	if (res != 0) {
+
+	if (res < 0) {
 		format_bigdoubleDestroy(result);
 		return res;
 	}
+
 	if (isSubnormalOrZero != 0) {
 		exp = -1022;
 	}
+
 	/* Check if there is no fractional part */
 	if (DOUBLE_EXP_SHIFT < exp) {
 		result->firstIntegerBit = 0;
 		res = __bignum_shiftl(&result->num, exp - DOUBLE_EXP_SHIFT);
+		if (res < 0) {
+			format_bigdoubleDestroy(result);
+			return res;
+		}
 	}
 	else {
 		result->firstIntegerBit = DOUBLE_EXP_SHIFT - exp;
@@ -305,68 +328,46 @@ static void format_bufferReverse(char *buff, size_t start, size_t end)
 static int format_sprintfDecimalForm(struct buffer *buff, struct bigdouble *bd, uint32_t flags, int precision, unsigned int *startOffset)
 {
 	char *carrier;
-
 	unsigned int removeTrailingZeros = flags & FLAG_NO_TRAILING_ZEROS && !(flags & FLAG_ALTERNATE);
 	unsigned int carry = 0;
 	uint32_t remainder;
 	int i, length, ret;
 
 	/* Reserve space for potential additional digit, due to carry. For example: 99.996 -> 100.00 */
-	ret = format_bufferAddChar(buff, 0);
-	if (ret < 0) {
-		return ret;
-	}
+	CHECK_FAIL(ret, format_bufferAddChar(buff, 0));
+
 	*startOffset = 1;
 
-	ret = format_bigdoubleIntegerPart(bd, &bd->helper1);
-	if (ret < 0) {
-		return ret;
-	}
+	CHECK_FAIL(ret, format_bigdoubleIntegerPart(bd, &bd->helper1));
 	format_bigdoubleCutIntegerPart(bd);
 
 	/* Integer part */
 	length = 0;
 	do {
 		__bignum_div(&bd->helper1, &remainder, 10);
-		ret = format_bufferAddChar(buff, smallDigits[remainder]);
-		if (ret < 0) {
-			return ret;
-		}
+		CHECK_FAIL(ret, format_bufferAddChar(buff, smallDigits[remainder]));
 		length += 1;
 	} while (__bignum_cmp(&bd->helper1, 0) != 0);
+
 	format_bufferReverse(buff->data, *startOffset, *startOffset + length);
 
 	/* Frac part */
 	if ((precision > 0) || ((flags & FLAG_ALTERNATE) != 0)) {
-		ret = format_bufferAddChar(buff, '.');
-		if (ret < 0) {
-			return ret;
-		}
+		CHECK_FAIL(ret, format_bufferAddChar(buff, '.'));
 	}
 	for (i = 0; i < precision; ++i) {
-		ret = __bignum_mul(&bd->num, 10);
-		if (ret < 0) {
-			return ret;
-		}
-		ret = format_bigdoubleIntegerPart(bd, &bd->helper1);
-		if (ret < 0) {
-			return ret;
-		}
+		CHECK_FAIL(ret, __bignum_mul(&bd->num, 10));
+
+		CHECK_FAIL(ret, format_bigdoubleIntegerPart(bd, &bd->helper1));
+
 		format_bigdoubleCutIntegerPart(bd);
-		ret = format_bufferAddChar(buff, smallDigits[bd->helper1.data[0] % 10]);
-		if (ret < 0) {
-			return ret;
-		}
+
+		CHECK_FAIL(ret, format_bufferAddChar(buff, smallDigits[bd->helper1.data[0] % 10]));
 	}
 	/* Rounding */
-	ret = __bignum_mul(&bd->num, 10);
-	if (ret < 0) {
-		return ret;
-	}
-	ret = format_bigdoubleIntegerPart(bd, &bd->helper1);
-	if (ret != 0) {
-		return ret;
-	}
+	CHECK_FAIL(ret, __bignum_mul(&bd->num, 10));
+
+	CHECK_FAIL(ret, format_bigdoubleIntegerPart(bd, &bd->helper1));
 
 	format_bigdoubleCutIntegerPart(bd);
 	if (bd->helper1.data[0] % 10 >= 5) {
@@ -414,26 +415,19 @@ static int format_sprintfHexadecimalForm(struct buffer *buff, double d, uint32_t
 	int i, ret;
 
 	for (i = 0; i < 5; ++i) {
-		ret = format_bufferAddChar(buff, 0);
-		if (ret < 0) {
-			return ret;
-		}
+		CHECK_FAIL(ret, format_bufferAddChar(buff, 0));
 	}
 	*startOffset = 5;
 
 	for (i = 0; i < precision - HEXDOUBLE_SUFFICIENT_PRECISION; ++i) {
-		ret = format_bufferAddChar(buff, 0);
-		if (ret < 0) {
-			return ret;
-		}
+		CHECK_FAIL(ret, format_bufferAddChar(buff, 0));
 	}
+
 	for (i = 0; i < HEXDOUBLE_SUFFICIENT_PRECISION; ++i) {
-		ret = format_bufferAddChar(buff, num64 % 16);
-		if (ret < 0) {
-			return ret;
-		}
+		CHECK_FAIL(ret, format_bufferAddChar(buff, num64 % 16));
 		num64 /= 16;
 	}
+
 	format_bufferReverse(buff->data, *startOffset, buff->len);
 
 	*startOffset -= 1;
@@ -476,119 +470,80 @@ static int format_sprintfHexadecimalForm(struct buffer *buff, double d, uint32_t
 	*startOffset -= 1;
 	buff->data[*startOffset] = '0';
 
-	ret = format_bufferAddChar(buff, ((flags & FLAG_LARGE_DIGITS) != 0) ? 'P' : 'p');
-	if (ret < 0) {
-		return ret;
-	}
+	CHECK_FAIL(ret, format_bufferAddChar(buff, ((flags & FLAG_LARGE_DIGITS) != 0) ? 'P' : 'p'));
+
 	if (exp < 0) {
 		if (exp == -1023) {
 			exp = -1022;
 		}
 		exp = -exp;
-		ret = format_bufferAddChar(buff, '-');
-		if (ret < 0) {
-			return ret;
-		}
+		CHECK_FAIL(ret, format_bufferAddChar(buff, '-'));
 	}
 	else {
-		ret = format_bufferAddChar(buff, '+');
-		if (ret < 0) {
-			return ret;
-		}
+		CHECK_FAIL(ret, format_bufferAddChar(buff, '+'));
 	}
 	if (exp > 0) {
 		currSize = buff->len;
 		for (; exp > 0; exp /= 10) {
-			ret = format_bufferAddChar(buff, digits[exp % 10]);
-			if (ret < 0) {
-				return ret;
-			}
+			CHECK_FAIL(ret, format_bufferAddChar(buff, digits[exp % 10]));
 		}
+
 		format_bufferReverse(buff->data, currSize, buff->len);
 	}
 	else {
-		ret = format_bufferAddChar(buff, digits[0]);
-		if (ret < 0) {
-			return ret;
-		}
+		CHECK_FAIL(ret, format_bufferAddChar(buff, digits[0]));
 	}
 	return 0;
 }
 
 
-static int format_sprintfScientificForm(struct buffer *buff, struct bigdouble *bd, uint32_t flags, const int precision, unsigned int *startOffset)
+static int format_sprintfScientificForm(struct buffer *buff, struct bigdouble *bd, uint32_t flags, const int precision, unsigned int *startOffset, int *exp)
 {
 	char *carrier;
 	unsigned int removeTrailingZeros = flags & FLAG_NO_TRAILING_ZEROS && !(flags & FLAG_ALTERNATE);
 	unsigned int expIsPositive, carry = 0;
 	uint32_t remainder;
 	uint32_t temp;
-	int i, exp = 0, resexp = DOUBLE_EXP_INVALID, ret;
+	int i, localexp = 0, ret;
 
 	/* Reserve space for potential additional digit (carry) and for a dot. */
 	for (i = 0; i < 2; ++i) {
-		ret = format_bufferAddChar(buff, 0);
-		if (ret < 0) {
-			return DOUBLE_EXP_INVALID + ret;
-		}
+		CHECK_FAIL(ret, format_bufferAddChar(buff, 0));
 	}
 	*startOffset = 2;
 
-	ret = format_bigdoubleIntegerPart(bd, &bd->helper1);
-	if (ret < 0) {
-		return DOUBLE_EXP_INVALID + ret;
-	}
+	CHECK_FAIL(ret, format_bigdoubleIntegerPart(bd, &bd->helper1));
 	format_bigdoubleCutIntegerPart(bd);
 
 	/* Integer part */
-	if (__bignum_cmp(&bd->helper1, 0) != 0) {
+	ret = __bignum_cmp(&bd->helper1, 0);
+	if (ret != 0) {
 		expIsPositive = 1;
 		do {
 			__bignum_div(&bd->helper1, &remainder, 10);
-			ret = format_bufferAddChar(buff, smallDigits[remainder]);
-			if (ret < 0) {
-				return DOUBLE_EXP_INVALID + ret;
-			}
-			exp += 1;
+			CHECK_FAIL(ret, format_bufferAddChar(buff, smallDigits[remainder]));
+			localexp += 1;
 		} while (__bignum_cmp(&bd->helper1, 0) != 0);
-		format_bufferReverse(buff->data, *startOffset, exp + *startOffset);
-		exp--;
+		format_bufferReverse(buff->data, *startOffset, localexp + *startOffset);
+		localexp--;
 	}
 	else {
 		expIsPositive = 0;
 		do {
-			ret = __bignum_mul(&bd->num, 10);
-			if (ret < 0) {
-				return DOUBLE_EXP_INVALID + ret;
-			}
-			ret = format_bigdoubleIntegerPart(bd, &bd->helper1);
-			if (ret < 0) {
-				return DOUBLE_EXP_INVALID + ret;
-			}
+			CHECK_FAIL(ret, __bignum_mul(&bd->num, 10));
+			CHECK_FAIL(ret, format_bigdoubleIntegerPart(bd, &bd->helper1));
 			format_bigdoubleCutIntegerPart(bd);
 			temp = bd->helper1.data[0] % 10;
-			--exp;
+			--localexp;
 		} while (temp == 0);
-		ret = format_bufferAddChar(buff, smallDigits[temp]);
-		if (ret < 0) {
-			return DOUBLE_EXP_INVALID + ret;
-		}
+		CHECK_FAIL(ret, format_bufferAddChar(buff, smallDigits[temp]));
 	}
 
 	for (i = 0; i <= precision; ++i) {
-		ret = __bignum_mul(&bd->num, 10);
-		if (ret < 0) {
-			return DOUBLE_EXP_INVALID + ret;
-		}
-		ret = format_bigdoubleIntegerPart(bd, &bd->helper1);
-		if (ret < 0) {
-			return DOUBLE_EXP_INVALID + ret;
-		}
+		CHECK_FAIL(ret, __bignum_mul(&bd->num, 10));
+		CHECK_FAIL(ret, format_bigdoubleIntegerPart(bd, &bd->helper1));
 		format_bigdoubleCutIntegerPart(bd);
-		ret = format_bufferAddChar(buff, smallDigits[bd->helper1.data[0] % 10]);
-		if (ret < 0) {
-			return DOUBLE_EXP_INVALID + ret;
-		}
+		CHECK_FAIL(ret, format_bufferAddChar(buff, smallDigits[bd->helper1.data[0] % 10]));
 	}
 
 	/* Remove garbage digits */
@@ -605,9 +560,9 @@ static int format_sprintfScientificForm(struct buffer *buff, struct bigdouble *b
 			*carrier = '1';
 			*startOffset -= 1;
 			carry = 0;
-			exp += 1;
+			localexp += 1;
 			buff->len -= 1;
-			if (exp == 0) {
+			if (localexp == 0) {
 				expIsPositive = 1;
 			}
 		}
@@ -640,42 +595,29 @@ static int format_sprintfScientificForm(struct buffer *buff, struct bigdouble *b
 			++buff->len;
 		}
 	}
-	ret = format_bufferAddChar(buff, flags & FLAG_LARGE_DIGITS ? 'E' : 'e');
-	if (ret < 0) {
-		return DOUBLE_EXP_INVALID + ret;
-	}
-	ret = format_bufferAddChar(buff, expIsPositive ? '+' : '-');
-	if (ret < 0) {
-		return DOUBLE_EXP_INVALID + ret;
-	}
+	CHECK_FAIL(ret, format_bufferAddChar(buff, flags & FLAG_LARGE_DIGITS ? 'E' : 'e'));
+	CHECK_FAIL(ret, format_bufferAddChar(buff, expIsPositive ? '+' : '-'));
 
-	resexp = exp;
+	*exp = localexp;
 	if (expIsPositive == 0) {
-		exp = -exp;
+		localexp = -localexp;
 	}
 	i = buff->len;
-	ret = format_bufferAddChar(buff, smallDigits[exp % 10]);
-	if (ret < 0) {
-		return DOUBLE_EXP_INVALID + ret;
-	}
-	exp /= 10;
-	if (exp == 0) {
-		ret = format_bufferAddChar(buff, smallDigits[0]);
-		if (ret < 0) {
-			return DOUBLE_EXP_INVALID + ret;
-		}
+	CHECK_FAIL(ret, format_bufferAddChar(buff, smallDigits[localexp % 10]));
+
+	localexp /= 10;
+	if (localexp == 0) {
+		CHECK_FAIL(ret, format_bufferAddChar(buff, smallDigits[0]));
 	}
 	else {
-		while (exp != 0) {
-			ret = format_bufferAddChar(buff, smallDigits[exp % 10]);
-			if (ret < 0) {
-				return DOUBLE_EXP_INVALID + ret;
-			}
-			exp /= 10;
+		while (localexp != 0) {
+			CHECK_FAIL(ret, format_bufferAddChar(buff, smallDigits[localexp % 10]));
+			localexp /= 10;
 		}
 	}
 	format_bufferReverse(buff->data, i, buff->len);
-	return resexp;
+
+	return 0;
 }
 
 
@@ -713,10 +655,7 @@ static int format_sprintfDouble(void *ctx, feedfunc feed, double d, uint32_t fla
 	}
 	num64 = format_u64FromDouble(d);
 
-	ret = format_bufferInit(&buff, 2 * precision + 6);
-	if (ret < 0) {
-		return ret;
-	}
+	CHECK_FAIL(ret, format_bufferInit(&buff, 2 * precision + 6));
 
 	/* check special cases */
 	if (((num64 >> DOUBLE_EXP_SHIFT) & 0x7ff) == 0x7ff) {
@@ -728,9 +667,11 @@ static int format_sprintfDouble(void *ctx, feedfunc feed, double d, uint32_t fla
 		else {
 			chosen = notNumber;
 		}
-		format_printBuffer(ctx, feed, flags, minFieldWidth, chosen, chosen + strlen(chosen), sign);
+
+		ret = format_printBuffer(ctx, feed, flags, minFieldWidth, chosen, chosen + strlen(chosen), sign);
 		format_bufferDestroy(&buff);
-		return 0;
+
+		return ret;
 	}
 
 	/* check zero */
@@ -763,7 +704,7 @@ static int format_sprintfDouble(void *ctx, feedfunc feed, double d, uint32_t fla
 			}
 			for (i = 0; i < precision; i++) {
 				ret = format_bufferAddChar(&buff, '0');
-				if (ret != 0) {
+				if (ret < 0) {
 					format_bufferDestroy(&buff);
 					return ret;
 				}
@@ -797,9 +738,12 @@ static int format_sprintfDouble(void *ctx, feedfunc feed, double d, uint32_t fla
 				}
 			}
 		}
-		format_printBuffer(ctx, feed, flags, minFieldWidth, buff.data, buff.data + buff.len, sign);
+
+		ret = format_printBuffer(ctx, feed, flags, minFieldWidth, buff.data, buff.data + buff.len, sign);
+
 		format_bufferDestroy(&buff);
-		return 0;
+
+		return ret;
 	}
 
 	ret = format_bigdoubleLoad(&bd, d);
@@ -812,13 +756,7 @@ static int format_sprintfDouble(void *ctx, feedfunc feed, double d, uint32_t fla
 		ret = format_sprintfDecimalForm(&buff, &bd, flags, precision, &startOffset);
 	}
 	else if (format == 'e') {
-		ret = format_sprintfScientificForm(&buff, &bd, flags, precision, &startOffset);
-		if (ret <= DOUBLE_EXP_INVALID) {
-			ret -= DOUBLE_EXP_INVALID;
-		}
-		else {
-			ret = 0;
-		}
+		ret = format_sprintfScientificForm(&buff, &bd, flags, precision, &startOffset, &exp);
 	}
 	else if (format == 'g') {
 		ret = format_bigdoubleInit(&bd_backup, BIGDOUBLE_DEFAULT_SIZE);
@@ -837,47 +775,47 @@ static int format_sprintfDouble(void *ctx, feedfunc feed, double d, uint32_t fla
 		bd_backup.firstIntegerBit = bd.firstIntegerBit;
 
 		prec = precision ? precision : 1;
-		exp = format_sprintfScientificForm(&buff, &bd_backup, flags, prec - 1, &startOffset);
-		if (exp <= DOUBLE_EXP_INVALID) {
-			ret = exp - DOUBLE_EXP_INVALID;
-		}
-		else {
+		ret = format_sprintfScientificForm(&buff, &bd_backup, flags, prec - 1, &startOffset, &exp);
+		if (ret == 0) {
 			if ((prec > exp) && (exp >= -4)) {
 				buff.len = 0;
 				precision = prec - (exp + 1);
 				ret = format_sprintfDecimalForm(&buff, &bd, flags, precision, &startOffset);
 			}
 		}
+
 		format_bigdoubleDestroy(&bd_backup);
 	}
 	else {
 		ret = format_sprintfHexadecimalForm(&buff, d, flags, precision, &startOffset);
 	}
+
 	if (ret == 0) {
-		format_printBuffer(ctx, feed, flags, minFieldWidth, buff.data + startOffset, buff.data + buff.len, sign);
+		ret = format_printBuffer(ctx, feed, flags, minFieldWidth, buff.data + startOffset, buff.data + buff.len, sign);
 	}
 	format_bufferDestroy(&buff);
 	format_bigdoubleDestroy(&bd);
+
 	return ret;
 }
 #endif /* IO_NO_FLOAT */
 
 
-static void format_sprintf_num(void *ctx, feedfunc feed, uint64_t num64, uint32_t flags, int minFieldWidth, int precision)
+static int format_sprintf_num(void *ctx, feedfunc feed, uint64_t num64, uint32_t flags, int minFieldWidth, int precision)
 {
 	const char *digits = (flags & FLAG_LARGE_DIGITS) ? largeDigits : smallDigits,
 			   *prefix = (flags & FLAG_LARGE_DIGITS) ? "X0" : "x0";
 	char tmp_buf[32];
 	char sign = 0;
 	char *tmp = tmp_buf;
-	int i;
+	int i, ret;
 	uint32_t num32 = (uint32_t)num64;
 	uint32_t num_high = (uint32_t)(num64 >> 32);
 
 	if (((flags & FLAG_NULLMARK) != 0) && (num64 == 0)) {
 		flags &= ~FLAG_ZERO;
-		format_printBuffer(ctx, feed, flags, minFieldWidth, FORMAT_NIL_STR, FORMAT_NIL_STR + FORMAT_NIL_STR_LEN, sign);
-		return;
+		CHECK_FAIL(ret, format_printBuffer(ctx, feed, flags, minFieldWidth, FORMAT_NIL_STR, FORMAT_NIL_STR + FORMAT_NIL_STR_LEN, sign));
+		return 0;
 	}
 
 	if ((flags & FLAG_SIGNED) != 0) {
@@ -998,7 +936,10 @@ static void format_sprintf_num(void *ctx, feedfunc feed, uint64_t num64, uint32_
 		*tmp++ = prefix[0];
 		*tmp++ = prefix[1];
 	}
-	format_printBuffer(ctx, feed, flags, minFieldWidth, tmp, tmp_buf, sign);
+
+	CHECK_FAIL(ret, format_printBuffer(ctx, feed, flags, minFieldWidth, tmp, tmp_buf, sign));
+
+	return 0;
 }
 
 
@@ -1011,6 +952,7 @@ int format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 	int precision, length;
 	char c, fmt;
 	int ret = 0;
+
 	for (;;) {
 		fmt = *format++;
 
@@ -1019,13 +961,13 @@ int format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 		}
 
 		if (fmt != '%') {
-			feed(ctx, fmt);
+			CHECK_FAIL(ret, feed(ctx, fmt));
 			continue;
 		}
 
 		fmt = *format++;
 		if (fmt == '\0') {
-			feed(ctx, '%');
+			CHECK_FAIL(ret, feed(ctx, '%'));
 			break;
 		}
 
@@ -1098,6 +1040,7 @@ int format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 			}
 		}
 
+		/* length specifiers */
 		if (fmt == 'L') {
 			fmt = *format++;
 			flags |= FLAG_LONG_DOUBLE;
@@ -1148,6 +1091,7 @@ int format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 			break;
 		}
 
+		/* conversion specifiers */
 		number = 0;
 		switch (fmt) {
 			case 's':
@@ -1170,11 +1114,11 @@ int format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 					length = strlen(s);
 				}
 
-				format_printBuffer(ctx, feed, flags, minFieldWidth, s, s + length, 0);
+				CHECK_FAIL(ret, format_printBuffer(ctx, feed, flags, minFieldWidth, s, s + length, 0));
 				break;
 			case 'c':
 				c = (char)va_arg(args, int);
-				format_printBuffer(ctx, feed, flags, minFieldWidth, &c, &c + 1, 0);
+				CHECK_FAIL(ret, format_printBuffer(ctx, feed, flags, minFieldWidth, &c, &c + 1, 0));
 				break;
 			case 'p':
 				flags |= (FLAG_HEX | FLAG_NULLMARK | FLAG_ZERO);
@@ -1183,7 +1127,7 @@ int format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 				}
 				minFieldWidth = sizeof(void *) * 2;
 				GET_UNSIGNED(number, flags, args);
-				format_sprintf_num(ctx, feed, number, flags, minFieldWidth, precision);
+				CHECK_FAIL(ret, format_sprintf_num(ctx, feed, number, flags, minFieldWidth, precision));
 				break;
 			case 'o':
 				if (precision != -1) {
@@ -1194,7 +1138,7 @@ int format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 				}
 				flags |= FLAG_OCT;
 				GET_UNSIGNED(number, flags, args);
-				format_sprintf_num(ctx, feed, number, flags, minFieldWidth, precision);
+				CHECK_FAIL(ret, format_sprintf_num(ctx, feed, number, flags, minFieldWidth, precision));
 				break;
 			case 'X':
 				flags |= FLAG_LARGE_DIGITS;
@@ -1208,7 +1152,7 @@ int format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 					precision = 1;
 				}
 				GET_UNSIGNED(number, flags, args);
-				format_sprintf_num(ctx, feed, number, flags, minFieldWidth, precision);
+				CHECK_FAIL(ret, format_sprintf_num(ctx, feed, number, flags, minFieldWidth, precision));
 				break;
 			case 'd':
 			case 'i':
@@ -1220,7 +1164,7 @@ int format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 				}
 				flags |= FLAG_SIGNED;
 				GET_SIGNED(number, flags, args);
-				format_sprintf_num(ctx, feed, number, flags, minFieldWidth, precision);
+				CHECK_FAIL(ret, format_sprintf_num(ctx, feed, number, flags, minFieldWidth, precision));
 				break;
 
 			case 'A':
@@ -1245,10 +1189,8 @@ int format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 				else {
 					doubleNumber = (double)va_arg((args), double);
 				}
-				ret = format_sprintfDouble(ctx, feed, doubleNumber, flags, minFieldWidth, precision, tolower(fmt));
-				if (ret < 0) {
-					return ret;
-				}
+
+				CHECK_FAIL(ret, format_sprintfDouble(ctx, feed, doubleNumber, flags, minFieldWidth, precision, tolower(fmt)));
 				break;
 #else
 				if ((flags & FLAG_LONG_DOUBLE) != 0) {
@@ -1258,19 +1200,19 @@ int format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 				else {
 					va_arg((args), double);
 				}
-				feed(ctx, '%');
-				feed(ctx, fmt);
+				CHECK_FAIL(ret, feed(ctx, '%'));
+				CHECK_FAIL(ret, feed(ctx, fmt));
 				break;
 #endif
 			}
 			case '%':
-				feed(ctx, '%');
+				CHECK_FAIL(ret, feed(ctx, '%'));
 				break;
 			default:
-				feed(ctx, '%');
-				feed(ctx, fmt);
+				CHECK_FAIL(ret, feed(ctx, '%'));
+				CHECK_FAIL(ret, feed(ctx, fmt));
 				break;
 		}
 	}
-	return ret;
+	return 0;
 }
