@@ -95,9 +95,9 @@ typedef struct _pthread_cleanup_t {
 
 static const pthread_attr_t pthread_attr_default = {
 	.stackaddr = NULL,
-	.policy = SCHED_RR,
+	.schedpolicy = SCHED_RR,
 	.priority = 4,
-	.detached = PTHREAD_CREATE_JOINABLE,
+	.detachstate = PTHREAD_CREATE_JOINABLE,
 	.stacksize = CEIL(PTHREAD_STACK_MIN, PAGE_SIZE)
 };
 
@@ -197,7 +197,7 @@ static int pthread_create_main(void)
 	ctx->retval = NULL;
 	ctx->stack = NULL;
 	ctx->stacksize = 0;
-	ctx->is_detached = (pthread_attr_default.detached == PTHREAD_CREATE_DETACHED) ? 1 : 0;
+	ctx->is_detached = (pthread_attr_default.detachstate == PTHREAD_CREATE_DETACHED) ? 1 : 0;
 	ctx->cancelstate = PTHREAD_CANCEL_ENABLE;
 	ctx->refcount = 1;
 	ctx->key_data_list = NULL;
@@ -235,7 +235,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 
 	ctx->refcount = 1;
 	ctx->retval = NULL;
-	ctx->is_detached = (pthread_attr_default.detached == PTHREAD_CREATE_DETACHED) ? 1 : 0;
+	ctx->is_detached = (pthread_attr_default.detachstate == PTHREAD_CREATE_DETACHED) ? 1 : 0;
 	ctx->start_routine = start_routine;
 	ctx->arg = arg;
 	ctx->stack = stack;
@@ -511,6 +511,26 @@ __attribute__((noreturn)) void pthread_exit(void *value_ptr)
 }
 
 
+#define DECLARE_PTHREAD_ATTR_GET_EX(attr_name, attr_type, res, body) \
+	int pthread_attr_get##attr_name(const pthread_attr_t *__restrict attr, attr_type *__restrict res) \
+	{ \
+		if (attr == NULL || (res) == NULL) { \
+			return EINVAL; \
+		} \
+		{ \
+			body \
+		} \
+		return 0; \
+	}
+#define DECLARE_PTHREAD_ATTR_GET(attr_name, attr_type, res) DECLARE_PTHREAD_ATTR_GET_EX(attr_name, attr_type, res, { *(res) = attr->attr_name; })
+
+DECLARE_PTHREAD_ATTR_GET(stackaddr, void *, stackaddr);
+DECLARE_PTHREAD_ATTR_GET(stacksize, size_t, stacksize);
+DECLARE_PTHREAD_ATTR_GET_EX(schedparam, struct sched_param, param, { param->sched_priority = attr->priority; });
+DECLARE_PTHREAD_ATTR_GET(schedpolicy, int, policy);
+DECLARE_PTHREAD_ATTR_GET(detachstate, int, detachstate);
+
+
 int pthread_attr_init(pthread_attr_t *attr)
 {
 	if (attr == NULL) {
@@ -544,34 +564,12 @@ int pthread_attr_setstackaddr(pthread_attr_t *attr, void *stackaddr)
 }
 
 
-int pthread_attr_getstackaddr(const pthread_attr_t *attr, void **stackaddr)
-{
-	if (attr == NULL)
-		return EINVAL;
-
-	*stackaddr = attr->stackaddr;
-
-	return 0;
-}
-
-
 int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize)
 {
 	if (attr == NULL || stacksize < PTHREAD_STACK_MIN)
 		return EINVAL;
 
 	attr->stacksize = stacksize;
-
-	return 0;
-}
-
-
-int pthread_attr_getstacksize(const pthread_attr_t *attr, size_t *stacksize)
-{
-	if (attr == NULL)
-		return EINVAL;
-
-	*stacksize = attr->stacksize;
 
 	return 0;
 }
@@ -609,18 +607,6 @@ int pthread_attr_setschedparam(pthread_attr_t *attr,
 }
 
 
-int pthread_attr_getschedparam(const pthread_attr_t *attr,
-	struct sched_param *param)
-{
-	if (attr == NULL)
-		return EINVAL;
-
-	param->sched_priority = attr->priority;
-
-	return 0;
-}
-
-
 int pthread_attr_setschedpolicy(pthread_attr_t *attr, int policy)
 {
 	if (policy < SCHED_FIFO || policy > SCHED_OTHER)
@@ -628,18 +614,7 @@ int pthread_attr_setschedpolicy(pthread_attr_t *attr, int policy)
 	else if (policy == SCHED_FIFO || policy == SCHED_OTHER)
 		return ENOTSUP;
 
-	attr->policy = policy;
-
-	return 0;
-}
-
-
-int pthread_attr_getschedpolicy(const pthread_attr_t *attr, int *policy)
-{
-	if (attr == NULL)
-		return EINVAL;
-
-	*policy = attr->policy;
+	attr->schedpolicy = policy;
 
 	return 0;
 }
@@ -666,20 +641,7 @@ int pthread_attr_setdetachstate(pthread_attr_t *attr, int detachstate)
 		return EINVAL;
 	}
 
-	attr->detached = detachstate;
-
-	return 0;
-}
-
-
-int pthread_attr_getdetachstate(const pthread_attr_t *attr,
-	int *detachstate)
-{
-	if (attr == NULL) {
-		return EINVAL;
-	}
-
-	*detachstate = attr->detached;
+	attr->detachstate = detachstate;
 
 	return 0;
 }
