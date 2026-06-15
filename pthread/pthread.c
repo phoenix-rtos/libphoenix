@@ -219,8 +219,8 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 		attrs = attr;
 	}
 
-	void *stack = mmap(attrs->stackaddr, attrs->stacksize,
-		PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	void *stack = mmap(attrs->stackaddr, CEIL(attrs->stacksize, PAGE_SIZE),
+			PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
 	if ((stack == MAP_FAILED) || (stack == NULL)) {
 		return EAGAIN;
@@ -560,7 +560,7 @@ int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize)
 	if (attr == NULL || stacksize < PTHREAD_STACK_MIN)
 		return EINVAL;
 
-	attr->stacksize = CEIL(stacksize, PAGE_SIZE);
+	attr->stacksize = stacksize;
 
 	return 0;
 }
