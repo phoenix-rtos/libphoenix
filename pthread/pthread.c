@@ -98,6 +98,7 @@ static const pthread_attr_t pthread_attr_default = {
 	.schedpolicy = SCHED_RR,
 	.priority = 4,
 	.detachstate = PTHREAD_CREATE_JOINABLE,
+	.inheritsched = PTHREAD_INHERIT_SCHED,
 	.stacksize = CEIL(PTHREAD_STACK_MIN, PAGE_SIZE)
 };
 
@@ -247,8 +248,9 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 
 	mutexLock(pthread_common.pthread_list_lock);
 
-	int err = beginthreadex(pthread_start_point, attrs->priority, stack,
-		attrs->stacksize, (void *)ctx, &ctx->id);
+	/* TODO: inherit schedpolicy and contentionscope too once they get relevant */
+	int prio = attrs->inheritsched == PTHREAD_EXPLICIT_SCHED ? attrs->priority : priority(-1);
+	int err = beginthreadex(pthread_start_point, prio, stack, attrs->stacksize, (void *)ctx, &ctx->id);
 
 	if (err != 0) {
 		_pthread_ctx_put(ctx);
@@ -529,6 +531,7 @@ DECLARE_PTHREAD_ATTR_GET(stacksize, size_t, stacksize);
 DECLARE_PTHREAD_ATTR_GET_EX(schedparam, struct sched_param, param, { param->sched_priority = attr->priority; });
 DECLARE_PTHREAD_ATTR_GET(schedpolicy, int, policy);
 DECLARE_PTHREAD_ATTR_GET(detachstate, int, detachstate);
+DECLARE_PTHREAD_ATTR_GET(inheritsched, int, inheritsched);
 
 
 int pthread_attr_init(pthread_attr_t *attr)
@@ -647,12 +650,16 @@ int pthread_attr_setdetachstate(pthread_attr_t *attr, int detachstate)
 }
 
 
-int pthread_attr_getinheritsched(const pthread_attr_t *__restrict attr,
-	int *__restrict inheritsched);
+int pthread_attr_setinheritsched(pthread_attr_t *attr, int inheritsched)
+{
+	if (attr == NULL || (inheritsched != PTHREAD_INHERIT_SCHED && inheritsched != PTHREAD_EXPLICIT_SCHED)) {
+		return EINVAL;
+	}
 
+	attr->inheritsched = inheritsched;
 
-int pthread_attr_setinheritsched(pthread_attr_t *attr,
-	int inheritsched);
+	return 0;
+}
 
 
 int pthread_setschedprio(pthread_t thread, int prio);

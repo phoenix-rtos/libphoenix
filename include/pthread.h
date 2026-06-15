@@ -133,10 +133,10 @@ extern int pthread_attr_setdetachstate(pthread_attr_t *attr, int detachstate);
 extern int pthread_attr_getdetachstate(const pthread_attr_t *attr, int *detachstate);
 
 
-extern int pthread_attr_getinheritsched(const pthread_attr_t *__restrict attr, int *__restrict inheritsched); /* TODO */
+extern int pthread_attr_getinheritsched(const pthread_attr_t *__restrict attr, int *__restrict inheritsched);
 
 
-extern int pthread_attr_setinheritsched(pthread_attr_t *attr, int inheritsched); /* TODO */
+extern int pthread_attr_setinheritsched(pthread_attr_t *attr, int inheritsched);
 
 
 extern int pthread_setschedprio(pthread_t thread, int prio);
