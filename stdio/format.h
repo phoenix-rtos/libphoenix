@@ -23,7 +23,7 @@
 #define FORMAT_NIL_STR_LEN (sizeof(FORMAT_NIL_STR) - 1)
 
 
-typedef void (*feedfunc)(void *, char);
+typedef int (*feedfunc)(void *, char);
 
 
 extern int format_parse(void *ctx, feedfunc feed, const char *format, va_list args);

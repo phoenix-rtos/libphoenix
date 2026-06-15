@@ -24,11 +24,18 @@ typedef struct _printf_ctx_t {
 } printf_ctx_t;
 
 
-static void printf_feed(void *context, char c)
+static int printf_feed(void *context, char c)
 {
+	int ret;
 	size_t *n = context;
+
+	ret = putchar(c);
+	if (ret == EOF) {
+		return -1;
+	}
+
 	*n = *n + 1;
-	putchar(c);
+	return ret;
 }
 
 
@@ -45,6 +52,7 @@ int printf(const char *format, ...)
 }
 
 
+/* errno is set by `format_parse` */
 int vprintf(const char *format, va_list arg)
 {
 	size_t n = 0;
@@ -53,6 +61,6 @@ int vprintf(const char *format, va_list arg)
 		return n;
 	}
 	else {
-		return SET_ERRNO(ret);
+		return -1;
 	}
 }

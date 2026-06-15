@@ -39,13 +39,13 @@ struct feed_ctx_s {
 /* clang-format on */
 
 
-static void format_feed(void *context, char c)
+static int format_feed(void *context, char c)
 {
 	size_t res;
 	struct feed_ctx_s *ctx = (struct feed_ctx_s *)context;
 
 	if (ctx->error < 0) {
-		return;
+		return ctx->error;
 	}
 
 	ctx->buff[ctx->n++] = c;
@@ -53,16 +53,18 @@ static void format_feed(void *context, char c)
 
 	if (ctx->n == sizeof(ctx->buff) - 1) {
 		res = (ctx->hType == feed_hStream) ?
-			fwrite(ctx->buff, 1, ctx->n, ctx->h.stream) :
-			__safe_write(ctx->h.fd, ctx->buff, ctx->n);
+				fwrite(ctx->buff, 1, ctx->n, ctx->h.stream) :
+				__safe_write(ctx->h.fd, ctx->buff, ctx->n);
 
 		ctx->total += res;
 		if (ctx->n != res) {
-			ctx->error = (ctx->hType == feed_hStream ? -1 : -errno);
+			ctx->error = -errno;
 		}
 
 		ctx->n = 0;
 	}
+
+	return ctx->error;
 }
 
 
@@ -79,10 +81,11 @@ int fprintf(FILE *stream, const char *format, ...)
 }
 
 
+/* errno is set by `format_parse` and `fwrite`. */
 int vfprintf(FILE *stream, const char *format, va_list arg)
 {
 	struct feed_ctx_s ctx;
-	size_t res;
+	size_t res = 0;
 	int ret;
 
 	ctx.hType = feed_hStream;
@@ -92,28 +95,24 @@ int vfprintf(FILE *stream, const char *format, va_list arg)
 	ctx.error = 0;
 
 	ret = format_parse(&ctx, format_feed, format, arg);
+	if (ret != 0) {
+		return -1;
+	}
 
-	if ((ret == 0) && (ctx.n != 0)) {
+	if ((ctx.n != 0)) {
 		res = fwrite(ctx.buff, 1, ctx.n, ctx.h.stream);
 		ctx.total += res;
+	}
 
-		if (ctx.n != res) {
-			ctx.error = -1;
-		}
-	}
-	if (ret != 0) {
-		return SET_ERRNO(ret);
-	}
-	else {
-		return ctx.error < 0 ? -1 : /* check error with feof() or ferror() */ ctx.total;
-	}
+	return (ctx.n == res) ? ctx.total : -1;
 }
 
 
+/* errno is set by `format_parse` and `__safe_write`. */
 int vdprintf(int fd, const char *format, va_list arg)
 {
 	struct feed_ctx_s ctx;
-	size_t res;
+	size_t res = 0;
 	int ret;
 
 	ctx.hType = feed_hDescriptor;
@@ -123,22 +122,16 @@ int vdprintf(int fd, const char *format, va_list arg)
 	ctx.error = 0;
 
 	ret = format_parse(&ctx, format_feed, format, arg);
+	if (ret != 0) {
+		return -1;
+	}
 
-	if ((ret == 0) && (ctx.n != 0)) {
+	if ((ctx.n != 0)) {
 		res = __safe_write(ctx.h.fd, ctx.buff, ctx.n);
 		ctx.total += res;
-
-		if (ctx.n != res) {
-			ctx.error = -errno;
-		}
 	}
 
-	if (ret != 0) {
-		return SET_ERRNO(ret);
-	}
-	else {
-		return ctx.error < 0 ? SET_ERRNO(ctx.error) : ctx.total;
-	}
+	return (ctx.n == res) ? ctx.total : -1;
 }
 
 

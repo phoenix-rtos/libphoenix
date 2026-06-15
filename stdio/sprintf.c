@@ -32,17 +32,19 @@ typedef struct _vsnprintf_ctx_t {
 } vsnprintf_ctx_t;
 
 
-static void vsprintf_feed(void *context, char c)
+static int vsprintf_feed(void *context, char c)
 {
-	vsprintf_ctx_t* ctx = (vsprintf_ctx_t *)context;
+	vsprintf_ctx_t *ctx = (vsprintf_ctx_t *)context;
 
 	ctx->buff[ctx->n++] = c;
+
+	return 0;
 }
 
 
-static void vsnprintf_feed(void *context, char c)
+static int vsnprintf_feed(void *context, char c)
 {
-	vsnprintf_ctx_t* ctx = (vsnprintf_ctx_t *)context;
+	vsnprintf_ctx_t *ctx = (vsnprintf_ctx_t *)context;
 
 	if ((ctx->n + 1) < ctx->max_len) {
 		ctx->buff[ctx->n] = c;
@@ -54,6 +56,8 @@ static void vsnprintf_feed(void *context, char c)
 	/* Count anyway to return the number of characters that would have been
 	 * written if buffer had been sufficiently large */
 	ctx->n++;
+
+	return 0;
 }
 
 
@@ -83,6 +87,7 @@ int snprintf(char *str, size_t n, const char *format, ...)
 }
 
 
+/* errno is set by `format_parse` */
 int vsprintf(char *str, const char *format, va_list arg)
 {
 	vsprintf_ctx_t ctx;
@@ -92,14 +97,9 @@ int vsprintf(char *str, const char *format, va_list arg)
 	ctx.n = 0;
 
 	ret = format_parse(&ctx, vsprintf_feed, format, arg);
-	vsprintf_feed(&ctx, '\0');
+	(void)vsprintf_feed(&ctx, '\0');
 
-	if (ret == 0) {
-		return ctx.n - 1;
-	}
-	else {
-		return SET_ERRNO(ret);
-	}
+	return (ret == 0) ? ctx.n - 1 : -1;
 }
 
 
@@ -113,12 +113,7 @@ int vsnprintf(char *str, size_t n, const char *format, va_list arg)
 	ctx.max_len = n;
 
 	ret = format_parse(&ctx, vsnprintf_feed, format, arg);
-	vsnprintf_feed(&ctx, '\0');
+	(void)vsnprintf_feed(&ctx, '\0');
 
-	if (ret == 0) {
-		return ctx.n - 1;
-	}
-	else {
-		return SET_ERRNO(ret);
-	}
+	return (ret == 0) ? ctx.n - 1 : -1;
 }
