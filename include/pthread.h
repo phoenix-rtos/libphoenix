@@ -133,6 +133,12 @@ extern int pthread_attr_setdetachstate(pthread_attr_t *attr, int detachstate);
 extern int pthread_attr_getdetachstate(const pthread_attr_t *attr, int *detachstate);
 
 
+extern int pthread_attr_setguardsize(pthread_attr_t *attr, size_t guardsize);
+
+
+extern int pthread_attr_getguardsize(const pthread_attr_t *__restrict attr, size_t *__restrict guardsize);
+
+
 extern int pthread_attr_getinheritsched(const pthread_attr_t *__restrict attr, int *__restrict inheritsched);
 
 
