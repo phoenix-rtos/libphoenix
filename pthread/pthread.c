@@ -35,6 +35,10 @@ typedef struct pthread_ctx {
 	void *(*start_routine)(void *);
 	void *arg;
 	void *retval;
+	/*
+	 * NOTE: if guardsize is specified and the stack is non-NULL, the stack
+	 * points to the guard start and stacksize accounts for the guard size.
+	 */
 	void *stack;
 	size_t stacksize;
 	struct pthread_ctx *next;
@@ -99,7 +103,8 @@ static const pthread_attr_t pthread_attr_default = {
 	.priority = 4,
 	.detachstate = PTHREAD_CREATE_JOINABLE,
 	.inheritsched = PTHREAD_INHERIT_SCHED,
-	.stacksize = CEIL(PTHREAD_STACK_MIN, PAGE_SIZE)
+	.stacksize = CEIL(PTHREAD_STACK_MIN, PAGE_SIZE),
+	.guardsize = 0
 };
 
 
@@ -220,11 +225,29 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 		attrs = attr;
 	}
 
-	void *stack = mmap(attrs->stackaddr, CEIL(attrs->stacksize, PAGE_SIZE),
-			PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	size_t guardsize = (attrs->stackaddr != NULL) ? 0 : attrs->guardsize;
+	if (guardsize > SIZE_MAX - PAGE_SIZE) {
+		return EINVAL;
+	}
+	guardsize = CEIL(guardsize, PAGE_SIZE);
+
+	if (attrs->stacksize > SIZE_MAX - guardsize || attrs->stacksize + guardsize > SIZE_MAX - PAGE_SIZE) {
+		return EINVAL;
+	}
+
+	size_t stacksize = CEIL(attrs->stacksize + guardsize, PAGE_SIZE);
+	/* FIXME: don't mmap when attrs->stackaddr is not null and just use that address as a stack */
+	void *stack = mmap(attrs->stackaddr, stacksize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
 	if ((stack == MAP_FAILED) || (stack == NULL)) {
 		return EAGAIN;
+	}
+
+	if (guardsize > 0) {
+		if (mprotect(stack, guardsize, PROT_NONE) != 0) {
+			munmap(stack, stacksize);
+			return EAGAIN;
+		}
 	}
 
 	pthread_ctx *ctx = (pthread_ctx *)malloc(sizeof(pthread_ctx));
@@ -240,7 +263,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 	ctx->start_routine = start_routine;
 	ctx->arg = arg;
 	ctx->stack = stack;
-	ctx->stacksize = attrs->stacksize;
+	ctx->stacksize = stacksize;
 	ctx->key_data_list = NULL;
 	ctx->cancelstate = PTHREAD_CANCEL_ENABLE;
 	ctx->cleanup_list = NULL;
@@ -250,11 +273,11 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 
 	/* TODO: inherit schedpolicy and contentionscope too once they get relevant */
 	int prio = attrs->inheritsched == PTHREAD_EXPLICIT_SCHED ? attrs->priority : priority(-1);
-	int err = beginthreadex(pthread_start_point, prio, stack, attrs->stacksize, (void *)ctx, &ctx->id);
+	int err = beginthreadex(pthread_start_point, prio, stack + guardsize, stacksize - guardsize, (void *)ctx, &ctx->id);
 
 	if (err != 0) {
 		_pthread_ctx_put(ctx);
-		munmap(stack, attrs->stacksize);
+		munmap(stack, stacksize);
 	}
 	else {
 		LIST_ADD(&pthread_common.pthread_list, ctx);
@@ -531,6 +554,7 @@ DECLARE_PTHREAD_ATTR_GET(stacksize, size_t, stacksize);
 DECLARE_PTHREAD_ATTR_GET_EX(schedparam, struct sched_param, param, { param->sched_priority = attr->priority; });
 DECLARE_PTHREAD_ATTR_GET(schedpolicy, int, policy);
 DECLARE_PTHREAD_ATTR_GET(detachstate, int, detachstate);
+DECLARE_PTHREAD_ATTR_GET(guardsize, size_t, guardsize);
 DECLARE_PTHREAD_ATTR_GET(inheritsched, int, inheritsched);
 
 
@@ -645,6 +669,18 @@ int pthread_attr_setdetachstate(pthread_attr_t *attr, int detachstate)
 	}
 
 	attr->detachstate = detachstate;
+
+	return 0;
+}
+
+
+int pthread_attr_setguardsize(pthread_attr_t *attr, size_t guardsize)
+{
+	if (attr == NULL) {
+		return EINVAL;
+	}
+
+	attr->guardsize = guardsize;
 
 	return 0;
 }

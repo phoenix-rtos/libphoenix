@@ -43,6 +43,7 @@ typedef struct pthread_attr_t {
 	int detachstate;
 	int inheritsched;
 	size_t stacksize;
+	size_t guardsize;
 } pthread_attr_t;
 
 typedef uintptr_t pthread_t;
