@@ -662,8 +662,7 @@ int pthread_attr_getscope(const pthread_attr_t *attr,
 
 int pthread_attr_setdetachstate(pthread_attr_t *attr, int detachstate)
 {
-	if ((detachstate != PTHREAD_CREATE_DETACHED) ||
-			(detachstate != PTHREAD_CREATE_JOINABLE)) {
+	if (attr == NULL || (detachstate != PTHREAD_CREATE_DETACHED && detachstate != PTHREAD_CREATE_JOINABLE)) {
 		return EINVAL;
 	}
 
