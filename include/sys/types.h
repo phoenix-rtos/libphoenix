@@ -38,9 +38,9 @@ typedef unsigned long u_long;
 
 typedef struct pthread_attr_t {
 	void *stackaddr;
-	int policy;
+	int schedpolicy;
 	int priority;
-	int detached;
+	int detachstate;
 	size_t stacksize;
 } pthread_attr_t;
 
