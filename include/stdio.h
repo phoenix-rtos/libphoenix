@@ -94,289 +94,289 @@ extern FILE *stderr, *stdin, *stdout;
 #define stdout stdout
 
 /* Closes the stream. All buffers are flushed. */
-extern int fclose(FILE *stream);
+int fclose(FILE *stream);
 
 
 /* Clears the end-of-file and error indicators for the given stream. */
-extern void clearerr(FILE *stream);
+void clearerr(FILE *stream);
 
 
 /* Tests the end-of-file indicator for the given stream. */
-extern int feof_unlocked(FILE *stream);
+int feof_unlocked(FILE *stream);
 
 
 /* Tests the end-of-file indicator for the given stream. */
-extern int feof(FILE *stream);
+int feof(FILE *stream);
 
 
 /* Tests the error indicator for the given stream. */
-extern int ferror(FILE *stream);
-extern int ferror_unlocked(FILE *stream);
+int ferror(FILE *stream);
+int ferror_unlocked(FILE *stream);
 
 
 /* Flushes the output buffer of a stream. */
-extern int fflush(FILE *stream);
-extern int fflush_unlocked(FILE *stream);
+int fflush(FILE *stream);
+int fflush_unlocked(FILE *stream);
 
 
 /* Gets the current file position of the stream and writes it to pos. */
-extern int fgetpos(FILE *stream, fpos_t *pos);
+int fgetpos(FILE *stream, fpos_t *pos);
 
 
 /* Opens the filename pointed to by filename using the given mode. */
-extern FILE *fopen(const char *filename, const char *mode);
+FILE *fopen(const char *filename, const char *mode);
 
 
 /* Associates a stream with existing file descriptor fd. */
-extern FILE *fdopen(int fd, const char *mode);
+FILE *fdopen(int fd, const char *mode);
 
 
 /* Reads data from the given stream into the array pointed to by ptr. */
-extern size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
-extern size_t fread_unlocked(void *ptr, size_t size, size_t nmemb, FILE *stream);
+size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
+size_t fread_unlocked(void *ptr, size_t size, size_t nmemb, FILE *stream);
 
 
 /* Associates a new filename with the given open stream and same time closing the old file in stream. */
-extern FILE *freopen(const char *filename, const char *mode, FILE *stream);
+FILE *freopen(const char *filename, const char *mode, FILE *stream);
 
 /* examines the argument stream and returns its integer file descriptor */
-extern int fileno(FILE *stream);
-extern int fileno_unlocked(FILE *stream);
+int fileno(FILE *stream);
+int fileno_unlocked(FILE *stream);
 
 /*
  * Sets the file position of the stream to the given offset. The argument offset signifies the number of bytes
  * to seek from the given whence position.
  */
-extern int fseek(FILE *stream, long int offset, int whence);
-extern int fseeko(FILE *stream, off_t offset, int whence);
+int fseek(FILE *stream, long int offset, int whence);
+int fseeko(FILE *stream, off_t offset, int whence);
 
 
 /*
  * Sets the file position of the given stream to the given position. The argument pos is a position given by
  * the function fgetpos.
  */
-extern int fsetpos(FILE *stream, const fpos_t *pos);
+int fsetpos(FILE *stream, const fpos_t *pos);
 
 
 /* Returns the current file position of the given stream. */
-extern long int ftell(FILE *stream);
-extern off_t ftello(FILE *stream);
+long int ftell(FILE *stream);
+off_t ftello(FILE *stream);
 
 
 /* Writes data from the array pointed to by ptr to the given stream. */
-extern size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
-extern size_t fwrite_unlocked(const void *ptr, size_t size, size_t nmemb, FILE *stream);
+size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
+size_t fwrite_unlocked(const void *ptr, size_t size, size_t nmemb, FILE *stream);
 
 
 /* Deletes the given filename so that it is no longer accessible. */
-extern int remove(const char *filename);
+int remove(const char *filename);
 
 
 /* Causes the filename referred to, by old_filename to be changed to new_filename. */
-extern int rename(const char *old_filename, const char *new_filename);
+int rename(const char *old_filename, const char *new_filename);
 
 
 /* Sets the file position to the beginning of the file of the given stream. */
-extern void rewind(FILE *stream);
+void rewind(FILE *stream);
 
 
 /* Defines how a stream should be buffered. */
-extern void setbuf(FILE *stream, char *buffer);
+void setbuf(FILE *stream, char *buffer);
 
 
 /* Another function to define how a stream should be buffered. */
-extern int setvbuf(FILE *stream, char *buffer, int mode, size_t size);
+int setvbuf(FILE *stream, char *buffer, int mode, size_t size);
 
 
 /* Creates a temporary file in binary update mode (wb+). */
-extern FILE *tmpfile(void);
+FILE *tmpfile(void);
 
 
 /* Generates and returns a valid temporary filename which does not exist. */
-extern char *tmpnam(char *str);
+char *tmpnam(char *str);
 
 
 /* Generates a pathname that may be used for a temporary file. */
-extern char *tempnam(const char *dir, const char *pfx);
+char *tempnam(const char *dir, const char *pfx);
 
 
 /* Sends formatted output to a stream. */
-extern int fprintf(FILE *stream, const char *format, ...)
-	__attribute__((format(printf, 2, 3)));
+int fprintf(FILE *stream, const char *format, ...)
+		__attribute__((format(printf, 2, 3)));
 
 
 /* Sends formatted output to a file descriptor. */
-extern int dprintf(int fd, const char *format, ...)
-	__attribute__((format(printf, 2, 3)));
+int dprintf(int fd, const char *format, ...)
+		__attribute__((format(printf, 2, 3)));
 
 
 /* Sends formatted output to stdout. */
-extern int printf(const char *format, ...)
-	__attribute__((format(printf, 1, 2)));
+int printf(const char *format, ...)
+		__attribute__((format(printf, 1, 2)));
 
 
 /* Sends formatted output to a string. */
-extern int sprintf(char *str, const char *format, ...)
-	__attribute__((format(printf, 2, 3)));
+int sprintf(char *str, const char *format, ...)
+		__attribute__((format(printf, 2, 3)));
 
 
 /* Sends formatted output to a string. */
-extern int snprintf(char *str, size_t n, const char *format, ...)
-	__attribute__((format(printf, 3, 4)));
+int snprintf(char *str, size_t n, const char *format, ...)
+		__attribute__((format(printf, 3, 4)));
 
 
 /* Sends formatted output to a stream using an argument list. */
-extern int vfprintf(FILE *stream, const char *format, va_list arg)
-	__attribute__((format(printf, 2, 0)));
+int vfprintf(FILE *stream, const char *format, va_list arg)
+		__attribute__((format(printf, 2, 0)));
 
 
 /* Sends formatted output to a file descriptor using an argument list. */
-extern int vdprintf(int fd, const char *format, va_list arg)
-	__attribute__((format(printf, 2, 0)));
+int vdprintf(int fd, const char *format, va_list arg)
+		__attribute__((format(printf, 2, 0)));
 
 
 /* Sends formatted output to stdout using an argument list. */
-extern int vprintf(const char *format, va_list arg)
-	__attribute__((format(printf, 1, 0)));
+int vprintf(const char *format, va_list arg)
+		__attribute__((format(printf, 1, 0)));
 
 
 /* Sends formatted output to a string using an argument list. */
-extern int vsprintf(char *str, const char *format, va_list arg)
-	__attribute__((format(printf, 2, 0)));
+int vsprintf(char *str, const char *format, va_list arg)
+		__attribute__((format(printf, 2, 0)));
 
 
 /* Sends formatted output to a string using an argument list. */
-extern int vsnprintf(char *str, size_t n, const char *format, va_list arg)
-	__attribute__((format(printf, 3, 0)));
+int vsnprintf(char *str, size_t n, const char *format, va_list arg)
+		__attribute__((format(printf, 3, 0)));
 
 
 /* Print formatted output to allocated string.  */
-extern int asprintf(char **strp, const char *fmt, ...)
-	__attribute__((format(printf, 2, 3)));
+int asprintf(char **strp, const char *fmt, ...)
+		__attribute__((format(printf, 2, 3)));
 
 
 /* Print formatted output to allocated string using an argument list. */
-extern int vasprintf(char **strp, const char *fmt, va_list ap)
-	__attribute__((format(printf, 2, 0)));
+int vasprintf(char **strp, const char *fmt, va_list ap)
+		__attribute__((format(printf, 2, 0)));
 
 
 /* Reads formatted input from a stream using an argument list. */
-extern int vfscanf(FILE *stream, const char *format, va_list ap)
-	__attribute__((format(scanf, 2, 0)));
+int vfscanf(FILE *stream, const char *format, va_list ap)
+		__attribute__((format(scanf, 2, 0)));
 
 
 /* Reads formatted input from a string using an argument list. */
-extern int vsscanf(const char *str, const char *format, va_list ap)
-	__attribute__((format(scanf, 2, 0)));
+int vsscanf(const char *str, const char *format, va_list ap)
+		__attribute__((format(scanf, 2, 0)));
 
 
 /* Reads formatted input from stdin using an argument list. */
-extern int vscanf(const char *format, va_list ap)
-	__attribute__((format(scanf, 1, 0)));
+int vscanf(const char *format, va_list ap)
+		__attribute__((format(scanf, 1, 0)));
 
 
 /* Reads formatted input from a stream. */
-extern int fscanf(FILE *stream, const char *format, ...)
-	__attribute__((format(scanf, 2, 3)));
+int fscanf(FILE *stream, const char *format, ...)
+		__attribute__((format(scanf, 2, 3)));
 
 
 /* Reads formatted input from stdin. */
-extern int scanf(const char *format, ...)
-	__attribute__((format(scanf, 1, 2)));
+int scanf(const char *format, ...)
+		__attribute__((format(scanf, 1, 2)));
 
 
 /* Reads formatted input from a string. */
-extern int sscanf(const char *str, const char *format, ...)
-	__attribute__((format(scanf, 2, 3)));
+int sscanf(const char *str, const char *format, ...)
+		__attribute__((format(scanf, 2, 3)));
 
 
 /* Gets the next character (an unsigned char) from the specified stream and advances the position indicator for the stream. */
-extern int fgetc(FILE *stream);
+int fgetc(FILE *stream);
 
 
 /*
  * Reads a line from the specified stream and stores it into the string pointed to by str. It stops when either (n-1) characters are read,
  * the newline character is read, or the end-of-file is reached, whichever comes first.
  */
-extern char *fgets(char *str, int n, FILE *stream);
-extern char *fgets_unlocked(char *s, int n, FILE *stream);
+char *fgets(char *str, int n, FILE *stream);
+char *fgets_unlocked(char *s, int n, FILE *stream);
 
 
 /*
  * Writes a character (an unsigned char) specified by the argument char to the specified stream and advances the position
  * indicator for the stream.
  */
-extern int fputc(int c, FILE *stream);
-extern int fputc_unlocked(int c, FILE *stream);
+int fputc(int c, FILE *stream);
+int fputc_unlocked(int c, FILE *stream);
 
 
 /* Writes a string to the specified stream up to but not including the null character. */
-extern int fputs(const char *str, FILE *stream);
-extern int fputs_unlocked(const char *s, FILE *stream);
+int fputs(const char *str, FILE *stream);
+int fputs_unlocked(const char *s, FILE *stream);
 
 
 /* Gets the next character (an unsigned char) from the specified stream and advances the position indicator for the stream. */
-extern int getc(FILE *stream);
-extern int getc_unlocked(FILE *stream);
+int getc(FILE *stream);
+int getc_unlocked(FILE *stream);
 
 
 /* Gets a character (an unsigned char) from stdin. */
-extern int getchar(void);
-extern int getchar_unlocked(void);
+int getchar(void);
+int getchar_unlocked(void);
 
 
 /*
  * Reads a line from stdin and stores it into the string pointed to by, str. It stops when either the newline character is read
  * or when the end-of-file is reached, whichever comes first.
  */
-extern char *gets(char *str);
+char *gets(char *str);
 
 
 /*
  * Writes a character (an unsigned char) specified by the argument char to the specified stream and advances the position indicator
  * for the stream.
  */
-extern int putc(int c, FILE *stream);
-extern int putc_unlocked(int c, FILE *stream);
+int putc(int c, FILE *stream);
+int putc_unlocked(int c, FILE *stream);
 
 
 /* Writes a character (an unsigned char) specified by the argument char to stdout. */
-extern int putchar(int c);
-extern int putchar_unlocked(int c);
+int putchar(int c);
+int putchar_unlocked(int c);
 
 
 /* Writes a string to stdout up to but not including the null character. A newline character is appended to the output. */
-extern int puts(const char *str);
+int puts(const char *str);
 
 
 /* Pushes the character char (an unsigned char) onto the specified stream so that the next character is read. */
-extern int ungetc(int c, FILE *stream);
+int ungetc(int c, FILE *stream);
 
 
 /* Prints a descriptive error message to stderr. First the string str is printed followed by a colon and then a space. */
-extern void perror(const char *str);
+void perror(const char *str);
 
 
-extern FILE *popen(const char *command, const char *type);
+FILE *popen(const char *command, const char *type);
 
 
-extern int pclose(FILE *stream);
+int pclose(FILE *stream);
 
 
 /* Reads a string input delimited by a user-specified character. */
-extern ssize_t getdelim(char **lineptr, size_t *n, int delim, FILE *stream);
+ssize_t getdelim(char **lineptr, size_t *n, int delim, FILE *stream);
 
 
 /* Reads a string separated by a newline character. */
-extern ssize_t getline(char **lineptr, size_t *n, FILE *stream);
+ssize_t getline(char **lineptr, size_t *n, FILE *stream);
 
 
-extern void _file_init(void);
+void _file_init(void);
 
 
 /* stdio locking functions */
-extern void flockfile(FILE *stream);
-extern void funlockfile(FILE *stream);
+void flockfile(FILE *stream);
+void funlockfile(FILE *stream);
 
 
 #ifdef __cplusplus
