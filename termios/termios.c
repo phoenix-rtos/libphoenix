@@ -85,6 +85,16 @@ int tcdrain(int fd)
 	return ret;
 }
 
+int tcflow(int fd, int action)
+{
+	int ret;
+	do {
+		ret = ioctl(fd, TCXONC, action);
+	} while (ret < 0 && errno == EINTR);
+
+	return ret;
+}
+
 int tcsetpgrp(int fd, pid_t pgrp)
 {
 	int ret;

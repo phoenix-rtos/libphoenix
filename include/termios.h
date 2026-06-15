@@ -192,6 +192,7 @@ struct winsize {
 #define TCSETSF    _IOW(TTY_IOC_TYPE, 0x4, struct termios)
 #define TCFLSH     _IOV(TTY_IOC_TYPE, 0x5, int)
 #define TCDRAIN    _IO(TTY_IOC_TYPE, 0x6)
+#define TCXONC     _IOV(TTY_IOC_TYPE, 0x7, int)
 #define TCSBRK     _IOV(TTY_IOC_TYPE, 0x9, int)
 #define TIOCSCTTY  _IOV(TTY_IOC_TYPE, 0xE, int)
 #define TIOCGPGRP  _IOR(TTY_IOC_TYPE, 0xF, pid_t)
@@ -228,6 +229,7 @@ int tcsetattr(int fildes, int optional_actions, const struct termios *termios_p)
 int tcsendbreak(int fd, int duration);
 int tcflush(int fd, int queue_selector);
 int tcdrain(int fd);
+int tcflow(int fd, int action);
 
 int tcsetpgrp(int fd, pid_t pgrp);
 pid_t tcgetpgrp(int fd);
