@@ -41,6 +41,7 @@ typedef struct pthread_attr_t {
 	int schedpolicy;
 	int priority;
 	int detachstate;
+	int inheritsched;
 	size_t stacksize;
 } pthread_attr_t;
 
