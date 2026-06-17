@@ -23,6 +23,7 @@
 #include <limits.h>
 
 #include "../common/util.h"
+#include "../common/cancellation.h"
 
 
 char *tzname[2];
@@ -533,7 +534,7 @@ int nanosleep(const struct timespec *req, struct timespec *rem)
 	long nsec = req->tv_nsec;
 	int ret;
 
-	ret = nsleep(&sec, &nsec, CLOCK_MONOTONIC, 0);
+	ret = CANCELLATION_POINT(int, nsleep, (&sec, &nsec, CLOCK_MONOTONIC, 0));
 
 	if (ret == -EINTR && rem != NULL) {
 		rem->tv_sec = sec;
@@ -555,7 +556,7 @@ int clock_nanosleep(clockid_t clock, int flags, const struct timespec *req, stru
 		return EINVAL;
 	}
 
-	int ret = nsleep(&sec, &nsec, clock, flags);
+	int ret = CANCELLATION_POINT(int, nsleep, (&sec, &nsec, clock, flags));
 
 	if ((ret == -EINTR) && (rem != NULL) && ((flags & TIMER_ABSTIME) == 0)) {
 		rem->tv_sec = sec;

@@ -16,6 +16,6 @@
 #include <errno.h>
 #include <sys/wait.h>
 
+#include "../common/cancellation.h"
 
-WRAP_ERRNO_DEF(pid_t, waitpid, (pid_t pid, int *status, int options), (pid, status, options))
-
+WRAP_ERRNO_DEF_CANCELLATION(pid_t, waitpid, (pid_t pid, int *status, int options), (pid, status, options))

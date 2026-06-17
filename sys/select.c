@@ -23,6 +23,7 @@
 #include <sched.h>
 
 #include "../common/util.h"
+#include "../common/cancellation.h"
 
 /* POSIX requires the maximum timeout in select to be at least 31 days */
 #define POSIX_MAX_TIMEOUT_MS (31LL * 24LL * 60LL * 60LL * 1000LL)
@@ -31,7 +32,7 @@
 
 
 /* clang-format off */
-WRAP_ERRNO_DEF(int, poll, (struct pollfd *fds, nfds_t nfds, int timeout_ms), (fds, nfds, timeout_ms))
+WRAP_ERRNO_DEF_CANCELLATION(int, poll, (struct pollfd *fds, nfds_t nfds, int timeout_ms), (fds, nfds, timeout_ms))
 /* clang-format on */
 
 
@@ -81,7 +82,7 @@ int select(int nfds, fd_set *rd, fd_set *wr, fd_set *ex, struct timeval *to)
 			sec = min(to->tv_sec, POSIX_MAX_TIMEOUT_MS / 1000);
 			nsec = to->tv_usec * 1000;
 			if (sec != 0 || nsec != 0) {
-				rv = SET_ERRNO(nsleep(&sec, &nsec, CLOCK_MONOTONIC, 0));
+				rv = SET_ERRNO(CANCELLATION_POINT(int, nsleep, (&sec, &nsec, CLOCK_MONOTONIC, 0)));
 			}
 			else {
 				rv = 0;

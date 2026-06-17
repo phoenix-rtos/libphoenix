@@ -21,6 +21,8 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
+#include "../common/cancellation.h"
+
 extern char **environ;
 
 static size_t _size = 0; /* Total number of slots. */
@@ -305,7 +307,7 @@ int system(const char *command)
 		exit(EXIT_FAILURE);
 	}
 
-	waitpid(pid, &ret, 0);
+	(void)CANCELLATION_POINT(pid_t, waitpid, (pid, &ret, 0));
 	sigprocmask(SIG_SETMASK, &old_mask, NULL);
 
 	return ret;

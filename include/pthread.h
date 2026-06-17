@@ -57,7 +57,11 @@ extern "C" {
 
 #define PTHREAD_CANCEL_DISABLE 0
 #define PTHREAD_CANCEL_ENABLE  1
-#define PTHREAD_CANCELED       2
+
+#define PTHREAD_CANCELED ((void *)-1)
+
+#define PTHREAD_CANCEL_DEFERRED     0
+#define PTHREAD_CANCEL_ASYNCHRONOUS 1
 
 /* clang-format off */
 #define PTHREAD_MUTEX_INITIALIZER  { 0, 0 }
@@ -76,6 +80,9 @@ int pthread_detach(pthread_t thread);
 
 
 int pthread_setcancelstate(int state, int *oldstate);
+
+
+int pthread_setcanceltype(int type, int *oldtype);
 
 
 int pthread_cancel(pthread_t thread);
@@ -291,6 +298,21 @@ void _pthread_atfork_parent(void);
 
 
 void _pthread_atfork_child(void);
+
+
+void _pthread_fork_child_reinit(pthread_t self);
+
+
+void _pthread_nocancel_begin(void);
+
+
+void _pthread_nocancel_end(void);
+
+
+int _pthread_enable_asynccancel(void);
+
+
+void _pthread_disable_asynccancel(int oldval);
 
 
 void pthread_cleanup_push(void (*routine)(void *), void *arg);

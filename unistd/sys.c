@@ -30,6 +30,9 @@
 #include <time.h>
 
 
+#include "../common/cancellation.h"
+
+
 WRAP_ERRNO_DEF(int, setpgid, (pid_t pid, pid_t pgid), (pid, pgid))
 WRAP_ERRNO_DEF(int, setpgrp, (void), ())
 
@@ -96,7 +99,7 @@ int execv(const char *path, char *const argv[])
 }
 
 
-int execve(const char *file, char *const argv[], char *const envp[])
+static int _execve(const char *file, char *const argv[], char *const envp[])
 {
 	int fd, noargs = 0, err;
 	char *interp, *end;
@@ -202,6 +205,23 @@ int execve(const char *file, char *const argv[], char *const envp[])
 	sys_clear();
 
 	return SET_ERRNO(err);
+}
+
+
+int execve(const char *file, char *const argv[], char *const envp[])
+{
+	int ret;
+
+	/*
+	 * exec() is not a cancellation point, but the lookup above reaches open(),
+	 * read() and close(), which are. It also can run in a vfork child,
+	 * where those would operate on the parent thread's context/TLS.
+	 */
+	_pthread_nocancel_begin();
+	ret = _execve(file, argv, envp);
+	_pthread_nocancel_end();
+
+	return ret;
 }
 
 
@@ -321,7 +341,7 @@ int usleep(useconds_t usecs)
 	time_t sec = usecs / (1000 * 1000);
 	long nsec = (usecs % (1000 * 1000)) * 1000;
 
-	err = nsleep(&sec, &nsec, CLOCK_MONOTONIC, 0);
+	err = CANCELLATION_POINT(int, nsleep, (&sec, &nsec, CLOCK_MONOTONIC, 0));
 
 	SET_ERRNO(err);
 
@@ -336,7 +356,7 @@ unsigned sleep(unsigned seconds)
 	long nsec = 0;
 	unsigned unslept;
 
-	err = nsleep(&sec, &nsec, CLOCK_MONOTONIC, 0);
+	err = CANCELLATION_POINT(int, nsleep, (&sec, &nsec, CLOCK_MONOTONIC, 0));
 	unslept = (err == -EINTR) ? (unsigned)sec : 0;
 
 	return unslept;
@@ -350,9 +370,11 @@ extern void release(void);
 pid_t fork(void)
 {
 	pid_t pid;
+	pthread_t self = pthread_self();
 	_pthread_atfork_prepare();
 	if (!(pid = sys_fork())) {
 		release();
+		_pthread_fork_child_reinit(self);
 		_pthread_atfork_child();
 	}
 	else if (pid < 0) {

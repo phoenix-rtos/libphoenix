@@ -28,6 +28,8 @@
 #include <sys/ioctl.h>
 #include <termios.h>
 
+#include "../common/cancellation.h"
+
 #include "posix/utils.h"
 #include "ioctl-helper.h"
 
@@ -42,22 +44,22 @@ extern int sys_pipe(int fildes[2]);
 extern int sys_fstat(int fd, struct stat *buf);
 extern int sys_lseek(int fildes, off_t *offset, int whence);
 
-WRAP_ERRNO_DEF(int, close, (int fildes), (fildes))
+WRAP_ERRNO_DEF_CANCELLATION(int, close, (int fildes), (fildes))
 WRAP_ERRNO_DEF(int, ftruncate, (int fildes, off_t length), (fildes, length))
 WRAP_ERRNO_DEF(int, dup, (int fildes), (fildes))
 WRAP_ERRNO_DEF(int, dup2, (int fildes, int fildes2), (fildes, fildes2))
-WRAP_ERRNO_DEF(int, fsync, (int fildes), (fildes))
+WRAP_ERRNO_DEF_CANCELLATION(int, fsync, (int fildes), (fildes))
 
 
 ssize_t read(int fildes, void *buf, size_t nbyte)
 {
-	return SET_ERRNO(sys_read(fildes, buf, nbyte, -1));
+	return SET_ERRNO(CANCELLATION_POINT(ssize_t, sys_read, (fildes, buf, nbyte, -1)));
 }
 
 
 ssize_t write(int fildes, const void *buf, size_t nbyte)
 {
-	return SET_ERRNO(sys_write(fildes, buf, nbyte, -1));
+	return SET_ERRNO(CANCELLATION_POINT(ssize_t, sys_write, (fildes, buf, nbyte, -1)));
 }
 
 
@@ -67,7 +69,7 @@ ssize_t pread(int fildes, void *buf, size_t nbyte, off_t offset)
 		errno = EINVAL;
 		return -1;
 	}
-	return SET_ERRNO(sys_read(fildes, buf, nbyte, offset));
+	return SET_ERRNO(CANCELLATION_POINT(ssize_t, sys_read, (fildes, buf, nbyte, offset)));
 }
 
 
@@ -77,7 +79,7 @@ ssize_t pwrite(int fildes, const void *buf, size_t nbyte, off_t offset)
 		errno = EINVAL;
 		return -1;
 	}
-	return SET_ERRNO(sys_write(fildes, buf, nbyte, offset));
+	return SET_ERRNO(CANCELLATION_POINT(ssize_t, sys_write, (fildes, buf, nbyte, offset)));
 }
 
 
@@ -240,6 +242,8 @@ ssize_t __safe_pread_nb(int fd, void *buf, size_t size, off_t offset)
 }
 
 
+/* FIXME: __safe_open/close should likely not be cancellation points */
+
 int __safe_open(const char *path, int oflag, mode_t mode)
 {
 	int err;
@@ -359,9 +363,9 @@ int open(const char *filename, int oflag, ...)
 	if (canonical == NULL)
 		return -1; /* errno set by resolve_path */
 
-	do
-		err = sys_open(canonical, oflag, mode);
-	while (err == -EINTR);
+	do {
+		err = CANCELLATION_POINT(int, sys_open, (canonical, oflag, mode));
+	} while (err == -EINTR);
 
 	free(canonical);
 	return SET_ERRNO(err);
@@ -756,14 +760,22 @@ extern int sys_fcntl(int fd, int cmd, unsigned val);
 int fcntl(int fd, int cmd, ...)
 {
 	va_list ap;
-	unsigned val;
+	unsigned int val;
+	int ret;
 
 	/* FIXME: handle varargs properly */
 	va_start(ap, cmd);
 	val = va_arg(ap, unsigned);
 	va_end(ap);
 
-	return SET_ERRNO(sys_fcntl(fd, cmd, val));
+	if (cmd == F_SETLKW) {
+		ret = CANCELLATION_POINT(int, sys_fcntl, (fd, cmd, val));
+	}
+	else {
+		ret = sys_fcntl(fd, cmd, val);
+	}
+
+	return SET_ERRNO(ret);
 }
 
 

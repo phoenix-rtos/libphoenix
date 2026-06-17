@@ -21,6 +21,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "../common/cancellation.h"
+
 
 extern int sys_tkill(int pid, int tid, int signal);
 
@@ -357,7 +359,7 @@ int sigsuspend(const sigset_t *sigmask)
 		}
 	}
 
-	return SET_ERRNO(signalSuspend(phxv));
+	return SET_ERRNO(CANCELLATION_POINT(int, signalSuspend, (phxv)));
 }
 
 
