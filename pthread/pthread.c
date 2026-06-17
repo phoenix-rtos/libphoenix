@@ -841,19 +841,17 @@ int sched_yield(void)
 
 int sched_get_priority_max(int policy)
 {
-	if (policy == SCHED_RR)
-		return 7;
-
-	return EINVAL;
+	sched_info_t info;
+	int err = SET_ERRNO(schedInfo(getpid(), policy, &info));
+	return err < 0 ? err : info.maxPriority;
 }
 
 
 int sched_get_priority_min(int policy)
 {
-	if (policy == SCHED_RR)
-		return 0;
-
-	return EINVAL;
+	sched_info_t info;
+	int err = SET_ERRNO(schedInfo(getpid(), policy, &info));
+	return err < 0 ? err : info.minPriority;
 }
 
 
