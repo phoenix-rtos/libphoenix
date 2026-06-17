@@ -621,12 +621,22 @@ int pthread_attr_getstack(const pthread_attr_t *attr, void **stackaddr,
 int pthread_attr_setschedparam(pthread_attr_t *attr,
 	const struct sched_param *param)
 {
-	if (attr == NULL)
+	if (attr == NULL || param == NULL) {
 		return EINVAL;
+	}
 
-	if (param->sched_priority > sched_get_priority_max(SCHED_RR) ||
-			param->sched_priority < sched_get_priority_min(SCHED_RR))
+	if (attr->schedpolicy != SCHED_RR) {
 		return ENOTSUP;
+	}
+
+	sched_info_t info;
+	if (schedInfo(getpid(), attr->schedpolicy, &info) < 0) {
+		return EINVAL;
+	}
+
+	if (param->sched_priority > info.maxPriority || param->sched_priority < info.minPriority) {
+		return EINVAL;
+	}
 
 	attr->priority = param->sched_priority;
 
