@@ -44,6 +44,7 @@ typedef struct pthread_attr_t {
 	int inheritsched;
 	size_t stacksize;
 	size_t guardsize;
+	/* scope is always PTHREAD_SCOPE_SYSTEM */
 } pthread_attr_t;
 
 typedef uintptr_t pthread_t;

@@ -660,16 +660,27 @@ int pthread_attr_setschedpolicy(pthread_attr_t *attr, int policy)
 }
 
 
-int pthread_attr_setscope(pthread_attr_t *attr, int contentionscope)
+int pthread_attr_setscope(pthread_attr_t *attr, int scope)
 {
+	if (attr == NULL || (scope != PTHREAD_SCOPE_SYSTEM && scope != PTHREAD_SCOPE_PROCESS)) {
+		return EINVAL;
+	}
+
+	if (scope == PTHREAD_SCOPE_PROCESS) {
+		return ENOTSUP;
+	}
+
 	return 0;
 }
 
-int pthread_attr_getscope(const pthread_attr_t *attr,
-	int *contentionscope)
+
+int pthread_attr_getscope(const pthread_attr_t *attr, int *scope)
 {
-	if (attr == NULL)
+	if (attr == NULL || scope == NULL) {
 		return EINVAL;
+	}
+
+	*scope = PTHREAD_SCOPE_SYSTEM;
 
 	return 0;
 }
