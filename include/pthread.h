@@ -121,10 +121,10 @@ extern int pthread_attr_setschedpolicy(pthread_attr_t *attr, int policy);
 extern int pthread_attr_getschedpolicy(const pthread_attr_t *attr, int *policy);
 
 
-extern int pthread_attr_setscope(pthread_attr_t *attr, int contentionscope); /* TODO */
+extern int pthread_attr_setscope(pthread_attr_t *attr, int scope);
 
 
-extern int pthread_attr_getscope(const pthread_attr_t *attr, int *contentionscope); /* TODO */
+extern int pthread_attr_getscope(const pthread_attr_t *attr, int *scope);
 
 
 extern int pthread_attr_setdetachstate(pthread_attr_t *attr, int detachstate);
