@@ -22,9 +22,7 @@
 #include <pthread.h>
 #include <unistd.h>
 
-/* clang-format off */
-#define CEIL(value, size) ((((value) + (size) - 1) / (size)) * (size))
-/* clang-format on */
+#define ALIGN(value, size) ((((value) + (size) - 1) / (size)) * (size))
 
 #define PTHREAD_ONCE_DONE          0
 #define PTHREAD_ONCE_IN_PROGRESS   2
@@ -103,7 +101,7 @@ static const pthread_attr_t pthread_attr_default = {
 	.priority = 4,
 	.detachstate = PTHREAD_CREATE_JOINABLE,
 	.inheritsched = PTHREAD_INHERIT_SCHED,
-	.stacksize = CEIL(PTHREAD_STACK_MIN, PAGE_SIZE),
+	.stacksize = ALIGN(PTHREAD_STACK_MIN, PAGE_SIZE),
 	.guardsize = 0
 };
 
@@ -229,13 +227,13 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 	if (guardsize > SIZE_MAX - PAGE_SIZE) {
 		return EINVAL;
 	}
-	guardsize = CEIL(guardsize, PAGE_SIZE);
+	guardsize = ALIGN(guardsize, PAGE_SIZE);
 
 	if (attrs->stacksize > SIZE_MAX - guardsize || attrs->stacksize + guardsize > SIZE_MAX - PAGE_SIZE) {
 		return EINVAL;
 	}
 
-	size_t stacksize = CEIL(attrs->stacksize + guardsize, PAGE_SIZE);
+	size_t stacksize = ALIGN(attrs->stacksize + guardsize, PAGE_SIZE);
 	/* FIXME: don't mmap when attrs->stackaddr is not null and just use that address as a stack */
 	void *stack = mmap(attrs->stackaddr, stacksize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
