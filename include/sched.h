@@ -31,6 +31,9 @@ struct sched_param {
 };
 
 
+int schedInfo(pid_t pid, int policy, sched_info_t *info);
+
+
 int sched_yield(void);
 
 
