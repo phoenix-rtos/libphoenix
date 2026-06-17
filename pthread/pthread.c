@@ -259,7 +259,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 
 	ctx->refcount = 1;
 	ctx->retval = NULL;
-	ctx->is_detached = (pthread_attr_default.detachstate == PTHREAD_CREATE_DETACHED) ? 1 : 0;
+	ctx->is_detached = (attrs->detachstate == PTHREAD_CREATE_DETACHED) ? 1 : 0;
 	ctx->start_routine = start_routine;
 	ctx->arg = arg;
 	ctx->stack = stack;
