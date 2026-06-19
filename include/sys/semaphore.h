@@ -6,13 +6,14 @@
  * POSIX implementation - semaphores
  *
  * Copyright 2026 Phoenix Systems
- * Author: Michał Lach
+ * Author: Michal Lach
  *
  * This file is part of Phoenix-RTOS.
  *
  * %LICENSE%
  */
 
+#include <assert.h>
 #include <limits.h>
 #include <sys/ioctl.h>
 
