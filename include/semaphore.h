@@ -6,7 +6,7 @@
  * POSIX implementation - semaphores
  *
  * Copyright 2026 Phoenix Systems
- * Author: Michał Lach
+ * Author: Michal Lach
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */

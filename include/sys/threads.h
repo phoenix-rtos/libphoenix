@@ -5,8 +5,8 @@
  *
  * sys/threads
  *
- * Copyright 2017, 2018 Phoenix Systems
- * Author: Pawel Pisarczyk, Aleksander Kaminski
+ * Copyright 2017, 2018, 2026 Phoenix Systems
+ * Author: Pawel Pisarczyk, Aleksander Kaminski, Michal Lach
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -14,6 +14,8 @@
 #ifndef _LIBPHOENIX_SYS_THREADS_H_
 #define _LIBPHOENIX_SYS_THREADS_H_
 
+#include <assert.h>
+#include <limits.h>
 #include <sys/types.h>
 #include <sys/rb.h>
 #include <stddef.h>

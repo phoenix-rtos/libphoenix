@@ -8,9 +8,7 @@
  * Copyright 2018 Phoenix Systems
  * Author: Michal Miroslaw
  *
- * This file is part of Phoenix-RTOS.
- *
- * %LICENSE%
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <errno.h>
@@ -35,6 +33,10 @@ long sysconf(int name)
 		case _SC_PAGESIZE:
 			/* _SC_PAGE_SIZE is synonym */
 			return _PAGE_SIZE;
+		case _SC_SEM_VALUE_MAX:
+			return SEM_VALUE_MAX;
+		case _SC_SEM_NSEMS_MAX:
+			return SEM_NSEMS_MAX;
 		default:
 			errno = EINVAL;
 			return -1;
