@@ -5,8 +5,8 @@
  *
  * Architecture dependent part (arch/armv7m)
  *
- * Copyright 2017 Phoenix Systems
- * Author: Pawel Pisarczyk
+ * Copyright 2017, 2026 Phoenix Systems
+ * Author: Pawel Pisarczyk, Michal Lach
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -40,9 +40,6 @@
 #define __IEEE754_SQRTF
 #define __ieee754_sqrtf(x) ({ float a = (x); __asm__ volatile ("vsqrt.f32 %0, %1" : "=t"(a) : "t"(a)); a; })
 #endif
-
-
-#define _PAGE_SIZE 0x200
 
 /* FIXME provide libphoenix config to be able to
  * selectively disable/enable features on per

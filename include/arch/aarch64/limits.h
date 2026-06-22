@@ -50,9 +50,6 @@
 
 #define SSIZE_MAX LONG_MAX
 
-#define PAGE_SIZE _PAGE_SIZE
-#define PAGESIZE  _PAGE_SIZE
-
 #define PTHREAD_STACK_MIN 256
 
 /*** POSIX-required defines ***/

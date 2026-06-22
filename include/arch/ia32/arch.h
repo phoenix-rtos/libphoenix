@@ -5,8 +5,8 @@
  *
  * Architecture dependent part
  *
- * Copyright 2017 Phoenix Systems
- * Author: Pawel Pisarczyk
+ * Copyright 2017, 2026 Phoenix Systems
+ * Author: Pawel Pisarczyk, Michal Lach
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -50,8 +50,6 @@ static inline double __ieee754_sqrt(double x)
 }
 
 #endif
-
-#define _PAGE_SIZE 0x1000
 
 #define __LIBPHOENIX_ARCH_TLS_SUPPORTED
 
