@@ -5,8 +5,8 @@
  *
  * Architecture dependent part (RISCV64)
  *
- * Copyright 2018 Phoenix Systems
- * Author: Pawel Pisarczyk
+ * Copyright 2018, 2026 Phoenix Systems
+ * Author: Pawel Pisarczyk, Michal Lach
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -47,8 +47,6 @@ static inline float __ieee754_sqrtf(float x)
 }
 
 #endif
-
-#define _PAGE_SIZE 0x1000
 
 #define __LIBPHOENIX_ARCH_TLS_SUPPORTED
 

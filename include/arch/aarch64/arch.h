@@ -5,8 +5,8 @@
  *
  * Architecture dependent part (arch/aarch64)
  *
- * Copyright 2017, 2018 Phoenix Systems
- * Author: Pawel Pisarczyk, Aleksander Kaminski
+ * Copyright 2017, 2018, 2026 Phoenix Systems
+ * Author: Pawel Pisarczyk, Aleksander Kaminski, Michal Lach
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -62,8 +62,6 @@
 #define __ieee754_truncf(x) ({ float a = (x); __asm__ ("frintz %s0, %s1" : "=w"(a) : "w"(a)); a; })
 /* clang-format on */
 #endif
-
-#define _PAGE_SIZE 0x1000
 
 #define __LIBPHOENIX_ARCH_TLS_SUPPORTED
 

@@ -1,3 +1,19 @@
+/*
+ * Phoenix-RTOS
+ *
+ * libphoenix
+ *
+ * Architecture dependent definitions, common part
+ *
+ * Copyright 2026 Phoenix Systems
+ * Author: Michal Lach
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+#ifndef _LIBPHOENIX_ARCH_H_
+#define _LIBPHOENIX_ARCH_H_
+
 #if defined(__i386__) || defined(__x86_64__)
 #include <arch/ia32/arch.h>
 #elif defined(__ARM_ARCH_6M__) || defined(__ARM_ARCH_7M__) || defined(__ARM_ARCH_7EM__)
@@ -21,3 +37,7 @@
 #else
 #error "unsupported architecture"
 #endif
+
+#include <phoenix/page.h>
+
+#endif /* _LIBPHOENIX_ARCH_H_ */
