@@ -646,10 +646,13 @@ int pthread_attr_setschedparam(pthread_attr_t *attr,
 
 int pthread_attr_setschedpolicy(pthread_attr_t *attr, int policy)
 {
-	if (policy < SCHED_FIFO || policy > SCHED_OTHER)
+	if (attr == NULL || (policy != SCHED_FIFO && policy != SCHED_RR && policy != SCHED_OTHER)) {
 		return EINVAL;
-	else if (policy == SCHED_FIFO || policy == SCHED_OTHER)
+	}
+	else if (policy == SCHED_FIFO || policy == SCHED_OTHER) {
+		/* Currently, the kernel doesn't support policies other than RR */
 		return ENOTSUP;
+	}
 
 	attr->schedpolicy = policy;
 
