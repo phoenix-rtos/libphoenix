@@ -58,7 +58,6 @@ static inline float __ieee754_sqrtf(float x)
 #else
 #define _PAGE_SIZE 0x1000
 #endif
-#define SIZE_PAGE _Pragma("GCC warning \"'SIZE_PAGE' is deprecated. Use _PAGE_SIZE from arch.h or PAGE_SIZE from limits.h (POSIX only)\"") _PAGE_SIZE
 
 #define __LIBPHOENIX_ARCH_TLS_SUPPORTED
 
