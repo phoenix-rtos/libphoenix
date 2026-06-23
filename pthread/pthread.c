@@ -349,7 +349,7 @@ int pthread_join(pthread_t thread, void **value_ptr)
 	} while (err == -EINTR);
 
 	if (err < 0) {
-		return err;
+		return -err;
 	}
 	mutexLock(pthread_common.pthread_list_lock);
 
