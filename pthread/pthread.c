@@ -36,6 +36,9 @@ typedef struct pthread_ctx {
 	/*
 	 * NOTE: if guardsize is specified and the stack is non-NULL, the stack
 	 * points to the guard start and stacksize accounts for the guard size.
+	 *
+	 * If stack is NULL, then it is externally managed (i.e. provided by the
+	 * caller through pthread_attr_setstackaddr).
 	 */
 	void *stack;
 	size_t stacksize;
@@ -223,35 +226,45 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 		attrs = attr;
 	}
 
-	size_t guardsize = (attrs->stackaddr != NULL) ? 0 : attrs->guardsize;
-	if (guardsize > SIZE_MAX - PAGE_SIZE) {
-		return EINVAL;
+	void *stack;
+	size_t stacksize, guardsize;
+
+	if (attrs->stackaddr != NULL) {
+		stack = NULL;
+		stacksize = attrs->stacksize;
+		guardsize = 0;
 	}
-	guardsize = ALIGN(guardsize, PAGE_SIZE);
+	else {
+		if (attrs->guardsize > SIZE_MAX - PAGE_SIZE) {
+			return EINVAL;
+		}
+		guardsize = ALIGN(attrs->guardsize, PAGE_SIZE);
 
-	if (attrs->stacksize > SIZE_MAX - guardsize || attrs->stacksize + guardsize > SIZE_MAX - PAGE_SIZE) {
-		return EINVAL;
-	}
+		if (attrs->stacksize > SIZE_MAX - guardsize || attrs->stacksize + guardsize > SIZE_MAX - PAGE_SIZE) {
+			return EINVAL;
+		}
 
-	size_t stacksize = ALIGN(attrs->stacksize + guardsize, PAGE_SIZE);
-	/* FIXME: don't mmap when attrs->stackaddr is not null and just use that address as a stack */
-	void *stack = mmap(attrs->stackaddr, stacksize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+		stacksize = ALIGN(attrs->stacksize + guardsize, PAGE_SIZE);
+		stack = mmap(NULL, stacksize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
-	if ((stack == MAP_FAILED) || (stack == NULL)) {
-		return EAGAIN;
-	}
-
-	if (guardsize > 0) {
-		if (mprotect(stack, guardsize, PROT_NONE) != 0) {
-			munmap(stack, stacksize);
+		if ((stack == MAP_FAILED) || (stack == NULL)) {
 			return EAGAIN;
+		}
+
+		if (guardsize > 0) {
+			if (mprotect(stack, guardsize, PROT_NONE) != 0) {
+				munmap(stack, stacksize);
+				return EAGAIN;
+			}
 		}
 	}
 
 	pthread_ctx *ctx = (pthread_ctx *)malloc(sizeof(pthread_ctx));
 
 	if (ctx == NULL) {
-		munmap(stack, attrs->stacksize);
+		if (stack != NULL) {
+			munmap(stack, stacksize);
+		}
 		return EAGAIN;
 	}
 
@@ -271,11 +284,13 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 
 	/* TODO: inherit schedpolicy and contentionscope too once they get relevant */
 	int prio = attrs->inheritsched == PTHREAD_EXPLICIT_SCHED ? attrs->priority : priority(-1);
-	int err = beginthreadex(pthread_start_point, prio, stack + guardsize, stacksize - guardsize, (void *)ctx, &ctx->id);
+	int err = beginthreadex(pthread_start_point, prio, stack == NULL ? attrs->stackaddr : stack + guardsize, stacksize - guardsize, (void *)ctx, &ctx->id);
 
 	if (err != 0) {
 		_pthread_ctx_put(ctx);
-		munmap(stack, stacksize);
+		if (stack != NULL) {
+			munmap(stack, stacksize);
+		}
 	}
 	else {
 		LIST_ADD(&pthread_common.pthread_list, ctx);
@@ -316,7 +331,7 @@ static void _pthread_release(pthread_ctx *ctx, int self)
 	if (prev_stack != NULL) {
 		munmap(prev_stack, prev_stacksize);
 	}
-	if (self == 0) {
+	if (self == 0 && stack != NULL) {
 		munmap(stack, stacksize);
 	}
 }
