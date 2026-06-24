@@ -5,8 +5,8 @@
  *
  * cos, sin, tan, acos, asin, atan
  *
- * Copyright 2017, 2018 Phoenix Systems
- * Author: Aleksander Kaminski
+ * Copyright 2017, 2018, 2026 Phoenix Systems
+ * Author: Aleksander Kaminski, Jakub Smolaga
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -17,11 +17,10 @@
 #include <errno.h>
 
 
-/* Calculates value of cosine using Maclaurin series. */
+/* Calculates value of cosine using Maclaurin series via Horner's method. */
 double cos(double x)
 {
-	int i;
-	double res, xn, xpow, factorial;
+	double res, xpow;
 
 	if (isnan(x) != 0) {
 		return NAN;
@@ -50,32 +49,28 @@ double cos(double x)
 		return sin(x + M_PI_2);
 	}
 
-	res = 1.0;
 	xpow = x * x;
-	xn = xpow;
-	factorial = 2.0;
 
-	for (i = 0; i < 10; ++i) {
-		if (i & 1) {
-			res += xn / factorial;
-		}
-		else {
-			res -= xn / factorial;
-		}
-
-		xn *= xpow;
-		factorial = factorial * ((2 * i) + 3) * ((2 * i) + 4);
-	}
+	res = 0x1.e542ba4020225p-62;              /* 1/20! */
+	res = res * xpow - 0x1.6827863b97d97p-53; /* 1/18! */
+	res = res * xpow + 0x1.ae7f3e733b81fp-45; /* 1/16! */
+	res = res * xpow - 0x1.93974a8c07c9dp-37; /* 1/14! */
+	res = res * xpow + 0x1.1eed8eff8d898p-29; /* 1/12! */
+	res = res * xpow - 0x1.27e4fb7789f5cp-22; /* 1/10! */
+	res = res * xpow + 0x1.a01a01a01a01ap-16; /* 1/8!  */
+	res = res * xpow - 0x1.6c16c16c16c17p-10; /* 1/6!  */
+	res = res * xpow + 0x1.5555555555555p-5;  /* 1/4!  */
+	res = res * xpow - 0x1p-1;                /* 1/2!  */
+	res = res * xpow + 0x1p0;                 /* 1/0!  */
 
 	return res;
 }
 
 
-/* Calculates value of sine using Maclaurin series. */
+/* Calculates value of sine using Maclaurin series via Horner's method. */
 double sin(double x)
 {
-	int i;
-	double res, xn, xpow, factorial;
+	double res, xpow;
 
 	if (isnan(x) != 0) {
 		return NAN;
@@ -108,24 +103,21 @@ double sin(double x)
 		return -cos(x + M_PI_2);
 	}
 
-	res = x;
 	xpow = x * x;
-	xn = xpow * x;
-	factorial = 6.0;
 
-	for (i = 0; i < 10; ++i) {
-		if (i & 1) {
-			res += xn / factorial;
-		}
-		else {
-			res -= xn / factorial;
-		}
+	res = 0x1.71b8ef6dcf572p-66;              /* 1/21! */
+	res = res * xpow - 0x1.2f49b46814157p-57; /* 1/19! */
+	res = res * xpow + 0x1.952c77030ad4ap-49; /* 1/17! */
+	res = res * xpow - 0x1.ae7f3e733b81fp-41; /* 1/15! */
+	res = res * xpow + 0x1.6124613a86d09p-33; /* 1/13! */
+	res = res * xpow - 0x1.ae64567f544e4p-26; /* 1/11! */
+	res = res * xpow + 0x1.71de3a556c734p-19; /* 1/9!  */
+	res = res * xpow - 0x1.a01a01a01a01ap-13; /* 1/7!  */
+	res = res * xpow + 0x1.1111111111111p-7;  /* 1/5!  */
+	res = res * xpow - 0x1.5555555555555p-3;  /* 1/3!  */
+	res = res * xpow + 0x1.0p0;               /* 1/1!  */
 
-		xn *= xpow;
-		factorial = factorial * ((2 * i) + 4) * ((2 * i) + 5);
-	}
-
-	return res;
+	return res * x;
 }
 
 
