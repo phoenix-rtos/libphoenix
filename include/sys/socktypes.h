@@ -16,9 +16,9 @@
 #ifndef _SYS_SOCKTYPES_H_
 #define _SYS_SOCKTYPES_H_
 
-#include <stddef.h>
+#include <stdint.h>
 
-typedef size_t socklen_t;
+typedef uint32_t socklen_t;
 
 /* NOTE: Define to make mbedtls recognise socklen_t is defined. */
 #define _SOCKLEN_T

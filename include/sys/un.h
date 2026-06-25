@@ -17,10 +17,11 @@
 #ifndef _SYS_UN_H_
 #define _SYS_UN_H_
 
+#include <stddef.h>
 #include <sys/socket.h>
 
 
-#define SUN_LEN(addr) ((socklen_t)(((struct sockaddr_un *)0)->sun_path) + strlen((addr)->sun_path))
+#define SUN_LEN(addr) ((socklen_t)(offsetof(struct sockaddr_un, sun_path) + strlen((addr)->sun_path)))
 
 
 struct sockaddr_un {
