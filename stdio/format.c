@@ -621,13 +621,13 @@ static int format_sprintfScientificForm(struct buffer *buff, struct bigdouble *b
 }
 
 
-static int format_sprintfDouble(void *ctx, feedfunc feed, double d, uint32_t flags, int minFieldWidth, int precision, char format)
+static int format_sprintfDouble(void *ctx, feedfunc feed, double d, uint32_t flags, int minFieldWidth, int precision, char format, uint8_t signbit)
 {
 	struct buffer buff;
 	char sign = 0;
 	const char *chosen, *infinity = (flags & FLAG_LARGE_DIGITS) ? "INF" : "inf",
 						*notNumber = (flags & FLAG_LARGE_DIGITS) ? "NAN" : "nan";
-	uint64_t num64 = format_u64FromDouble(d);
+	uint64_t num64;
 	unsigned int startOffset = 0;
 	int i, prec, exp, ret = 0;
 	struct bigdouble bd, bd_backup;
@@ -640,9 +640,8 @@ static int format_sprintfDouble(void *ctx, feedfunc feed, double d, uint32_t fla
 	}
 
 	/* check sign */
-	if (((num64 >> 63) & 1) != 0) {
+	if (signbit != 0) {
 		sign = '-';
-		d = -d;
 	}
 	else if ((flags & FLAG_PLUS) != 0) {
 		sign = '+';
@@ -1180,19 +1179,29 @@ int format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 			case 'f':
 			case 'g': {
 #ifndef IO_NO_FLOAT
+				long double longDouble;
 				double doubleNumber;
+				uint8_t signbit = 0;
+
 				if (fmt == 'g' || fmt == 'G') {
 					flags |= FLAG_NO_TRAILING_ZEROS;
 				}
 				if ((flags & FLAG_LONG_DOUBLE) != 0) {
 					/* NOTE: support for long double is incomplete */
-					doubleNumber = (double)va_arg((args), long double);
+					longDouble = va_arg((args), long double);
+					if (__builtin_signbit(longDouble) != 0) {
+						signbit = 1;
+					}
+					doubleNumber = (double)longDouble;
 				}
 				else {
-					doubleNumber = (double)va_arg((args), double);
+					doubleNumber = va_arg((args), double);
+					if (__builtin_signbit(doubleNumber) != 0) {
+						signbit = 1;
+					}
 				}
 
-				CHECK_FAIL(ret, format_sprintfDouble(ctx, feed, doubleNumber, flags, minFieldWidth, precision, tolower(fmt)));
+				CHECK_FAIL(ret, format_sprintfDouble(ctx, feed, doubleNumber, flags, minFieldWidth, precision, tolower(fmt), signbit));
 				break;
 #else
 				if ((flags & FLAG_LONG_DOUBLE) != 0) {
