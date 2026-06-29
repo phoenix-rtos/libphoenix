@@ -49,9 +49,6 @@
 
 #define SSIZE_MAX INT_MAX
 
-#define PAGE_SIZE _PAGE_SIZE
-#define PAGESIZE  _PAGE_SIZE
-
 #define PTHREAD_STACK_MIN 256
 
 /*** POSIX-required defines ***/
@@ -60,7 +57,5 @@
 #define NAME_MAX    64   /* Maximum number of bytes in a filename (not including the terminating null of a filename string). MIN: 14 */
 #define ARG_MAX     1500 /* Maximum length of argument to the exec functions including environment data. MIN: 4096 */
 #define SYMLOOP_MAX 8    /* Maximum number of symbolic links that can be reliably traversed in the resolution of a pathname in the absence of a loop. MIN: 8 */
-
-#define _POSIX2_RE_DUP_MAX 255
 
 #endif
