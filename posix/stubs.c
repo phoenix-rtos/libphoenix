@@ -23,7 +23,6 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <stdarg.h>
-#include <grp.h>
 #include <stdio.h>
 
 
@@ -136,12 +135,6 @@ int setrlimit(int resource, const struct rlimit *rlp)
 }
 
 
-struct group *getgrgid(gid_t gid)
-{
-	return NULL;
-}
-
-
 dev_t makedev(unsigned int maj, unsigned int min)
 {
 	return 0;
@@ -171,18 +164,6 @@ unsigned int minor(int dev)
 }
 
 
-struct group *getgrnam(const char *name)
-{
-	return NULL;
-}
-
-
-int initgroups(const char *user, gid_t group)
-{
-	return 0;
-}
-
-
 int flock(int fd, int operation)
 {
 	return 0;
@@ -196,6 +177,35 @@ long ulimit(int __cmd, ...)
 
 
 int wctomb(char *str, wchar_t wchar)
+{
+	return 0;
+}
+
+
+gid_t getgid(void)
+{
+	return 0;
+}
+
+
+gid_t getegid(void)
+{
+	return 0;
+}
+
+
+int getgroups(int size, gid_t list[])
+{
+	return 0;
+}
+
+
+int setgroups(size_t size, const gid_t *list)
+{
+	return 0;
+}
+
+int issetugid(void)
 {
 	return 0;
 }
