@@ -39,6 +39,8 @@ extern int portUnregister(const char *name);
 
 extern int lookup(const char *name, oid_t *file, oid_t *dev);
 
+extern int sys_namedResource(const char *name, size_t len, __u32 *portId);
+
 
 /* Message passing */
 
