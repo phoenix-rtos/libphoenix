@@ -44,12 +44,14 @@ extern "C" {
 #define X_OK (1 << 0)
 
 
-#define _SC_OPEN_MAX   0
-#define _SC_IOV_MAX    1
-#define _SC_ATEXIT_MAX 2
-#define _SC_CLK_TCK    3
-#define _SC_PAGESIZE   4
-#define _SC_PAGE_SIZE  _SC_PAGESIZE /* spec. 1170 compatibility */
+#define _SC_OPEN_MAX      0
+#define _SC_IOV_MAX       1
+#define _SC_ATEXIT_MAX    2
+#define _SC_CLK_TCK       3
+#define _SC_PAGESIZE      4
+#define _SC_SEM_VALUE_MAX 5
+#define _SC_SEM_NSEMS_MAX 6
+#define _SC_PAGE_SIZE     _SC_PAGESIZE /* spec. 1170 compatibility */
 
 #define _POSIX_NO_TRUNC             1
 #define _POSIX_ASYNC_IO             -1 /* Async IO not implemented. */

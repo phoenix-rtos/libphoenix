@@ -5,8 +5,8 @@
  *
  * sys/threads
  *
- * Copyright 2017, 2018 Phoenix Systems
- * Author: Pawel Pisarczyk, Aleksander Kaminski
+ * Copyright 2017, 2018, 2026 Phoenix Systems
+ * Author: Pawel Pisarczyk, Aleksander Kaminski, Michal Lach
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -16,6 +16,8 @@
 #ifndef _LIBPHOENIX_SYS_THREADS_H_
 #define _LIBPHOENIX_SYS_THREADS_H_
 
+#include <assert.h>
+#include <limits.h>
 #include <sys/types.h>
 #include <sys/rb.h>
 #include <stddef.h>
@@ -34,6 +36,9 @@ typedef struct {
 	handle_t cond;
 	volatile unsigned int v;
 } semaphore_t;
+
+
+STATIC_ASSERT(SEM_VALUE_MAX <= UINT_MAX, "The maximum semaphore value SEM_VALUE_MAX shall be less or equal to the maximum possible value of its container");
 
 
 struct __errno_t {
@@ -113,10 +118,16 @@ extern int semaphoreCreate(semaphore_t *s, unsigned int v);
 extern int semaphoreDown(semaphore_t *s, time_t timeout);
 
 
+extern int semaphoreTryDown(semaphore_t *s);
+
+
 extern int semaphoreUp(semaphore_t *s);
 
 
 extern int semaphoreDone(semaphore_t *s);
+
+
+extern int semaphoreCount(semaphore_t *s);
 
 
 extern int phCondCreate(handle_t *h, const struct condAttr *attr);

@@ -25,6 +25,16 @@
 extern "C" {
 #endif
 
+/*
+ * We want to be able to include our headers in C++ source and it uses a different
+ * keyword for static assertions, the same goes for C from C23 onwards
+ */
+#if defined(__cplusplus) || __STDC_VERSION__ == 202311L
+#define STATIC_ASSERT static_assert
+#else
+#define STATIC_ASSERT _Static_assert
+#endif
+
 
 #ifndef NDEBUG
 #define assert(__expr) \
