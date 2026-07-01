@@ -1142,8 +1142,10 @@ int format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 				break;
 			case 'X':
 				flags |= FLAG_LARGE_DIGITS;
+				/* fallthrough */
 			case 'x':
 				flags |= FLAG_HEX;
+				/* fallthrough */
 			case 'u':
 				if (precision != -1) {
 					flags &= ~FLAG_ZERO;
