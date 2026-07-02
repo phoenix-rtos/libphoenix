@@ -1124,15 +1124,24 @@ int pthread_kill(pthread_t thread, int sig)
 
 int pthread_key_create(pthread_key_t *key, void (*destructor)(void *))
 {
-	int err = 0;
-	*key = malloc(sizeof(__pthread_key_t));
-	if (*key == NULL) {
-		err = ENOMEM;
+	int ret;
+	pthread_key_t localkey;
+
+	localkey = (pthread_key_t)malloc(sizeof(__pthread_key_t));
+	if (localkey == NULL) {
+		return ENOMEM;
 	}
-	else {
-		(*key)->destructor = destructor;
+
+	localkey->destructor = destructor;
+
+	ret = pthread_setspecific(localkey, NULL);
+	if (ret != 0) {
+		free(localkey);
+		return ret;
 	}
-	return err;
+
+	*key = localkey;
+	return 0;
 }
 
 
