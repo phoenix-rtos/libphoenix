@@ -5,8 +5,8 @@
  *
  * grp.h
  *
- * Copyright 2018 Phoenix Systems
- * Author: Jan Sikorski
+ * Copyright 2018, 2026 Phoenix Systems
+ * Author: Jan Sikorski, Julian Uziemblo
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -26,14 +26,11 @@ extern "C" {
 
 
 struct group {
-	char   *gr_name;
-	gid_t   gr_gid;
-	char  **gr_mem;
-	char   *gr_passwd;
+	char *gr_name;
+	char *gr_passwd;
+	gid_t gr_gid;
+	char **gr_mem;
 };
-
-
-int initgroups(const char *user, gid_t group);
 
 
 struct group *getgrnam(const char *name);
@@ -42,7 +39,19 @@ struct group *getgrnam(const char *name);
 struct group *getgrgid(gid_t gid);
 
 
-int setgroups(size_t size, const gid_t *list);
+int getgrnam_r(const char *name, struct group *grp, char *buffer, size_t bufsize, struct group **result);
+
+
+int getgrgid_r(gid_t gid, struct group *grp, char *buffer, size_t bufsize, struct group **result);
+
+
+struct group *getgrent(void);
+
+
+void endgrent(void);
+
+
+void setgrent(void);
 
 
 #ifdef __cplusplus
