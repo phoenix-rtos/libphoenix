@@ -1899,9 +1899,11 @@ int mccs;
 		case OANYOF:
 			if (mccs)
 				return -1;
+			/* fallthrough */
 		case OCHAR:
 		case OANY:
 			try++;
+			/* fallthrough */
 		case OBOW:
 		case OEOW:
 		case OLPAREN:
