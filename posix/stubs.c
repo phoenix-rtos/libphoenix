@@ -16,6 +16,7 @@
 #include <locale.h>
 #include <string.h>
 #include <unistd.h>
+#include <grp.h>
 #include <sys/socket.h>
 #include <time.h>
 #include <sys/resource.h>
@@ -204,6 +205,13 @@ int setgroups(size_t size, const gid_t *list)
 {
 	return 0;
 }
+
+
+int initgroups(const char *user, gid_t group)
+{
+	return 0;
+}
+
 
 int issetugid(void)
 {

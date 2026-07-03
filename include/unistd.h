@@ -294,9 +294,6 @@ extern char *getpass(const char *prompt);
 extern int getgroups(int size, gid_t list[]);
 
 
-int setgroups(size_t size, const gid_t *list);
-
-
 extern char *ttyname(int fildes);
 
 
