@@ -236,7 +236,7 @@ static int pthread_create_main(void)
 
 
 int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
-	void *(*start_routine)(void *), void *arg)
+		void *(*start_routine)(void *), void *arg)
 {
 	const pthread_attr_t *attrs = &pthread_attr_default;
 
@@ -655,18 +655,18 @@ int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize)
 
 
 int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr,
-	size_t stacksize)
+		size_t stacksize)
 {
 	return pthread_attr_setstackaddr(attr, stackaddr) |
-		pthread_attr_setstacksize(attr, stacksize);
+			pthread_attr_setstacksize(attr, stacksize);
 }
 
 
 int pthread_attr_getstack(const pthread_attr_t *attr, void **stackaddr,
-	size_t *stacksize)
+		size_t *stacksize)
 {
 	return pthread_attr_getstackaddr(attr, stackaddr) |
-		pthread_attr_getstacksize(attr, stacksize);
+			pthread_attr_getstacksize(attr, stacksize);
 }
 
 
