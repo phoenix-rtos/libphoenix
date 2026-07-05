@@ -19,6 +19,7 @@
 #include <sys/list.h>
 #include <sys/mman.h>
 #include <sys/minmax.h>
+#include <sys/sched.h>
 #include <pthread.h>
 #include <unistd.h>
 
