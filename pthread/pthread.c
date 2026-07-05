@@ -631,8 +631,23 @@ int pthread_attr_getstack(const pthread_attr_t *attr, void **stackaddr,
 }
 
 
-int pthread_attr_setschedparam(pthread_attr_t *attr,
-	const struct sched_param *param)
+static int check_rr_prio(int prio)
+{
+	sched_info_t info;
+
+	if (schedInfo(0, SCHED_RR, &info) < 0) {
+		return EINVAL;
+	}
+
+	if (prio > info.maxPriority || prio < info.minPriority) {
+		return EINVAL;
+	}
+
+	return EOK;
+}
+
+
+int pthread_attr_setschedparam(pthread_attr_t *attr, const struct sched_param *param)
 {
 	if (attr == NULL || param == NULL) {
 		return EINVAL;
@@ -642,12 +657,7 @@ int pthread_attr_setschedparam(pthread_attr_t *attr,
 		return ENOTSUP;
 	}
 
-	sched_info_t info;
-	if (schedInfo(getpid(), attr->schedpolicy, &info) < 0) {
-		return EINVAL;
-	}
-
-	if (param->sched_priority > info.maxPriority || param->sched_priority < info.minPriority) {
+	if (check_rr_prio(param->sched_priority) != 0) {
 		return EINVAL;
 	}
 
@@ -734,16 +744,67 @@ int pthread_attr_setinheritsched(pthread_attr_t *attr, int inheritsched)
 	return 0;
 }
 
+int pthread_setschedprio(pthread_t thread, int prio)
+{
+	pthread_ctx *ctx = (pthread_ctx *)thread;
+	int err = EOK;
 
-int pthread_setschedprio(pthread_t thread, int prio);
+	if (ctx == NULL) {
+		err = EINVAL;
+	}
+	else {
+		if (check_rr_prio(prio) != 0) {
+			return EINVAL;
+		}
+		sched_params_t p = { 0 };
+		p.priorityBase = prio;
+		err = -schedSet(0, ctx->id, SCHED_RR, &p);
+	}
+
+	return err;
+}
 
 
-int pthread_getschedparam(pthread_t thread, int *policy,
-	struct sched_param *__restrict param);
+int pthread_getschedparam(pthread_t thread, int *policy, struct sched_param *__restrict param)
+{
+	pthread_ctx *ctx = (pthread_ctx *)thread;
+	int err = EOK;
+
+	if (ctx == NULL || policy == NULL || param == NULL) {
+		err = EINVAL;
+	}
+	else {
+		sched_params_t p;
+		err = -schedGet(0, ctx->id, &p);
+		if (err == EOK) {
+			*policy = SCHED_RR; /* Nothing else supported for now */
+			param->sched_priority = p.priorityBase;
+		}
+	}
+
+	return err;
+}
 
 
-int pthread_setschedparam(pthread_t thread, int policy,
-	const struct sched_param *param);
+int pthread_setschedparam(pthread_t thread, int policy, const struct sched_param *param)
+{
+	pthread_ctx *ctx = (pthread_ctx *)thread;
+	int err;
+
+	if (ctx == NULL || param == NULL || (policy != SCHED_FIFO && policy != SCHED_RR && policy != SCHED_OTHER)) {
+		err = EINVAL;
+	}
+	else if (policy != SCHED_RR) {
+		err = ENOTSUP;
+	}
+	else {
+		sched_params_t p = { 0 };
+		p.priorityBase = param->sched_priority;
+		err = -schedSet(0, ctx->id, SCHED_RR, &p);
+	}
+
+	return err;
+}
 
 
 static int pthread_mutex_lazy_init(pthread_mutex_t *mutex)
