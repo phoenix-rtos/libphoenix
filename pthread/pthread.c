@@ -5,8 +5,8 @@
  *
  * pthread
  *
- * Copyright 2017, 2019, 2023 Phoenix Systems
- * Author: Pawel Pisarczyk, Marcin Baran, Hubert Badocha
+ * Copyright 2017, 2019, 2023, 2026 Phoenix Systems
+ * Author: Pawel Pisarczyk, Marcin Baran, Hubert Badocha, Adam Greloch
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -951,6 +951,80 @@ int sched_get_priority_min(int policy)
 	sched_info_t info;
 	int err = SET_ERRNO(schedInfo(getpid(), policy, &info));
 	return err < 0 ? err : info.minPriority;
+}
+
+
+int sched_setparam(pid_t pid, const struct sched_param *param)
+{
+	if (param == NULL || pid < 0) {
+		return SET_ERRNO(-EINVAL);
+	}
+	sched_params_t p = { 0 };
+	p.priorityBase = param->sched_priority;
+	int err = SET_ERRNO(schedSet(pid, 0, SCHED_RR, &p));
+	return err < 0 ? err : EOK;
+}
+
+
+int sched_getparam(pid_t pid, struct sched_param *param)
+{
+	if (pid < 0 || param == NULL) {
+		return SET_ERRNO(-EINVAL);
+	}
+	sched_params_t p;
+	int err = SET_ERRNO(schedGet(pid, 0, &p));
+	if (err < 0) {
+		return err;
+	}
+	param->sched_priority = p.priorityBase;
+	return EOK;
+}
+
+
+int sched_setscheduler(pid_t pid, int policy, const struct sched_param *param)
+{
+	if (policy != SCHED_FIFO && policy != SCHED_RR && policy != SCHED_OTHER) {
+		return SET_ERRNO(-EINVAL);
+	}
+
+	if (policy != SCHED_RR) {
+		return SET_ERRNO(-ENOTSUP);
+	}
+
+	int err = sched_setparam(pid, param);
+	return err < 0 ? err : SCHED_RR;
+}
+
+
+int sched_getscheduler(pid_t pid)
+{
+	sched_params_t p;
+	int err = SET_ERRNO(schedGet(pid, 0, &p));
+	return err < 0 ? err : p.policy;
+}
+
+
+static void us_to_timespec(time_t abstime_us, struct timespec *__restrict time)
+{
+	time->tv_sec = abstime_us / (1000 * 1000);
+	time->tv_nsec = (abstime_us % (1000 * 1000)) * 1000;
+}
+
+
+int sched_rr_get_interval(pid_t pid, struct timespec *tp)
+{
+	if (pid < 0 || tp == NULL) {
+		return SET_ERRNO(-EINVAL);
+	}
+
+	sched_info_t info;
+	int err = SET_ERRNO(schedInfo(pid, SCHED_RR, &info));
+	if (err < 0) {
+		return err;
+	}
+
+	us_to_timespec(info.interval, tp);
+	return EOK;
 }
 
 
