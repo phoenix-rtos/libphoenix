@@ -99,7 +99,6 @@ void openlog(const char *ident, int logopt, int facility)
 	}
 
 	syslog_common.configured = 1;
-	syslog_common.logmask = 0;
 	syslog_common.logopt = logopt;
 	syslog_common.facility = facility;
 }
