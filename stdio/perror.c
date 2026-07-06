@@ -19,5 +19,7 @@
 
 void perror(const char *str)
 {
-	fprintf(stderr, "%s: %s\n", str, strerror(errno));
+	const char *s = (str != NULL) ? str : "";
+	const char *sep = (str != NULL && str[0] != '\0') ? ": " : "";
+	fprintf(stderr, "%s%s%s\n", s, sep, strerror(errno));
 }
