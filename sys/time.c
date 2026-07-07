@@ -22,6 +22,8 @@
 
 #include "posix/utils.h"
 
+#include "../common/util.h"
+
 
 extern int sys_futimens(int fd, const struct timespec times[2]);
 
@@ -29,27 +31,43 @@ extern int sys_futimens(int fd, const struct timespec times[2]);
 /* path needs to be canonical */
 static int utimes_internal(const char *path, const struct timeval times[2])
 {
+	int err;
 	oid_t oid, dev;
+	time_t sec0, sec1;
+
 	if (lookup(path, &oid, &dev) < 0) {
 		return -ENOENT;
 	}
 
 	struct timeval now;
+
 	if (times == NULL) {
-		gettimeofday(&now, NULL);
+		err = gettimeofday(&now, NULL);
+		if (err < 0) {
+			return -errno;
+		}
+		sec0 = now.tv_sec;
+		sec1 = now.tv_sec;
+	}
+	else {
+		if (!__timevalValid(&times[0]) || !__timevalValid(&times[1])) {
+			return -EINVAL;
+		}
+		sec0 = times[0].tv_sec;
+		sec1 = times[1].tv_sec;
 	}
 
 	msg_t msg = {
 		.type = mtSetAttr,
 		.oid = oid,
 		.i.attr.type = atMTime,
-		.i.attr.val = (times == NULL) ? now.tv_sec : times[1].tv_sec
+		.i.attr.val = sec1
 	};
 
-	int err = msgSend(oid.port, &msg);
+	err = msgSend(oid.port, &msg);
 	if ((err >= 0) && (msg.o.err >= 0)) {
 		msg.i.attr.type = atATime;
-		msg.i.attr.val = (times == NULL) ? now.tv_sec : times[0].tv_sec;
+		msg.i.attr.val = sec0;
 		err = msgSend(oid.port, &msg);
 	}
 	if (err >= 0) {
@@ -68,8 +86,10 @@ int utimes(const char *filename, const struct timeval times[2])
 	char *canonical;
 	int err;
 
-	if ((canonical = resolve_path(filename, NULL, 1, 0)) == NULL)
+	canonical = resolve_path(filename, NULL, 1, 0);
+	if (canonical == NULL) {
 		return -1; /* errno set by resolve_path */
+	}
 
 	err = utimes_internal(canonical, times);
 
@@ -98,9 +118,12 @@ int utime(const char *path, const struct utimbuf *times)
 int gettimeofday(struct timeval *tp, void *tzp)
 {
 	time_t t, o;
+	int err;
 
-	/* TODO: Set errno if failed */
-	gettime(&t, &o);
+	err = gettime(&t, &o);
+	if (err < 0) {
+		return SET_ERRNO(err);
+	}
 
 	tp->tv_sec = (t + o) / (1000 * 1000);
 	tp->tv_usec = (t + o) % (1000 * 1000);
@@ -122,15 +145,19 @@ int stime(const time_t *t)
 
 int settimeofday(const struct timeval *tv, void *tz)
 {
+	int err;
 	time_t t;
 
-	/* TODO: Set errno if failed */
-	gettime(&t, NULL);
+	if (!__timevalValid(tv) || tv->tv_sec < 0) {
+		return SET_ERRNO(-EINVAL);
+	}
 
-	/* TODO: Set errno if failed */
-	settime(tv->tv_usec + tv->tv_sec * 1000 * 1000 - t);
+	err = gettime(&t, NULL);
+	if (err < 0) {
+		return SET_ERRNO(err);
+	}
 
-	return 0;
+	return SET_ERRNO(settime(tv->tv_usec + tv->tv_sec * 1000 * 1000 - t));
 }
 
 
@@ -140,13 +167,20 @@ int futimes(int fd, const struct timeval tv[2])
 	int err;
 
 	if (tv != NULL) {
+		if (!__timevalValid(&tv[0]) || tv[0].tv_sec < 0 || !__timevalValid(&tv[1]) || tv[1].tv_sec < 0) {
+			return SET_ERRNO(-EINVAL);
+		}
+
 		tp[0].tv_sec = tv[0].tv_sec;
 		tp[1].tv_sec = tv[1].tv_sec;
 		tp[0].tv_nsec = tv[0].tv_usec * 1000;
 		tp[1].tv_nsec = tv[1].tv_usec * 1000;
 	}
 	else {
-		clock_gettime(CLOCK_REALTIME, &tp[0]);
+		err = clock_gettime(CLOCK_REALTIME, &tp[0]);
+		if (err < 0) {
+			return -1; /* errno set by clock_gettime */
+		}
 		tp[1] = tp[0];
 	}
 
@@ -163,8 +197,10 @@ int lutimes(const char *filename, const struct timeval tv[2])
 	int err;
 
 	/* resolve_last_symlink = 0 -> utimes on a symlink */
-	if ((canonical = resolve_path(filename, NULL, 0, 0)) == NULL)
+	canonical = resolve_path(filename, NULL, 0, 0);
+	if (canonical == NULL) {
 		return -1; /* errno set by resolve_path */
+	}
 
 	err = utimes_internal(canonical, tv);
 

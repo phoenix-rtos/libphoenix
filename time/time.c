@@ -22,6 +22,8 @@
 #include <stdio.h>
 #include <limits.h>
 
+#include "../common/util.h"
+
 
 char *tzname[2];
 
@@ -73,17 +75,22 @@ void tzset(void)
 
 time_t time(time_t *tp)
 {
+	int err;
 	time_t now, offs;
 
-	gettime(&now, &offs);
+	err = gettime(&now, &offs);
+	if (err < 0) {
+		return (time_t)SET_ERRNO(err);
+	}
 
 	now += offs;
 
 	/* microseconds to seconds */
 	now /= 1000 * 1000;
 
-	if (tp != NULL)
+	if (tp != NULL) {
 		*tp = now;
+	}
 
 	return now;
 }
@@ -91,22 +98,25 @@ time_t time(time_t *tp)
 
 int clock_gettime(clockid_t clk_id, struct timespec *tp)
 {
+	int err;
 	time_t now, offs;
 
 	if (tp == NULL) {
-		errno = EINVAL;
-		return -1;
+		return SET_ERRNO(-EINVAL);
 	}
 
 	if (clk_id != CLOCK_REALTIME && clk_id != CLOCK_MONOTONIC && clk_id != CLOCK_MONOTONIC_RAW) {
-		errno = EINVAL;
-		return -1;
+		return SET_ERRNO(-EINVAL);
 	}
 
-	gettime(&now, &offs);
+	err = gettime(&now, &offs);
+	if (err < 0) {
+		return SET_ERRNO(err);
+	}
 
-	if (clk_id == CLOCK_REALTIME)
+	if (clk_id == CLOCK_REALTIME) {
 		now += offs;
+	}
 
 	tp->tv_sec = now / (1000 * 1000);
 	now -= tp->tv_sec * 1000 * 1000;
@@ -118,9 +128,8 @@ int clock_gettime(clockid_t clk_id, struct timespec *tp)
 
 int clock_settime(clockid_t clock_id, const struct timespec *tp)
 {
-	if (clock_id != CLOCK_REALTIME) {
-		errno = EINVAL;
-		return -1;
+	if (clock_id != CLOCK_REALTIME || !__timespecValid(tp) || tp->tv_sec < 0) {
+		return SET_ERRNO(-EINVAL);
 	}
 
 	time_t time = tp->tv_sec * 1000 * 1000 + tp->tv_nsec / 1000;
