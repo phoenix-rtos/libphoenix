@@ -47,7 +47,6 @@ extern "C" {
 #define ECONNABORTED    103
 #define ECONNRESET      104
 #define ENOBUFS         105
-#define ETIMEDOUT       110
 #define EHOSTDOWN       112
 #define EHOSTUNREACH    113
 #define ENOLCK          116
