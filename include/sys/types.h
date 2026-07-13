@@ -54,10 +54,20 @@ typedef struct {
 	volatile int initialized;
 } pthread_mutex_t;
 
-/* TODO */
-typedef int pthread_rwlock_t;
+typedef struct {
+	handle_t lock;
+	handle_t readCond;
+	handle_t writeCond;
+	size_t readActive;
+	size_t writeActive;
+	size_t writeWaiting;
+	volatile int initialized;
+} pthread_rwlock_t;
 
-typedef int pthread_rwlockattr_t;
+
+typedef struct {
+	int pshared;
+} pthread_rwlockattr_t;
 
 
 typedef struct lockAttr pthread_mutexattr_t;

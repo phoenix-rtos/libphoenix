@@ -5,8 +5,8 @@
  *
  * pthread
  *
- * Copyright 2017, 2019, 2023 Phoenix Systems
- * Author: Pawel Pisarczyk, Marcin Baran, Hubert Badocha
+ * Copyright 2017, 2019, 2023, 2026 Phoenix Systems
+ * Author: Pawel Pisarczyk, Marcin Baran, Hubert Badocha, Adam Greloch
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -107,6 +107,11 @@ static const pthread_attr_t pthread_attr_default = {
 	.inheritsched = PTHREAD_INHERIT_SCHED,
 	.stacksize = ALIGN(PTHREAD_STACK_MIN, PAGE_SIZE),
 	.guardsize = 0
+};
+
+
+static const pthread_rwlockattr_t pthread_rwlockattr_default = {
+	.pshared = PTHREAD_PROCESS_PRIVATE,
 };
 
 
@@ -1096,6 +1101,12 @@ static time_t timespec_to_us(const struct timespec *__restrict time)
 }
 
 
+static int timespec_is_valid(const struct timespec *__restrict time)
+{
+	return time != NULL && time->tv_nsec >= 0 && time->tv_nsec < 1000000000L;
+}
+
+
 int pthread_cond_timedwait(pthread_cond_t *__restrict cond,
 	pthread_mutex_t *__restrict mutex,
 	const struct timespec *__restrict abstime)
@@ -1417,54 +1428,314 @@ void pthread_cleanup_pop(int execute)
 }
 
 
-/* FIXME: rwlocks are yet to be implemented, that breaks shared_mutex in cpp. */
+static int pthread_rwlock_lazy_init(pthread_rwlock_t *__restrict__ rwlock, const pthread_rwlockattr_t *__restrict__ attr)
+{
+	int err = EOK;
+
+	(void)attr;
+
+	if (rwlock->initialized != 0) {
+		return EOK;
+	}
+
+	mutexLock(pthread_common.mutex_cond_init_lock);
+
+	do {
+		if (rwlock->initialized != 0) {
+			break;
+		}
+
+		err = mutexCreate(&rwlock->lock);
+		if (err < 0) {
+			break;
+		}
+
+		struct condAttr cattr = { 0 };
+		cattr.clock = PH_CLOCK_REALTIME;
+
+		err = condCreateWithAttr(&rwlock->readCond, &cattr);
+		if (err < 0) {
+			resourceDestroy(rwlock->lock);
+			break;
+		}
+
+		err = condCreateWithAttr(&rwlock->writeCond, &cattr);
+		if (err < 0) {
+			resourceDestroy(rwlock->readCond);
+			resourceDestroy(rwlock->lock);
+			break;
+		}
+
+		rwlock->readActive = 0;
+		rwlock->writeActive = 0;
+		rwlock->writeWaiting = 0;
+		rwlock->initialized = 1;
+	} while (0);
+
+	mutexUnlock(pthread_common.mutex_cond_init_lock);
+
+	return -err;
+}
+
+
+static int pthread_rwlock_rdlock_ex(pthread_rwlock_t *rwlock, int block, int timeout)
+{
+	int err = pthread_rwlock_lazy_init(rwlock, NULL);
+	if (err != EOK) {
+		return err;
+	}
+
+	/* TODO: can rwlocks be robust? */
+	mutexLock(rwlock->lock);
+
+	/* avoid starving the waiting writers by letting them through */
+	while (rwlock->writeActive > 0 || rwlock->writeWaiting > 0) {
+		if (block == 0) {
+			err = EBUSY;
+			break;
+		}
+
+		err = condWait(rwlock->readCond, rwlock->lock, timeout);
+
+		if (err == -ETIME) {
+			err = ETIMEDOUT;
+			break;
+		}
+		else if (err == -EINTR) {
+			err = EOK;
+		}
+		else if (err < 0) {
+			err = -err;
+			break;
+		}
+	}
+
+	if (err == EOK) {
+		rwlock->readActive++;
+	}
+
+	mutexUnlock(rwlock->lock);
+
+	return err;
+}
+
+
+static int pthread_rwlock_wrlock_ex(pthread_rwlock_t *rwlock, int block, int timeout)
+{
+	int err = pthread_rwlock_lazy_init(rwlock, NULL);
+	if (err != EOK) {
+		return err;
+	}
+
+	mutexLock(rwlock->lock);
+
+	if (block != 0) {
+		rwlock->writeWaiting++;
+	}
+
+	while (rwlock->readActive > 0 || rwlock->writeActive > 0) {
+		if (block == 0) {
+			err = EBUSY;
+			break;
+		}
+
+		err = condWait(rwlock->writeCond, rwlock->lock, timeout);
+
+		if (err == -ETIME) {
+			err = ETIMEDOUT;
+			break;
+		}
+		else if (err == -EINTR) {
+			err = EOK;
+		}
+		else if (err < 0) {
+			err = -err;
+			break;
+		}
+	}
+
+	if (block != 0) {
+		rwlock->writeWaiting--;
+	}
+
+	if (err == EOK) {
+		rwlock->writeActive++;
+	}
+
+	mutexUnlock(rwlock->lock);
+
+	return err;
+}
+
+
 int pthread_rwlock_rdlock(pthread_rwlock_t *rwlock)
 {
-	(void)rwlock;
-	return ENOSYS;
+	return pthread_rwlock_rdlock_ex(rwlock, 1, 0);
 }
 
 
 int pthread_rwlock_tryrdlock(pthread_rwlock_t *rwlock)
 {
-	(void)rwlock;
-	return ENOSYS;
+	return pthread_rwlock_rdlock_ex(rwlock, 0, 0);
 }
 
 
 int pthread_rwlock_trywrlock(pthread_rwlock_t *rwlock)
 {
-	(void)rwlock;
-	return ENOSYS;
+	return pthread_rwlock_wrlock_ex(rwlock, 0, 0);
 }
 
 
 int pthread_rwlock_wrlock(pthread_rwlock_t *rwlock)
 {
-	(void)rwlock;
-	return ENOSYS;
+	return pthread_rwlock_wrlock_ex(rwlock, 1, 0);
 }
 
 
 int pthread_rwlock_unlock(pthread_rwlock_t *rwlock)
 {
-	(void)rwlock;
-	return ENOSYS;
+	int err = pthread_rwlock_lazy_init(rwlock, NULL);
+	if (err != EOK) {
+		return err;
+	}
+
+	mutexLock(rwlock->lock);
+
+	if (rwlock->writeActive > 0) {
+		/* caller is a writer, as there can be at most one */
+		rwlock->writeActive--;
+
+		/* avoid starving the writers by waking waiting writers first */
+		if (rwlock->writeWaiting > 0) {
+			condSignal(rwlock->writeCond);
+		}
+		else {
+			condBroadcast(rwlock->readCond);
+		}
+	}
+	else if (rwlock->readActive > 0) {
+		rwlock->readActive--;
+
+		if (rwlock->readActive == 0 && rwlock->writeWaiting > 0) {
+			condSignal(rwlock->writeCond);
+		}
+	}
+	else {
+		/* caller does not hold this lock */
+		err = EPERM;
+	}
+
+	mutexUnlock(rwlock->lock);
+
+	return err;
+}
+
+
+int pthread_rwlock_timedrdlock(pthread_rwlock_t *restrict rwlock, const struct timespec *restrict abs_timeout)
+{
+	if (timespec_is_valid(abs_timeout) == 0) {
+		return EINVAL;
+	}
+
+	const time_t abs_timeout_us = timespec_to_us(abs_timeout);
+
+	if (abs_timeout_us == 0) {
+		return ETIMEDOUT;
+	}
+
+	return pthread_rwlock_rdlock_ex(rwlock, 1, abs_timeout_us);
+}
+
+
+int pthread_rwlock_timedwrlock(pthread_rwlock_t *restrict rwlock, const struct timespec *restrict abs_timeout)
+{
+	if (timespec_is_valid(abs_timeout) == 0) {
+		return EINVAL;
+	}
+
+	const time_t abs_timeout_us = timespec_to_us(abs_timeout);
+
+	if (abs_timeout_us == 0) {
+		return ETIMEDOUT;
+	}
+
+	return pthread_rwlock_wrlock_ex(rwlock, 1, abs_timeout_us);
+}
+
+
+int pthread_rwlockattr_destroy(pthread_rwlockattr_t *attr)
+{
+	return attr == NULL ? EINVAL : EOK;
+}
+
+
+int pthread_rwlockattr_init(pthread_rwlockattr_t *attr)
+{
+	if (attr == NULL) {
+		return EINVAL;
+	}
+
+	*attr = pthread_rwlockattr_default;
+
+	return EOK;
+}
+
+
+int pthread_rwlockattr_getpshared(const pthread_rwlockattr_t *restrict attr, int *restrict pshared)
+{
+	if (attr == NULL || pshared == NULL) {
+		return EINVAL;
+	}
+
+	*pshared = attr->pshared;
+
+	return EOK;
+}
+
+
+int pthread_rwlockattr_setpshared(pthread_rwlockattr_t *attr, int pshared)
+{
+	int err = EOK;
+
+	if (attr == NULL || pshared != PTHREAD_PROCESS_PRIVATE) {
+		err = EINVAL;
+	}
+	else {
+		attr->pshared = pshared;
+	}
+
+	return err;
 }
 
 
 int pthread_rwlock_destroy(pthread_rwlock_t *rwlock)
 {
-	(void)rwlock;
-	return ENOSYS;
+	if (rwlock == NULL) {
+		return EINVAL;
+	}
+
+	mutexLock(pthread_common.mutex_cond_init_lock);
+	if (rwlock->initialized != 0) {
+		resourceDestroy(rwlock->writeCond);
+		resourceDestroy(rwlock->readCond);
+		resourceDestroy(rwlock->lock);
+		rwlock->initialized = 0;
+	}
+	mutexUnlock(pthread_common.mutex_cond_init_lock);
+
+	return EOK;
 }
 
 
 int pthread_rwlock_init(pthread_rwlock_t *__restrict__ rwlock, const pthread_rwlockattr_t *__restrict__ attr)
 {
-	(void)rwlock;
-	(void)attr;
-	return ENOSYS;
+	if (rwlock == NULL) {
+		return EINVAL;
+	}
+
+	rwlock->initialized = 0;
+
+	return pthread_rwlock_lazy_init(rwlock, attr);
 }
 
 
