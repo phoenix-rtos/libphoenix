@@ -76,6 +76,9 @@ int pthread_setcancelstate(int state, int *oldstate);
 int pthread_cancel(pthread_t thread);
 
 
+void pthread_testcancel(void);
+
+
 pthread_t pthread_self(void);
 
 
