@@ -40,4 +40,10 @@ static inline bool __timespecValid(const struct timespec *ts)
 }
 
 
+static inline time_t __timespecToUs(const struct timespec *time)
+{
+	return (time->tv_sec * 1000000 + time->tv_nsec / 1000);
+}
+
+
 #endif /* _LIBPHOENIX_COMMON_UTIL_H_ */
