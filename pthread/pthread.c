@@ -46,6 +46,7 @@ typedef struct pthread_ctx {
 	struct pthread_ctx *prev;
 	int is_detached;
 	int cancelstate;
+	int cancelled;
 	struct __errno_t e;
 	int refcount;
 	struct pthread_key_data_t *key_data_list;
@@ -206,6 +207,7 @@ static int pthread_create_main(void)
 	ctx->stacksize = 0;
 	ctx->is_detached = (pthread_attr_default.detachstate == PTHREAD_CREATE_DETACHED) ? 1 : 0;
 	ctx->cancelstate = PTHREAD_CANCEL_ENABLE;
+	ctx->cancelled = 0;
 	ctx->refcount = 1;
 	ctx->key_data_list = NULL;
 	ctx->cleanup_list = NULL;
@@ -277,6 +279,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 	ctx->stacksize = stacksize;
 	ctx->key_data_list = NULL;
 	ctx->cancelstate = PTHREAD_CANCEL_ENABLE;
+	ctx->cancelled = 0;
 	ctx->cleanup_list = NULL;
 	*thread = (pthread_t)ctx;
 
@@ -478,6 +481,7 @@ int pthread_cancel(pthread_t thread)
 		self = pthread_self();
 		mutexLock(pthread_common.pthread_list_lock);
 		_pthread_ctx_get(ctx);
+		ctx->cancelled = 1;
 		if (thread == self) {
 			if (ctx->cancelstate == PTHREAD_CANCEL_ENABLE) {
 				_pthread_ctx_put(ctx);
@@ -502,6 +506,20 @@ int pthread_cancel(pthread_t thread)
 		}
 	}
 	return -err;
+}
+
+
+void pthread_testcancel(void)
+{
+	pthread_ctx *ctx = (pthread_ctx *)pthread_self();
+	mutexLock(pthread_common.pthread_list_lock);
+	_pthread_ctx_get(ctx);
+	if (ctx->cancelstate == PTHREAD_CANCEL_ENABLE && ctx->cancelled != 0) {
+		_pthread_ctx_put(ctx);
+		pthread_exit((void *)PTHREAD_CANCELED);
+		/* no return */
+	}
+	_pthread_ctx_put(ctx);
 }
 
 
