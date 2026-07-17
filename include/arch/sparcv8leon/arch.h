@@ -28,31 +28,6 @@
 #define __STRCPY
 #define __STRNCPY
 
-#ifndef _SOFT_FLOAT
-#define __IEEE754_SQRT
-
-static inline double __ieee754_sqrt(double x)
-{
-	/* clang-format off */
-	__asm__ volatile ("fsqrtd %0, %0" : "+f"(x));
-	/* clang-format on */
-
-	return x;
-}
-
-
-#define __IEEE754_SQRTF
-static inline float __ieee754_sqrtf(float x)
-{
-	/* clang-format off */
-	__asm__ volatile ("fsqrts %0, %0" : "+f"(x));
-	/* clang-format on */
-
-	return x;
-}
-
-#endif
-
 #define __LIBPHOENIX_ARCH_TLS_SUPPORTED
 
 #endif
