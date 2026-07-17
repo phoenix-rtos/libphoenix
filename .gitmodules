@@ -1,0 +1,4 @@
+[submodule "libm/libmcs"]
+	path = libm/libmcs
+	url = https://github.com/phoenix-rtos/libmcs.git
+	branch = phoenix
