@@ -30,17 +30,6 @@
 #define __STRNCPY
 #define __MEMMOVE
 
-
-#if defined(__ARM_PCS_VFP) || (defined(__VFP_FP__) && !defined(__SOFTFP__))
-#if defined(__ARM_FP) && (__ARM_FP & 8) != 0
-#define __IEEE754_SQRT
-#define __ieee754_sqrt(x) ({ double a = (x); __asm__ volatile ("vsqrt.f64 %P0, %P1" : "=w"(a) : "w"(a)); a; })
-#endif
-
-#define __IEEE754_SQRTF
-#define __ieee754_sqrtf(x) ({ float a = (x); __asm__ volatile ("vsqrt.f32 %0, %1" : "=t"(a) : "t"(a)); a; })
-#endif
-
 /* FIXME provide libphoenix config to be able to
  * selectively disable/enable features on per
  * project basis.
