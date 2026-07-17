@@ -10,11 +10,12 @@
  *
  * This file is part of Phoenix-RTOS.
  *
- * %LICENSE%
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <math.h>
 #include <complex.h>
+#include <sys/cdefs.h>
 
 
 __EXPORT_INLINE double creal(double complex z);
