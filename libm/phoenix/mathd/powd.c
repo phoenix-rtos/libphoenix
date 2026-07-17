@@ -10,15 +10,13 @@
  *
  * This file is part of Phoenix-RTOS.
  *
- * %LICENSE%
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <arch.h> /* Needed for __ieee754_sqrt */
 #include <math.h>
-#include <float.h>
-#include <limits.h>
 #include <errno.h>
-#include <stdlib.h>
+#include <limits.h>
+#include <float.h>
 #include "common.h"
 
 
@@ -90,82 +88,4 @@ double pow(double base, double exponent)
 	}
 
 	return res;
-}
-
-
-double sqrt(double x)
-{
-	if (isnan(x) != 0) {
-		return NAN;
-	}
-
-	if (x < 0.0) {
-		errno = EDOM;
-		return NAN;
-	}
-
-	if ((x == 0.0) || (x == INFINITY)) {
-		return x;
-	}
-
-#ifdef __IEEE754_SQRT
-	return __ieee754_sqrt(x);
-#else
-	/* Use reciprocal square root method: */
-	double xn = 1.0 / x;
-
-	/* IEEE-754 compliant: */
-	conv_t *init = (conv_t *)&xn;
-
-	/* +Infinity : */
-	if ((init->i.mantisa == 0) && (init->i.exponent == 0x7FF)) {
-		return x;
-	}
-
-	/* Subnormals: */
-	if (init->i.exponent == 0) {
-		init->i.exponent = 0x1;
-	}
-
-	/* Initial guess: */
-	init->i.mantisa = (init->i.mantisa >> 1);
-
-	if (init->i.exponent & 0x1) {
-		init->i.exponent = (init->i.exponent >> 1) + 0x200;
-	}
-	else {
-		init->i.exponent = (init->i.exponent >> 1) + 0x1FF;
-		init->i.mantisa |= (0x1ull << 51);
-	}
-
-	/* Reciprocal sqare root iters (avoiding division): */
-	for (int i = 0; i < 4; ++i) {
-		xn = xn * (1.5 - (0.5 * x * xn * xn));
-	}
-
-	return (xn * x);
-#endif
-}
-
-
-float sqrtf(float x)
-{
-#ifdef __IEEE754_SQRTF
-	if (isnan(x) != 0) {
-		return NAN;
-	}
-
-	if (x < 0.0f) {
-		errno = EDOM;
-		return NAN;
-	}
-
-	if ((x == 0.0f) || (x == INFINITY)) {
-		return x;
-	}
-
-	return __ieee754_sqrtf(x);
-#else
-	return (float)sqrt(x);
-#endif
 }

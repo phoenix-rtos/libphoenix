@@ -10,35 +10,12 @@
  *
  * This file is part of Phoenix-RTOS.
  *
- * %LICENSE%
+ * SPDX-License-Identifier: BSD-3-Clause
  */
-
+ 
 #include <math.h>
-#include <float.h>
 #include <errno.h>
-
-
-double cosh(double x)
-{
-	double y;
-
-	if (isnan(x) != 0) {
-		return NAN;
-	}
-
-	if (isinf(x) != 0) {
-		return INFINITY;
-	}
-
-	/* Make sure exp(x) is not infinity */
-	if (x < 709.78) {
-		return ((exp(x) + exp(-x)) / 2.0);
-	}
-	else {
-		y = cosh(x / 2.0);
-		return ((2.0 * y * y) - 1.0);
-	}
-}
+#include <float.h>
 
 
 double sinh(double x)
@@ -69,22 +46,4 @@ double sinh(double x)
 
 		return f;
 	}
-}
-
-
-double tanh(double x)
-{
-	if (isnan(x) != 0) {
-		return NAN;
-	}
-
-	if (x == INFINITY) {
-		return 1.0;
-	}
-	else if (x == -INFINITY) {
-		return -1.0;
-	}
-
-	/* cosh is never equal to zero */
-	return (sinh(x) / cosh(x));
 }
