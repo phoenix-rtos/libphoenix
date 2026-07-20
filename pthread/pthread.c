@@ -459,6 +459,7 @@ static void pthread_key_cleanup(pthread_ctx *ctx)
 		key_data = key_data->next;
 		free(curr);
 	}
+	ctx->key_data_list = NULL;
 
 	mutexUnlock(pthread_common.pthread_key_lock);
 }
