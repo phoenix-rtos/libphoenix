@@ -5,12 +5,10 @@
  *
  * stdlib/malloc (Doug Lea)
  *
- * Copyright 2017, 2020 Phoenix Systems
- * Author: Jakub Sejdak, Jan Sikorski, Aleksander Kaminski
+ * Copyright 2017, 2020, 2026 Phoenix Systems
+ * Author: Jakub Sejdak, Jan Sikorski, Aleksander Kaminski, Michal Lach
  *
- * This file is part of Phoenix-RTOS.
- *
- * %LICENSE%
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <errno.h>
@@ -29,6 +27,7 @@
 #include <string.h>
 #include <sysexits.h>
 #include <unistd.h>
+#include <malloc.h>
 
 #define CEIL(value, size)          ((((value) + (size) - 1) / (size)) * (size))
 #define FLOOR(value, size)         (((value) / (size)) * (size))
@@ -66,8 +65,9 @@ struct {
 	chunk_t *sbins[32];
 	rbtree_t lbins[32];
 
-	size_t allocsz;
+	size_t mapsz;
 	size_t freesz;
+	size_t maxalloc;
 
 	handle_t mutex;
 } malloc_common;
@@ -193,6 +193,7 @@ static void _malloc_chunkAdd(chunk_t *chunk)
 	size_t chunksz = malloc_chunkSize(chunk);
 	chunk_t *exist;
 
+	malloc_common.freesz += chunksz - CHUNK_OVERHEAD;
 	if (chunksz <= CHUNK_SMALLBIN_MAX_SIZE) {
 		idx = malloc_getsidx(chunksz);
 		LIST_ADD(&malloc_common.sbins[idx], chunk);
@@ -217,6 +218,7 @@ static void _malloc_chunkRemove(chunk_t *chunk)
 	size_t chunksz = malloc_chunkSize(chunk);
 	chunk_t *next = chunk;
 
+	malloc_common.freesz -= chunksz - CHUNK_OVERHEAD;
 	if (chunksz <= CHUNK_SMALLBIN_MAX_SIZE) {
 		idx = malloc_getsidx(chunksz);
 		LIST_REMOVE(&malloc_common.sbins[idx], chunk);
@@ -306,7 +308,7 @@ static void malloc_heapInit(heap_t *heap, size_t size)
 static heap_t *_malloc_heapAlloc(size_t size)
 {
 	chunk_t *chunk;
-	size_t heapSize = CEIL(sizeof(heap_t) + size, _PAGE_SIZE);
+	size_t chunkSize, heapSize = CEIL(sizeof(heap_t) + size, _PAGE_SIZE);
 	heap_t *heap;
 
 	if (heapSize < size) {
@@ -321,7 +323,10 @@ static heap_t *_malloc_heapAlloc(size_t size)
 	chunk = (chunk_t*) heap->space;
 
 	malloc_heapInit(heap, heapSize);
-	malloc_chunkInit(chunk, heap, FLOOR(heap->size - sizeof(heap_t), 8));
+
+	chunkSize = FLOOR(heap->size - sizeof(heap_t), 8);
+	malloc_chunkInit(chunk, heap, chunkSize);
+	malloc_common.mapsz += heapSize;
 	chunk->size |= CHUNK_PUSED;
 	_malloc_chunkAdd(chunk);
 	return heap;
@@ -331,6 +336,7 @@ static heap_t *_malloc_heapAlloc(size_t size)
 static inline void *_malloc_allocFrom(chunk_t *chunk, size_t size)
 {
 	chunk_t *chunkNext;
+	size_t usable;
 
 	if (malloc_chunkCanSplit(chunk, size))
 		_malloc_chunkSplit(chunk, size);
@@ -338,11 +344,15 @@ static inline void *_malloc_allocFrom(chunk_t *chunk, size_t size)
 		_malloc_chunkRemove(chunk);
 
 	chunk->heap->freesz -= malloc_chunkSize(chunk);
-
 	chunk->size |= CHUNK_CUSED;
 
 	if ((chunkNext = malloc_chunkNext(chunk)) != NULL)
 		chunkNext->size |= CHUNK_PUSED;
+
+	usable = malloc_chunkSize(chunk) - CHUNK_OVERHEAD;
+	if (malloc_common.maxalloc < usable) {
+		malloc_common.maxalloc = usable;
+	}
 
 	return (void *) ((uintptr_t) chunk + CHUNK_OVERHEAD);
 }
@@ -515,6 +525,7 @@ void free(void *ptr)
 	if (heap->freesz == heap->size - sizeof(heap_t)) {
 		chunk = (chunk_t *) heap->space;
 		_malloc_chunkRemove(chunk);
+		malloc_common.mapsz -= heap->size;
 		munmap(heap, heap->size);
 	}
 
@@ -526,8 +537,7 @@ void *realloc(void *ptr, size_t size)
 {
 	chunk_t *chunk, *sibling, *next;
 	heap_t *heap;
-	size_t chunksz;
-
+	size_t chunksz, usable;
 	void *p;
 
 	if (ptr == NULL)
@@ -571,6 +581,10 @@ void *realloc(void *ptr, size_t size)
 				(malloc_chunkSize(next) >= (size - chunksz))) {
 			_malloc_allocFrom(next, size - chunksz);
 			chunk->size += malloc_chunkSize(next);
+			usable = malloc_chunkSize(chunk) - CHUNK_OVERHEAD;
+			if (malloc_common.maxalloc < usable) {
+				malloc_common.maxalloc = usable;
+			}
 		}
 		else {
 			mutexUnlock(malloc_common.mutex);
@@ -595,8 +609,9 @@ void _malloc_init(void)
 {
 	int i;
 
-	malloc_common.allocsz = 0;
+	malloc_common.mapsz = 0;
 	malloc_common.freesz = 0;
+	malloc_common.maxalloc = 0;
 	malloc_common.sbinmap = 0;
 	malloc_common.lbinmap = 0;
 
@@ -658,6 +673,21 @@ static void malloc_test_lbin(int lidx, chunk_t *chunk)
 }
 
 
+void mallocInfo(mallocInfo_t *info)
+{
+	if (info == NULL) {
+		return;
+	}
+
+	memset(info, 0, sizeof(*info));
+	mutexLock(malloc_common.mutex);
+	info->mapsz = malloc_common.mapsz;
+	info->freesz = malloc_common.freesz;
+	info->maxalloc = malloc_common.maxalloc;
+	mutexUnlock(malloc_common.mutex);
+}
+
+
 void malloc_test(void)
 {
 	int i;
@@ -669,7 +699,7 @@ void malloc_test(void)
 			ASSERT(malloc_common.sbins[i] != NULL, "malloc_dl: sbinmap bit %d set but bin is empty\n", i);
 			chunk = malloc_common.sbins[i];
 
-			do  {
+			do {
 				malloc_test_heap(chunk);
 				ASSERT(!(chunk->size & CHUNK_CUSED), "malloc_dl: free chunk marked as used\n");
 				ASSERT(malloc_chunkSize(chunk) == (i << 3), "malloc_dl: wrong chunk size at sidx %d\n", i);
