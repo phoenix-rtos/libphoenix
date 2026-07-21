@@ -104,6 +104,12 @@ extern int mutexLock2(handle_t h1, handle_t h2);
 extern int mutexTry(handle_t h);
 
 
+extern int mutexConsistent(handle_t h);
+
+
+extern int mutexPrioCeiling(handle_t h, int prioceiling);
+
+
 extern int mutexUnlock(handle_t h);
 
 
