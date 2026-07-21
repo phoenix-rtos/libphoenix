@@ -59,6 +59,7 @@ int condWait(handle_t h, handle_t m, time_t timeout)
 }
 
 
+/* WARN: does not support robust locks (TODO?) */
 int mutexLock2(handle_t m1, handle_t m2)
 {
 	int err;
