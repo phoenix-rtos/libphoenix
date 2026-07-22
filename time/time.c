@@ -132,7 +132,15 @@ int clock_settime(clockid_t clock_id, const struct timespec *tp)
 		return SET_ERRNO(-EINVAL);
 	}
 
-	time_t time = tp->tv_sec * 1000 * 1000 + tp->tv_nsec / 1000;
+	int err;
+	time_t now, time = tp->tv_sec * 1000 * 1000 + tp->tv_nsec / 1000;
+
+	err = gettime(&now, NULL);
+	if (err < 0) {
+		return SET_ERRNO(err);
+	}
+
+	time -= now;
 
 	return SET_ERRNO(settime(time));
 }
