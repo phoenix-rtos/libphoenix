@@ -5,8 +5,8 @@
  *
  * pthread
  *
- * Copyright 2017, 2019, 2023 Phoenix Systems
- * Author: Pawel Pisarczyk, Marcin Baran, Hubert Badocha
+ * Copyright 2017, 2019, 2023, 2026 Phoenix Systems
+ * Author: Pawel Pisarczyk, Marcin Baran, Hubert Badocha, Adam Greloch
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -19,6 +19,7 @@
 #include <sys/list.h>
 #include <sys/mman.h>
 #include <sys/minmax.h>
+#include <sys/sched.h>
 #include <pthread.h>
 #include <unistd.h>
 
@@ -218,7 +219,7 @@ static int pthread_create_main(void)
 
 
 int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
-	void *(*start_routine)(void *), void *arg)
+		void *(*start_routine)(void *), void *arg)
 {
 	const pthread_attr_t *attrs = &pthread_attr_default;
 
@@ -616,23 +617,38 @@ int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize)
 
 
 int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr,
-	size_t stacksize)
+		size_t stacksize)
 {
 	return pthread_attr_setstackaddr(attr, stackaddr) |
-		pthread_attr_setstacksize(attr, stacksize);
+			pthread_attr_setstacksize(attr, stacksize);
 }
 
 
 int pthread_attr_getstack(const pthread_attr_t *attr, void **stackaddr,
-	size_t *stacksize)
+		size_t *stacksize)
 {
 	return pthread_attr_getstackaddr(attr, stackaddr) |
-		pthread_attr_getstacksize(attr, stacksize);
+			pthread_attr_getstacksize(attr, stacksize);
 }
 
 
-int pthread_attr_setschedparam(pthread_attr_t *attr,
-	const struct sched_param *param)
+static int check_rr_prio(int prio)
+{
+	sched_info_t info;
+
+	if (schedInfo(0, SCHED_RR, &info) < 0) {
+		return EINVAL;
+	}
+
+	if (prio > info.maxPriority || prio < info.minPriority) {
+		return EINVAL;
+	}
+
+	return EOK;
+}
+
+
+int pthread_attr_setschedparam(pthread_attr_t *attr, const struct sched_param *param)
 {
 	if (attr == NULL || param == NULL) {
 		return EINVAL;
@@ -642,12 +658,7 @@ int pthread_attr_setschedparam(pthread_attr_t *attr,
 		return ENOTSUP;
 	}
 
-	sched_info_t info;
-	if (schedInfo(getpid(), attr->schedpolicy, &info) < 0) {
-		return EINVAL;
-	}
-
-	if (param->sched_priority > info.maxPriority || param->sched_priority < info.minPriority) {
+	if (check_rr_prio(param->sched_priority) != 0) {
 		return EINVAL;
 	}
 
@@ -734,16 +745,67 @@ int pthread_attr_setinheritsched(pthread_attr_t *attr, int inheritsched)
 	return 0;
 }
 
+int pthread_setschedprio(pthread_t thread, int prio)
+{
+	pthread_ctx *ctx = (pthread_ctx *)thread;
+	int err = EOK;
 
-int pthread_setschedprio(pthread_t thread, int prio);
+	if (ctx == NULL) {
+		err = EINVAL;
+	}
+	else {
+		if (check_rr_prio(prio) != 0) {
+			return EINVAL;
+		}
+		sched_params_t p = { 0 };
+		p.priorityBase = prio;
+		err = -schedSet(0, ctx->id, SCHED_RR, &p);
+	}
+
+	return err;
+}
 
 
-int pthread_getschedparam(pthread_t thread, int *policy,
-	struct sched_param *__restrict param);
+int pthread_getschedparam(pthread_t thread, int *policy, struct sched_param *__restrict param)
+{
+	pthread_ctx *ctx = (pthread_ctx *)thread;
+	int err = EOK;
+
+	if (ctx == NULL || policy == NULL || param == NULL) {
+		err = EINVAL;
+	}
+	else {
+		sched_params_t p;
+		err = -schedGet(0, ctx->id, &p);
+		if (err == EOK) {
+			*policy = SCHED_RR; /* Nothing else supported for now */
+			param->sched_priority = p.priorityBase;
+		}
+	}
+
+	return err;
+}
 
 
-int pthread_setschedparam(pthread_t thread, int policy,
-	const struct sched_param *param);
+int pthread_setschedparam(pthread_t thread, int policy, const struct sched_param *param)
+{
+	pthread_ctx *ctx = (pthread_ctx *)thread;
+	int err;
+
+	if (ctx == NULL || param == NULL || (policy != SCHED_FIFO && policy != SCHED_RR && policy != SCHED_OTHER)) {
+		err = EINVAL;
+	}
+	else if (policy != SCHED_RR) {
+		err = ENOTSUP;
+	}
+	else {
+		sched_params_t p = { 0 };
+		p.priorityBase = param->sched_priority;
+		err = -schedSet(0, ctx->id, SCHED_RR, &p);
+	}
+
+	return err;
+}
 
 
 static int pthread_mutex_lazy_init(pthread_mutex_t *mutex)
@@ -889,6 +951,80 @@ int sched_get_priority_min(int policy)
 	sched_info_t info;
 	int err = SET_ERRNO(schedInfo(getpid(), policy, &info));
 	return err < 0 ? err : info.minPriority;
+}
+
+
+int sched_setparam(pid_t pid, const struct sched_param *param)
+{
+	if (param == NULL || pid < 0) {
+		return SET_ERRNO(-EINVAL);
+	}
+	sched_params_t p = { 0 };
+	p.priorityBase = param->sched_priority;
+	int err = SET_ERRNO(schedSet(pid, 0, SCHED_RR, &p));
+	return err < 0 ? err : EOK;
+}
+
+
+int sched_getparam(pid_t pid, struct sched_param *param)
+{
+	if (pid < 0 || param == NULL) {
+		return SET_ERRNO(-EINVAL);
+	}
+	sched_params_t p;
+	int err = SET_ERRNO(schedGet(pid, 0, &p));
+	if (err < 0) {
+		return err;
+	}
+	param->sched_priority = p.priorityBase;
+	return EOK;
+}
+
+
+int sched_setscheduler(pid_t pid, int policy, const struct sched_param *param)
+{
+	if (policy != SCHED_FIFO && policy != SCHED_RR && policy != SCHED_OTHER) {
+		return SET_ERRNO(-EINVAL);
+	}
+
+	if (policy != SCHED_RR) {
+		return SET_ERRNO(-ENOTSUP);
+	}
+
+	int err = sched_setparam(pid, param);
+	return err < 0 ? err : SCHED_RR;
+}
+
+
+int sched_getscheduler(pid_t pid)
+{
+	sched_params_t p;
+	int err = SET_ERRNO(schedGet(pid, 0, &p));
+	return err < 0 ? err : p.policy;
+}
+
+
+static void us_to_timespec(time_t abstime_us, struct timespec *__restrict time)
+{
+	time->tv_sec = abstime_us / (1000 * 1000);
+	time->tv_nsec = (abstime_us % (1000 * 1000)) * 1000;
+}
+
+
+int sched_rr_get_interval(pid_t pid, struct timespec *tp)
+{
+	if (pid < 0 || tp == NULL) {
+		return SET_ERRNO(-EINVAL);
+	}
+
+	sched_info_t info;
+	int err = SET_ERRNO(schedInfo(pid, SCHED_RR, &info));
+	if (err < 0) {
+		return err;
+	}
+
+	us_to_timespec(info.interval, tp);
+	return EOK;
 }
 
 
@@ -1078,8 +1214,8 @@ static time_t timespec_to_us(const struct timespec *__restrict time)
 
 
 int pthread_cond_timedwait(pthread_cond_t *__restrict cond,
-	pthread_mutex_t *__restrict mutex,
-	const struct timespec *__restrict abstime)
+		pthread_mutex_t *__restrict mutex,
+		const struct timespec *__restrict abstime)
 {
 	int err = 0;
 
