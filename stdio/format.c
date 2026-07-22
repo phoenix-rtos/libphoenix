@@ -621,7 +621,7 @@ static int format_sprintfScientificForm(struct buffer *buff, struct bigdouble *b
 }
 
 
-static int format_sprintfDouble(void *ctx, feedfunc feed, double d, uint32_t flags, int minFieldWidth, int precision, char format)
+static int format_sprintfDouble(void *ctx, feedfunc feed, double d, uint32_t flags, int minFieldWidth, int precision, char format, uint8_t msb)
 {
 	struct buffer buff;
 	char sign = 0;
@@ -640,7 +640,7 @@ static int format_sprintfDouble(void *ctx, feedfunc feed, double d, uint32_t fla
 	}
 
 	/* check sign */
-	if (((num64 >> 63) & 1) != 0) {
+	if (msb != 0) {
 		sign = '-';
 		d = -d;
 	}
@@ -654,6 +654,7 @@ static int format_sprintfDouble(void *ctx, feedfunc feed, double d, uint32_t fla
 		sign = '\0';
 	}
 	num64 = format_u64FromDouble(d);
+	num64 |= ((uint64_t)msb << 63);
 
 	CHECK_FAIL(ret, format_bufferInit(&buff, 2 * precision + 6));
 
@@ -1180,19 +1181,26 @@ int format_parse(void *ctx, feedfunc feed, const char *format, va_list args)
 			case 'f':
 			case 'g': {
 #ifndef IO_NO_FLOAT
-				double doubleNumber;
+				long double doubleNumber;
+				uint8_t msb = 0;
+
 				if (fmt == 'g' || fmt == 'G') {
 					flags |= FLAG_NO_TRAILING_ZEROS;
 				}
 				if ((flags & FLAG_LONG_DOUBLE) != 0) {
 					/* NOTE: support for long double is incomplete */
-					doubleNumber = (double)va_arg((args), long double);
+					doubleNumber = va_arg((args), long double);
 				}
 				else {
-					doubleNumber = (double)va_arg((args), double);
+					doubleNumber = (long double)va_arg((args), double);
 				}
 
-				CHECK_FAIL(ret, format_sprintfDouble(ctx, feed, doubleNumber, flags, minFieldWidth, precision, tolower(fmt)));
+				/* preserve sign bit during down-conversion to double */
+				if (__builtin_signbit(doubleNumber) != 0) {
+					msb = 1;
+				}
+
+				CHECK_FAIL(ret, format_sprintfDouble(ctx, feed, (double)doubleNumber, flags, minFieldWidth, precision, tolower(fmt), msb));
 				break;
 #else
 				if ((flags & FLAG_LONG_DOUBLE) != 0) {
