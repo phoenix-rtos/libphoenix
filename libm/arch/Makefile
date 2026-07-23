@@ -6,7 +6,7 @@
 #
 # This file is part of Phoenix-RTOS.
 #
-# %LICENSE%
+# SPDX-License-Identifier: BSD-3-Clause
 #
 
 HW_OBJS := $(addprefix $(PREFIX_O), $(patsubst %.c,%.o,$(wildcard libm/arch/$(TARGET_SUFF)/*.c)))
