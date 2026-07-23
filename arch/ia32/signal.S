@@ -20,8 +20,9 @@
 .globl _signal_trampoline
 .type _signal_trampoline, %function
 _signal_trampoline:
+	pop %ebx /* handler */
 	/* Signal number on stack */
-	call _signal_handler
+	call %ebx
 
 	addl $4, %esp
 	/* oldmask is now on top of the stack */
