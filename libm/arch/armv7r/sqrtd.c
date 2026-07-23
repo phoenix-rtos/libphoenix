@@ -8,10 +8,9 @@
  * Copyright 2017, 2024, 2026 Phoenix Systems
  * Author: Pawel Pisarczyk, Lukasz Leczkowski, Michal Lach
  *
- * This file is part of Phoenix-RTOS.
- *
- * %LICENSE%
+ * SPDX-License-Identifier: BSD-3-Clause
  */
+
 #include <math.h>
 #include <errno.h>
 

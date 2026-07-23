@@ -8,7 +8,6 @@
  * Copyright 2023 Phoenix Systems
  * Author: Gerard Swiderski
  *
- * This file is part of Phoenix-RTOS.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
