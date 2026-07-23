@@ -35,9 +35,9 @@ extern "C" {
 #define PTHREAD_EXPLICIT_SCHED 0
 #define PTHREAD_INHERIT_SCHED  1
 
-#define PTHREAD_PRIO_NONE    0
-#define PTHREAD_PRIO_INHERIT 1
-#define PTHREAD_PRIO_PROTECT 2
+#define PTHREAD_PRIO_NONE    PH_LOCK_PROTO_NOINHERIT
+#define PTHREAD_PRIO_INHERIT PH_LOCK_PROTO_INHERIT
+#define PTHREAD_PRIO_PROTECT PH_LOCK_PROTO_PRIOCEILING
 
 #define PTHREAD_PROCESS_SHARED  0
 #define PTHREAD_PROCESS_PRIVATE 1
@@ -51,6 +51,9 @@ extern "C" {
 #define PTHREAD_MUTEX_ERRORCHECK PH_LOCK_ERRORCHECK
 #define PTHREAD_MUTEX_RECURSIVE  PH_LOCK_RECURSIVE
 #define PTHREAD_MUTEX_DEFAULT    PTHREAD_MUTEX_NORMAL
+
+#define PTHREAD_MUTEX_STALLED 0
+#define PTHREAD_MUTEX_ROBUST  1
 
 #define PTHREAD_ONCE_INIT 1
 
@@ -160,10 +163,19 @@ int pthread_mutex_destroy(pthread_mutex_t *);
 int pthread_mutex_init(pthread_mutex_t *__restrict, const pthread_mutexattr_t *__restrict);
 
 
+int pthread_mutex_getprioceiling(const pthread_mutex_t *__restrict mutex, int *__restrict prioceiling);
+
+
+int pthread_mutex_setprioceiling(pthread_mutex_t *__restrict mutex, int prioceiling, int *__restrict old_ceiling);
+
+
 int pthread_mutex_lock(pthread_mutex_t *);
 
 
 int pthread_mutex_trylock(pthread_mutex_t *);
+
+
+int pthread_mutex_consistent(pthread_mutex_t *mutex);
 
 
 int pthread_mutex_unlock(pthread_mutex_t *);
@@ -175,7 +187,31 @@ int pthread_mutexattr_destroy(pthread_mutexattr_t *attr);
 int pthread_mutexattr_init(pthread_mutexattr_t *attr);
 
 
-int pthread_mutexattr_gettype(const pthread_mutexattr_t *attr, int *type);
+int pthread_mutexattr_getprioceiling(const pthread_mutexattr_t *__restrict attr, int *__restrict prioceiling);
+
+
+int pthread_mutexattr_setprioceiling(pthread_mutexattr_t *attr, int prioceiling);
+
+
+int pthread_mutexattr_getprotocol(const pthread_mutexattr_t *__restrict attr, int *__restrict protocol);
+
+
+int pthread_mutexattr_setprotocol(pthread_mutexattr_t *attr, int protocol);
+
+
+int pthread_mutexattr_getpshared(const pthread_mutexattr_t *__restrict attr, int *__restrict pshared);
+
+
+int pthread_mutexattr_setpshared(pthread_mutexattr_t *attr, int pshared);
+
+
+int pthread_mutexattr_getrobust(const pthread_mutexattr_t *__restrict attr, int *__restrict robust);
+
+
+int pthread_mutexattr_setrobust(pthread_mutexattr_t *attr, int robust);
+
+
+int pthread_mutexattr_gettype(const pthread_mutexattr_t *__restrict attr, int *__restrict type);
 
 
 int pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type);
