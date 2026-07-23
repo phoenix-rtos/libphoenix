@@ -1,12 +1,12 @@
 #
 # Makefile for math library
 #
-# Copyright 2025 Phoenix Systems
+# Copyright 2025-2026 Phoenix Systems
 # Author: Mikolaj Matalowski
 #
 # This file is part of Phoenix-RTOS.
 #
-# %LICENSE%
+# SPDX-License-Identifier: BSD-3-Clause
 #
 
 LIBM_USE_LIBMCS ?= n

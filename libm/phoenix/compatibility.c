@@ -8,7 +8,6 @@
  * Copyright 2025 Phoenix Systems
  * Author: Mikolaj Matalowski
  *
- * This file is part of Phoenix-RTOS.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */

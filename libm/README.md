@@ -18,7 +18,7 @@ This is a copy of libmcs math library implementation from https://gitlab.com/gtd
 For documentation please refer to /docs directory present on the main repo linked above. 
 
 # Phoenix 
-This is implementation of math library developed alongside Pheonix RTOS operating system. Keep in mind that this implementation is not complete, not all functions in C99 standard are implemented.
+This is implementation of math library developed alongside Phoenix RTOS operating system. Keep in mind that this implementation is not complete, not all functions in C99 standard are implemented.
 
 # Notes
 1. This is a temporary state, moving math library to be separate to libphoenix
