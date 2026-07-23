@@ -5,8 +5,8 @@
  *
  * pthread
  *
- * Copyright 2017-2018, 2019 Phoenix Systems
- * Author: Pawel Pisarczyk, Michal Miroslaw, Marcin Baran
+ * Copyright 2017-2018, 2019, 2026 Phoenix Systems
+ * Author: Pawel Pisarczyk, Michal Miroslaw, Marcin Baran, Adam Greloch
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -45,8 +45,6 @@ extern "C" {
 #define PTHREAD_SCOPE_PROCESS 0
 #define PTHREAD_SCOPE_SYSTEM  1
 
-#define PTHREAD_MUTEX_INITIALIZER { 0, 0 }
-
 #define PTHREAD_MUTEX_NORMAL     PH_LOCK_NORMAL
 #define PTHREAD_MUTEX_ERRORCHECK PH_LOCK_ERRORCHECK
 #define PTHREAD_MUTEX_RECURSIVE  PH_LOCK_RECURSIVE
@@ -58,7 +56,11 @@ extern "C" {
 #define PTHREAD_CANCEL_ENABLE  1
 #define PTHREAD_CANCELED       2
 
-#define PTHREAD_COND_INITIALIZER { 0, 0 }
+/* clang-format off */
+#define PTHREAD_MUTEX_INITIALIZER  { 0, 0 }
+#define PTHREAD_COND_INITIALIZER   { 0, 0 }
+#define PTHREAD_RWLOCK_INITIALIZER { 0 }
+/* clang-format on */
 
 
 int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_routine)(void *), void *arg);
@@ -74,6 +76,9 @@ int pthread_setcancelstate(int state, int *oldstate);
 
 
 int pthread_cancel(pthread_t thread);
+
+
+void pthread_testcancel(void);
 
 
 pthread_t pthread_self(void);
@@ -276,7 +281,25 @@ int pthread_rwlock_unlock(pthread_rwlock_t *rwlock);
 int pthread_rwlock_destroy(pthread_rwlock_t *rwlock);
 
 
+int pthread_rwlock_timedrdlock(pthread_rwlock_t *__restrict__ rwlock, const struct timespec *__restrict__ abs_timeout);
+
+
+int pthread_rwlock_timedwrlock(pthread_rwlock_t *__restrict__ rwlock, const struct timespec *__restrict__ abs_timeout);
+
+
 int pthread_rwlock_init(pthread_rwlock_t *__restrict__ rwlock, const pthread_rwlockattr_t *__restrict__ attr);
+
+
+int pthread_rwlockattr_destroy(pthread_rwlockattr_t *attr);
+
+
+int pthread_rwlockattr_init(pthread_rwlockattr_t *attr);
+
+
+int pthread_rwlockattr_getpshared(const pthread_rwlockattr_t *__restrict__ attr, int *__restrict__ pshared);
+
+
+int pthread_rwlockattr_setpshared(pthread_rwlockattr_t *attr, int pshared);
 
 
 #ifdef __cplusplus
