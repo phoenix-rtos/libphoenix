@@ -50,7 +50,7 @@ include ctype/Makefile
 include err/Makefile
 include errno/Makefile
 include locale/Makefile
-include math/Makefile
+include libm/Makefile
 include misc/Makefile
 include net/Makefile
 include netinet/Makefile
@@ -86,7 +86,8 @@ install: install-headers install-libs
 install-headers: $(SRCHEADERS)
 	@echo INSTALL "$(HEADERS_INSTALL_DIR)/*"; \
 	mkdir -p "$(HEADERS_INSTALL_DIR)"; \
-	cp -a include/* "$(HEADERS_INSTALL_DIR)";
+	cp -a include/* "$(HEADERS_INSTALL_DIR)"; \
+	cp -a libm/libmcs/libm/include/* "$(HEADERS_INSTALL_DIR)";
 
 # TODO: remove `rm crt0.o` when we will be sure it's not a symlink to libphoenix.a anymore
 install-libs: $(LIB_TARGETS)
