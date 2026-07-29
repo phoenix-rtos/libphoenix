@@ -45,7 +45,6 @@ extern "C" {
 #define ENETUNREACH     101
 #define ENETRESET       102
 #define ECONNABORTED    103
-#define ECONNRESET      104
 #define ENOBUFS         105
 #define EHOSTDOWN       112
 #define EHOSTUNREACH    113
