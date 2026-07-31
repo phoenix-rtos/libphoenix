@@ -14,6 +14,7 @@
  */
 
 #include <stdlib.h>
+#include <phoenix/elf-notes.h>
 
 
 extern void (*__preinit_array_start[])(void);
@@ -91,3 +92,20 @@ __attribute__((noreturn)) void _startc(void (*cleanup)(void), int argc, char **a
 
 	exit(main(argc, argv));
 }
+
+
+struct __attribute__((packed, aligned(4))) elf_note_sig {
+	uint32_t namesz;
+	uint32_t descsz;
+	uint32_t type;
+	char name[4];
+	uint32_t checksum;
+};
+
+__attribute__((section(".note.os_sig"), used)) volatile const struct elf_note_sig g_os_sig = {
+	.namesz = 4,
+	.descsz = 4,
+	.type = ELF_CHECKSUM_MAGIC,
+	.name = { 'P', 'R', 'T', '\0' },
+	.checksum = 0x0
+};
