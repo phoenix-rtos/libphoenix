@@ -154,9 +154,14 @@ void vsyslog(int priority, const char *format, va_list ap)
 
 	/* output to stderr if logging device is not available */
 	if (syslog_common.logopt & LOG_PERROR || syslog_common.connected == 0 || err < 0) {
-		if (syslog_common.buf[len - 1] != '\n')
+		/* don't include \0 (will be interpreted by klog as new empty line) */
+		size_t write_len = len - prefix_size;
+		if (syslog_common.buf[len - 1] != '\n') {
+			/* always end with \n, we have place for it (overwriting \0) */
 			syslog_common.buf[len] = '\n';
-		write(STDERR_FILENO, syslog_common.buf + prefix_size, len - prefix_size + 1);
+			write_len += 1;
+		}
+		write(STDERR_FILENO, syslog_common.buf + prefix_size, write_len);
 	}
 }
 
