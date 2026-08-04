@@ -13,119 +13,152 @@
  * %LICENSE%
  */
 
+#include <sys/minmax.h>
 #include <sys/select.h>
 #include <errno.h>
 #include <limits.h>
 #include <poll.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sched.h>
 
+#include "../common/util.h"
+
+/* POSIX requires the maximum timeout in select to be at least 31 days */
+#define POSIX_MAX_TIMEOUT_MS (31LL * 24LL * 60LL * 60LL * 1000LL)
 
 #define SFD_ISSET(i, s) ((s) && FD_ISSET(i, s))
 
 
+/* clang-format off */
 WRAP_ERRNO_DEF(int, poll, (struct pollfd *fds, nfds_t nfds, int timeout_ms), (fds, nfds, timeout_ms))
+/* clang-format on */
 
 
-static int poll_timeout(struct timeval *to)
-{
-	time_t timeout;
-
-	if (to && to->tv_sec < INT_MAX / 1000) {
-		timeout = ((to->tv_usec + 999) / 1000) + to->tv_sec * 1000;
-		if (timeout >= 0 && timeout <= INT_MAX)
-			return timeout;
-	}
-
-	return -1;
-}
+extern int nsleep(time_t *sec, long *nsec, int clockid, int flags);
 
 
 int select(int nfds, fd_set *rd, fd_set *wr, fd_set *ex, struct timeval *to)
 {
 	struct pollfd *pfd;
-	time_t timeout;
+	time_t timeoutMs, sec;
 	size_t i, n;
 	int rv;
+	long nsec;
+	long long requestedTimeoutMs;
 
 	if ((nfds < 0) || (nfds > FD_SETSIZE)) {
-		errno = EINVAL;
-		return -1;
+		return SET_ERRNO(-EINVAL);
 	}
 
-	if ((to != NULL) && ((to->tv_usec < 0) || (to->tv_usec > 999999))) {
-		errno = EINVAL;
-		return -1;
+	if (to == NULL) {
+		requestedTimeoutMs = -1;
+	}
+	else {
+		if (!__timevalValid(to) || to->tv_sec < 0) {
+			return SET_ERRNO(-EINVAL);
+		}
+
+		if (to->tv_sec > POSIX_MAX_TIMEOUT_MS / 1000) {
+			requestedTimeoutMs = POSIX_MAX_TIMEOUT_MS;
+		}
+		else {
+			requestedTimeoutMs = min((((long long)to->tv_usec + 999) / 1000) + ((long long)to->tv_sec * 1000), POSIX_MAX_TIMEOUT_MS);
+		}
 	}
 
-	for (n = i = 0; i < nfds; ++i)
-		if (SFD_ISSET(i, rd) || SFD_ISSET(i, wr) || SFD_ISSET(i, ex))
+	for (n = i = 0; i < nfds; ++i) {
+		if (SFD_ISSET(i, rd) || SFD_ISSET(i, wr) || SFD_ISSET(i, ex)) {
 			++n;
-
-	rv = poll_timeout(to);
-	timeout = rv < 0 ? 0 : (time_t)rv;
+		}
+	}
 
 	if (n == 0) {
-		rv = usleep(timeout);
+		if (to == NULL) {
+			rv = pause();
+		}
+		else {
+			sec = min(to->tv_sec, POSIX_MAX_TIMEOUT_MS / 1000);
+			nsec = to->tv_usec * 1000;
+			if (sec != 0 || nsec != 0) {
+				rv = SET_ERRNO(nsleep(&sec, &nsec, CLOCK_MONOTONIC, 0));
+			}
+			else {
+				rv = 0;
+				sched_yield();
+			}
+		}
 		return rv < 0 ? -1 : 0;
 	}
 
 	pfd = calloc(n, sizeof(*pfd));
-	if (!pfd) {
-		errno = ENOMEM;
-		return -1;
+	if (pfd == NULL) {
+		return SET_ERRNO(-ENOMEM);
 	}
 
 	for (n = i = 0; i < nfds; ++i) {
-		if (!(SFD_ISSET(i, rd) || SFD_ISSET(i, wr) || SFD_ISSET(i, ex)))
+		if (!(SFD_ISSET(i, rd) || SFD_ISSET(i, wr) || SFD_ISSET(i, ex))) {
 			continue;
+		}
 
 		pfd[n].fd = i;
-		if (SFD_ISSET(i, rd))
+		if (SFD_ISSET(i, rd)) {
 			pfd[n].events |= POLLIN_SET;
-		if (SFD_ISSET(i, wr))
+		}
+		if (SFD_ISSET(i, wr)) {
 			pfd[n].events |= POLLOUT_SET;
-		if (SFD_ISSET(i, ex))
+		}
+		if (SFD_ISSET(i, ex)) {
 			pfd[n].events |= POLLEX_SET;
+		}
 		pfd[n].events &= ~POLLIGN_SET;
 		++n;
 	}
 
-	rv = poll(pfd, n, timeout);
+	do {
+		timeoutMs = (requestedTimeoutMs < 0) ? -1 : min(requestedTimeoutMs, INT_MAX);
+		rv = poll(pfd, n, (int)timeoutMs);
+		requestedTimeoutMs -= timeoutMs;
+	} while ((rv == 0) && (requestedTimeoutMs > 0));
 
 	for (i = 0; i < n; ++i) {
 		if ((pfd[i].revents & POLLNVAL) != 0) {
-			rv = -EBADF;
+			rv = SET_ERRNO(-EBADF);
 			break;
 		}
 	}
 
 	if (rv < 0) {
-		if (pfd)
-			free(pfd);
-		return SET_ERRNO(rv);
+		free(pfd);
+		/* errno set by poll */
+		return rv;
 	}
 
-	if (rd)
+	if (rd != NULL) {
 		FD_ZERO(rd);
-	if (wr)
+	}
+	if (wr != NULL) {
 		FD_ZERO(wr);
-	if (ex)
+	}
+	if (ex != NULL) {
 		FD_ZERO(ex);
+	}
 
 	for (i = nfds = 0; i < n; ++i) {
-		if (rd && (pfd[i].revents & (POLLIN_SET)))
+		if (rd != NULL && (pfd[i].revents & POLLIN_SET) != 0) {
 			FD_SET(pfd[i].fd, rd);
-		if (wr && (pfd[i].revents & POLLOUT_SET))
+		}
+		if (wr != NULL && (pfd[i].revents & POLLOUT_SET) != 0) {
 			FD_SET(pfd[i].fd, wr);
-		if (ex && (pfd[i].revents & (POLLEX_SET)))
+		}
+		if (ex != NULL && (pfd[i].revents & POLLEX_SET) != 0) {
 			FD_SET(pfd[i].fd, ex);
-		if (SFD_ISSET(pfd[i].fd, rd) | SFD_ISSET(pfd[i].fd, wr)
-				| SFD_ISSET(pfd[i].fd, ex))
+		}
+		if (SFD_ISSET(pfd[i].fd, rd) | SFD_ISSET(pfd[i].fd, wr) | SFD_ISSET(pfd[i].fd, ex)) {
 			nfds++;
+		}
 	}
 
-	if (pfd)
-		free(pfd);
+	free(pfd);
 	return nfds;
 }
