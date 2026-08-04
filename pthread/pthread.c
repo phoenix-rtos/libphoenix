@@ -675,7 +675,7 @@ static int check_rr_prio(int prio)
 {
 	sched_info_t info;
 
-	if (schedInfo(0, SCHED_RR, &info) < 0) {
+	if (schedInfo(SCHED_RR, &info) < 0) {
 		return EINVAL;
 	}
 
@@ -1015,7 +1015,7 @@ int sched_yield(void)
 int sched_get_priority_max(int policy)
 {
 	sched_info_t info;
-	int err = SET_ERRNO(schedInfo(getpid(), policy, &info));
+	int err = SET_ERRNO(schedInfo(policy, &info));
 	return err < 0 ? err : info.maxPriority;
 }
 
@@ -1023,7 +1023,7 @@ int sched_get_priority_max(int policy)
 int sched_get_priority_min(int policy)
 {
 	sched_info_t info;
-	int err = SET_ERRNO(schedInfo(getpid(), policy, &info));
+	int err = SET_ERRNO(schedInfo(policy, &info));
 	return err < 0 ? err : info.minPriority;
 }
 
@@ -1104,7 +1104,7 @@ int sched_rr_get_interval(pid_t pid, struct timespec *tp)
 	}
 
 	sched_info_t info;
-	int err = SET_ERRNO(schedInfo(pid, SCHED_RR, &info));
+	int err = SET_ERRNO(schedInfo(SCHED_RR, &info));
 	if (err < 0) {
 		return err;
 	}

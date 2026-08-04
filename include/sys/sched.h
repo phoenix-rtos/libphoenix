@@ -23,7 +23,7 @@ extern "C" {
 #endif
 
 
-int schedInfo(int pid, int policy, sched_info_t *info);
+int schedInfo(int policy, sched_info_t *info);
 
 
 int schedGet(int pid, int tid, sched_params_t *params);
