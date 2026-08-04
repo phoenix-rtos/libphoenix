@@ -103,7 +103,7 @@ static const pthread_attr_t pthread_attr_default = {
 	.schedpolicy = SCHED_RR,
 	.priority = 4,
 	.detachstate = PTHREAD_CREATE_JOINABLE,
-	.inheritsched = PTHREAD_INHERIT_SCHED,
+	.inheritsched = PTHREAD_EXPLICIT_SCHED,
 	.stacksize = ALIGN(PTHREAD_STACK_MIN, PAGE_SIZE),
 	.guardsize = 0
 };
