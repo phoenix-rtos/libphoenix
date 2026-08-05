@@ -35,7 +35,7 @@ int mutexLock(handle_t m)
 
 int condCreate(handle_t *h)
 {
-	static const struct condAttr defaultAttr = { .clock = PH_CLOCK_RELATIVE };
+	static const struct condAttr defaultAttr = { .clock = PH_CLOCK_RELATIVE, .type = PH_COND_NORMAL };
 
 	return phCondCreate(h, &defaultAttr);
 }

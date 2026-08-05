@@ -959,6 +959,9 @@ int pthread_condattr_getclock(const pthread_condattr_t *__restrict attr, clockid
 static int pthread_condattr_to_condAttr(const pthread_condattr_t *pattr, struct condAttr *attr)
 {
 	int ret = 0;
+
+	attr->type = PH_COND_NORMAL;
+
 	switch (pattr->clock_id) {
 		case CLOCK_REALTIME:
 			attr->clock = PH_CLOCK_REALTIME;
