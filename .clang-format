@@ -31,5 +31,8 @@ BreakBeforeBinaryOperators: None
 BreakBeforeTernaryOperators: false
 BreakConstructorInitializers: AfterColon
 
+TypenameMacros:
+  - _ATOMIC
+
 InsertNewlineAtEOF: true
 ...
