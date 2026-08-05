@@ -21,7 +21,7 @@
 
 int semaphoreCreate(semaphore_t *s, unsigned int v)
 {
-	static const struct condAttr cAttr = { .clock = PH_CLOCK_MONOTONIC };
+	static const struct condAttr cAttr = { .clock = PH_CLOCK_MONOTONIC, .type = PH_COND_NORMAL };
 	int err;
 
 	err = mutexCreate(&s->mutex);
