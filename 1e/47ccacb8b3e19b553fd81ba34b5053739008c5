@@ -1,0 +1,28 @@
+sys/semaphore.c
+  h_fc26ad17182140 24
+sys/threads.c
+  s_868f0f19ba0f4f::t_99902bf770063b 38
+pthread/pthread.c
+  s_868f0f19ba0f4f::t_39a7fa4f91edd5 962-964
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "1e47ccacb8b3e19b553fd81ba34b5053739008c5",
+  "prompts": {},
+  "humans": {
+    "h_fc26ad17182140": {
+      "author": "Lukasz Leczkowski <lukasz.leczkowski@phoenix-rtos.com>"
+    }
+  },
+  "sessions": {
+    "s_868f0f19ba0f4f": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "1021763e-669e-4b5e-85a9-f3e7882ff690",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Lukasz Leczkowski <lukasz.leczkowski@phoenix-rtos.com>"
+    }
+  }
+}
