@@ -1767,6 +1767,75 @@ int pthread_rwlock_init(pthread_rwlock_t *__restrict__ rwlock, const pthread_rwl
 }
 
 
+int pthread_spin_destroy(pthread_spinlock_t *lock)
+{
+	return lock == NULL ? EINVAL : EOK;
+}
+
+
+int pthread_spin_init(pthread_spinlock_t *lock, int pshared)
+{
+	if (lock == NULL || (pshared != PTHREAD_PROCESS_SHARED && pshared != PTHREAD_PROCESS_PRIVATE)) {
+		return EINVAL;
+	}
+
+	if (pshared != PTHREAD_PROCESS_PRIVATE) {
+		return ENOTSUP;
+	}
+
+	atomic_store_explicit(&lock->locked, 0, memory_order_relaxed);
+
+	return EOK;
+}
+
+
+int pthread_spin_lock(pthread_spinlock_t *lock)
+{
+	if (lock == NULL) {
+		return EINVAL;
+	}
+
+	while (atomic_exchange_explicit(&lock->locked, 1, memory_order_acquire) != 0) {
+		while (atomic_load_explicit(&lock->locked, memory_order_relaxed) != 0) {
+			/* TODO: detect if we have SMP. If so, actually spin for a while */
+			sched_yield();
+		}
+	}
+
+	return 0;
+}
+
+
+int pthread_spin_trylock(pthread_spinlock_t *lock)
+{
+	if (lock == NULL) {
+		return EINVAL;
+	}
+
+	if (atomic_load_explicit(&lock->locked, memory_order_relaxed) != 0) {
+		return EBUSY;
+	}
+
+	if (atomic_exchange_explicit(&lock->locked, 1, memory_order_acquire) == 0) {
+		return 0;
+	}
+
+	return EBUSY;
+}
+
+
+int pthread_spin_unlock(pthread_spinlock_t *lock)
+{
+	if (lock == NULL) {
+		return EINVAL;
+	}
+
+	atomic_store_explicit(&lock->locked, 0, memory_order_release);
+
+	return 0;
+}
+
+
 void _pthread_init(void)
 {
 	mutexCreate(&pthread_common.pthread_key_lock);
