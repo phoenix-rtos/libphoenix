@@ -62,6 +62,10 @@ typedef struct {
 } pthread_mutex_t;
 
 typedef struct {
+	_ATOMIC(int) locked;
+} pthread_spinlock_t;
+
+typedef struct {
 	handle_t lock;
 	handle_t readCond;
 	handle_t writeCond;
@@ -70,7 +74,6 @@ typedef struct {
 	size_t writeWaiting;
 	_ATOMIC(int) initialized;
 } pthread_rwlock_t;
-
 
 typedef struct {
 	int pshared;

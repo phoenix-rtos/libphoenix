@@ -50,6 +50,7 @@ extern "C" {
 #define _SC_CLK_TCK    3
 #define _SC_PAGESIZE   4
 #define _SC_PAGE_SIZE  _SC_PAGESIZE /* spec. 1170 compatibility */
+#define _SC_SPIN_LOCKS 5
 
 #define _POSIX_NO_TRUNC             1
 #define _POSIX_ASYNC_IO             -1 /* Async IO not implemented. */
@@ -83,6 +84,7 @@ extern "C" {
 #define _PC_TIMESTAMP_RESOLUTION 21
 #define _PC_NAME_MAX             22
 
+#define _POSIX_SPIN_LOCKS 202405L
 
 extern long sysconf(int name);
 
