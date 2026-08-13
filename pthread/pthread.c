@@ -236,7 +236,7 @@ static int pthread_create_main(void)
 
 
 int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
-	void *(*start_routine)(void *), void *arg)
+		void *(*start_routine)(void *), void *arg)
 {
 	const pthread_attr_t *attrs = &pthread_attr_default;
 
@@ -655,23 +655,23 @@ int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize)
 
 
 int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr,
-	size_t stacksize)
+		size_t stacksize)
 {
 	return pthread_attr_setstackaddr(attr, stackaddr) |
-		pthread_attr_setstacksize(attr, stacksize);
+			pthread_attr_setstacksize(attr, stacksize);
 }
 
 
 int pthread_attr_getstack(const pthread_attr_t *attr, void **stackaddr,
-	size_t *stacksize)
+		size_t *stacksize)
 {
 	return pthread_attr_getstackaddr(attr, stackaddr) |
-		pthread_attr_getstacksize(attr, stacksize);
+			pthread_attr_getstacksize(attr, stacksize);
 }
 
 
 int pthread_attr_setschedparam(pthread_attr_t *attr,
-	const struct sched_param *param)
+		const struct sched_param *param)
 {
 	if (attr == NULL || param == NULL) {
 		return EINVAL;
@@ -778,11 +778,11 @@ int pthread_setschedprio(pthread_t thread, int prio);
 
 
 int pthread_getschedparam(pthread_t thread, int *policy,
-	struct sched_param *__restrict param);
+		struct sched_param *__restrict param);
 
 
 int pthread_setschedparam(pthread_t thread, int policy,
-	const struct sched_param *param);
+		const struct sched_param *param);
 
 
 static int pthread_initialize_acquire_release(
@@ -868,6 +868,67 @@ int pthread_mutex_lock(pthread_mutex_t *mutex)
 	}
 
 	return -err;
+}
+
+
+static int pthread_clock_id_to_phx_clock(clockid_t clock_id)
+{
+	switch (clock_id) {
+		case CLOCK_REALTIME:
+			return PH_CLOCK_REALTIME;
+		case CLOCK_MONOTONIC:
+		case CLOCK_MONOTONIC_RAW:
+			return PH_CLOCK_MONOTONIC;
+		default:
+			return -EINVAL;
+	}
+}
+
+
+static int pthread_mutex_clocklock_phx(pthread_mutex_t *__restrict mutex,
+		int clock, const struct timespec *__restrict abstime)
+{
+	int err = pthread_mutex_trylock(mutex);
+	if (err != EBUSY) {
+		return err;
+	}
+
+	if (__timespecValid(abstime) == 0) {
+		return EINVAL;
+	}
+
+	time_t abstime_us = __timespecToUs(abstime);
+
+	/* check timeout as condClockWait with timeout 0 will wait indefinitely */
+	if (abstime_us == 0) {
+		return ETIMEDOUT;
+	}
+
+	err = mutexLockTimeoutable(mutex->mutexh, abstime_us, clock);
+
+	if (err == -ETIME) {
+		err = -ETIMEDOUT;
+	}
+
+	return -err;
+}
+
+
+int pthread_mutex_clocklock(pthread_mutex_t *__restrict mutex,
+		clockid_t clock_id, const struct timespec *__restrict abstime)
+{
+	int clock = pthread_clock_id_to_phx_clock(clock_id);
+	if (clock < 0) {
+		return -clock;
+	}
+	return pthread_mutex_clocklock_phx(mutex, clock, abstime);
+}
+
+
+int pthread_mutex_timedlock(pthread_mutex_t *__restrict mutex,
+		const struct timespec *__restrict abstime)
+{
+	return pthread_mutex_clocklock_phx(mutex, -1, abstime);
 }
 
 
@@ -1035,22 +1096,12 @@ int pthread_condattr_getclock(const pthread_condattr_t *__restrict attr, clockid
 
 static int pthread_condattr_to_condAttr(const pthread_condattr_t *pattr, struct condAttr *attr)
 {
-	int ret = 0;
-	switch (pattr->clock_id) {
-		case CLOCK_REALTIME:
-			attr->clock = PH_CLOCK_REALTIME;
-			break;
-
-		case CLOCK_MONOTONIC:
-		case CLOCK_MONOTONIC_RAW:
-			attr->clock = PH_CLOCK_MONOTONIC;
-			break;
-
-		default:
-			ret = EINVAL;
-			break;
+	int clock = pthread_clock_id_to_phx_clock(pattr->clock_id);
+	if (clock < 0) {
+		return -clock;
 	}
-	return ret;
+	attr->clock = clock;
+	return EOK;
 }
 
 
@@ -1137,33 +1188,55 @@ int pthread_cond_wait(pthread_cond_t *__restrict cond, pthread_mutex_t *__restri
 }
 
 
-int pthread_cond_timedwait(pthread_cond_t *__restrict cond,
-		pthread_mutex_t *__restrict mutex,
+static int pthread_cond_clockwait_phx(pthread_cond_t *__restrict cond,
+		pthread_mutex_t *__restrict mutex, int clock,
 		const struct timespec *__restrict abstime)
 {
-	int err = 0;
+	if (__timespecValid(abstime) == 0) {
+		return EINVAL;
+	}
 
-	const time_t abstime_us = __timespecToUs(abstime);
+	time_t abstime_us = __timespecToUs(abstime);
 
-	/* check timeout as condWait with timeout 0 will wait indefinitely */
+	/* see note in pthread_mutex_clocklock_phx */
 	if (abstime_us == 0) {
 		return ETIMEDOUT;
 	}
 
-	err = pthread_cond_lazy_init(cond, NULL);
+	int err = pthread_cond_lazy_init(cond, NULL);
 
 	if (err == 0) {
 		err = pthread_mutex_lazy_init(mutex, NULL);
 	}
 
 	if (err == 0) {
-		err = condWait(cond->condh, mutex->mutexh, abstime_us);
+		err = condClockWait(cond->condh, mutex->mutexh, abstime_us, clock);
 	}
 
 	if (err == -ETIME) {
 		err = -ETIMEDOUT;
 	}
 	return -err;
+}
+
+
+int pthread_cond_clockwait(pthread_cond_t *__restrict cond,
+		pthread_mutex_t *__restrict mutex, clockid_t clock_id,
+		const struct timespec *__restrict abstime)
+{
+	int clock = pthread_clock_id_to_phx_clock(clock_id);
+	if (clock < 0) {
+		return -clock;
+	}
+	return pthread_cond_clockwait_phx(cond, mutex, clock, abstime);
+}
+
+
+int pthread_cond_timedwait(pthread_cond_t *__restrict cond,
+		pthread_mutex_t *__restrict mutex,
+		const struct timespec *__restrict abstime)
+{
+	return pthread_cond_clockwait_phx(cond, mutex, -1, abstime);
 }
 
 
@@ -1497,7 +1570,7 @@ static int pthread_rwlock_lazy_init(pthread_rwlock_t *__restrict__ rwlock, const
 }
 
 
-static int pthread_rwlock_rdlock_ex(pthread_rwlock_t *rwlock, int block, int timeout)
+static int pthread_rwlock_rdlock_ex(pthread_rwlock_t *rwlock, int block, int timeout, int clock)
 {
 	int err = pthread_rwlock_lazy_init(rwlock, NULL);
 	if (err != EOK) {
@@ -1514,7 +1587,7 @@ static int pthread_rwlock_rdlock_ex(pthread_rwlock_t *rwlock, int block, int tim
 			break;
 		}
 
-		err = condWait(rwlock->readCond, rwlock->lock, timeout);
+		err = condClockWait(rwlock->readCond, rwlock->lock, timeout, clock);
 
 		if (err == -ETIME) {
 			err = ETIMEDOUT;
@@ -1536,7 +1609,7 @@ static int pthread_rwlock_rdlock_ex(pthread_rwlock_t *rwlock, int block, int tim
 }
 
 
-static int pthread_rwlock_wrlock_ex(pthread_rwlock_t *rwlock, int block, int timeout)
+static int pthread_rwlock_wrlock_ex(pthread_rwlock_t *rwlock, int block, int timeout, int clock)
 {
 	int err = pthread_rwlock_lazy_init(rwlock, NULL);
 	if (err != EOK) {
@@ -1555,7 +1628,7 @@ static int pthread_rwlock_wrlock_ex(pthread_rwlock_t *rwlock, int block, int tim
 			break;
 		}
 
-		err = condWait(rwlock->writeCond, rwlock->lock, timeout);
+		err = condClockWait(rwlock->writeCond, rwlock->lock, timeout, clock);
 
 		if (err == -ETIME) {
 			err = ETIMEDOUT;
@@ -1586,25 +1659,25 @@ static int pthread_rwlock_wrlock_ex(pthread_rwlock_t *rwlock, int block, int tim
 
 int pthread_rwlock_rdlock(pthread_rwlock_t *rwlock)
 {
-	return pthread_rwlock_rdlock_ex(rwlock, 1, 0);
+	return pthread_rwlock_rdlock_ex(rwlock, 1, 0, -1);
 }
 
 
 int pthread_rwlock_tryrdlock(pthread_rwlock_t *rwlock)
 {
-	return pthread_rwlock_rdlock_ex(rwlock, 0, 0);
+	return pthread_rwlock_rdlock_ex(rwlock, 0, 0, -1);
 }
 
 
 int pthread_rwlock_trywrlock(pthread_rwlock_t *rwlock)
 {
-	return pthread_rwlock_wrlock_ex(rwlock, 0, 0);
+	return pthread_rwlock_wrlock_ex(rwlock, 0, 0, -1);
 }
 
 
 int pthread_rwlock_wrlock(pthread_rwlock_t *rwlock)
 {
-	return pthread_rwlock_wrlock_ex(rwlock, 1, 0);
+	return pthread_rwlock_wrlock_ex(rwlock, 1, 0, -1);
 }
 
 
@@ -1647,7 +1720,7 @@ int pthread_rwlock_unlock(pthread_rwlock_t *rwlock)
 }
 
 
-int pthread_rwlock_timedrdlock(pthread_rwlock_t *restrict rwlock, const struct timespec *restrict abs_timeout)
+static int pthread_rwlock_clockrdlock_phx(pthread_rwlock_t *restrict rwlock, const struct timespec *restrict abs_timeout, int clock)
 {
 	if (pthread_rwlock_tryrdlock(rwlock) == EOK) {
 		return EOK;
@@ -1663,11 +1736,27 @@ int pthread_rwlock_timedrdlock(pthread_rwlock_t *restrict rwlock, const struct t
 		return ETIMEDOUT;
 	}
 
-	return pthread_rwlock_rdlock_ex(rwlock, 1, abs_timeout_us);
+	return pthread_rwlock_rdlock_ex(rwlock, 1, abs_timeout_us, clock);
 }
 
 
-int pthread_rwlock_timedwrlock(pthread_rwlock_t *restrict rwlock, const struct timespec *restrict abs_timeout)
+int pthread_rwlock_timedrdlock(pthread_rwlock_t *restrict rwlock, const struct timespec *restrict abs_timeout)
+{
+	return pthread_rwlock_clockrdlock_phx(rwlock, abs_timeout, -1);
+}
+
+
+int pthread_rwlock_clockrdlock(pthread_rwlock_t *restrict rwlock, clockid_t clock_id, const struct timespec *restrict abs_timeout)
+{
+	int clock = pthread_clock_id_to_phx_clock(clock_id);
+	if (clock < 0) {
+		return -clock;
+	}
+	return pthread_rwlock_clockrdlock_phx(rwlock, abs_timeout, clock);
+}
+
+
+static int pthread_rwlock_clockwrlock_phx(pthread_rwlock_t *restrict rwlock, const struct timespec *restrict abs_timeout, int clock)
 {
 	if (pthread_rwlock_trywrlock(rwlock) == EOK) {
 		return EOK;
@@ -1683,7 +1772,23 @@ int pthread_rwlock_timedwrlock(pthread_rwlock_t *restrict rwlock, const struct t
 		return ETIMEDOUT;
 	}
 
-	return pthread_rwlock_wrlock_ex(rwlock, 1, abs_timeout_us);
+	return pthread_rwlock_wrlock_ex(rwlock, 1, abs_timeout_us, clock);
+}
+
+
+int pthread_rwlock_timedwrlock(pthread_rwlock_t *restrict rwlock, const struct timespec *restrict abs_timeout)
+{
+	return pthread_rwlock_clockwrlock_phx(rwlock, abs_timeout, -1);
+}
+
+
+int pthread_rwlock_clockwrlock(pthread_rwlock_t *restrict rwlock, clockid_t clock_id, const struct timespec *restrict abs_timeout)
+{
+	int clock = pthread_clock_id_to_phx_clock(clock_id);
+	if (clock < 0) {
+		return -clock;
+	}
+	return pthread_rwlock_clockwrlock_phx(rwlock, abs_timeout, clock);
 }
 
 
