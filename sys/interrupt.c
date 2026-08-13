@@ -38,7 +38,7 @@ int interrupt_queueWait(handle_t queue, time_t timeout)
 
 	do {
 		/* FIXME: for PH_CLOCK_RELATIVE the timeout should be recalculated on EINTR */
-		err = phCondWait(queue, (handle_t)-1, timeout);
+		err = phCondWait(queue, (handle_t)-1, timeout, -1);
 	} while (err == -EINTR);
 
 	return err;
