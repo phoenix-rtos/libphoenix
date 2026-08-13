@@ -34,11 +34,11 @@ int pause(void)
 		return SET_ERRNO(err);
 	}
 
-	err = phMutexLock(lock);
+	err = phMutexLock(lock, 0, -1);
 	if (err >= 0) {
 		/* Sleep on a private cond - only signal can wake us up */
 		while (err >= 0) {
-			err = phCondWait(cond, lock, 0);
+			err = phCondWait(cond, lock, 0, -1);
 		}
 
 		if (err != -EINTR) {
