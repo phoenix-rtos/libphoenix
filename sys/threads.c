@@ -19,7 +19,7 @@
 
 int mutexCreate(handle_t *h)
 {
-	static const struct lockAttr defaultAttr = { .type = PH_LOCK_NORMAL };
+	static const struct lockAttr defaultAttr = { .type = PH_LOCK_NORMAL, .protocol = PH_LOCK_PROTO_INHERIT, .robust = PH_LOCK_STALLED };
 
 	return phMutexCreate(h, &defaultAttr);
 }
