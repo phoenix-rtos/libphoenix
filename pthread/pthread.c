@@ -863,11 +863,11 @@ int pthread_mutex_lock(pthread_mutex_t *mutex)
 {
 	int err = pthread_mutex_lazy_init(mutex, NULL);
 
-	if (err == 0) {
-		err = mutexLock(mutex->mutexh);
+	if (err == EOK) {
+		err = -mutexLock(mutex->mutexh);
 	}
 
-	return -err;
+	return err;
 }
 
 
@@ -875,11 +875,11 @@ int pthread_mutex_trylock(pthread_mutex_t *mutex)
 {
 	int err = pthread_mutex_lazy_init(mutex, NULL);
 
-	if (err == 0) {
-		err = mutexTry(mutex->mutexh);
+	if (err == EOK) {
+		err = -mutexTry(mutex->mutexh);
 	}
 
-	return -err;
+	return err;
 }
 
 
@@ -887,11 +887,11 @@ int pthread_mutex_unlock(pthread_mutex_t *mutex)
 {
 	int err = pthread_mutex_lazy_init(mutex, NULL);
 
-	if (err == 0) {
-		err = mutexUnlock(mutex->mutexh);
+	if (err == EOK) {
+		err = -mutexUnlock(mutex->mutexh);
 	}
 
-	return -err;
+	return err;
 }
 
 
@@ -1129,14 +1129,15 @@ int pthread_cond_wait(pthread_cond_t *__restrict cond, pthread_mutex_t *__restri
 {
 	int err = pthread_cond_lazy_init(cond, NULL);
 
-	if (err == 0) {
+	if (err == EOK) {
 		err = pthread_mutex_lazy_init(mutex, NULL);
 	}
 
-	if (err == 0) {
-		err = condWait(cond->condh, mutex->mutexh, 0);
+	if (err == EOK) {
+		err = -condWait(cond->condh, mutex->mutexh, 0);
 	}
-	return -err;
+
+	return err;
 }
 
 
@@ -1155,18 +1156,19 @@ int pthread_cond_timedwait(pthread_cond_t *__restrict cond,
 
 	err = pthread_cond_lazy_init(cond, NULL);
 
-	if (err == 0) {
+	if (err == EOK) {
 		err = pthread_mutex_lazy_init(mutex, NULL);
 	}
 
-	if (err == 0) {
-		err = condWait(cond->condh, mutex->mutexh, abstime_us);
+	if (err == EOK) {
+		err = -condWait(cond->condh, mutex->mutexh, abstime_us);
 	}
 
-	if (err == -ETIME) {
-		err = -ETIMEDOUT;
+	if (err == ETIME) {
+		err = ETIMEDOUT;
 	}
-	return -err;
+
+	return err;
 }
 
 
