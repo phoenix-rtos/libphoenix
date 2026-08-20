@@ -83,6 +83,13 @@ static struct {
 		void *stack;
 		size_t stacksize;
 	} to_cleanup;
+
+	/*
+	 * TODO: replace with an array indexed by SCHED_FIFO, SCHED_RR, etc. once more
+	 * sched policies get implemented
+	 */
+	int pthread_min_prio_rr;
+	int pthread_max_prio_rr;
 } pthread_common;
 
 
@@ -686,7 +693,7 @@ int pthread_attr_setschedparam(pthread_attr_t *attr,
 		return EINVAL;
 	}
 
-	if (param->sched_priority > info.maxPriority || param->sched_priority < info.minPriority) {
+	if (param->sched_priority > pthread_common.pthread_max_prio_rr || param->sched_priority < pthread_common.pthread_min_prio_rr) {
 		return EINVAL;
 	}
 
@@ -955,17 +962,13 @@ int sched_yield(void)
 
 int sched_get_priority_max(int policy)
 {
-	sched_info_t info;
-	int err = SET_ERRNO(schedInfo(getpid(), policy, &info));
-	return err < 0 ? err : info.maxPriority;
+	return pthread_common.pthread_max_prio_rr;
 }
 
 
 int sched_get_priority_min(int policy)
 {
-	sched_info_t info;
-	int err = SET_ERRNO(schedInfo(getpid(), policy, &info));
-	return err < 0 ? err : info.minPriority;
+	return pthread_common.pthread_min_prio_rr;
 }
 
 
@@ -1838,6 +1841,15 @@ int pthread_spin_unlock(pthread_spinlock_t *lock)
 }
 
 
+static void pthread_cache_policies(void)
+{
+	sched_info_t info;
+	schedInfo(getpid(), SCHED_RR, &info);
+	pthread_common.pthread_min_prio_rr = info.minPriority;
+	pthread_common.pthread_max_prio_rr = info.maxPriority;
+}
+
+
 void _pthread_init(void)
 {
 	mutexCreate(&pthread_common.pthread_key_lock);
@@ -1848,5 +1860,6 @@ void _pthread_init(void)
 	pthread_common.pthread_list = NULL;
 	pthread_common.pthread_fork_handlers = NULL;
 	pthread_create_main();
+	pthread_cache_policies();
 	pthread_common.to_cleanup.stack = NULL;
 }
