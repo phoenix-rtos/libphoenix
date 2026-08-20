@@ -48,7 +48,9 @@ typedef struct {
 
 
 static const struct lockAttr flockAttr = {
-	.type = PH_LOCK_RECURSIVE
+	.type = PH_LOCK_RECURSIVE,
+	.protocol = PH_LOCK_PROTO_INHERIT,
+	.robust = PH_LOCK_STALLED,
 };
 
 

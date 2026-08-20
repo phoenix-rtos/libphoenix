@@ -19,7 +19,7 @@
 
 int mutexCreate(handle_t *h)
 {
-	static const struct lockAttr defaultAttr = { .type = PH_LOCK_NORMAL };
+	static const struct lockAttr defaultAttr = { .type = PH_LOCK_NORMAL, .protocol = PH_LOCK_PROTO_INHERIT, .robust = PH_LOCK_STALLED };
 
 	return phMutexCreate(h, &defaultAttr);
 }
@@ -59,6 +59,7 @@ int condWait(handle_t h, handle_t m, time_t timeout)
 }
 
 
+/* WARN: does not support robust locks (TODO?) */
 int mutexLock2(handle_t m1, handle_t m2)
 {
 	int err;
