@@ -23,11 +23,7 @@
 #include <phoenix/types.h>
 
 #ifdef __cplusplus
-#include <atomic>
-#define _ATOMIC(type) std::atomic<type>
-#else
-#include <stdatomic.h>
-#define _ATOMIC(type) _Atomic(type)
+extern "C" {
 #endif
 
 typedef int clock_t;
@@ -58,11 +54,11 @@ typedef uintptr_t pthread_t;
 
 typedef struct {
 	handle_t mutexh;
-	_ATOMIC(int) initialized;
+	int initialized;
 } pthread_mutex_t;
 
 typedef struct {
-	_ATOMIC(int) locked;
+	int locked;
 } pthread_spinlock_t;
 
 typedef struct {
@@ -72,7 +68,7 @@ typedef struct {
 	size_t readActive;
 	size_t writeActive;
 	size_t writeWaiting;
-	_ATOMIC(int) initialized;
+	int initialized;
 } pthread_rwlock_t;
 
 typedef struct {
@@ -85,7 +81,7 @@ typedef struct lockAttr pthread_mutexattr_t;
 
 typedef struct {
 	handle_t condh;
-	_ATOMIC(int) initialized;
+	int initialized;
 } pthread_cond_t;
 
 
@@ -104,5 +100,9 @@ typedef uint16_t  u_int16_t;
 typedef uint32_t  u_int32_t;
 typedef uint64_t  u_int64_t;
 typedef int register_t;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
