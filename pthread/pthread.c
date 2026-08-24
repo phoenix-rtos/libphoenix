@@ -21,7 +21,6 @@
 #include <sys/minmax.h>
 #include <pthread.h>
 #include <unistd.h>
-#include <stdatomic.h>
 
 #include "../common/util.h"
 
@@ -786,19 +785,19 @@ int pthread_setschedparam(pthread_t thread, int policy,
 
 
 static int pthread_initialize_acquire_release(
-		atomic_int *initialized_flag, void *__restrict__ resource, const void *__restrict__ attr, int(initCb(void *__restrict__ resource, const void *__restrict__ attr)))
+		int *initialized_flag, void *__restrict__ resource, const void *__restrict__ attr, int(initCb(void *__restrict__ resource, const void *__restrict__ attr)))
 {
 	for (;;) {
-		int state = atomic_load_explicit(initialized_flag, memory_order_acquire);
+		int state = __atomic_load_n(initialized_flag, __ATOMIC_ACQUIRE);
 		if (state == RESOURCE_INITIALIZED) {
 			return EOK;
 		}
 
 		if (state == RESOURCE_UNINITIALIZED) {
 			int expected = RESOURCE_UNINITIALIZED;
-			if (atomic_compare_exchange_strong_explicit(initialized_flag, &expected, RESOURCE_INITIALIZING, memory_order_acquire, memory_order_acquire)) {
+			if (__atomic_compare_exchange_n(initialized_flag, &expected, RESOURCE_INITIALIZING, false, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE)) {
 				int err = initCb(resource, attr);
-				atomic_store_explicit(initialized_flag, err == EOK ? RESOURCE_INITIALIZED : RESOURCE_UNINITIALIZED, memory_order_release);
+				__atomic_store_n(initialized_flag, err == EOK ? RESOURCE_INITIALIZED : RESOURCE_UNINITIALIZED, __ATOMIC_RELEASE);
 				return err;
 			}
 		}
@@ -809,17 +808,17 @@ static int pthread_initialize_acquire_release(
 
 
 static int pthread_destroy_acquire_release(
-		atomic_int *initialized_flag, void *__restrict__ resource, int(initCb(void *__restrict__ resource)))
+		int *initialized_flag, void *__restrict__ resource, int(initCb(void *__restrict__ resource)))
 {
 	for (;;) {
-		int state = atomic_load_explicit(initialized_flag, memory_order_acquire);
+		int state = __atomic_load_n(initialized_flag, __ATOMIC_ACQUIRE);
 		if (state == RESOURCE_UNINITIALIZED) {
 			return EOK;
 		}
 
 		if (state == RESOURCE_INITIALIZED) {
 			int expected = RESOURCE_INITIALIZED;
-			if (atomic_compare_exchange_strong_explicit(initialized_flag, &expected, RESOURCE_UNINITIALIZED, memory_order_acquire, memory_order_acquire)) {
+			if (__atomic_compare_exchange_n(initialized_flag, &expected, RESOURCE_UNINITIALIZED, false, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE)) {
 				return initCb(resource);
 			}
 		}
@@ -854,7 +853,7 @@ int pthread_mutex_init(pthread_mutex_t *__restrict mutex, const pthread_mutexatt
 	if (mutex == NULL) {
 		return EINVAL;
 	}
-	atomic_store_explicit(&mutex->initialized, RESOURCE_UNINITIALIZED, memory_order_relaxed);
+	__atomic_store_n(&mutex->initialized, RESOURCE_UNINITIALIZED, __ATOMIC_RELAXED);
 	return pthread_mutex_lazy_init(mutex, attr);
 }
 
@@ -1082,7 +1081,7 @@ int pthread_cond_init(pthread_cond_t *__restrict cond, const pthread_condattr_t 
 	if (cond == NULL) {
 		return EINVAL;
 	}
-	atomic_store_explicit(&cond->initialized, RESOURCE_UNINITIALIZED, memory_order_relaxed);
+	__atomic_store_n(&cond->initialized, RESOURCE_UNINITIALIZED, __ATOMIC_RELAXED);
 	return pthread_cond_lazy_init(cond, attr);
 }
 
@@ -1762,7 +1761,7 @@ int pthread_rwlock_init(pthread_rwlock_t *__restrict__ rwlock, const pthread_rwl
 	if (rwlock == NULL) {
 		return EINVAL;
 	}
-	atomic_store_explicit(&rwlock->initialized, RESOURCE_UNINITIALIZED, memory_order_relaxed);
+	__atomic_store_n(&rwlock->initialized, RESOURCE_UNINITIALIZED, __ATOMIC_RELAXED);
 	return pthread_rwlock_lazy_init(rwlock, attr);
 }
 
@@ -1783,7 +1782,7 @@ int pthread_spin_init(pthread_spinlock_t *lock, int pshared)
 		return ENOTSUP;
 	}
 
-	atomic_store_explicit(&lock->locked, 0, memory_order_relaxed);
+	__atomic_store_n(&lock->locked, 0, __ATOMIC_RELAXED);
 
 	return EOK;
 }
@@ -1795,8 +1794,8 @@ int pthread_spin_lock(pthread_spinlock_t *lock)
 		return EINVAL;
 	}
 
-	while (atomic_exchange_explicit(&lock->locked, 1, memory_order_acquire) != 0) {
-		while (atomic_load_explicit(&lock->locked, memory_order_relaxed) != 0) {
+	while (__atomic_exchange_n(&lock->locked, 1, __ATOMIC_ACQUIRE) != 0) {
+		while (__atomic_load_n(&lock->locked, __ATOMIC_RELAXED) != 0) {
 			/* TODO: detect if we have SMP. If so, actually spin for a while */
 			sched_yield();
 		}
@@ -1812,11 +1811,11 @@ int pthread_spin_trylock(pthread_spinlock_t *lock)
 		return EINVAL;
 	}
 
-	if (atomic_load_explicit(&lock->locked, memory_order_relaxed) != 0) {
+	if (__atomic_load_n(&lock->locked, __ATOMIC_RELAXED) != 0) {
 		return EBUSY;
 	}
 
-	if (atomic_exchange_explicit(&lock->locked, 1, memory_order_acquire) == 0) {
+	if (__atomic_exchange_n(&lock->locked, 1, __ATOMIC_ACQUIRE) == 0) {
 		return 0;
 	}
 
@@ -1830,7 +1829,7 @@ int pthread_spin_unlock(pthread_spinlock_t *lock)
 		return EINVAL;
 	}
 
-	atomic_store_explicit(&lock->locked, 0, memory_order_release);
+	__atomic_store_n(&lock->locked, 0, __ATOMIC_RELEASE);
 
 	return 0;
 }
