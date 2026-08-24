@@ -23,8 +23,10 @@
 #include <phoenix/types.h>
 
 #ifdef __cplusplus
+extern "C++" {
 #include <atomic>
 #define _ATOMIC(type) std::atomic<type>
+}
 #else
 #include <stdatomic.h>
 #define _ATOMIC(type) _Atomic(type)
