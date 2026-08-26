@@ -16,10 +16,6 @@
 
 double trunc(double x)
 {
-	if (isnan(x) != 0) {
-		return NAN;
-	}
-
 	__asm__ volatile("frintz %d0, %d1" : "=w"(x) : "w"(x));
 	return x;
 }

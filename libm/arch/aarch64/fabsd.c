@@ -16,9 +16,6 @@
 
 double fabs(double x)
 {
-	if (isnan(x)) {
-		return x;
-	}
 	if (0 < x) {
 		return x;
 	}

@@ -12,10 +12,15 @@
  */
 
 #include <math.h>
+#include <errno.h>
 
 
 double sqrt(double x)
 {
+	if (x < 0.0) {
+		errno = EDOM;
+		return NAN;
+	}
 	/* clang-format off */
 	__asm__ volatile ("fsqrtd %0, %0" : "+f"(x));
 	/* clang-format on */
