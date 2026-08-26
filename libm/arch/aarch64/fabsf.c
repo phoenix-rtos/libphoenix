@@ -16,9 +16,6 @@
 
 float fabsf(float x)
 {
-	if (isnan(x)) {
-		return x;
-	}
 	if (0 < x) {
 		return x;
 	}

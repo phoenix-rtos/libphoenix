@@ -16,10 +16,6 @@
 
 float roundf(float x)
 {
-	if (isnan(x) != 0) {
-		return NAN;
-	}
-
 	__asm__ volatile("frinta %s0, %s1" : "=w"(x) : "w"(x));
 	return x;
 }

@@ -22,4 +22,4 @@ This is implementation of math library developed alongside Phoenix RTOS operatin
 
 # Notes
 1. This is a temporary state, moving math library to be separate to libphoenix
-2. Some hardware instrinsics for math functions are still not implemented 
+2. Some hardware intrinsics for math functions are still not implemented 

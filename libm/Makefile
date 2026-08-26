@@ -14,16 +14,17 @@ LIBM_LIBMCS_DAZ ?= n
 LIBM_WANT_COMPLEX ?= y
 LIBM_USE_HW ?= y
 
-# Set options for denormals on the FPU
-ifeq ($(LIBM_LIBMCS_DAZ), y)
-  CPPFLAGS += -DLIBMCS_FPU_DAZ
-endif
-
-ifeq ($(LIBM_WANT_COMPLEX), y)
-  CPPFLAGS += -DLIBMCS_WANT_COMPLEX
-endif
-
 CFLAGS += -Ilibm/libmcs/libm/include
+CFLAGS += -I$(BUILD_DIR)/include
+
+$(foreach v,LIBM_USE_LIBMCS LIBM_USE_HW LIBM_WANT_COMPLEX LIBM_LIBMCS_DAZ, $(if $(filter-out y n,$($(v))),$(error $(v) must be set to 'y' or 'n', got '$($(v))')))
+
+# Assert on invalid configuration
+ifeq ($(LIBM_USE_LIBMCS), n)
+  ifeq ($(LIBM_LIBMCS_DAZ), y)
+    $(error "Invalid libm configuration. FPU DAZ option is only valid with libmcs")
+  endif
+endif
 
 # Add source files for hardware accelerated math
 HW_OBJS :=
@@ -35,7 +36,6 @@ SW_OBJS :=
 # Build for libmcs
 ifeq ($(LIBM_USE_LIBMCS), y)
   ifeq ($(LIBM_WANT_COMPLEX), y)
-    CPPFLAGS += -DLIBM_WANT_COMPLEX
     SW_OBJS += $(addprefix $(PREFIX_O), $(patsubst %.c,%.o,$(wildcard libm/libmcs/libm/complexd/internal/*.c)))
     SW_OBJS += $(addprefix $(PREFIX_O), $(patsubst %.c,%.o,$(wildcard libm/libmcs/libm/complexd/*.c)))
     SW_OBJS += $(addprefix $(PREFIX_O), $(patsubst %.c,%.o,$(wildcard libm/libmcs/libm/complexf/internal/*.c)))
@@ -59,8 +59,6 @@ else
   SW_OBJS += $(addprefix $(PREFIX_O), $(patsubst %.c,%.o,$(wildcard libm/phoenix/mathf/*.c)))
   
   CFLAGS += -Ilibm/phoenix
-  # This part is needed for libmcs headers compatibility
-  CFLAGS += -include libm/libmcs/libm/include/internal_config.h
 endif
 
 # Clear functions that already implemented in hardware
