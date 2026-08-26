@@ -16,10 +16,6 @@
 
 float truncf(float x)
 {
-	if (isnan(x) != 0) {
-		return NAN;
-	}
-
 	__asm__ volatile("frintz %s0, %s1" : "=w"(x) : "w"(x));
 	return x;
 }
