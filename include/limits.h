@@ -21,10 +21,6 @@
 #define PAGE_SIZE _PAGE_SIZE
 #define PAGESIZE  _PAGE_SIZE
 
-
-#define _POSIX_THREAD_DESTRUCTOR_ITERATIONS 4
-#define PTHREAD_DESTRUCTOR_ITERATIONS       _POSIX_THREAD_DESTRUCTOR_ITERATIONS
-
 #ifdef __ARCH_LIMITS
 #include __ARCH_LIMITS
 #else
@@ -35,6 +31,8 @@
 #include <phoenix/limits.h>
 
 #include <posix/limits.h>
+
+#define PTHREAD_DESTRUCTOR_ITERATIONS _POSIX_THREAD_DESTRUCTOR_ITERATIONS
 
 /* TODO: supplementary group IDs are not implemented yet - getgroups() is a stub. */
 #define NGROUPS_MAX _POSIX_NGROUPS_MAX
