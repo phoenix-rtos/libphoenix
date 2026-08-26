@@ -61,6 +61,18 @@ extern "C" {
 #define _POSIX_TIMESTAMP_RESOLUTION -1 /* FS timestamps have a resolution up to a second. */
 #define _POSIX_VDISABLE             '\0'
 
+#define _POSIX_CLOCK_SELECTION     202405L
+#define _POSIX_FSYNC               202405L
+#define _POSIX_READER_WRITER_LOCKS 202405L
+#define _POSIX_REGEXP              202405L
+#define _POSIX_SPIN_LOCKS          202405L
+
+#ifndef NOMMU
+#define _POSIX_MEMORY_PROTECTION 202405L
+#else
+#define _POSIX_MEMORY_PROTECTION -1 /* mprotect() has no effect without MMU. */
+#endif
+
 #define _PC_FILESIZEBITS         0
 #define _PC_LINK_MAX             1
 #define _PC_MAX_CANON            2
@@ -85,7 +97,6 @@ extern "C" {
 #define _PC_TIMESTAMP_RESOLUTION 21
 #define _PC_NAME_MAX             22
 
-#define _POSIX_SPIN_LOCKS 202405L
 
 long sysconf(int name);
 
