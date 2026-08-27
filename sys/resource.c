@@ -26,7 +26,7 @@ int setpriority(int which, id_t who, int prio)
 
 int getpriority(int which, id_t who)
 {
-	int ret = priority(-1);
+	int ret = getPriority();
 	if (ret < 0) {
 		errno = -ret;
 		return -1;

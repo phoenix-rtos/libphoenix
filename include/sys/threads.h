@@ -61,14 +61,14 @@ extern int spawnSyspage(const char *imap, const char *dmap, const char *name, ch
 extern int threadJoin(int tid, time_t timeout);
 
 
-extern int beginthreadex(void (*start)(void *), unsigned int priority, void *stack, unsigned int stacksz, void *arg, handle_t *id);
+extern int beginthreadex(void (*start)(void *), int priority, void *stack, unsigned int stacksz, void *arg, handle_t *id);
 
 
 __attribute__((noreturn))
 extern void endthread(void);
 
 
-static inline int beginthread(void (*start)(void *), unsigned int priority, void *stack, unsigned int stacksz, void *arg)
+static inline int beginthread(void (*start)(void *), int priority, void *stack, unsigned int stacksz, void *arg)
 {
 	return beginthreadex(start, priority, stack, stacksz, arg, NULL);
 }
@@ -77,7 +77,17 @@ static inline int beginthread(void (*start)(void *), unsigned int priority, void
 extern int threadsinfo(int n, threadinfo_t *info);
 
 
-extern int priority(int priority);
+extern int sys_priority(int priority, int *prev);
+
+
+int setPriority(int priority);
+
+
+int getPriority(void);
+
+
+/* WARN: obsolete - use setPriority() instead */
+int priority(int priority);
 
 
 extern int phMutexCreate(handle_t *h, const struct lockAttr *attr);
@@ -107,7 +117,7 @@ extern int mutexTry(handle_t h);
 extern int mutexConsistent(handle_t h);
 
 
-extern int mutexPrioCeiling(handle_t h, int prioceiling);
+extern int mutexPrioCeiling(handle_t h, int prioceiling, int *prev);
 
 
 extern int mutexUnlock(handle_t h);
