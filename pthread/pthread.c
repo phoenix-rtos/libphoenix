@@ -1886,7 +1886,7 @@ static int pthread_rwlock_lazy_init(pthread_rwlock_t *__restrict__ rwlock, const
 }
 
 
-static int pthread_rwlock_rdlock_ex(pthread_rwlock_t *rwlock, int block, int timeout, int clock)
+static int pthread_rwlock_rdlock_ex(pthread_rwlock_t *rwlock, int block, time_t timeout, int clock)
 {
 	int err = pthread_rwlock_lazy_init(rwlock, NULL);
 	if (err != EOK) {
@@ -1925,7 +1925,7 @@ static int pthread_rwlock_rdlock_ex(pthread_rwlock_t *rwlock, int block, int tim
 }
 
 
-static int pthread_rwlock_wrlock_ex(pthread_rwlock_t *rwlock, int block, int timeout, int clock)
+static int pthread_rwlock_wrlock_ex(pthread_rwlock_t *rwlock, int block, time_t timeout, int clock)
 {
 	int err = pthread_rwlock_lazy_init(rwlock, NULL);
 	if (err != EOK) {
