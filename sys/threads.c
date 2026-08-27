@@ -28,7 +28,9 @@ int mutexCreate(handle_t *h)
 int mutexLock(handle_t m)
 {
 	int err;
-	while ((err = phMutexLock(m)) == -EINTR) ;
+	do {
+		err = phMutexLock(m);
+	} while (err == -EINTR);
 	return err;
 }
 
@@ -79,4 +81,24 @@ int mutexLock2(handle_t m1, handle_t m2)
 	}
 
 	return EOK;
+}
+
+
+int priority(int priority)
+{
+	return sys_priority(priority, NULL);
+}
+
+
+int setPriority(int priority)
+{
+	return sys_priority(priority, NULL);
+}
+
+
+int getPriority(void)
+{
+	int prio = PH_PRIO_DEFAULT;
+	(void)sys_priority(PH_GET_PRIO, &prio);
+	return prio;
 }
