@@ -42,6 +42,7 @@ extern int lookup(const char *name, oid_t *file, oid_t *dev);
 
 /* Message passing */
 
+extern void *msgSetup(size_t sz);
 
 extern int msgSend(uint32_t port, msg_t *m);
 
