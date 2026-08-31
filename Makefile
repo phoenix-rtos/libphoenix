@@ -72,6 +72,11 @@ include ubsan/Makefile
 
 #include test/Makefile
 
+# incremental build fix
+LIBPHOENIX_DEP_FILES := $(OBJS:.o=.c.d) $(OBJS:.o=.S.d)
+LIBPHOENIX_DEP_FILES += $(CRT0_OBJS:.o=.c.d) $(CRT0_OBJS:.o=.S.d)
+-include $(LIBPHOENIX_DEP_FILES)
+
 $(PREFIX_A)libphoenix.a: $(OBJS)
 	$(ARCH)
 
