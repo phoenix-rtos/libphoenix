@@ -1,0 +1,25 @@
+sys/threads.c
+  s_868f0f19ba0f4f::t_99902bf770063b 38,44-51,70-76,79
+  s_868f0f19ba0f4f::t_51ed656fc0eb52 77-78
+  s_868f0f19ba0f4f::t_6a4ca83fa71d52 80-81
+pthread/pthread.c
+  s_868f0f19ba0f4f::t_39a7fa4f91edd5 962-964
+include/sys/threads.h
+  s_868f0f19ba0f4f::t_0bc2bfdc39dd6b 128-130,140-142
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.20",
+  "base_commit_sha": "1efddf347adee06da54802cf89698428940db346",
+  "prompts": {},
+  "sessions": {
+    "s_868f0f19ba0f4f": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "1021763e-669e-4b5e-85a9-f3e7882ff690",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Lukasz Leczkowski <lukasz.leczkowski@phoenix-rtos.com>"
+    }
+  }
+}

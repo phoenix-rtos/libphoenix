@@ -1,0 +1,15 @@
+syslog/syslog.c
+  h_edab809c32d497 157,159,163-164
+  h_edab809c32d497 158,160,162
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.20",
+  "base_commit_sha": "9ee70d54d9215eda3ecc3f3af0e26de94e5b67f4",
+  "prompts": {},
+  "humans": {
+    "h_edab809c32d497": {
+      "author": "Marek Białowąs <marek.bialowas@phoenix-rtos.com>"
+    }
+  }
+}
