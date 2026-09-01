@@ -16,6 +16,8 @@
 #ifndef _SYS_RESOURCE_H_
 #define _SYS_RESOURCE_H_
 
+#include <phoenix/limits.h>
+#include <errno.h>
 #include <sys/time.h>
 #include <sys/types.h>
 
@@ -25,16 +27,8 @@ extern "C" {
 #endif
 
 
-#define RLIMIT_CORE 0
-#define RLIMIT_STACK 4096
-#define RLIMIT_NOFILE 65536
-
-
-typedef int rlim_t;
-
-
-enum { RLIM_INFINITY = -1, RUSAGE_CHILDREN = -1 };
-enum { RUSAGE_SELF };
+enum { RUSAGE_SELF,
+	RUSAGE_CHILDREN = -1 };
 
 
 struct rusage {
@@ -43,18 +37,29 @@ struct rusage {
 };
 
 
-struct rlimit {
-	rlim_t rlim_cur;
-	rlim_t rlim_max;
-};
+#define PRIO_PROCESS 0
+#define PRIO_PGRP    1
+#define PRIO_USER    2
 
 
-#define PRIO_PROCESS	0
-#define PRIO_PGRP	1
-#define PRIO_USER	2
+extern int rlimits(limit_target_t target, int resource, struct rlimit *oldLimit, const struct rlimit *newLimit);
 
 
 extern int getrusage(int who, struct rusage *usage);
+
+
+static inline int getrlimit(int resource, struct rlimit *rlp)
+{
+	limit_target_t target = { .kind = limit_target_process, .pid = 0 };
+	return SET_ERRNO(rlimits(target, resource, rlp, NULL));
+}
+
+
+static inline int setrlimit(int resource, const struct rlimit *rlp)
+{
+	limit_target_t target = { .kind = limit_target_process, .pid = 0 };
+	return SET_ERRNO(rlimits(target, resource, NULL, rlp));
+}
 
 
 extern int getrlimit(int resource, struct rlimit *rlp);
