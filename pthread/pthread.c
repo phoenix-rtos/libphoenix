@@ -706,7 +706,7 @@ static int check_sched_policy(int policy)
 	}
 
 	if (policy != SCHED_RR) {
-		/* Currently, the kernel doesn't support policies other than RR */
+		/* OS-LIMITATION: Currently, the kernel doesn't support policies other than SCHED_RR */
 		return -ENOTSUP;
 	}
 
