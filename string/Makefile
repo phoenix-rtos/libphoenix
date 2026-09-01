@@ -32,7 +32,7 @@ ERR_EXTRACT := $(SED) -En -e '/^\s*\#\s*define\s+E\w+\s+[[:digit:]]+/{s/^[^d]*de
 	$(SIL)bash -c 'o=0; while read num name; do echo "{ $$num, $$o },"; o=$$((o+$${#name}+1)); done' < $< > $@
 
 
-$(PREFIX_O)string/strerror.o: $(patsubst %,string/%,$(INCS))
+$(PREFIX_O)string/strerror.o: $(patsubst %,$(CURDIR)/string/%,$(INCS))
 
 
 OBJS += $(addprefix $(PREFIX_O)string/, string.o strdup.o strerror.o strsignal.o)
