@@ -15,6 +15,11 @@
 
 #include <sys/threads.h>
 #include <errno.h>
+#include <assert.h>
+
+
+/* TODO: expose RESOURCE_ID_MIN from kernel headers */
+#define HANDLE_MIN 1
 
 
 int mutexCreate(handle_t *h)
@@ -28,6 +33,9 @@ int mutexCreate(handle_t *h)
 int mutexLock(handle_t m)
 {
 	int err;
+
+	assert(m >= HANDLE_MIN);
+
 	while ((err = phMutexLock(m)) == -EINTR) ;
 	return err;
 }
@@ -44,6 +52,9 @@ int condCreate(handle_t *h)
 int condWait(handle_t h, handle_t m, time_t timeout)
 {
 	int err, mut_err;
+
+	assert(m >= HANDLE_MIN);
+	assert(h >= HANDLE_MIN);
 
 	err = phCondWait(h, m, timeout);
 
@@ -64,6 +75,9 @@ int mutexLock2(handle_t m1, handle_t m2)
 {
 	int err;
 	int tmp;
+
+	assert(m1 >= HANDLE_MIN);
+	assert(m2 >= HANDLE_MIN);
 
 	if ((err = mutexLock(m1)) < 0)
 		return err;
