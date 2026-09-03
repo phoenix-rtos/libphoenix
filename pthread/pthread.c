@@ -28,8 +28,6 @@
 
 #define ALIGN(value, size) ((((value) + (size) - 1) / (size)) * (size))
 
-#define PRIO_DEFAULT 4
-
 #define PTHREAD_ONCE_DONE          0
 #define PTHREAD_ONCE_IN_PROGRESS   2
 #define PTHREAD_COND_CLOCK_DEFAULT CLOCK_MONOTONIC
@@ -119,7 +117,7 @@ typedef struct _pthread_cleanup_t {
 static const pthread_attr_t pthread_attr_default = {
 	.stackaddr = NULL,
 	.schedpolicy = SCHED_RR,
-	.priority = PRIO_DEFAULT,
+	.priority = PH_PRIO_DEFAULT,
 	.detachstate = PTHREAD_CREATE_JOINABLE,
 	.inheritsched = PTHREAD_EXPLICIT_SCHED,
 	.stacksize = ALIGN(PTHREAD_STACK_MIN, PAGE_SIZE),
@@ -313,7 +311,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 	mutexLock(pthread_common.pthread_list_lock);
 
 	/* TODO: inherit schedpolicy and contentionscope too once they get relevant */
-	int prio = attrs->inheritsched == PTHREAD_EXPLICIT_SCHED ? attrs->priority : priority(-1);
+	int prio = attrs->inheritsched == PTHREAD_EXPLICIT_SCHED ? attrs->priority : getPriority();
 	int err = beginthreadex(pthread_start_point, prio, stack == NULL ? attrs->stackaddr : stack + guardsize, stacksize - guardsize, (void *)ctx, &ctx->id);
 
 	if (err != 0) {
@@ -708,7 +706,7 @@ static int check_sched_policy(int policy)
 	}
 
 	if (policy != SCHED_RR) {
-		/* Currently, the kernel doesn't support policies other than RR */
+		/* OS-LIMITATION: Currently, the kernel doesn't support policies other than SCHED_RR */
 		return -ENOTSUP;
 	}
 
@@ -936,12 +934,7 @@ int pthread_mutex_getprioceiling(const pthread_mutex_t *__restrict mutex, int *_
 		return EINVAL;
 	}
 
-	int err = mutexPrioCeiling(mutex->mutexh, -1);
-	if (err >= 0) {
-		*prioceiling = err;
-		err = EOK;
-	}
-	return -err;
+	return -mutexPrioCeiling(mutex->mutexh, PH_GET_PRIO, prioceiling);
 }
 
 
@@ -953,7 +946,7 @@ static int pthread_mutex_lazy_init(pthread_mutex_t *__restrict mutex, const pthr
 
 int pthread_mutex_setprioceiling(pthread_mutex_t *__restrict mutex, int prioceiling, int *__restrict old_ceiling)
 {
-	if (old_ceiling == NULL || prioceiling < 0) {
+	if (old_ceiling == NULL || prioceiling == PH_GET_PRIO) {
 		return EINVAL;
 	}
 
@@ -962,12 +955,7 @@ int pthread_mutex_setprioceiling(pthread_mutex_t *__restrict mutex, int prioceil
 		return err;
 	}
 
-	err = mutexPrioCeiling(mutex->mutexh, prioceiling);
-	if (err >= 0) {
-		*old_ceiling = err;
-		err = EOK;
-	}
-	return -err;
+	return -mutexPrioCeiling(mutex->mutexh, prioceiling, old_ceiling);
 }
 
 

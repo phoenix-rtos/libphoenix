@@ -69,7 +69,7 @@ static void alarm_initThread(void)
 	/* ensure alarm thread will inherit sigmask with all signals blocked */
 	sigfillset(&mask);
 	pthread_sigmask(SIG_BLOCK, &mask, &orgMask);
-	beginthreadex(alarm_thread, priority(-1), alarm_common.stack, sizeof(alarm_common.stack), NULL, &alarm_common.tid);
+	beginthreadex(alarm_thread, getPriority(), alarm_common.stack, sizeof(alarm_common.stack), NULL, &alarm_common.tid);
 	pthread_sigmask(SIG_SETMASK, &orgMask, NULL);
 }
 

@@ -363,3 +363,13 @@ pid_t fork(void)
 	}
 	return pid;
 }
+
+
+int nice(int incr)
+{
+	/*
+	 * Since the kernel doesn't support policies other than SCHED_RR and POSIX says
+	 * that SCHED_RR threads are unaffected by nice, just do nothing.
+	 */
+	return 0;
+}

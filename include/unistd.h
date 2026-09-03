@@ -308,6 +308,9 @@ extern int pause(void);
 extern int chroot(const char *path);
 
 
+extern int nice(int incr);
+
+
 extern char *optarg;
 
 
