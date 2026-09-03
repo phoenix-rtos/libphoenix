@@ -28,7 +28,21 @@ int mutexCreate(handle_t *h)
 int mutexLock(handle_t m)
 {
 	int err;
-	while ((err = phMutexLock(m)) == -EINTR) ;
+	while ((err = phMutexLock(m, 0, -1)) == -EINTR)
+		;
+	return err;
+}
+
+
+int mutexLockTimeoutable(handle_t m, time_t timeout, int clock)
+{
+	int err;
+
+	do {
+		/* FIXME: for PH_CLOCK_RELATIVE the timeout should be recalculated on EINTR */
+		err = phMutexLock(m, timeout, clock);
+	} while (err == -EINTR);
+
 	return err;
 }
 
@@ -41,21 +55,27 @@ int condCreate(handle_t *h)
 }
 
 
-int condWait(handle_t h, handle_t m, time_t timeout)
+int condClockWait(handle_t h, handle_t m, time_t timeout, int clock)
 {
 	int err, mut_err;
 
-	err = phCondWait(h, m, timeout);
+	err = phCondWait(h, m, timeout, clock);
 
 	while (err == -EINTR) {
 		mut_err = mutexLock(m);
 		if (mut_err != EOK) {
 			return mut_err;
 		}
-		err = phCondWait(h, m, timeout);
+		err = phCondWait(h, m, timeout, clock);
 	}
 
 	return err;
+}
+
+
+int condWait(handle_t h, handle_t m, time_t timeout)
+{
+	return condClockWait(h, m, timeout, -1);
 }
 
 
