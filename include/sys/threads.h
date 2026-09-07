@@ -43,29 +43,28 @@ struct __errno_t {
 };
 
 
-extern void _errno_new(struct __errno_t *e);
+void _errno_new(struct __errno_t *e);
 
 
-extern void _errno_remove(struct __errno_t *e);
+void _errno_remove(struct __errno_t *e);
 
 
-extern int gettid(void);
+int gettid(void);
 
 
-extern int exec(const char *path, char *const argv[], char *const env[]);
+int exec(const char *path, char *const argv[], char *const env[]);
 
 
-extern int spawnSyspage(const char *imap, const char *dmap, const char *name, char *const argv[]);
+int spawnSyspage(const char *imap, const char *dmap, const char *name, char *const argv[]);
 
 
-extern int threadJoin(int tid, time_t timeout);
+int threadJoin(int tid, time_t timeout);
 
 
-extern int beginthreadex(void (*start)(void *), int priority, void *stack, unsigned int stacksz, void *arg, handle_t *id);
+int beginthreadex(void (*start)(void *), int priority, void *stack, unsigned int stacksz, void *arg, handle_t *id);
 
 
-__attribute__((noreturn))
-extern void endthread(void);
+__attribute__((noreturn)) void endthread(void);
 
 
 static inline int beginthread(void (*start)(void *), int priority, void *stack, unsigned int stacksz, void *arg)
@@ -74,7 +73,7 @@ static inline int beginthread(void (*start)(void *), int priority, void *stack, 
 }
 
 
-extern int threadsinfo(int n, threadinfo_t *info);
+int threadsinfo(int n, threadinfo_t *info);
 
 
 /* Sets the thread priority to val or retrieves the current thread priority when val == PH_GET_PRIO. Returns the current thread priority in *res if res != NULL. */
@@ -90,10 +89,10 @@ int getPriority(void);
 int priority(int val) __attribute__((deprecated("use setPriority() or getPriority() instead")));
 
 
-extern int phMutexCreate(handle_t *h, const struct lockAttr *attr);
+int phMutexCreate(handle_t *h, const struct lockAttr *attr);
 
 
-extern int mutexCreate(handle_t *h);
+int mutexCreate(handle_t *h);
 
 
 static inline int mutexCreateWithAttr(handle_t *h, const struct lockAttr *attr)
@@ -102,44 +101,44 @@ static inline int mutexCreateWithAttr(handle_t *h, const struct lockAttr *attr)
 }
 
 
-extern int phMutexLock(handle_t h);
+int phMutexLock(handle_t h);
 
 
-extern int mutexLock(handle_t h);
+int mutexLock(handle_t h);
 
 
-extern int mutexLock2(handle_t h1, handle_t h2);
+int mutexLock2(handle_t h1, handle_t h2);
 
 
-extern int mutexTry(handle_t h);
+int mutexTry(handle_t h);
 
 
-extern int mutexConsistent(handle_t h);
+int mutexConsistent(handle_t h);
 
 
 /* Sets the prioceiling to val or retrieves the current prioceiling when val == PH_GET_PRIO. Returns the current prioceiling in *res if res != NULL. */
-extern int mutexPrioCeiling(handle_t h, int prioceiling, int *res);
+int mutexPrioCeiling(handle_t h, int prioceiling, int *res);
 
 
-extern int mutexUnlock(handle_t h);
+int mutexUnlock(handle_t h);
 
 
-extern int semaphoreCreate(semaphore_t *s, unsigned int v);
+int semaphoreCreate(semaphore_t *s, unsigned int v);
 
 
-extern int semaphoreDown(semaphore_t *s, time_t timeout);
+int semaphoreDown(semaphore_t *s, time_t timeout);
 
 
-extern int semaphoreUp(semaphore_t *s);
+int semaphoreUp(semaphore_t *s);
 
 
-extern int semaphoreDone(semaphore_t *s);
+int semaphoreDone(semaphore_t *s);
 
 
-extern int phCondCreate(handle_t *h, const struct condAttr *attr);
+int phCondCreate(handle_t *h, const struct condAttr *attr);
 
 
-extern int condCreate(handle_t *h);
+int condCreate(handle_t *h);
 
 
 static inline int condCreateWithAttr(handle_t *h, const struct condAttr *attr)
@@ -148,34 +147,34 @@ static inline int condCreateWithAttr(handle_t *h, const struct condAttr *attr)
 }
 
 
-extern int condWait(handle_t h, handle_t m, time_t timeout);
+int condWait(handle_t h, handle_t m, time_t timeout);
 
 
-extern int phCondWait(handle_t h, handle_t m, time_t timeout);
+int phCondWait(handle_t h, handle_t m, time_t timeout);
 
 
-extern int condSignal(handle_t h);
+int condSignal(handle_t h);
 
 
-extern int condBroadcast(handle_t h);
+int condBroadcast(handle_t h);
 
 
-extern int resourceDestroy(handle_t h);
+int resourceDestroy(handle_t h);
 
 
-extern int signalHandle(void (*handler)(void));
+int signalHandle(void (*handler)(void));
 
 
-extern int signalPost(int pid, int tid, int signal);
+int signalPost(int pid, int tid, int signal);
 
 
-extern int signalReturn(int signal);
+int signalReturn(int signal);
 
 
-extern unsigned int signalMask(unsigned mask, unsigned mmask);
+unsigned int signalMask(unsigned mask, unsigned mmask);
 
 
-extern int signalSuspend(unsigned mask);
+int signalSuspend(unsigned mask);
 
 
 #ifdef __cplusplus
