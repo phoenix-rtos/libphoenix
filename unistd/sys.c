@@ -104,6 +104,10 @@ int execve(const char *file, char *const argv[], char *const envp[])
 	int fileNameLen = strlen(file);
 	struct stat buf;
 
+	if (fileNameLen == 0) {
+		return SET_ERRNO(-ENOENT);
+	}
+
 	fflush(NULL);
 	sys_clear();
 
