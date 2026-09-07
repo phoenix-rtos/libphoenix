@@ -19,6 +19,7 @@
 #include <sys/types.h>
 #include <sys/rb.h>
 #include <stddef.h>
+#include <errno.h>
 #include <phoenix/sysinfo.h>
 #include <phoenix/signal.h>
 #include <phoenix/threads.h>
@@ -73,7 +74,29 @@ static inline int beginthread(void (*start)(void *), int priority, void *stack, 
 }
 
 
-int threadsinfo(int n, threadinfo_t *info);
+int sys_threadsinfo(int tid, unsigned int flags, int n, threadinfo_t *info);
+
+
+inline int threadsinfo(int n, unsigned int flags, threadinfo_t *info)
+{
+	return sys_threadsinfo(PH_THREADINFO_THREADS_ALL, flags, n, info);
+}
+
+
+inline int threadinfo(int tid, unsigned int flags, threadinfo_t *info)
+{
+	if (tid < 0) {
+		return -EINVAL;
+	}
+
+	return sys_threadsinfo(tid, flags, 1, info);
+}
+
+
+inline int threadcount(void)
+{
+	return sys_threadsinfo(PH_THREADINFO_THREADS_ALL, PH_THREADINFO_OPT_THREADCOUNT, 0, NULL);
+}
 
 
 /* Sets the thread priority to val or retrieves the current thread priority when val == PH_GET_PRIO. Returns the current thread priority in *res if res != NULL. */
