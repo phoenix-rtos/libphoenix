@@ -17,6 +17,15 @@
 #include <errno.h>
 
 
+extern inline int threadsinfo(int n, unsigned int flags, threadinfo_t *info);
+
+
+extern inline int threadinfo(int tid, unsigned int flags, threadinfo_t *info);
+
+
+extern inline int threadcount(void);
+
+
 int mutexCreate(handle_t *h)
 {
 	static const struct lockAttr defaultAttr = { .type = PH_LOCK_NORMAL, .protocol = PH_LOCK_PROTO_INHERIT, .robust = PH_LOCK_STALLED };
