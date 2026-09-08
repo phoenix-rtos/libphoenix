@@ -13,6 +13,7 @@
  * %LICENSE%
  */
 
+#include <sys/resource.h>
 #include <sys/minmax.h>
 #include <sys/threads.h>
 #include <errno.h>

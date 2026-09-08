@@ -124,18 +124,6 @@ int chroot(const char *path)
 }
 
 
-int getrlimit(int resource, struct rlimit *rlp)
-{
-	return 0;
-}
-
-
-int setrlimit(int resource, const struct rlimit *rlp)
-{
-	return 0;
-}
-
-
 dev_t makedev(unsigned int maj, unsigned int min)
 {
 	return 0;
