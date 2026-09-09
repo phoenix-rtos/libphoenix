@@ -25,6 +25,7 @@
 
 #include "posix/utils.h"
 
+#include "../common/cancellation.h"
 
 /* path needs to be canonical */
 static int _stat_abs(const char *path, struct stat *buf)

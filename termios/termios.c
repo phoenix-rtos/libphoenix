@@ -17,6 +17,8 @@
 #include <termios.h>
 #include <errno.h>
 
+#include "../common/cancellation.h"
+
 
 int tcgetattr(int fildes, struct termios *termios_p)
 {
@@ -75,7 +77,7 @@ int tcflush(int fd, int queue_selector)
 	return ret;
 }
 
-int tcdrain(int fd)
+static int _tcdrain(int fd)
 {
 	int ret;
 	do {
@@ -83,6 +85,11 @@ int tcdrain(int fd)
 	} while (ret < 0 && errno == EINTR);
 
 	return ret;
+}
+
+int tcdrain(int fd)
+{
+	return CANCELLATION_POINT(int, _tcdrain, (fd));
 }
 
 int tcflow(int fd, int action)

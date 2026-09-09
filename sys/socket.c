@@ -31,15 +31,17 @@
 #include <ifaddrs.h>
 #include <limits.h>
 
-WRAP_ERRNO_DEF(int, accept4, (int socket, struct sockaddr *address, socklen_t *address_len, int flags), (socket, address, address_len, flags))
+#include "../common/cancellation.h"
+
+WRAP_ERRNO_DEF_CANCELLATION(int, accept4, (int socket, struct sockaddr *address, socklen_t *address_len, int flags), (socket, address, address_len, flags))
 WRAP_ERRNO_DEF(int, bind, (int socket, const struct sockaddr *address, socklen_t address_len), (socket, address, address_len))
-WRAP_ERRNO_DEF(int, connect, (int socket, const struct sockaddr *address, socklen_t address_len), (socket, address, address_len))
+WRAP_ERRNO_DEF_CANCELLATION(int, connect, (int socket, const struct sockaddr *address, socklen_t address_len), (socket, address, address_len))
 WRAP_ERRNO_DEF(int, getpeername, (int socket, struct sockaddr *address, socklen_t *address_len), (socket, address, address_len))
 WRAP_ERRNO_DEF(int, getsockname, (int socket, struct sockaddr *address, socklen_t *address_len), (socket, address, address_len))
 WRAP_ERRNO_DEF(int, getsockopt, (int socket, int level, int optname, void *optval, socklen_t *optlen), (socket, level, optname, optval, optlen))
 WRAP_ERRNO_DEF(int, listen, (int socket, int backlog), (socket, backlog))
-WRAP_ERRNO_DEF(ssize_t, recvfrom, (int socket, void *message, size_t length, int flags, struct sockaddr *src_addr, socklen_t *src_len), (socket, message, length, flags, src_addr, src_len))
-WRAP_ERRNO_DEF(ssize_t, sendto, (int socket, const void *message, size_t length, int flags, const struct sockaddr *dest_addr, socklen_t dest_len), (socket, message, length, flags, dest_addr, dest_len))
+WRAP_ERRNO_DEF_CANCELLATION(ssize_t, recvfrom, (int socket, void *message, size_t length, int flags, struct sockaddr *src_addr, socklen_t *src_len), (socket, message, length, flags, src_addr, src_len))
+WRAP_ERRNO_DEF_CANCELLATION(ssize_t, sendto, (int socket, const void *message, size_t length, int flags, const struct sockaddr *dest_addr, socklen_t dest_len), (socket, message, length, flags, dest_addr, dest_len))
 WRAP_ERRNO_DEF(int, socket, (int domain, int type, int protocol), (domain, type, protocol))
 WRAP_ERRNO_DEF(int, socketpair, (int domain, int type, int protocol, int sv[2]), (domain, type, protocol, sv))
 WRAP_ERRNO_DEF(int, shutdown, (int socket, int how), (socket, how))
@@ -119,7 +121,7 @@ ssize_t sendmsg(int socket, const struct msghdr *msg, int flags)
 
 	if (len >= 0) {
 		if (msg->msg_iovlen <= 1) {
-			len = sys_sendmsg(socket, msg, flags);
+			len = CANCELLATION_POINT(ssize_t, sys_sendmsg, (socket, msg, flags));
 		}
 		else { /* copy data from scatter-gather buffers to a temporary buffer */
 			struct iovec _iov = {
@@ -140,7 +142,7 @@ ssize_t sendmsg(int socket, const struct msghdr *msg, int flags)
 
 				_iov.iov_base = buf;
 				copy_from_iov(buf, msg->msg_iov, msg->msg_iovlen);
-				len = sys_sendmsg(socket, &_msg, flags);
+				len = CANCELLATION_POINT(ssize_t, sys_sendmsg, (socket, &_msg, flags));
 			}
 			else {
 				void *buf;
@@ -151,7 +153,7 @@ ssize_t sendmsg(int socket, const struct msghdr *msg, int flags)
 
 				_iov.iov_base = buf;
 				copy_from_iov(buf, msg->msg_iov, msg->msg_iovlen);
-				len = sys_sendmsg(socket, &_msg, flags);
+				len = CANCELLATION_POINT(ssize_t, sys_sendmsg, (socket, &_msg, flags));
 				free(buf);
 			}
 		}
@@ -167,7 +169,7 @@ ssize_t recvmsg(int socket, struct msghdr *msg, int flags)
 
 	if (len >= 0) {
 		if (msg->msg_iovlen <= 1) {
-			len = sys_recvmsg(socket, msg, flags);
+			len = CANCELLATION_POINT(ssize_t, sys_recvmsg, (socket, msg, flags));
 		}
 		else { /* copy data from a temporary buffer to scatter-gather buffers */
 			struct iovec _iov = {
@@ -187,7 +189,7 @@ ssize_t recvmsg(int socket, struct msghdr *msg, int flags)
 				char buf[64]; /* small buffer optimization */
 
 				_iov.iov_base = buf;
-				len = sys_recvmsg(socket, &_msg, flags);
+				len = CANCELLATION_POINT(ssize_t, sys_recvmsg, (socket, &_msg, flags));
 				copy_to_iov(buf, msg->msg_iov, msg->msg_iovlen, len);
 			}
 			else {
@@ -198,7 +200,7 @@ ssize_t recvmsg(int socket, struct msghdr *msg, int flags)
 					return SET_ERRNO(-ENOMEM);
 
 				_iov.iov_base = buf;
-				len = sys_recvmsg(socket, &_msg, flags);
+				len = CANCELLATION_POINT(ssize_t, sys_recvmsg, (socket, &_msg, flags));
 				copy_to_iov(buf, msg->msg_iov, msg->msg_iovlen, len);
 				free(buf);
 			}

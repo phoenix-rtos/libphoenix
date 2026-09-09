@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <limits.h>
+#include <pthread.h>
 
 #include "../unistd/file-internal.h"
 
@@ -1373,10 +1374,10 @@ FILE *popen(const char *command, const char *mode)
 		goto failed;
 	}
 
-	if ((pid = vfork()) < 0) {
-		goto failed;
-	}
-	else if (!pid) {
+	_pthread_nocancel_begin();
+
+	pid = vfork();
+	if (pid == 0) {
 		if (mode[0] == 'r') {
 			dup2(fd[1], 1);
 		}
@@ -1389,6 +1390,12 @@ FILE *popen(const char *command, const char *mode)
 
 		execl("/bin/sh", "sh", "-c", command, NULL);
 		exit(EXIT_FAILURE);
+	}
+
+	_pthread_nocancel_end();
+
+	if (pid < 0) {
+		goto failed;
 	}
 
 	pf->pid = pid;

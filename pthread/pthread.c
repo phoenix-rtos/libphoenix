@@ -25,6 +25,7 @@
 #include <unistd.h>
 
 #include "../common/util.h"
+#include "../common/cancellation.h"
 
 #define ALIGN(value, size) ((((value) + (size) - 1) / (size)) * (size))
 
@@ -35,6 +36,32 @@
 #define RESOURCE_UNINITIALIZED 0
 #define RESOURCE_INITIALIZING  1
 #define RESOURCE_INITIALIZED   2
+
+
+#define CANCEL_DISABLED_BIT   (1 << 0) /* PTHREAD_CANCEL_DISABLE is in effect */
+#define CANCEL_ASYNC_BIT      (1 << 1) /* PTHREAD_CANCEL_ASYNCHRONOUS is in effect */
+#define CANCEL_REQUESTED_BIT  (1 << 2) /* pthread_cancel() has been called on the thread */
+#define CANCEL_INPROGRESS_BIT (1 << 3) /* a canceller has claimed the right to destroy the thread */
+#define CANCEL_EXITING_BIT    (1 << 4) /* the thread has begun tearing itself down */
+
+/*
+ * The all-zero word is the POSIX default for a new thread: cancellation enabled,
+ * deferred, and not requested.
+ */
+#define CANCEL_DEFAULT (0)
+
+/* Cancellation is enabled and requested: act on it at the next cancellation point. */
+#define CANCEL_IS_PENDING(val) (((val) & (CANCEL_DISABLED_BIT | CANCEL_REQUESTED_BIT)) == CANCEL_REQUESTED_BIT)
+
+/* As above, but asynchronous, so it has to be acted upon immediately. */
+#define CANCEL_IS_ACTIVE(val) \
+	(((val) & (CANCEL_DISABLED_BIT | CANCEL_ASYNC_BIT | CANCEL_REQUESTED_BIT)) == (CANCEL_ASYNC_BIT | CANCEL_REQUESTED_BIT))
+
+#define CANCEL_WAIT_INTERVAL_NS (1000 * 1000)
+
+
+int nsleep(time_t *sec, long *nsec, int clockid, int flags);
+
 
 typedef struct pthread_ctx {
 	handle_t id;
@@ -53,8 +80,11 @@ typedef struct pthread_ctx {
 	struct pthread_ctx *next;
 	struct pthread_ctx *prev;
 	int is_detached;
-	int cancelstate;
-	int cancelled;
+	/*
+	 * Cancellation state lives in a single atomic word, so that a canceller
+	 * and its victim always transact on one memory location.
+	 */
+	int cancellation;
 	struct __errno_t e;
 	int refcount;
 	struct pthread_key_data_t *key_data_list;
@@ -92,7 +122,17 @@ static struct {
 	int pthread_min_prio_rr;
 	int pthread_max_prio_rr;
 	int pthread_rr_interval;
+
+	pthread_ctx main_ctx;
 } pthread_common;
+
+
+#ifdef __LIBPHOENIX_ARCH_TLS_SUPPORTED
+static __thread pthread_t __self = (pthread_t)NULL;
+
+/* Non-zero in a region that must not act on cancellation (usually between vfork() and execve()). */
+static __thread int __nocancel_depth = 0;
+#endif
 
 
 typedef struct __pthread_key_t {
@@ -138,6 +178,40 @@ static const pthread_rwlockattr_t pthread_rwlockattr_default = {
 static __attribute__((noreturn)) void pthread_do_exit(pthread_ctx *ctx, void *value_ptr, int cleanup);
 
 
+static inline int _pthread_cancel_get(pthread_ctx *ctx)
+{
+	return __atomic_load_n(&ctx->cancellation, __ATOMIC_SEQ_CST);
+}
+
+
+static inline int _pthread_cancel_set(pthread_ctx *ctx, int bits)
+{
+	return __atomic_fetch_or(&ctx->cancellation, bits, __ATOMIC_SEQ_CST);
+}
+
+
+static inline int _pthread_cancel_clear(pthread_ctx *ctx, int bits)
+{
+	return __atomic_fetch_and(&ctx->cancellation, ~bits, __ATOMIC_SEQ_CST);
+}
+
+
+/*
+ * Wait out a canceller that has claimed this thread. The claim is withdrawn if the canceller
+ * fails to post the signal, so this is not an unconditional wait.
+ */
+static void _pthread_wait_for_cancel(pthread_ctx *ctx)
+{
+	while ((_pthread_cancel_get(ctx) & CANCEL_INPROGRESS_BIT) != 0) {
+		time_t sec = 0;
+		long nsec = CANCEL_WAIT_INTERVAL_NS;
+
+		/* use nsleep as it is not a cancellation point */
+		(void)nsleep(&sec, &nsec, CLOCK_REALTIME, 0);
+	}
+}
+
+
 static void _pthread_ctx_get(pthread_ctx *ctx)
 {
 	++ctx->refcount;
@@ -157,7 +231,7 @@ static void _pthread_ctx_put(pthread_ctx *ctx)
 	int refcnt = --ctx->refcount;
 	mutexUnlock(pthread_common.pthread_list_lock);
 
-	if (refcnt == 0) {
+	if (refcnt == 0 && ctx != &pthread_common.main_ctx) {
 		free(ctx);
 	}
 }
@@ -173,6 +247,11 @@ static void pthread_ctx_put(pthread_ctx *ctx)
 static void pthread_start_point(void *args)
 {
 	pthread_ctx *ctx = (pthread_ctx *)args;
+
+	ctx->id = gettid();
+#ifdef __LIBPHOENIX_ARCH_TLS_SUPPORTED
+	__self = (pthread_t)ctx;
+#endif
 
 	_errno_new(&ctx->e);
 
@@ -219,26 +298,34 @@ static pthread_ctx *pthread_find(handle_t id)
 }
 
 
-static int pthread_create_main(void)
+static void _pthread_init_ctx(pthread_ctx *ctx, const pthread_attr_t *attrs)
 {
-	pthread_ctx *ctx = (pthread_ctx *)malloc(sizeof(pthread_ctx));
-	if (ctx == NULL) {
-		return ENOMEM;
-	}
-	ctx->id = gettid();
+	ctx->refcount = 1;
 	ctx->arg = NULL;
-	ctx->retval = NULL;
 	ctx->stack = NULL;
 	ctx->stacksize = 0;
-	ctx->is_detached = (pthread_attr_default.detachstate == PTHREAD_CREATE_DETACHED) ? 1 : 0;
-	ctx->cancelstate = PTHREAD_CANCEL_ENABLE;
-	ctx->cancelled = 0;
-	ctx->refcount = 1;
+	ctx->start_routine = 0;
+	ctx->retval = NULL;
+	ctx->exiting = 0;
+	ctx->cancellation = CANCEL_DEFAULT;
 	ctx->key_data_list = NULL;
 	ctx->cleanup_list = NULL;
-	ctx->exiting = 0;
+	ctx->is_detached = (attrs->detachstate == PTHREAD_CREATE_DETACHED) ? 1 : 0;
+}
+
+
+static int pthread_create_main(void)
+{
+	pthread_ctx *ctx = &pthread_common.main_ctx;
+
+	_pthread_init_ctx(ctx, &pthread_attr_default);
+	ctx->id = gettid();
 
 	LIST_ADD(&pthread_common.pthread_list, ctx);
+
+#ifdef __LIBPHOENIX_ARCH_TLS_SUPPORTED
+	__self = (pthread_t)ctx;
+#endif
 
 	return 0;
 }
@@ -295,17 +382,11 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 		return EAGAIN;
 	}
 
-	ctx->refcount = 1;
-	ctx->retval = NULL;
-	ctx->is_detached = (attrs->detachstate == PTHREAD_CREATE_DETACHED) ? 1 : 0;
+	_pthread_init_ctx(ctx, attrs);
 	ctx->start_routine = start_routine;
 	ctx->arg = arg;
 	ctx->stack = stack;
 	ctx->stacksize = stacksize;
-	ctx->key_data_list = NULL;
-	ctx->cancelstate = PTHREAD_CANCEL_ENABLE;
-	ctx->cancelled = 0;
-	ctx->cleanup_list = NULL;
 	*thread = (pthread_t)ctx;
 
 	mutexLock(pthread_common.pthread_list_lock);
@@ -388,7 +469,7 @@ int pthread_join(pthread_t thread, void **value_ptr)
 	mutexUnlock(pthread_common.pthread_list_lock);
 
 	do {
-		err = threadJoin(id, 0);
+		err = CANCELLATION_POINT(int, threadJoin, (id, 0));
 	} while (err == -EINTR);
 
 	if (err < 0) {
@@ -432,22 +513,63 @@ int pthread_detach(pthread_t thread)
 
 int pthread_setcancelstate(int state, int *oldstate)
 {
-	int err = 0;
+	int oldVal, newVal;
 	pthread_ctx *ctx = (pthread_ctx *)pthread_self();
 
-	if (state != PTHREAD_CANCEL_ENABLE && state != PTHREAD_CANCEL_DISABLE) {
-		err = EINVAL;
+	if ((ctx == NULL) || ((state != PTHREAD_CANCEL_ENABLE) && (state != PTHREAD_CANCEL_DISABLE))) {
+		return EINVAL;
+	}
+
+	if (state == PTHREAD_CANCEL_DISABLE) {
+		oldVal = _pthread_cancel_set(ctx, CANCEL_DISABLED_BIT);
+		newVal = oldVal | CANCEL_DISABLED_BIT;
 	}
 	else {
-		mutexLock(pthread_common.pthread_list_lock);
-		_pthread_ctx_get(ctx);
-		if (oldstate != NULL) {
-			*oldstate = ctx->cancelstate;
-		}
-		ctx->cancelstate = state;
-		_pthread_ctx_put(ctx);
+		oldVal = _pthread_cancel_clear(ctx, CANCEL_DISABLED_BIT);
+		newVal = oldVal & ~CANCEL_DISABLED_BIT;
 	}
-	return err;
+
+	if (oldstate != NULL) {
+		*oldstate = ((oldVal & CANCEL_DISABLED_BIT) != 0) ? PTHREAD_CANCEL_DISABLE : PTHREAD_CANCEL_ENABLE;
+	}
+
+	if (CANCEL_IS_ACTIVE(newVal)) {
+		pthread_exit((void *)PTHREAD_CANCELED);
+		/* no return */
+	}
+
+	return 0;
+}
+
+
+int pthread_setcanceltype(int type, int *oldtype)
+{
+	int oldVal, newVal;
+	pthread_ctx *ctx = (pthread_ctx *)pthread_self();
+
+	if ((ctx == NULL) || ((type != PTHREAD_CANCEL_DEFERRED) && (type != PTHREAD_CANCEL_ASYNCHRONOUS))) {
+		return EINVAL;
+	}
+
+	if (type == PTHREAD_CANCEL_ASYNCHRONOUS) {
+		oldVal = _pthread_cancel_set(ctx, CANCEL_ASYNC_BIT);
+		newVal = oldVal | CANCEL_ASYNC_BIT;
+	}
+	else {
+		oldVal = _pthread_cancel_clear(ctx, CANCEL_ASYNC_BIT);
+		newVal = oldVal & ~CANCEL_ASYNC_BIT;
+	}
+
+	if (oldtype != NULL) {
+		*oldtype = ((oldVal & CANCEL_ASYNC_BIT) != 0) ? PTHREAD_CANCEL_ASYNCHRONOUS : PTHREAD_CANCEL_DEFERRED;
+	}
+
+	if (CANCEL_IS_ACTIVE(newVal)) {
+		pthread_exit((void *)PTHREAD_CANCELED);
+		/* no return */
+	}
+
+	return 0;
 }
 
 
@@ -495,70 +617,100 @@ static void pthread_key_cleanup(pthread_ctx *ctx)
 
 int pthread_cancel(pthread_t thread)
 {
-	int err = 0, id;
+	int err, id, oldVal, newVal, isSelf;
 	pthread_ctx *ctx = (pthread_ctx *)thread;
-	pthread_t self;
 
 	if (ctx == NULL) {
-		err = -ESRCH;
+		return ESRCH;
 	}
-	else {
-		self = pthread_self();
-		mutexLock(pthread_common.pthread_list_lock);
-		_pthread_ctx_get(ctx);
-		ctx->cancelled = 1;
-		if (thread == self) {
-			if (ctx->cancelstate == PTHREAD_CANCEL_ENABLE) {
-				_pthread_ctx_put(ctx);
-				pthread_exit((void *)PTHREAD_CANCELED);
-				/* no return */
-			}
-			_pthread_ctx_put(ctx);
+
+	isSelf = (thread == pthread_self()) ? 1 : 0;
+
+	mutexLock(pthread_common.pthread_list_lock);
+	_pthread_ctx_get(ctx);
+
+	oldVal = _pthread_cancel_get(ctx);
+	do {
+		newVal = oldVal | CANCEL_REQUESTED_BIT;
+		if ((isSelf == 0) && ((newVal & CANCEL_EXITING_BIT) == 0) && CANCEL_IS_ACTIVE(newVal)) {
+			/* claim the right to destroy the thread and post the signal */
+			newVal |= CANCEL_INPROGRESS_BIT;
 		}
-		else {
-			if (ctx->cancelstate == PTHREAD_CANCEL_ENABLE) {
-				_pthread_do_cleanup(ctx);
-				ctx->retval = (void *)PTHREAD_CANCELED;
-				id = ctx->id;
-				mutexUnlock(pthread_common.pthread_list_lock);
-				pthread_key_cleanup(ctx);
-				pthread_ctx_put(ctx);
-				err = signalPost(getpid(), id, signal_cancel);
-			}
-			else {
-				_pthread_ctx_put(ctx);
-			}
+		if (newVal == oldVal) {
+			break;
 		}
+	} while (__atomic_compare_exchange_n(&ctx->cancellation, &oldVal, newVal, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST) == false);
+
+	if (isSelf != 0) {
+		_pthread_ctx_put(ctx);
+		if (CANCEL_IS_PENDING(newVal)) {
+			pthread_exit((void *)PTHREAD_CANCELED);
+			/* no return */
+		}
+		return EOK;
 	}
-	return -err;
+
+	if (((newVal & CANCEL_INPROGRESS_BIT) == 0) || ((oldVal & CANCEL_INPROGRESS_BIT) != 0)) {
+		/*
+		 * Either the thread is not inside a cancellation point or another caller
+		 * already claimed the destroy.
+		 */
+		_pthread_ctx_put(ctx);
+		return EOK;
+	}
+
+	id = ctx->id;
+
+	/*
+	 * POSIX-DEVIATION: the handlers still run here rather than in the victim, which
+	 * POSIX requires. signal_cancel has no user-space handler to run them from, which
+	 * also means a thread cancelled in pthread_cond_wait() never reacquires the
+	 * mutex before they run.
+	 */
+	err = signalPost(getpid(), id, signal_cancel);
+	if (err != EOK) {
+		(void)_pthread_cancel_clear(ctx, CANCEL_INPROGRESS_BIT);
+		_pthread_ctx_put(ctx);
+		return -err;
+	}
+
+	ctx->retval = (void *)PTHREAD_CANCELED;
+	_pthread_do_cleanup(ctx);
+	mutexUnlock(pthread_common.pthread_list_lock);
+
+	pthread_key_cleanup(ctx);
+	pthread_ctx_put(ctx);
+
+	return EOK;
 }
 
 
 void pthread_testcancel(void)
 {
 	pthread_ctx *ctx = (pthread_ctx *)pthread_self();
+
 	if (ctx == NULL) {
 		return;
 	}
 
-	mutexLock(pthread_common.pthread_list_lock);
-	_pthread_ctx_get(ctx);
-	if (ctx->cancelstate == PTHREAD_CANCEL_ENABLE && ctx->cancelled != 0) {
-		_pthread_ctx_put(ctx);
+	if (CANCEL_IS_PENDING(_pthread_cancel_get(ctx))) {
 		pthread_exit((void *)PTHREAD_CANCELED);
 		/* no return */
 	}
-	_pthread_ctx_put(ctx);
 }
 
 
 pthread_t pthread_self(void)
 {
+#ifdef __LIBPHOENIX_ARCH_TLS_SUPPORTED
+	return __self;
+#else
 	pthread_ctx *ctx = pthread_find(gettid());
 	if (ctx != NULL) {
 		pthread_ctx_put(ctx);
 	}
 	return (pthread_t)ctx;
+#endif
 }
 
 
@@ -571,6 +723,12 @@ int pthread_equal(pthread_t t1, pthread_t t2)
 static __attribute__((noreturn)) void pthread_do_exit(pthread_ctx *ctx, void *value_ptr, int cleanup)
 {
 	if (ctx != NULL) {
+		/* Announce the teardown before taking any lock to prevent race with the potential cleanup in pthread_cancel() */
+		if ((_pthread_cancel_set(ctx, CANCEL_EXITING_BIT) & CANCEL_INPROGRESS_BIT) != 0) {
+			/* Wait for already pending cancel to happen. otherwise, we risk leaving a lock held */
+			_pthread_wait_for_cancel(ctx);
+		}
+
 		if (cleanup != 0) {
 			mutexLock(pthread_common.pthread_list_lock);
 			_pthread_do_cleanup(ctx);
@@ -1442,15 +1600,14 @@ int pthread_cond_wait(pthread_cond_t *__restrict cond, pthread_mutex_t *__restri
 	}
 
 	if (err == EOK) {
-		err = -condWait(cond->condh, mutex->mutexh, 0);
+		err = -CANCELLATION_POINT(int, condWait, (cond->condh, mutex->mutexh, 0));
 	}
 
 	return err;
 }
 
 
-int pthread_cond_timedwait(pthread_cond_t *__restrict cond,
-		pthread_mutex_t *__restrict mutex,
+int pthread_cond_timedwait(pthread_cond_t *__restrict cond, pthread_mutex_t *__restrict mutex,
 		const struct timespec *__restrict abstime)
 {
 	int err = 0;
@@ -1469,7 +1626,7 @@ int pthread_cond_timedwait(pthread_cond_t *__restrict cond,
 	}
 
 	if (err == EOK) {
-		err = -condWait(cond->condh, mutex->mutexh, abstime_us);
+		err = -CANCELLATION_POINT(int, condWait, (cond->condh, mutex->mutexh, abstime_us));
 	}
 
 	if (err == ETIME) {
@@ -1635,6 +1792,60 @@ int pthread_once(pthread_once_t *once_control, void (*init_routine)(void))
 	pthread_mutex_unlock(&pthread_common.pthread_once_lock);
 
 	return 0;
+}
+
+
+static void _pthread_free_orphaned_ctx(pthread_ctx *ctx)
+{
+	while (ctx->cleanup_list != NULL) {
+		pthread_cleanup_t *head = ctx->cleanup_list;
+		ctx->cleanup_list = head->next;
+		free(head);
+	}
+
+	while (ctx->key_data_list != NULL) {
+		pthread_key_data_t *head = ctx->key_data_list;
+		ctx->key_data_list = head->next;
+		free(head);
+	}
+
+	if (ctx->stack != NULL) {
+		munmap(ctx->stack, ctx->stacksize);
+	}
+
+	if (ctx != &pthread_common.main_ctx) {
+		free(ctx);
+	}
+}
+
+
+void _pthread_fork_child_reinit(pthread_t self_thread)
+{
+	pthread_ctx *self = (pthread_ctx *)self_thread;
+
+	mutexLock(pthread_common.pthread_list_lock);
+
+	self->id = gettid();
+	self->refcount = 1;
+	(void)_pthread_cancel_clear(self, CANCEL_INPROGRESS_BIT | CANCEL_EXITING_BIT);
+
+#ifdef __LIBPHOENIX_ARCH_TLS_SUPPORTED
+	assert(__self == (pthread_t)self);
+#endif
+
+	while (pthread_common.pthread_list != NULL && pthread_common.pthread_list != self) {
+		pthread_ctx *ctx = pthread_common.pthread_list;
+		LIST_REMOVE(&pthread_common.pthread_list, ctx);
+		_pthread_free_orphaned_ctx(ctx);
+	}
+
+	while (self->next != self) {
+		pthread_ctx *ctx = self->next;
+		LIST_REMOVE(&pthread_common.pthread_list, ctx);
+		_pthread_free_orphaned_ctx(ctx);
+	}
+
+	mutexUnlock(pthread_common.pthread_list_lock);
 }
 
 
@@ -2027,6 +2238,85 @@ int pthread_rwlockattr_getpshared(const pthread_rwlockattr_t *restrict attr, int
 	*pshared = attr->pshared;
 
 	return EOK;
+}
+
+
+void _pthread_nocancel_begin(void)
+{
+#ifdef __LIBPHOENIX_ARCH_TLS_SUPPORTED
+	++__nocancel_depth;
+#endif
+}
+
+
+void _pthread_nocancel_end(void)
+{
+#ifdef __LIBPHOENIX_ARCH_TLS_SUPPORTED
+	--__nocancel_depth;
+#endif
+}
+
+
+int _pthread_enable_asynccancel(void)
+{
+#ifndef __LIBPHOENIX_ARCH_TLS_SUPPORTED
+	/*
+	 * pthread_self() has huge performance penalty on non-TLS targets, so keep
+	 * this as no-op.
+	 */
+	return PTHREAD_CANCEL_ASYNCHRONOUS;
+#else
+	pthread_ctx *ctx;
+	int oldval;
+
+	if (__nocancel_depth != 0) {
+		/* not a cancellation point, or the context here is another thread's */
+		return PTHREAD_CANCEL_ASYNCHRONOUS;
+	}
+
+	ctx = (pthread_ctx *)pthread_self();
+
+	if (ctx == NULL) {
+		/*
+		 * No ctx to track cancellation state against - a thread not started
+		 * through pthread_create(), i.e. a bare beginthread() one.
+		 */
+		return PTHREAD_CANCEL_ASYNCHRONOUS;
+	}
+
+	oldval = _pthread_cancel_set(ctx, CANCEL_ASYNC_BIT);
+
+	if (CANCEL_IS_ACTIVE(oldval | CANCEL_ASYNC_BIT)) {
+		pthread_exit((void *)PTHREAD_CANCELED);
+		/* no return */
+	}
+
+	return ((oldval & CANCEL_ASYNC_BIT) != 0) ? PTHREAD_CANCEL_ASYNCHRONOUS : PTHREAD_CANCEL_DEFERRED;
+#endif
+}
+
+
+void _pthread_disable_asynccancel(int oldtype)
+{
+	pthread_ctx *ctx;
+	int oldval;
+
+	if (oldtype == PTHREAD_CANCEL_ASYNCHRONOUS) {
+		return;
+	}
+
+	ctx = (pthread_ctx *)pthread_self();
+
+	if (ctx == NULL) {
+		/* See note in _pthread_enable_asynccancel() */
+		return;
+	}
+
+	oldval = _pthread_cancel_clear(ctx, CANCEL_ASYNC_BIT);
+
+	if ((oldval & CANCEL_INPROGRESS_BIT) != 0) {
+		_pthread_wait_for_cancel(ctx);
+	}
 }
 
 
