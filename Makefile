@@ -36,8 +36,6 @@ CRT0_OBJS := $(PREFIX_O)crt0-common.o
 
 LIB_TARGETS := $(PREFIX_A)libphoenix.a $(PREFIX_A)crt0.o
 
-all: $(LIB_TARGETS)
-
 ifneq (,$(findstring arm,$(TARGET_SUFF)))
   include arch/arm/Makefile
 else ifneq (,$(findstring aarch64,$(TARGET_SUFF)))
@@ -50,7 +48,7 @@ include ctype/Makefile
 include err/Makefile
 include errno/Makefile
 include locale/Makefile
-include math/Makefile
+include libm/Makefile
 include misc/Makefile
 include net/Makefile
 include netinet/Makefile
@@ -71,6 +69,29 @@ include wchar/Makefile
 include ubsan/Makefile
 
 #include test/Makefile
+LIBM_FEATURE_CONFIG_IN := libm/libmcs/libm/include/libm_feature_config.h.in
+LIBM_FEATURE_CONFIG := $(BUILD_DIR)/include/libm_feature_config.h
+
+LIBM_CFG_WANT_COMPLEX := $(if $(filter y,$(LIBM_WANT_COMPLEX)),\#define LIBMCS_WANT_COMPLEX 1,\#undef LIBMCS_WANT_COMPLEX)
+LIBM_CFG_FPU_DAZ := $(if $(filter y,$(LIBM_LIBMCS_DAZ)),\#define LIBMCS_FPU_DAZ 1,\#undef LIBMCS_FPU_DAZ)
+
+$(LIBM_FEATURE_CONFIG): $(LIBM_FEATURE_CONFIG_IN) FORCE
+	@mkdir -p $(@D)
+	$(SIL)$(SED) -e 's|\#undef LIBMCS_WANT_COMPLEX|$(LIBM_CFG_WANT_COMPLEX)|' \
+		-e 's|\#undef LIBMCS_FPU_DAZ|$(LIBM_CFG_FPU_DAZ)|' "$<" > "$@.tmp"
+	$(SIL)if cmp -s "$@.tmp" "$@"; then \
+		rm -f "$@.tmp"; \
+	else \
+		printf "GEN %-24s\n" "$(@F)"; \
+		mv "$@.tmp" "$@"; \
+	fi
+	$(SIL)rm -f $(dir $(LIBM_FEATURE_CONFIG_IN))libm_feature_config.h
+
+FORCE:
+
+all: $(LIB_TARGETS)
+
+$(OBJS): $(LIBM_FEATURE_CONFIG)
 
 # incremental build fix
 LIBPHOENIX_DEP_FILES := $(OBJS:.o=.c.d) $(OBJS:.o=.S.d)
@@ -88,10 +109,12 @@ SRCHEADERS := $(shell find include -name \*.h)
 
 install: install-headers install-libs
 
-install-headers: $(SRCHEADERS)
+install-headers: $(SRCHEADERS) $(LIBM_FEATURE_CONFIG)
 	@echo INSTALL "$(HEADERS_INSTALL_DIR)/*"; \
 	mkdir -p "$(HEADERS_INSTALL_DIR)"; \
-	cp -a include/* "$(HEADERS_INSTALL_DIR)";
+	cp -a include/* "$(HEADERS_INSTALL_DIR)"; \
+	cp -a libm/libmcs/libm/include/* "$(HEADERS_INSTALL_DIR)"; \
+	cp -a "$(LIBM_FEATURE_CONFIG)" "$(HEADERS_INSTALL_DIR)";
 
 # TODO: remove `rm crt0.o` when we will be sure it's not a symlink to libphoenix.a anymore
 install-libs: $(LIB_TARGETS)
@@ -106,7 +129,7 @@ install-libs: $(LIB_TARGETS)
 			fi \
 	done)
 
-.PHONY: clean install install-headers install-libs
+.PHONY: clean all install install-headers install-libs FORCE
 clean:
 	@echo "rm -rf $(BUILD_DIR)"
 
