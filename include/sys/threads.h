@@ -101,10 +101,13 @@ static inline int mutexCreateWithAttr(handle_t *h, const struct lockAttr *attr)
 }
 
 
-int phMutexLock(handle_t h);
+int phMutexLock(handle_t h, time_t timeout, int clock);
 
 
 int mutexLock(handle_t h);
+
+
+int mutexLockTimeoutable(handle_t h, time_t timeout, int clock);
 
 
 int mutexLock2(handle_t h1, handle_t h2);
@@ -150,7 +153,10 @@ static inline int condCreateWithAttr(handle_t *h, const struct condAttr *attr)
 int condWait(handle_t h, handle_t m, time_t timeout);
 
 
-int phCondWait(handle_t h, handle_t m, time_t timeout);
+int condClockWait(handle_t h, handle_t m, time_t timeout, int clock);
+
+
+int phCondWait(handle_t h, handle_t m, time_t timeout, int clock);
 
 
 int condSignal(handle_t h);
