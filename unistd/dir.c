@@ -282,8 +282,8 @@ static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, 
 char *resolve_path(const char *path, char *resolved_path, int resolve_last_symlink, int allow_missing_leaf)
 {
 	char *alloc_resolved_path = NULL; /* internally allocated path needed to be freed on error */
-	char *path_copy, *p;
-	size_t pathlen;
+	char *path_copy = NULL, *cwd = NULL;
+	size_t pathlen, cwdlen, total;
 
 	if (!path) {
 		errno = EINVAL;
@@ -295,32 +295,41 @@ char *resolve_path(const char *path, char *resolved_path, int resolve_last_symli
 		return NULL;
 	}
 
-	if ((p = path_copy = malloc(PATH_MAX)) == NULL) {
+	pathlen = strlen(path);
+	if (pathlen > PATH_MAX) {
+		errno = ENAMETOOLONG;
+		return NULL;
+	}
+
+	if (path[0] != '/') {
+		cwd = getcwd(cwd, 0);
+		if (cwd == NULL) {
+			return NULL;
+		}
+	}
+
+	cwdlen = (cwd != NULL) ? strlen(cwd) : 0;
+	total = cwdlen + 1 + pathlen;
+
+	path_copy = (total > PATH_MAX) ? malloc(total + 1) : malloc(PATH_MAX + 1);
+	if (path_copy == NULL) {
+		free(cwd);
 		errno = ENOMEM;
 		return NULL;
 	}
 
-	pathlen = strlen(path);
-	if (path[0] != '/') {
-		if (getcwd(path_copy, PATH_MAX) == NULL) {
-			/* errno set by getcwd */
-			free(path_copy);
-			return NULL;
-		}
-
-		p = strchr(path_copy, 0);
-		*p++ = '/';
+	if (cwd != NULL) {
+		memcpy(path_copy, cwd, cwdlen);
+		path_copy[cwdlen] = '/';
+		memcpy(path_copy + cwdlen + 1, path, pathlen + 1);
+		free(cwd);
+	}
+	else {
+		memcpy(path_copy, path, pathlen + 1);
 	}
 
-	if ((p - path_copy) + pathlen + 1 > PATH_MAX) {
-		free(path_copy);
-		errno = ENAMETOOLONG;
-		return NULL;
-	}
-	memcpy(p, path, pathlen + 1);
-
-	if (!resolved_path) {
-		if ((alloc_resolved_path = malloc(PATH_MAX)) == NULL) {
+	if (resolved_path == NULL) {
+		if ((alloc_resolved_path = malloc(PATH_MAX + 1)) == NULL) {
 			free(path_copy);
 			errno = ENOMEM;
 			return NULL;
