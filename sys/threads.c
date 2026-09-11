@@ -102,3 +102,12 @@ int getPriority(void)
 	(void)sys_priority(PH_GET_PRIO, &prio);
 	return prio;
 }
+
+
+extern inline int threadsinfo(int n, unsigned int flags, threadinfo_t *info);
+
+
+extern inline int threadinfo(int tid, unsigned int flags, threadinfo_t *info);
+
+
+extern inline int threadcount(void);
