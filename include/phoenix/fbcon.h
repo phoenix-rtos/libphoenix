@@ -26,7 +26,7 @@ extern "C" {
 
 /* ioctls */
 #define FBCONSETMODE _IOV('t', 0x80, int)
-#define FBCONGETMODE _IO('t', 0x81)
+#define FBCONGETMODE _IOR('t', 0x81, int)
 
 
 #define FBCON_ENABLED     0x0
