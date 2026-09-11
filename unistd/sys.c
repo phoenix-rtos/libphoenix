@@ -37,6 +37,7 @@ WRAP_ERRNO_DEF(pid_t, getpgid, (pid_t pid), (pid))
 WRAP_ERRNO_DEF(pid_t, getpgrp, (void), ())
 
 WRAP_ERRNO_DEF(int, setsid, (void), ())
+WRAP_ERRNO_DEF(pid_t, getsid, (pid_t pid), (pid))
 
 
 #define PATH_DELIM ':'
@@ -64,12 +65,6 @@ static void sys_clear(void)
 
 	free(sys_common.sbArgs);
 	sys_common.sbArgs = NULL;
-}
-
-
-pid_t getsid(pid_t pid)
-{
-	return getpgid(pid);
 }
 
 
