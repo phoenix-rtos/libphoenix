@@ -15,8 +15,11 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
+
 
 extern void __cxa_finalize(void *);
+extern void _quick_exit_finalize(void);
 extern void sys_exit(int) __attribute__((noreturn));
 
 
@@ -37,5 +40,11 @@ void exit(int status)
 	__cxa_finalize(NULL);
 	fflush(NULL);
 	_exit(status);
-	for(;;);
+}
+
+
+void quick_exit(int status)
+{
+	_quick_exit_finalize();
+	_Exit(status);
 }

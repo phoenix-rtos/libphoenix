@@ -127,15 +127,23 @@ extern void abort(void) __attribute__((__noreturn__));
 
 
 /* Causes the specified function func to be called when the program terminates normally. */
-extern int atexit(void (*func)(void));
+int atexit(void (*func)(void));
+
+
+/* Causes the specified function func to be called when the program terminates via quick_exit. */
+int at_quick_exit(void (*func)(void));
 
 
 /* Causes the program to terminate normally.*/
-extern void exit(int status) __attribute__((__noreturn__));
+void exit(int status) __attribute__((__noreturn__));
+
+
+/* Causes the program to terminate normally, without flushing streams and calling atexit handlers. */
+void quick_exit(int status) __attribute__((__noreturn__));
 
 
 /* Causes the program to terminate without cleanup.*/
-extern void _Exit(int status);
+void _Exit(int status) __attribute__((__noreturn__));
 
 
 /* Removes variable from the environment. */
@@ -286,10 +294,6 @@ extern int mkstemp(char *templt);
 
 /* Create a unique directory */
 extern char *mkdtemp(char *templt);
-
-
-/* register a funtion to run at process termination */
-extern int atexit(void (*func)(void));
 
 
 #ifdef __cplusplus

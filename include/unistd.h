@@ -205,7 +205,7 @@ extern int isatty(int fildes);
 extern int dup2(int fildes, int fildes2);
 
 
-extern void _exit(int status);
+extern void _exit(int status) __attribute__((__noreturn__));
 
 
 /* Creates a symbolic link named linkpath which contains the string target. If linkpath exists, it will not be overwritten. */
