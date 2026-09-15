@@ -26,6 +26,12 @@
 #include "posix/utils.h"
 
 
+static struct {
+	/* TODO: add umask inheritance for exec() */
+	mode_t umask;
+} stat_common;
+
+
 /* path needs to be canonical */
 static int _stat_abs(const char *path, struct stat *buf)
 {
@@ -139,9 +145,13 @@ int stat(const char *path, struct stat *buf)
 
 mode_t umask(mode_t cmask)
 {
-	/* TODO: add proper umask() implementation */
-	/* Don't restrict process file mode mask for now */
-	return 0;
+	return __atomic_exchange_n(&stat_common.umask, cmask & ACCESSPERMS, __ATOMIC_RELAXED);
+}
+
+
+mode_t __getumask(void)
+{
+	return __atomic_load_n(&stat_common.umask, __ATOMIC_RELAXED);
 }
 
 
@@ -279,4 +289,10 @@ int rename(const char *old, const char *new)
 int chown(const char *path, uid_t owner, gid_t group)
 {
 	return 0;
+}
+
+
+void _stat_init(void)
+{
+	__atomic_store_n(&stat_common.umask, 0, __ATOMIC_RELAXED);
 }

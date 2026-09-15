@@ -42,9 +42,6 @@ extern int stat(const char *path, struct stat *buf);
 extern int fstat(int fildes, struct stat *buf);
 
 
-extern mode_t umask(mode_t cmask);
-
-
 extern int mkdir(const char *pathname, mode_t mode);
 
 
@@ -60,6 +57,12 @@ extern int fchmod(int fd, mode_t mode);
 
 extern int chown(const char *path, uid_t owner, gid_t group);
 extern int lchown(const char *path, uid_t owner, gid_t group);
+
+
+extern mode_t umask(mode_t cmask);
+
+
+extern mode_t __getumask(void);
 
 
 #ifdef __cplusplus

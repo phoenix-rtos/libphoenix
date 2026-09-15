@@ -22,6 +22,7 @@ extern void _errno_init(void);
 extern void _atexit_init(void);
 extern void _init_array(void);
 extern void _pthread_init(void);
+extern void _stat_init(void);
 
 
 void _libc_init(void)
@@ -33,4 +34,5 @@ void _libc_init(void)
 	_signals_init();
 	_file_init();
 	_pthread_init();
+	_stat_init();
 }
