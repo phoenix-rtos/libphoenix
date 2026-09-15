@@ -14,13 +14,9 @@
  */
 
 #include <stdlib.h>
-#include <string.h>
 #include <sys/threads.h>
 
 
-/* The atexit_node structure uses uint32_t for flags that
- indicate whether to call a function with arguments or not, therefore
- why ATEXIT_MAX must be 32 as type "fntype" */
 #define ATEXIT_MAX 32
 
 
@@ -31,88 +27,126 @@ struct atexit_node {
 	destructor_t destructors[ATEXIT_MAX];
 	void *args[ATEXIT_MAX];
 	void *handles[ATEXIT_MAX];
-	uint32_t fntype;
+	uint32_t fntype; /* i-th bit set means i-th function accepts an arg */
 	struct atexit_node *prev;
 };
 
 
-/* The first node is statically allocated to provide at least 32 function slots */
-static struct {
-	handle_t lock;
+_Static_assert(ATEXIT_MAX <= sizeof(((struct atexit_node *)0)->fntype) * 8, "ATEXIT_MAX must fit into fntype bitmask");
+
+
+/*
+ * List of functions to be called on termination. Nodes other than the (optional)
+ * statically allocated firstNode are allocated on demand.
+ */
+struct atexit_list {
 	struct atexit_node *head;
 	struct atexit_node *newestNode;
+	struct atexit_node *firstNode;
 	unsigned int idx;
-} atexit_common = { .head = &((struct atexit_node) {}) };
+};
 
 
-/* Initialise atexit_common structure before main */
+/* The first node of the exit list is statically allocated to provide at least 32 function slots */
+static struct atexit_node atexit_firstNode;
+
+
+static struct {
+	struct atexit_list exitList;
+	/* POSIX-DEVIATION: Nodes of the quick exit list are allocated only if at_quick_exit() is used, to optimize memory use. */
+	struct atexit_list quickExitList;
+	handle_t lock;
+} atexit_common = {
+	.exitList = {
+		.head = &atexit_firstNode,
+		.newestNode = &atexit_firstNode,
+		.firstNode = &atexit_firstNode,
+	},
+};
+
+
+/* Initialise exit lists before main */
 void _atexit_init(void)
 {
 	mutexCreate(&atexit_common.lock);
-	memset(atexit_common.head, 0, sizeof(struct atexit_node));
-	atexit_common.idx = 0;
-	atexit_common.newestNode = atexit_common.head;
 }
 
 
 /* Generic function to register destructors */
-static int _atexit_register(int isarg, void (*fn)(void), void *arg, void *handle)
+static int _atexit_register(struct atexit_list *list, int isarg, void (*fn)(void), void *arg, void *handle)
 {
 	struct atexit_node *node;
 
 	mutexLock(atexit_common.lock);
-	node = atexit_common.head;
+	node = list->head;
 
 	/* Allocate new node if there are no free slots left */
-	if (atexit_common.idx == ATEXIT_MAX) {
+	if ((node == NULL) || (list->idx == ATEXIT_MAX)) {
 		node = (struct atexit_node *)calloc(1, sizeof(struct atexit_node));
 		if (node == NULL) {
 			mutexUnlock(atexit_common.lock);
 			return -1;
 		}
-		node->prev = atexit_common.head;
+		node->prev = list->head;
 
-		atexit_common.head = node;
-		atexit_common.idx = 0;
-		atexit_common.newestNode = node;
+		list->head = node;
+		list->idx = 0;
+		list->newestNode = node;
 	}
 
 	if (isarg != 0) {
-		node->fntype |= (1u << atexit_common.idx);
-		node->args[atexit_common.idx] = arg;
+		node->fntype |= (1u << list->idx);
+		node->args[list->idx] = arg;
 	}
-	node->destructors[atexit_common.idx] = fn;
-	node->handles[atexit_common.idx] = handle;
+	else {
+		node->fntype &= ~(1u << list->idx);
+		node->args[list->idx] = NULL;
+	}
 
-	atexit_common.idx++;
+	node->destructors[list->idx] = fn;
+	node->handles[list->idx] = handle;
+
+	list->idx++;
 
 	mutexUnlock(atexit_common.lock);
 	return 0;
 }
 
 
-/* Call destructors registered for given object, or all in case of NULL */
-/* Conforming: https://itanium-cxx-abi.github.io/cxx-abi/abi.html#dso-dtor */
-void __cxa_finalize(void *handle)
+/* Generic function to call destructors registered for given object, or all in case of NULL */
+static void _atexit_finalize(struct atexit_list *list, void *handle)
 {
-	/* No handlers registered. */
-	if (atexit_common.idx == 0) {
+	struct atexit_node *node, *prev;
+	unsigned int i;
+
+	mutexLock(atexit_common.lock);
+
+	if ((list->head == NULL) || ((list->idx == 0) && (list->head->prev == NULL))) {
+		mutexUnlock(atexit_common.lock);
 		return;
 	}
 
-	mutexLock(atexit_common.lock);
-	/* Iteration has to be over the atexit_common.head and newest node must be restored at the end
-	 * as the atexit functions may register new atexit functions. */
-	while (atexit_common.head != NULL) {
-		atexit_common.idx--;
-		destructor_t destructor = atexit_common.head->destructors[atexit_common.idx];
-		/* Do not call already called destructors and destructors not from current handle. */
-		if ((destructor != NULL) && ((handle == atexit_common.head->handles[atexit_common.idx]) || (handle == NULL))) {
-			/* Mark destructor as called. */
-			atexit_common.head->destructors[atexit_common.idx] = NULL;
+	/*
+	 * Iteration has to be over the list->head and newest node must be restored at the end
+	 * as the atexit functions may register new atexit functions.
+	 */
+	while (list->head != NULL) {
+		if (list->idx == 0) {
+			list->head = list->head->prev;
+			/* Nodes other than the newest one are always full */
+			list->idx = ATEXIT_MAX;
+			continue;
+		}
 
-			if (((atexit_common.head->fntype >> atexit_common.idx) & 1) == 1) {
-				void *arg = atexit_common.head->args[atexit_common.idx];
+		list->idx--;
+		destructor_t destructor = list->head->destructors[list->idx];
+		/* Do not call already called destructors and destructors not from current handle. */
+		if ((destructor != NULL) && ((handle == list->head->handles[list->idx]) || (handle == NULL))) {
+			/* Mark destructor as called. */
+			list->head->destructors[list->idx] = NULL;
+
+			if (((list->head->fntype >> list->idx) & 1) == 1) {
+				void *arg = list->head->args[list->idx];
 				mutexUnlock(atexit_common.lock);
 				((void (*)(void *))destructor)(arg);
 			}
@@ -122,47 +156,77 @@ void __cxa_finalize(void *handle)
 			}
 			mutexLock(atexit_common.lock);
 		}
-
-		if (atexit_common.idx == 0) {
-			atexit_common.head = atexit_common.head->prev;
-			atexit_common.idx = ATEXIT_MAX;
-		}
 	}
 
-	atexit_common.head = atexit_common.newestNode;
-
-	/* All nodes are fully emptied from destructors, free memory. */
-	if (handle == NULL) {
-		/* Ensure the first node that is statically allocated is not freed */
-		while (atexit_common.head->prev != NULL) {
-			struct atexit_node *last = atexit_common.head;
-			atexit_common.head = atexit_common.head->prev;
-			free(last);
+	node = list->newestNode;
+	while (node != list->firstNode) {
+		for (i = 0; i < ATEXIT_MAX; i++) {
+			if (node->destructors[i] != NULL) {
+				break;
+			}
 		}
-		atexit_common.newestNode = atexit_common.head;
-		atexit_common.idx = 0;
+
+		if (i != ATEXIT_MAX) {
+			break;
+		}
+
+		prev = node->prev;
+		free(node);
+		node = prev;
+	}
+
+	list->head = node;
+	list->newestNode = node;
+
+	i = ATEXIT_MAX;
+	if (node == NULL) {
+		i = 0;
 	}
 	else {
-		/* Restore idx. */
-		unsigned int i = ATEXIT_MAX;
-		while ((i > 0) && (atexit_common.head->destructors[i - 1] == NULL)) {
+		while ((i > 0) && (node->destructors[i - 1] == NULL)) {
 			i--;
 		}
-		atexit_common.idx = i;
 	}
+	list->idx = i;
 
 	mutexUnlock(atexit_common.lock);
 }
 
 
-int atexit(void (*func)(void))
+/* Call destructors registered for given object, or all in case of NULL */
+/* Conforming: https://itanium-cxx-abi.github.io/cxx-abi/abi.html#dso-dtor */
+void __cxa_finalize(void *handle)
 {
-	return _atexit_register(0, func, NULL, NULL);
+	_atexit_finalize(&atexit_common.exitList, handle);
 }
 
 
-/* Register a function to run at process termination with given arguments */
+/* Call functions registered with at_quick_exit() */
+void _quick_exit_finalize(void)
+{
+	_atexit_finalize(&atexit_common.quickExitList, NULL);
+}
+
+
+int atexit(void (*func)(void))
+{
+	return _atexit_register(&atexit_common.exitList, 0, func, NULL, NULL);
+}
+
+
 int __cxa_atexit(void (*func)(void *), void *arg, void *handle)
 {
-	return _atexit_register(1, (void (*)(void))func, arg, handle);
+	return _atexit_register(&atexit_common.exitList, 1, (void (*)(void))func, arg, handle);
+}
+
+
+int __cxa_at_quick_exit(void (*func)(void *), void *arg, void *handle)
+{
+	return _atexit_register(&atexit_common.quickExitList, 1, (void (*)(void))func, arg, handle);
+}
+
+
+int at_quick_exit(void (*func)(void))
+{
+	return _atexit_register(&atexit_common.quickExitList, 0, func, NULL, NULL);
 }
