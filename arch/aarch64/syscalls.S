@@ -16,11 +16,12 @@
 #define __ASSEMBLY__
 #include <phoenix/syscalls.h>
 
-.text
 
 #define SYSCALLDEF(sym, sn) \
+.section .text.sym, "ax", %progbits; \
 .globl sym; \
 .type sym, %function; \
+.balign 4; \
 sym: \
 	.cfi_startproc; \
 	stp x0, x1, [sp, #-0x40]!; \
@@ -44,8 +45,10 @@ sym: \
 .size sym, .-sym
 
 
+.section .text.vfork, "ax", %progbits;
 .globl vfork;
 .type vfork, %function;
+.balign 4;
 vfork:
 	b vforksvc
 .size vfork, .-vfork
