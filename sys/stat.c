@@ -221,7 +221,7 @@ int mkdir(const char *path, mode_t mode)
 		.type = mtCreate,
 		.oid = dir,
 		.i.create.type = otDir,
-		.i.create.mode = mode | S_IFDIR,
+		.i.create.mode = (mode & ~__getumask()) | S_IFDIR,
 		.i.data = name,
 		.i.size = strlen(name) + 1
 	};

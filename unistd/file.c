@@ -359,6 +359,10 @@ int open(const char *filename, int oflag, ...)
 	if (canonical == NULL)
 		return -1; /* errno set by resolve_path */
 
+	if (oflag & O_CREAT) {
+		mode &= ~__getumask();
+	}
+
 	do
 		err = sys_open(canonical, oflag, mode);
 	while (err == -EINTR);
@@ -378,7 +382,7 @@ int mkfifo(const char *filename, mode_t mode)
 	if (canonical == NULL)
 		return -1; /* errno set by resolve_path */
 
-	while ((err = sys_mkfifo(canonical, mode)) == -EINTR)
+	while ((err = sys_mkfifo(canonical, ~__getumask() & mode)) == -EINTR)
 		;
 	free(canonical);
 	return SET_ERRNO(err);
