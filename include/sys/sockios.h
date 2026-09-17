@@ -21,6 +21,7 @@
 #include <net/route.h>
 
 /* Socket configuration controls. */
+#define SIOCATMARK     _IOR(SOCK_IOC_TYPE, 0x07, int)                             /* determine if the socket is at the out-of-band data mark */
 #define SIOCGIFNAME    _IOWR(SOCK_IOC_TYPE, 0x10, struct ifreq)                   /* get name of interface with given index */
 #define SIOCGIFCONF    _IOC_NESTED(IOC_INOUT, SOCK_IOC_TYPE, 0x12, struct ifconf) /* get iface list */
 #define SIOCGIFFLAGS   _IOWR(SOCK_IOC_TYPE, 0x13, struct ifreq)                   /* get interface flags */
