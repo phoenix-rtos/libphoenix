@@ -34,7 +34,7 @@
  */
 
 #include <sys/cdefs.h>
-#include <_ansi.h>
+#include <sys/features.h>
 
 /*
  * The matching engine and friends.  This file is #included by regexec.c
