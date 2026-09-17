@@ -17,6 +17,7 @@
 #define _LIBPHOENIX_STRING_H_
 
 
+#include <sys/cdefs.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -175,13 +176,13 @@ extern int strverscmp(const char *s1, const char *s2);
 extern char *strsignal(int sig);
 
 
-__attribute__((__always_inline__)) static inline void bcopy(const void *src, void *dest, size_t n)
+__INLINE __attribute__((__always_inline__)) void bcopy(const void *src, void *dest, size_t n)
 {
 	memmove(dest, src, n);
 }
 
 
-__attribute__((__always_inline__)) static inline void bzero(void *p, size_t sz)
+__INLINE __attribute__((__always_inline__)) void bzero(void *p, size_t sz)
 {
 	memset(p, 0, sz);
 }

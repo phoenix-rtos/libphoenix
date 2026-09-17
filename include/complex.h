@@ -16,6 +16,8 @@
 #ifndef _COMPLEX_H_
 #define _COMPLEX_H_
 
+#include <sys/cdefs.h>
+
 /* define complex numbers specifers */
 #define complex    _Complex
 #define _Complex_I 1.0fi
@@ -27,39 +29,49 @@ extern "C" {
 #endif
 
 
-static inline double creal(double complex z)
+__INLINE double creal(double complex z)
 {
 	return (__real__(z));
 }
 
 
-static inline float crealf(float complex z)
+__INLINE float crealf(float complex z)
 {
 	return (__real__(z));
 }
 
 
-static inline double cimag(double complex z)
+__INLINE double cimag(double complex z)
 {
 	return (__imag__(z));
 }
 
 
-static inline float cimagf(float complex z)
+__INLINE float cimagf(float complex z)
 {
 	return (__imag__(z));
 }
 
 
-static inline double complex conj(double complex z)
+__INLINE double complex conj(double complex z)
 {
-	return __builtin_complex((__real__(z)), -(__imag__(z)));
+	/* not __builtin_complex(), which g++ does not provide */
+	double complex r = z;
+
+	__imag__(r) = -__imag__(r);
+
+	return r;
 }
 
 
-static inline float complex conjf(float complex z)
+__INLINE float complex conjf(float complex z)
 {
-	return __builtin_complex((__real__(z)), -(__imag__(z)));
+	/* not __builtin_complex(), which g++ does not provide */
+	float complex r = z;
+
+	__imag__(r) = -__imag__(r);
+
+	return r;
 }
 
 

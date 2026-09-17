@@ -25,6 +25,9 @@
 #include "../unistd/ioctl-helper.h"
 
 
+__EXPORT_INLINE pid_t ioctl_getSenderPid(const msg_t *msg);
+
+
 const void *ioctl_unpack(msg_t *msg, unsigned long *request, id_t *id)
 {
 	return ioctl_unpackEx(msg, request, id, NULL);

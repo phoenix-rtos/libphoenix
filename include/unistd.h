@@ -18,6 +18,7 @@
 #define _LIBPHOENIX_UNISTD_H_
 
 
+#include <sys/cdefs.h>
 #include <arch.h>
 #include <stddef.h>
 #include <sys/types.h>
@@ -96,7 +97,7 @@ extern long fpathconf(int fildes, int name);
 
 
 /* NOTE: Legacy from SUSv2, new applications should use sysconf(_SC_PAGESIZE) */
-static inline int getpagesize(void)
+__INLINE int getpagesize(void)
 {
 	return (int)sysconf(_SC_PAGESIZE);
 }

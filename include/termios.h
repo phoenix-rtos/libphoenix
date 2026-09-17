@@ -17,6 +17,7 @@
 #define _LIBPHOENIX_TERMIOS_H_
 
 
+#include <sys/cdefs.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
 
@@ -240,17 +241,17 @@ pid_t tcgetsid(int fd);
 void cfmakeraw(struct termios *termios_p);
 
 
-static inline speed_t cfgetispeed(const struct termios *termios_p)
+__INLINE speed_t cfgetispeed(const struct termios *termios_p)
 {
 	return termios_p->c_ispeed;
 }
 
-static inline speed_t cfgetospeed(const struct termios *termios_p)
+__INLINE speed_t cfgetospeed(const struct termios *termios_p)
 {
 	return termios_p->c_ospeed;
 }
 
-static inline int cfsetispeed(struct termios *termios_p, speed_t speed)
+__INLINE int cfsetispeed(struct termios *termios_p, speed_t speed)
 {
 	if (speed == 0) /* needed by POSIX */
 		speed = termios_p->c_ospeed;
@@ -259,13 +260,13 @@ static inline int cfsetispeed(struct termios *termios_p, speed_t speed)
 	return 0;
 }
 
-static inline int cfsetospeed(struct termios *termios_p, speed_t speed)
+__INLINE int cfsetospeed(struct termios *termios_p, speed_t speed)
 {
 	termios_p->c_ospeed = speed;
 	return 0;
 }
 
-static inline int cfsetspeed(struct termios *termios_p, speed_t speed)
+__INLINE int cfsetspeed(struct termios *termios_p, speed_t speed)
 {
 	termios_p->c_ospeed = speed;
 	termios_p->c_ispeed = speed;

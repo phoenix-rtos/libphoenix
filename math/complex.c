@@ -17,6 +17,14 @@
 #include <complex.h>
 
 
+__EXPORT_INLINE double creal(double complex z);
+__EXPORT_INLINE float crealf(float complex z);
+__EXPORT_INLINE double cimag(double complex z);
+__EXPORT_INLINE float cimagf(float complex z);
+__EXPORT_INLINE double complex conj(double complex z);
+__EXPORT_INLINE float complex conjf(float complex z);
+
+
 double cabs(double complex z)
 {
 	/* FIXME: due to missing hypot() implementation, temporarily sqrt() is used */

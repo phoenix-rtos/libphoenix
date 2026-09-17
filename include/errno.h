@@ -17,6 +17,7 @@
 #define _LIBPHOENIX_ERRNO_H_
 
 
+#include <sys/cdefs.h>
 #include <phoenix/errno.h>
 
 
@@ -31,7 +32,7 @@ extern "C" {
 extern int *__errno_location(void);
 
 
-static inline int set_errno(int x)
+__INLINE int set_errno(int x)
 {
 	if (x < 0) {
 		errno = -x;

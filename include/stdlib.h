@@ -17,6 +17,7 @@
 #define _LIBPHOENIX_STDLIB_H_
 
 
+#include <sys/cdefs.h>
 #include <sys/wait.h>
 #include <stddef.h>
 #include <alloca.h>
@@ -170,23 +171,23 @@ extern void qsort(void *base, size_t nitems, size_t size, int (*compar)(const vo
 
 
 /* Returns the absolute value of x. */
-static inline int abs(int x)
+__INLINE int abs(int x)
 {
-	return x >= 0 ? x : -x;
+	return (x >= 0) ? x : -x;
 }
 
 
 /* Returns the absolute value of x. */
-static inline long int labs(long int x)
+__INLINE long int labs(long int x)
 {
-	return x >= 0 ? x : -x;
+	return (x >= 0) ? x : -x;
 }
 
 
 /* Returns the absolute value of x. */
-static inline long long int llabs(long long int x)
+__INLINE long long int llabs(long long int x)
 {
-	return x >= 0 ? x : -x;
+	return (x >= 0) ? x : -x;
 }
 
 

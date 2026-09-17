@@ -16,6 +16,11 @@
 #include <stdlib.h>
 
 
+__EXPORT_INLINE int abs(int x);
+__EXPORT_INLINE long int labs(long int x);
+__EXPORT_INLINE long long int llabs(long long int x);
+
+
 div_t div(int num, int den)
 {
 	div_t result = { .quot = num / den, .rem = num % den };
