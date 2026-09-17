@@ -82,7 +82,8 @@ const void *ioctl_unpackEx(msg_t *msg, unsigned long *request, id_t *id, void **
 
 void ioctl_setResponse(msg_t *msg, unsigned long request, int err, const void *data)
 {
-	size_t size = IOCPARM_LEN(request);
+	ioctl_in_t *ioctl = (ioctl_in_t *)msg->i.raw;
+	size_t size = ioctl->size;
 	void *dst;
 
 	msg->o.err = err;
