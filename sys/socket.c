@@ -56,6 +56,7 @@ int h_errno;
 __EXPORT_INLINE int accept(int socket, struct sockaddr *address, socklen_t *address_len);
 __EXPORT_INLINE ssize_t send(int socket, const void *message, size_t length, int flags);
 __EXPORT_INLINE ssize_t recv(int socket, void *message, size_t length, int flags);
+__EXPORT_INLINE int sockatmark(int socket);
 
 
 static int socksrvcall(msg_t *msg)
