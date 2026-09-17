@@ -20,6 +20,9 @@
 #include <limits.h>
 
 
+__EXPORT_INLINE int getpagesize(void);
+
+
 long sysconf(int name)
 {
 	switch (name) {

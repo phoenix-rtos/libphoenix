@@ -16,6 +16,7 @@
 #ifndef _SYS_SOCKET_H_
 #define _SYS_SOCKET_H_
 
+#include <sys/cdefs.h>
 #include <stdint.h>
 #include <sys/socktypes.h>
 #include <sys/sockdefs.h>
@@ -83,19 +84,19 @@ int shutdown(int socket, int how);
 int socketpair(int domain, int type, int protocol, int socket_vector[2]);
 
 
-inline int accept(int socket, struct sockaddr *address, socklen_t *address_len)
+__INLINE int accept(int socket, struct sockaddr *address, socklen_t *address_len)
 {
 	return accept4(socket, address, address_len, 0);
 }
 
 
-inline ssize_t send(int socket, const void *message, size_t length, int flags)
+__INLINE ssize_t send(int socket, const void *message, size_t length, int flags)
 {
 	return sendto(socket, message, length, flags, NULL, 0);
 }
 
 
-inline ssize_t recv(int socket, void *message, size_t length, int flags)
+__INLINE ssize_t recv(int socket, void *message, size_t length, int flags)
 {
 	return recvfrom(socket, message, length, flags, NULL, NULL);
 }

@@ -17,6 +17,7 @@
 #define _LIBPHENIX_POLL_H_
 
 
+#include <sys/cdefs.h>
 #include <sys/events.h>
 #include <errno.h>
 
@@ -44,7 +45,7 @@ extern "C" {
 extern int poll(struct pollfd *fds, nfds_t nfds, int timeout);
 
 
-static inline unsigned short eventMaskFromPoll(int pollevmask)
+__INLINE unsigned short eventMaskFromPoll(int pollevmask)
 {
 #define EVENT_MASK_FROM_POLL(pollev, evt) | (!!(pollevmask & (pollev)) << (evt))
 
@@ -54,7 +55,7 @@ static inline unsigned short eventMaskFromPoll(int pollevmask)
 }
 
 
-static inline int eventPollFromType(int evtype)
+__INLINE int eventPollFromType(int evtype)
 {
 #define EVENT_POLL_FROM_TYPE(pollev, evt) if (evtype == (evt)) return (pollev);
 
@@ -65,7 +66,7 @@ static inline int eventPollFromType(int evtype)
 }
 
 
-static inline int eventPollFromMask(unsigned short evmask)
+__INLINE int eventPollFromMask(unsigned short evmask)
 {
 #define EVENT_POLL_FROM_MASK(pollev, evt) | ((evmask & (1 << (evt))) ? (pollev) : 0)
 

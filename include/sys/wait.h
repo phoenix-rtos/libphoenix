@@ -16,6 +16,7 @@
 #ifndef _SYS_WAIT_H_
 #define _SYS_WAIT_H_
 
+#include <sys/cdefs.h>
 #include <sys/types.h>
 #include <phoenix/posix-wait.h>
 
@@ -38,7 +39,7 @@ extern "C" {
 extern pid_t waitpid(pid_t pid, int *status, int options);
 
 
-static inline pid_t wait(int *status)
+__INLINE pid_t wait(int *status)
 {
 	return waitpid(-1, status, 0);
 }

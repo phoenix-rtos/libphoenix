@@ -17,13 +17,12 @@
 #include <errno.h>
 
 
-extern inline int threadsinfo(int n, unsigned int flags, threadinfo_t *info);
-
-
-extern inline int threadinfo(int tid, unsigned int flags, threadinfo_t *info);
-
-
-extern inline int threadcount(void);
+__EXPORT_INLINE int beginthread(void (*start)(void *), int priority, void *stack, unsigned int stacksz, void *arg);
+__EXPORT_INLINE int threadsinfo(int n, unsigned int flags, threadinfo_t *info);
+__EXPORT_INLINE int threadinfo(int tid, unsigned int flags, threadinfo_t *info);
+__EXPORT_INLINE int threadcount(void);
+__EXPORT_INLINE int mutexCreateWithAttr(handle_t *h, const struct lockAttr *attr);
+__EXPORT_INLINE int condCreateWithAttr(handle_t *h, const struct condAttr *attr);
 
 
 int mutexCreate(handle_t *h)

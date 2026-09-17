@@ -17,12 +17,15 @@
 #define _LIBPHOENIX_IA32_IO_H_
 
 
+#include <sys/cdefs.h>
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 
-static inline unsigned char inb(void *addr)
+__INLINE unsigned char inb(void *addr)
 {
 	unsigned char b;
 
@@ -38,7 +41,7 @@ static inline unsigned char inb(void *addr)
 }
 
 
-static inline void outb(void *addr, unsigned char b)
+__INLINE void outb(void *addr, unsigned char b)
 {
 	__asm__ volatile
 	(" \
@@ -53,7 +56,7 @@ static inline void outb(void *addr, unsigned char b)
 }
 
 
-static inline unsigned short inw(void *addr)
+__INLINE unsigned short inw(void *addr)
 {
 	unsigned short w;
 
@@ -70,7 +73,7 @@ static inline unsigned short inw(void *addr)
 }
 
 
-static inline void outw(void *addr, unsigned short w)
+__INLINE void outw(void *addr, unsigned short w)
 {
 	__asm__ volatile
 	(" \
@@ -85,7 +88,7 @@ static inline void outw(void *addr, unsigned short w)
 }
 
 
-static inline unsigned int inl(void *addr)
+__INLINE unsigned int inl(void *addr)
 {
 	unsigned int l;
 
@@ -102,7 +105,7 @@ static inline unsigned int inl(void *addr)
 }
 
 
-static inline void outl(void *addr, unsigned int l)
+__INLINE void outl(void *addr, unsigned int l)
 {
 	__asm__ volatile
 	(" \

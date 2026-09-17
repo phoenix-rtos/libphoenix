@@ -19,3 +19,5 @@
 
 WRAP_ERRNO_DEF(pid_t, waitpid, (pid_t pid, int *status, int options), (pid, status, options))
 
+
+__EXPORT_INLINE pid_t wait(int *status);

@@ -18,6 +18,7 @@
 #define _LIBPHOENIX_IOCTL_H_
 
 
+#include <sys/cdefs.h>
 #include <sys/msg.h>
 #include <sys/types.h>
 
@@ -61,7 +62,7 @@ const void *ioctl_unpack(msg_t *msg, unsigned long *request, id_t *id);
 const void *ioctl_unpackEx(msg_t *msg, unsigned long *request, id_t *id, void **response_buf);
 
 
-static inline pid_t ioctl_getSenderPid(const msg_t *msg)
+__INLINE pid_t ioctl_getSenderPid(const msg_t *msg)
 {
 	return (pid_t)msg->pid;
 }

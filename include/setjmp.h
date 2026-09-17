@@ -17,6 +17,9 @@
 #define _LIBPHOENIX_SETJMP_H_
 
 
+#include <sys/cdefs.h>
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -37,7 +40,7 @@ extern void _longjmp(jmp_buf var, int m) __attribute__((__noreturn__));
 extern int setjmp(jmp_buf var);
 
 
-__attribute__((__noreturn__)) static inline void longjmp(jmp_buf var, int m)
+__attribute__((__noreturn__)) __INLINE void longjmp(jmp_buf var, int m)
 {
 	_longjmp(var, m);
 }
@@ -46,7 +49,7 @@ __attribute__((__noreturn__)) static inline void longjmp(jmp_buf var, int m)
 extern int sigsetjmp(sigjmp_buf env, int savesigs);
 
 
-__attribute__((__noreturn__)) static inline void siglongjmp(sigjmp_buf env, int val)
+__attribute__((__noreturn__)) __INLINE void siglongjmp(sigjmp_buf env, int val)
 {
 	_longjmp(env, val);
 }

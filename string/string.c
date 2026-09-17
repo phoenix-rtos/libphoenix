@@ -20,6 +20,10 @@
 
 #include <sys/debug.h>
 
+
+__EXPORT_INLINE void bcopy(const void *src, void *dest, size_t n);
+__EXPORT_INLINE void bzero(void *p, size_t sz);
+
 struct {
 	char *next_token;
 } string_common;

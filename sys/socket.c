@@ -53,9 +53,9 @@ extern ssize_t sys_sendmsg(int socket, const struct msghdr *msg, int flags);
 int h_errno;
 
 /* inline wrappers defined in sys/socket.h */
-extern inline int accept(int socket, struct sockaddr *address, socklen_t *address_len);
-extern inline ssize_t send(int socket, const void *message, size_t length, int flags);
-extern inline ssize_t recv(int socket, void *message, size_t length, int flags);
+__EXPORT_INLINE int accept(int socket, struct sockaddr *address, socklen_t *address_len);
+__EXPORT_INLINE ssize_t send(int socket, const void *message, size_t length, int flags);
+__EXPORT_INLINE ssize_t recv(int socket, void *message, size_t length, int flags);
 
 
 static int socksrvcall(msg_t *msg)

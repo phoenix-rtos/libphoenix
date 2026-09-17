@@ -16,6 +16,7 @@
 #ifndef _LIBPHOENIX_SYS_THREADS_H_
 #define _LIBPHOENIX_SYS_THREADS_H_
 
+#include <sys/cdefs.h>
 #include <sys/types.h>
 #include <sys/rb.h>
 #include <stddef.h>
@@ -68,7 +69,7 @@ int beginthreadex(void (*start)(void *), int priority, void *stack, unsigned int
 __attribute__((noreturn)) void endthread(void);
 
 
-static inline int beginthread(void (*start)(void *), int priority, void *stack, unsigned int stacksz, void *arg)
+__INLINE int beginthread(void (*start)(void *), int priority, void *stack, unsigned int stacksz, void *arg)
 {
 	return beginthreadex(start, priority, stack, stacksz, arg, NULL);
 }
@@ -77,13 +78,13 @@ static inline int beginthread(void (*start)(void *), int priority, void *stack, 
 int sys_threadsinfo(int tid, unsigned int flags, int n, threadinfo_t *info);
 
 
-inline int threadsinfo(int n, unsigned int flags, threadinfo_t *info)
+__INLINE int threadsinfo(int n, unsigned int flags, threadinfo_t *info)
 {
 	return sys_threadsinfo(PH_THREADINFO_THREADS_ALL, flags, n, info);
 }
 
 
-inline int threadinfo(int tid, unsigned int flags, threadinfo_t *info)
+__INLINE int threadinfo(int tid, unsigned int flags, threadinfo_t *info)
 {
 	if (tid < 0) {
 		return -EINVAL;
@@ -93,7 +94,7 @@ inline int threadinfo(int tid, unsigned int flags, threadinfo_t *info)
 }
 
 
-inline int threadcount(void)
+__INLINE int threadcount(void)
 {
 	return sys_threadsinfo(PH_THREADINFO_THREADS_ALL, PH_THREADINFO_OPT_THREADCOUNT, 0, NULL);
 }
@@ -118,7 +119,7 @@ int phMutexCreate(handle_t *h, const struct lockAttr *attr);
 int mutexCreate(handle_t *h);
 
 
-static inline int mutexCreateWithAttr(handle_t *h, const struct lockAttr *attr)
+__INLINE int mutexCreateWithAttr(handle_t *h, const struct lockAttr *attr)
 {
 	return phMutexCreate(h, attr);
 }
@@ -170,7 +171,7 @@ int phCondCreate(handle_t *h, const struct condAttr *attr);
 int condCreate(handle_t *h);
 
 
-static inline int condCreateWithAttr(handle_t *h, const struct condAttr *attr)
+__INLINE int condCreateWithAttr(handle_t *h, const struct condAttr *attr)
 {
 	return phCondCreate(h, attr);
 }

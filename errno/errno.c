@@ -19,6 +19,9 @@
 #include <arch.h>
 
 
+__EXPORT_INLINE int set_errno(int x);
+
+
 #ifdef __LIBPHOENIX_ARCH_TLS_SUPPORTED
 
 static __thread int __errno_tls;

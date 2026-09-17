@@ -35,6 +35,11 @@ WRAP_ERRNO_DEF(int, poll, (struct pollfd *fds, nfds_t nfds, int timeout_ms), (fd
 /* clang-format on */
 
 
+__EXPORT_INLINE unsigned short eventMaskFromPoll(int pollevmask);
+__EXPORT_INLINE int eventPollFromType(int evtype);
+__EXPORT_INLINE int eventPollFromMask(unsigned short evmask);
+
+
 extern int nsleep(time_t *sec, long *nsec, int clockid, int flags);
 
 

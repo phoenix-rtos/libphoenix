@@ -41,4 +41,15 @@
 #endif
 
 
+/*
+ * Macros for gnu89/gnu99/GCC-builtin non-conflicting way of declaring
+ * inline functions with external linkage in headers.
+ *
+ * Use __INLINE in the headers, then add __EXPORT_INLINE declaration
+ * in exactly one .c file.
+ */
+#define __INLINE        extern __inline __attribute__((__gnu_inline__))
+#define __EXPORT_INLINE __inline __attribute__((__gnu_inline__))
+
+
 #endif /* _LIBPHOENIX_SYS_CDEFS_H */

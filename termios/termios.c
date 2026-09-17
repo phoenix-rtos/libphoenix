@@ -18,6 +18,13 @@
 #include <errno.h>
 
 
+__EXPORT_INLINE speed_t cfgetispeed(const struct termios *termios_p);
+__EXPORT_INLINE speed_t cfgetospeed(const struct termios *termios_p);
+__EXPORT_INLINE int cfsetispeed(struct termios *termios_p, speed_t speed);
+__EXPORT_INLINE int cfsetospeed(struct termios *termios_p, speed_t speed);
+__EXPORT_INLINE int cfsetspeed(struct termios *termios_p, speed_t speed);
+
+
 int tcgetattr(int fildes, struct termios *termios_p)
 {
 	int ret;
