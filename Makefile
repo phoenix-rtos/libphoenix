@@ -69,7 +69,7 @@ include wchar/Makefile
 include ubsan/Makefile
 
 #include test/Makefile
-LIBM_FEATURE_CONFIG_IN := libm/libmcs/libm/include/libm_feature_config.h.in
+LIBM_FEATURE_CONFIG_IN := libm/include/libm_feature_config.h.in
 LIBM_FEATURE_CONFIG := $(BUILD_DIR)/include/libm_feature_config.h
 
 LIBM_CFG_WANT_COMPLEX := $(if $(filter y,$(LIBM_WANT_COMPLEX)),\#define LIBMCS_WANT_COMPLEX 1,\#undef LIBMCS_WANT_COMPLEX)

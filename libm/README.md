@@ -9,6 +9,11 @@ Usage: For each project it is suggested to set following
 - ```LIBM_LIBMCS_DAZ ?= y/n``` - (applicable only for libmcs) select whether denormals are zero. This is especially useful if underlying FPU has limited functionalities implemented.
 - ```LIBM_USE_HW ?= y``` - enable hardware intrinsics for math functions
 
+**Note:** Build headers are located in `libm/include/`. These mirror `libm/libmcs/libm/include`, where changes from the original libmcs headers are tracked in a submodule.
+When updating the libmcs version:
+1. Verify compatibility of new libmcs version with modified headers
+2. Once verified, migrate those changes to libphoenix as well
+
 # Architecture specific code
 Some targets might support instructions that implement parts of `math.h` required functions. Such implementation may be placed `arch/<target_name>`, and they will take precedence before software implementation, unless stated otherwise via appropriate flags. Please refer to already existing code if new architecture specific implementation is to be added. 
 
