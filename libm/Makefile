@@ -14,7 +14,7 @@ LIBM_LIBMCS_DAZ ?= n
 LIBM_WANT_COMPLEX ?= y
 LIBM_USE_HW ?= y
 
-CFLAGS += -Ilibm/libmcs/libm/include
+CFLAGS += -Ilibm/include
 CFLAGS += -I$(BUILD_DIR)/include
 
 $(foreach v,LIBM_USE_LIBMCS LIBM_USE_HW LIBM_WANT_COMPLEX LIBM_LIBMCS_DAZ, $(if $(filter-out y n,$($(v))),$(error $(v) must be set to 'y' or 'n', got '$($(v))')))
@@ -57,7 +57,7 @@ else
   SW_OBJS += $(addprefix $(PREFIX_O), $(patsubst %.c,%.o, $(patsubst %complex.c,, $(wildcard libm/phoenix/*.c))))
   SW_OBJS += $(addprefix $(PREFIX_O), $(patsubst %.c,%.o,$(wildcard libm/phoenix/mathd/*.c)))
   SW_OBJS += $(addprefix $(PREFIX_O), $(patsubst %.c,%.o,$(wildcard libm/phoenix/mathf/*.c)))
-  
+
   CFLAGS += -Ilibm/phoenix
 endif
 

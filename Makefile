@@ -69,7 +69,7 @@ include wchar/Makefile
 include ubsan/Makefile
 
 #include test/Makefile
-LIBM_FEATURE_CONFIG_IN := libm/libmcs/libm/include/libm_feature_config.h.in
+LIBM_FEATURE_CONFIG_IN := libm/include/libm_feature_config.h.in
 LIBM_FEATURE_CONFIG := $(BUILD_DIR)/include/libm_feature_config.h
 
 LIBM_CFG_WANT_COMPLEX := $(if $(filter y,$(LIBM_WANT_COMPLEX)),\#define LIBMCS_WANT_COMPLEX 1,\#undef LIBMCS_WANT_COMPLEX)
@@ -113,7 +113,7 @@ install-headers: $(SRCHEADERS) $(LIBM_FEATURE_CONFIG)
 	@echo INSTALL "$(HEADERS_INSTALL_DIR)/*"; \
 	mkdir -p "$(HEADERS_INSTALL_DIR)"; \
 	cp -a include/* "$(HEADERS_INSTALL_DIR)"; \
-	cp -a libm/libmcs/libm/include/* "$(HEADERS_INSTALL_DIR)"; \
+	cp -a libm/include/* "$(HEADERS_INSTALL_DIR)"; \
 	cp -a "$(LIBM_FEATURE_CONFIG)" "$(HEADERS_INSTALL_DIR)";
 
 # TODO: remove `rm crt0.o` when we will be sure it's not a symlink to libphoenix.a anymore
