@@ -129,8 +129,16 @@ extern void abort(void) __attribute__((__noreturn__));
 extern int atexit(void (*func)(void));
 
 
+/* Causes the specified function func to be called when the program terminates via quick_exit. */
+extern int at_quick_exit(void (*func)(void));
+
+
 /* Causes the program to terminate normally.*/
 extern void exit(int status) __attribute__((__noreturn__));
+
+
+/* Causes the program to terminate normally, without flushing streams and calling atexit handlers. */
+extern void quick_exit(int status) __attribute__((__noreturn__));
 
 
 /* Causes the program to terminate without cleanup.*/
