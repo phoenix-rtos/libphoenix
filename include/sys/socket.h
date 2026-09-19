@@ -101,6 +101,18 @@ __INLINE ssize_t recv(int socket, void *message, size_t length, int flags)
 	return recvfrom(socket, message, length, flags, NULL, NULL);
 }
 
+
+inline int sockatmark(int socket)
+{
+	int val;
+	if (ioctl(socket, SIOCATMARK, &val) < 0) {
+		/* errno set by ioctl */
+		return -1;
+	}
+	return val;
+}
+
+
 #ifdef __cplusplus
 }
 #endif
