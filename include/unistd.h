@@ -87,13 +87,13 @@ extern "C" {
 
 #define _POSIX_SPIN_LOCKS 202405L
 
-extern long sysconf(int name);
+long sysconf(int name);
 
 
-extern long pathconf(const char *path, int name);
+long pathconf(const char *path, int name);
 
 
-extern long fpathconf(int fildes, int name);
+long fpathconf(int fildes, int name);
 
 
 /* NOTE: Legacy from SUSv2, new applications should use sysconf(_SC_PAGESIZE) */
@@ -103,213 +103,213 @@ __INLINE int getpagesize(void)
 }
 
 
-extern int vfork(void);
+int vfork(void);
 
 
-extern pid_t fork(void);
+pid_t fork(void);
 
 
-extern int execl(const char *path, const char *arg, ...);
+int execl(const char *path, const char *arg, ...);
 
 
-extern int execle(const char *path, const char *arg, ...);
+int execle(const char *path, const char *arg, ...);
 
 
-extern int execlp(const char *path, const char *arg, ...);
+int execlp(const char *path, const char *arg, ...);
 
 
-extern int execve(const char *path, char *const argv[], char *const envp[]);
+int execve(const char *path, char *const argv[], char *const envp[]);
 
 
-extern int execvp(const char *file, char *const argv[]);
+int execvp(const char *file, char *const argv[]);
 
 
-extern int execvpe(const char *file, char *const argv[], char *const envp[]);
+int execvpe(const char *file, char *const argv[], char *const envp[]);
 
 
-extern int execv(const char *path, char *const argv[]);
+int execv(const char *path, char *const argv[]);
 
 
-extern pid_t getpid(void);
+pid_t getpid(void);
 
 
-extern pid_t getppid(void);
+pid_t getppid(void);
 
 
-extern uid_t getuid(void);
+uid_t getuid(void);
 
 
-extern uid_t geteuid(void);
+uid_t geteuid(void);
 
 
-extern gid_t getgid(void);
+gid_t getgid(void);
 
 
-extern gid_t getegid(void);
+gid_t getegid(void);
 
 
-extern int setuid(uid_t uid);
+int setuid(uid_t uid);
 
 
-extern int seteuid(uid_t uid);
+int seteuid(uid_t uid);
 
 
-extern int setgid(gid_t gid);
+int setgid(gid_t gid);
 
 
-extern int setegid(gid_t gid);
+int setegid(gid_t gid);
 
 
-extern int usleep(useconds_t usecs);
+int usleep(useconds_t usecs);
 
 
-extern unsigned int sleep(unsigned int seconds);
+unsigned int sleep(unsigned int seconds);
 
 
-extern int fsync(int fd);
+int fsync(int fd);
 
 
-extern void sync(void);
+void sync(void);
 
 
-extern int chdir(const char *path);
+int chdir(const char *path);
 
 
-extern int fchdir(int fd);
+int fchdir(int fd);
 
 
-extern int fchown(int fd, uid_t owner, gid_t group);
+int fchown(int fd, uid_t owner, gid_t group);
 
 
-extern int rmdir(const char *path);
+int rmdir(const char *path);
 
 
-extern ssize_t read(int fildes, void *buf, size_t nbyte);
+ssize_t read(int fildes, void *buf, size_t nbyte);
 
 
-extern ssize_t write(int fildes, const void *buf, size_t nbyte);
+ssize_t write(int fildes, const void *buf, size_t nbyte);
 
 
-extern ssize_t pread(int fildes, void *buf, size_t nbyte, off_t offset);
+ssize_t pread(int fildes, void *buf, size_t nbyte, off_t offset);
 
 
-extern ssize_t pwrite(int fildes, const void *buf, size_t nbyte, off_t offset);
+ssize_t pwrite(int fildes, const void *buf, size_t nbyte, off_t offset);
 
 
-extern int dup(int fildes);
+int dup(int fildes);
 
 
-extern int isatty(int fildes);
+int isatty(int fildes);
 
 
-extern int dup2(int fildes, int fildes2);
+int dup2(int fildes, int fildes2);
 
 
-extern void _exit(int status) __attribute__((__noreturn__));
+void _exit(int status) __attribute__((__noreturn__));
 
 
 /* Creates a symbolic link named linkpath which contains the string target. If linkpath exists, it will not be overwritten. */
-extern int symlink(const char *target, const char *linkpath);
+int symlink(const char *target, const char *linkpath);
 
 
 /* Creates a new link (also known as a hard link) to an existing file. If newpath exists, it will not be overwritten. */
-extern int link(const char *oldpath, const char *newpath);
+int link(const char *oldpath, const char *newpath);
 
 
-extern int unlink(const char *pathname);
+int unlink(const char *pathname);
 
 
-extern ssize_t readlink(const char *path, char *buf, size_t bufsiz);
+ssize_t readlink(const char *path, char *buf, size_t bufsiz);
 
 
-extern int access(const char *pathname, int mode);
+int access(const char *pathname, int mode);
 
 
-extern char *getcwd(char *buf, size_t size);
+char *getcwd(char *buf, size_t size);
 
 
-extern int getopt(int argc, char *const argv[], const char *optstring);
+int getopt(int argc, char *const argv[], const char *optstring);
 
 
-extern int close(int fildes);
+int close(int fildes);
 
 
-extern off_t lseek(int fildes, off_t offset, int whence);
+off_t lseek(int fildes, off_t offset, int whence);
 
 
-extern int pipe(int fildes[2]);
+int pipe(int fildes[2]);
 
 
-extern int truncate(const char *path, off_t length);
+int truncate(const char *path, off_t length);
 
 
-extern int ftruncate(int fildes, off_t length);
+int ftruncate(int fildes, off_t length);
 
 
-extern unsigned int alarm(unsigned int seconds);
+unsigned int alarm(unsigned int seconds);
 
 
-extern int issetugid(void);
+int issetugid(void);
 
 
-extern char *getlogin(void);
+char *getlogin(void);
 
 
-extern int getlogin_r(char *name, size_t namesize);
+int getlogin_r(char *name, size_t namesize);
 
 
-extern char *crypt(const char *key, const char *salt);
+char *crypt(const char *key, const char *salt);
 
 
-extern int setpgid(pid_t pid, pid_t pgid);
+int setpgid(pid_t pid, pid_t pgid);
 
 
-extern pid_t getpgid(pid_t pid);
+pid_t getpgid(pid_t pid);
 
 
-extern int setpgrp(void);
+int setpgrp(void);
 
 
-extern pid_t getpgrp(void);
+pid_t getpgrp(void);
 
 
-extern pid_t setsid(void);
+pid_t setsid(void);
 
 
-extern pid_t getsid(pid_t pid);
+pid_t getsid(pid_t pid);
 
 
-extern int gethostname(char *name, size_t namelen);
+int gethostname(char *name, size_t namelen);
 
 
-extern int sethostname(const char *name, size_t namelen);
+int sethostname(const char *name, size_t namelen);
 
 
-extern long gethostid(void);
+long gethostid(void);
 
 
-extern int sethostid(long hostid);
+int sethostid(long hostid);
 
 
-extern char *getpass(const char *prompt);
+char *getpass(const char *prompt);
 
 
-extern int getgroups(int size, gid_t list[]);
+int getgroups(int size, gid_t list[]);
 
 
-extern char *ttyname(int fildes);
+char *ttyname(int fildes);
 
 
-extern int ttyname_r(int fildes, char *name, size_t namesize);
+int ttyname_r(int fildes, char *name, size_t namesize);
 
 
-extern int pause(void);
+int pause(void);
 
 
-extern int chroot(const char *path);
+int chroot(const char *path);
 
 
-extern int nice(int incr);
+int nice(int incr);
 
 
 extern char *optarg;
