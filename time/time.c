@@ -154,7 +154,7 @@ char *asctime_r(const struct tm *tp, char *buf)
 	mon = tp->tm_mon < 0 || tp->tm_mon > 11 ? 12 : tp->tm_mon;
 
 	sprintf(buf, "%.3s %.3s %d %02d:%02d:%02d %d\n", wdayasc[wday], monasc[mon],
-		tp->tm_mday, tp->tm_hour, tp->tm_min, tp->tm_sec, tp->tm_year + 1900);
+			tp->tm_mday, tp->tm_hour, tp->tm_min, tp->tm_sec, tp->tm_year + 1900);
 
 	return buf;
 }
@@ -416,93 +416,94 @@ size_t strftime(char *__restrict s, size_t maxsize, const char *__restrict forma
 		if (*c == '%') {
 			c++;
 			switch (*c) {
-			case 'A':
-				tmp = wdayasc[timeptr->tm_wday < 7 ? timeptr->tm_wday : 7];
-				res = snprintf(s + size, maxsize - size, "%s", tmp);
-				break;
-			case 'a':
-				tmp = wdayasc[timeptr->tm_wday < 7 ? timeptr->tm_wday : 7];
-				res = snprintf(s + size, maxsize - size, "%.3s", tmp);
-				break;
-			case 'B':
-				tmp = monasc[timeptr->tm_mon < 12 ? timeptr->tm_mon : 12];
-				res = snprintf(s + size, maxsize - size, "%s", tmp);
-				break;
-			case 'b':
-				tmp = monasc[timeptr->tm_mon < 12 ? timeptr->tm_mon : 12];
-				res = snprintf(s + size, maxsize - size, "%.3s", tmp);
-				break;
-			case 'c':
-				res = snprintf(s + size, maxsize - size, "%.3s %.3s %u %02u:%02u:%02u %u",
-						wdayasc[timeptr->tm_wday < 7 ? timeptr->tm_wday : 7],
-						monasc[timeptr->tm_mon < 12 ? timeptr->tm_mon : 12],
-						timeptr->tm_mday,
-						timeptr->tm_hour,
-						timeptr->tm_min,
-						timeptr->tm_sec,
-						1900 + timeptr->tm_year);
-				break;
-			case 'd':
-				res = snprintf(s + size, maxsize - size, "%02u", timeptr->tm_mday);
-				break;
-			case 'e':
-				res = snprintf(s + size, maxsize - size, "%2u", timeptr->tm_mday);
-				break;
-			case 'H':
-				res = snprintf(s + size, maxsize - size, "%02u", timeptr->tm_hour);
-				break;
-			case 'j':
-				res = snprintf(s + size, maxsize - size, "%03u", timeptr->tm_yday + 1);
-				break;
-			case 'M':
-				res = snprintf(s + size, maxsize - size, "%02u", timeptr->tm_min);
-				break;
-			case 'm':
-				res = snprintf(s + size, maxsize - size, "%02u", timeptr->tm_mon < 12 ? timeptr->tm_mon + 1 : 13);
-				break;
-			case 'S':
-				res = snprintf(s + size, maxsize - size, "%02u", timeptr->tm_sec);
-				break;
-			case 's':
-				memcpy(&time, timeptr, sizeof(struct tm));
-				res = snprintf(s + size, maxsize - size, "%llu", mktime(&time));
-				break;
-			case 'T':
-				res = snprintf(s + size, maxsize - size, "%02u:%02u:%02u",
-						timeptr->tm_hour, timeptr->tm_min, timeptr->tm_sec);
-				break;
-			case 'w':
-				res = snprintf(s + size, maxsize - size, "%u", timeptr->tm_wday < 7 ? timeptr->tm_wday : 7);
-				break;
-			case 'Y':
-				res = snprintf(s + size, maxsize - size, "%u", 1900 + timeptr->tm_year);
-				break;
-			case 'y':
-				res = snprintf(s + size, maxsize - size, "%02u", timeptr->tm_year % 100);
-				break;
-			case 'Z':
-				c++;
-				continue;
-			case '%':
-				s[size] = *c;
-				res = 1;
-				break;
-			default: /* Unsupported conversion specifier */
-				if (maxsize - size < 3)
-					return 0;
-				s[size++] = '%';
-				s[size++] = *(c++);
-				continue;
+				case 'A':
+					tmp = wdayasc[timeptr->tm_wday < 7 ? timeptr->tm_wday : 7];
+					res = snprintf(s + size, maxsize - size, "%s", tmp);
+					break;
+				case 'a':
+					tmp = wdayasc[timeptr->tm_wday < 7 ? timeptr->tm_wday : 7];
+					res = snprintf(s + size, maxsize - size, "%.3s", tmp);
+					break;
+				case 'B':
+					tmp = monasc[timeptr->tm_mon < 12 ? timeptr->tm_mon : 12];
+					res = snprintf(s + size, maxsize - size, "%s", tmp);
+					break;
+				case 'b':
+					tmp = monasc[timeptr->tm_mon < 12 ? timeptr->tm_mon : 12];
+					res = snprintf(s + size, maxsize - size, "%.3s", tmp);
+					break;
+				case 'c':
+					res = snprintf(s + size, maxsize - size, "%.3s %.3s %u %02u:%02u:%02u %u",
+							wdayasc[timeptr->tm_wday < 7 ? timeptr->tm_wday : 7],
+							monasc[timeptr->tm_mon < 12 ? timeptr->tm_mon : 12],
+							timeptr->tm_mday,
+							timeptr->tm_hour,
+							timeptr->tm_min,
+							timeptr->tm_sec,
+							1900 + timeptr->tm_year);
+					break;
+				case 'd':
+					res = snprintf(s + size, maxsize - size, "%02u", timeptr->tm_mday);
+					break;
+				case 'e':
+					res = snprintf(s + size, maxsize - size, "%2u", timeptr->tm_mday);
+					break;
+				case 'H':
+					res = snprintf(s + size, maxsize - size, "%02u", timeptr->tm_hour);
+					break;
+				case 'j':
+					res = snprintf(s + size, maxsize - size, "%03u", timeptr->tm_yday + 1);
+					break;
+				case 'M':
+					res = snprintf(s + size, maxsize - size, "%02u", timeptr->tm_min);
+					break;
+				case 'm':
+					res = snprintf(s + size, maxsize - size, "%02u", timeptr->tm_mon < 12 ? timeptr->tm_mon + 1 : 13);
+					break;
+				case 'S':
+					res = snprintf(s + size, maxsize - size, "%02u", timeptr->tm_sec);
+					break;
+				case 's':
+					memcpy(&time, timeptr, sizeof(struct tm));
+					res = snprintf(s + size, maxsize - size, "%llu", mktime(&time));
+					break;
+				case 'T':
+					res = snprintf(s + size, maxsize - size, "%02u:%02u:%02u",
+							timeptr->tm_hour, timeptr->tm_min, timeptr->tm_sec);
+					break;
+				case 'w':
+					res = snprintf(s + size, maxsize - size, "%u", timeptr->tm_wday < 7 ? timeptr->tm_wday : 7);
+					break;
+				case 'Y':
+					res = snprintf(s + size, maxsize - size, "%u", 1900 + timeptr->tm_year);
+					break;
+				case 'y':
+					res = snprintf(s + size, maxsize - size, "%02u", timeptr->tm_year % 100);
+					break;
+				case 'Z':
+					c++;
+					continue;
+				case '%':
+					s[size] = *c;
+					res = 1;
+					break;
+				default: /* Unsupported conversion specifier */
+					if (maxsize - size < 3)
+						return 0;
+					s[size++] = '%';
+					s[size++] = *(c++);
+					continue;
 			}
 
 			if (res >= maxsize - size)
 				return 0;
 			size += res;
-
-		} else if (*c == 0) {
+		}
+		else if (*c == 0) {
 			s[size] = 0;
 			return size;
-		} else {
+		}
+		else {
 			s[size++] = *c;
 		}
 		c++;
