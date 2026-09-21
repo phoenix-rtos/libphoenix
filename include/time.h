@@ -5,19 +5,17 @@
  *
  * time.h
  *
- * Copyright 2017, 2018, 2024 Phoenix Systems
- * Author: Pawel Pisarczyk, Aleksander Kaminski, Lukasz Leczkowski
+ * Copyright 2017, 2018, 2024, 2026 Phoenix Systems
+ * Author: Pawel Pisarczyk, Aleksander Kaminski, Lukasz Leczkowski, Michal Lach
  *
- * This file is part of Phoenix-RTOS.
- *
- * %LICENSE%
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef _LIBPHOENIX_TIME_H_
 #define _LIBPHOENIX_TIME_H_
 
 
-#define SECS_TO_USECS_T(secs) (1000000ULL * (secs))
+#define SECS_TO_USECS_T(secs)   (1000000ULL * (secs))
 #define MSECS_TO_USECS_T(msecs) (1000ULL * (msecs))
 
 #include <sys/types.h>
@@ -26,9 +24,10 @@
 #define CLOCKS_PER_SEC 1000000
 
 
-#define CLOCK_MONOTONIC     0
-#define CLOCK_MONOTONIC_RAW 1
-#define CLOCK_REALTIME      2
+#define CLOCK_MONOTONIC         (0U)
+#define CLOCK_MONOTONIC_RAW     (1U)
+#define CLOCK_REALTIME          (2U)
+#define CLOCK_THREAD_CPUTIME_ID (3U)
 
 
 #ifdef __cplusplus

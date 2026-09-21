@@ -5,15 +5,14 @@
  *
  * time
  *
- * Copyright 2017, 2023 Phoenix Systems
- * Author: Andrzej Asztemborski, Jacek Maksymowicz
+ * Copyright 2017, 2023, 2026 Phoenix Systems
+ * Author: Andrzej Asztemborski, Jacek Maksymowicz, Michal Lach
  *
- * This file is part of Phoenix-RTOS.
- *
- * %LICENSE%
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <sys/time.h>
+#include <sys/threads.h>
 #include <time.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -98,24 +97,41 @@ time_t time(time_t *tp)
 
 int clock_gettime(clockid_t clk_id, struct timespec *tp)
 {
-	int err;
+	int err, tid;
 	time_t now, offs;
+	threadinfo_t info;
 
 	if (tp == NULL) {
 		return SET_ERRNO(-EINVAL);
 	}
 
-	if (clk_id != CLOCK_REALTIME && clk_id != CLOCK_MONOTONIC && clk_id != CLOCK_MONOTONIC_RAW) {
-		return SET_ERRNO(-EINVAL);
-	}
+	switch (clk_id) {
+		case CLOCK_REALTIME:
+			/* fallthrough */
+		case CLOCK_MONOTONIC_RAW:
+			/* fallthrough */
+		case CLOCK_MONOTONIC:
+			err = gettime(&now, &offs);
+			if (err < 0) {
+				return SET_ERRNO(err);
+			}
 
-	err = gettime(&now, &offs);
-	if (err < 0) {
-		return SET_ERRNO(err);
-	}
+			if (clk_id == CLOCK_REALTIME) {
+				now += offs;
+			}
 
-	if (clk_id == CLOCK_REALTIME) {
-		now += offs;
+			break;
+		case CLOCK_THREAD_CPUTIME_ID:
+			tid = gettid();
+			err = threadinfo(tid, PH_THREADINFO_CPUTIME, &info);
+			if (err != EOK) {
+				return SET_ERRNO(err);
+			}
+
+			now = info.cpuTime;
+			break;
+		default:
+			return SET_ERRNO(-EINVAL);
 	}
 
 	tp->tv_sec = now / (1000 * 1000);
