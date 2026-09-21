@@ -21,10 +21,6 @@
 #define PAGE_SIZE _PAGE_SIZE
 #define PAGESIZE  _PAGE_SIZE
 
-
-#define _POSIX_THREAD_DESTRUCTOR_ITERATIONS 4
-#define PTHREAD_DESTRUCTOR_ITERATIONS       _POSIX_THREAD_DESTRUCTOR_ITERATIONS
-
 #ifdef __ARCH_LIMITS
 #include __ARCH_LIMITS
 #else
@@ -35,5 +31,9 @@
 #include <phoenix/limits.h>
 
 #include <posix/limits.h>
+
+#define PTHREAD_DESTRUCTOR_ITERATIONS _POSIX_THREAD_DESTRUCTOR_ITERATIONS
+
+#define NGROUPS_MAX 8
 
 #endif
