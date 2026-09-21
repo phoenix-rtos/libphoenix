@@ -15,6 +15,7 @@
 
 #include <sys/types.h>
 #include <sys/threads.h>
+#include <sys/proc.h>
 #include <sys/msg.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -38,6 +39,8 @@ WRAP_ERRNO_DEF(pid_t, getpgrp, (void), ())
 
 WRAP_ERRNO_DEF(int, setsid, (void), ())
 WRAP_ERRNO_DEF(pid_t, getsid, (pid_t pid), (pid))
+
+WRAP_ERRNO_DEF(int, procExists, (pid_t pid, pid_t pgid, pid_t sid, unsigned int flags), (pid, pgid, sid, flags))
 
 
 #define PATH_DELIM ':'
