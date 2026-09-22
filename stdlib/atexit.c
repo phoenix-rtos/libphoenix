@@ -5,15 +5,14 @@
  *
  * atexit.c
  *
- * Copyright 2019 2022 Phoenix Systems
- * Author: Kamil Amanowicz, Dawid Szpejna
+ * Copyright 2019, 2022, 2026 Phoenix Systems
+ * Author: Kamil Amanowicz, Dawid Szpejna, Adam Greloch, Ziemowit Leszczynski
  *
- * This file is part of Phoenix-RTOS.
- *
- * %LICENSE%
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <stdlib.h>
+#include <stdbool.h>
 #include <sys/threads.h>
 
 
@@ -37,18 +36,25 @@ _Static_assert(ATEXIT_MAX <= sizeof(((struct atexit_node *)0)->fntype) * 8, "ATE
 
 /*
  * List of functions to be called on termination. Nodes other than the (optional)
- * statically allocated firstNode are allocated on demand.
+ * statically allocated one are allocated on demand.
  */
 struct atexit_list {
-	struct atexit_node *head;
-	struct atexit_node *newestNode;
-	struct atexit_node *firstNode;
-	unsigned int idx;
+	/* Top of the node chain - new functions are always registered into this node */
+	struct atexit_node *topNode;
+	/* Node that must not be freed, or NULL if the list has no statically allocated node */
+	struct atexit_node *staticNode;
+	/* Number of slots used in topNode */
+	unsigned int usedCnt;
+	/*
+	 * Counts the changes that invalidate a walk in progress: every registration and
+	 * every node release. It can safely wrap around.
+	 */
+	unsigned int modCnt;
 };
 
 
-/* The first node of the exit list is statically allocated to provide at least 32 function slots */
-static struct atexit_node atexit_firstNode;
+/* The exit list gets a statically allocated node, to provide at least 32 function slots */
+static struct atexit_node atexit_staticNode;
 
 
 static struct {
@@ -58,9 +64,8 @@ static struct {
 	handle_t lock;
 } atexit_common = {
 	.exitList = {
-		.head = &atexit_firstNode,
-		.newestNode = &atexit_firstNode,
-		.firstNode = &atexit_firstNode,
+		.topNode = &atexit_staticNode,
+		.staticNode = &atexit_staticNode,
 	},
 };
 
@@ -78,35 +83,35 @@ static int _atexit_register(struct atexit_list *list, int isarg, void (*fn)(void
 	struct atexit_node *node;
 
 	mutexLock(atexit_common.lock);
-	node = list->head;
+	node = list->topNode;
 
 	/* Allocate new node if there are no free slots left */
-	if ((node == NULL) || (list->idx == ATEXIT_MAX)) {
+	if ((node == NULL) || (list->usedCnt == ATEXIT_MAX)) {
 		node = (struct atexit_node *)calloc(1, sizeof(struct atexit_node));
 		if (node == NULL) {
 			mutexUnlock(atexit_common.lock);
 			return -1;
 		}
-		node->prev = list->head;
+		node->prev = list->topNode;
 
-		list->head = node;
-		list->idx = 0;
-		list->newestNode = node;
+		list->topNode = node;
+		list->usedCnt = 0;
 	}
 
 	if (isarg != 0) {
-		node->fntype |= (1u << list->idx);
-		node->args[list->idx] = arg;
+		node->fntype |= (1u << list->usedCnt);
+		node->args[list->usedCnt] = arg;
 	}
 	else {
-		node->fntype &= ~(1u << list->idx);
-		node->args[list->idx] = NULL;
+		node->fntype &= ~(1u << list->usedCnt);
+		node->args[list->usedCnt] = NULL;
 	}
 
-	node->destructors[list->idx] = fn;
-	node->handles[list->idx] = handle;
+	node->destructors[list->usedCnt] = fn;
+	node->handles[list->usedCnt] = handle;
 
-	list->idx++;
+	list->usedCnt++;
+	list->modCnt++;
 
 	mutexUnlock(atexit_common.lock);
 	return 0;
@@ -117,49 +122,86 @@ static int _atexit_register(struct atexit_list *list, int isarg, void (*fn)(void
 static void _atexit_finalize(struct atexit_list *list, void *handle)
 {
 	struct atexit_node *node, *prev;
-	unsigned int i;
+	destructor_t destructor;
+	unsigned int i, modCnt;
+	bool restart;
 
 	mutexLock(atexit_common.lock);
 
-	if ((list->head == NULL) || ((list->idx == 0) && (list->head->prev == NULL))) {
+	if (list->topNode == NULL) {
 		mutexUnlock(atexit_common.lock);
 		return;
 	}
 
 	/*
-	 * Iteration has to be over the list->head and newest node must be restored at the end
-	 * as the atexit functions may register new atexit functions.
+	 * Walk the chain from the top node down. The walk keeps its own cursor, so that
+	 * list->topNode always stays the top of the chain. A destructor registering new
+	 * functions must not detach the nodes the walk has already passed.
+	 *
+	 * The lock is dropped around every destructor call, so the list may change while
+	 * one runs. The walk saves modCnt before dropping the lock and restarts
+	 * from the top when it differs afterwards, which covers two cases:
+	 *  - functions registered by the destructor, which have to be called before the
+	 *    remaining, older ones,
+	 *  - nodes released by a concurrent or recursive finalize, which would otherwise
+	 *    leave the local cursor pointing into freed memory.
+	 *
+	 * Already called destructors are NULL, so a restart does not call anything twice.
 	 */
-	while (list->head != NULL) {
-		if (list->idx == 0) {
-			list->head = list->head->prev;
-			/* Nodes other than the newest one are always full */
-			list->idx = ATEXIT_MAX;
-			continue;
-		}
+	do {
+		restart = false;
+		node = list->topNode;
+		i = list->usedCnt;
+		modCnt = list->modCnt;
 
-		list->idx--;
-		destructor_t destructor = list->head->destructors[list->idx];
-		/* Do not call already called destructors and destructors not from current handle. */
-		if ((destructor != NULL) && ((handle == list->head->handles[list->idx]) || (handle == NULL))) {
-			/* Mark destructor as called. */
-			list->head->destructors[list->idx] = NULL;
+		while (node != NULL) {
+			while (i > 0) {
+				i--;
+				destructor = node->destructors[i];
 
-			if (((list->head->fntype >> list->idx) & 1) == 1) {
-				void *arg = list->head->args[list->idx];
-				mutexUnlock(atexit_common.lock);
-				((void (*)(void *))destructor)(arg);
+				/* skip already called destructors and destructors not from the current handle */
+				if ((destructor == NULL) || ((handle != NULL) && (handle != node->handles[i]))) {
+					continue;
+				}
+
+				/* mark destructor as called */
+				node->destructors[i] = NULL;
+
+				if (((node->fntype >> i) & 1) == 1) {
+					void *arg = node->args[i];
+					mutexUnlock(atexit_common.lock);
+					((void (*)(void *))destructor)(arg);
+				}
+				else {
+					mutexUnlock(atexit_common.lock);
+					destructor();
+				}
+				mutexLock(atexit_common.lock);
+
+				if (list->modCnt != modCnt) {
+					restart = true;
+					break;
+				}
 			}
-			else {
-				mutexUnlock(atexit_common.lock);
-				destructor();
-			}
-			mutexLock(atexit_common.lock);
-		}
-	}
 
-	node = list->newestNode;
-	while (node != list->firstNode) {
+			if (restart) {
+				break;
+			}
+
+			node = node->prev;
+
+			/* nodes other than the top one are always full */
+			i = ATEXIT_MAX;
+		}
+	} while (restart);
+
+	/*
+	 * Release the nodes that have been emptied completely, starting from the top
+	 * and stopping at the statically allocated node, or at the end of the chain
+	 * when the list has none (for quick exit list staticNode == NULL).
+	 */
+	node = list->topNode;
+	while (node != list->staticNode) {
 		for (i = 0; i < ATEXIT_MAX; i++) {
 			if (node->destructors[i] != NULL) {
 				break;
@@ -173,11 +215,22 @@ static void _atexit_finalize(struct atexit_list *list, void *handle)
 		prev = node->prev;
 		free(node);
 		node = prev;
+
+		/*
+		 * A concurrent or recursive walk may hold a cursor into the released
+		 * node, make it restart from the top instead of following it.
+		 */
+		list->modCnt++;
 	}
 
-	list->head = node;
-	list->newestNode = node;
+	list->topNode = node;
 
+	/*
+	 * Restore usedCnt to one past the highest live slot. Slots below it that a
+	 * handle specific finalize emptied stay unused on purpose. A new registration
+	 * has to land above every surviving one, or it would be called out of reverse
+	 * registration order.
+	 */
 	i = ATEXIT_MAX;
 	if (node == NULL) {
 		i = 0;
@@ -187,7 +240,7 @@ static void _atexit_finalize(struct atexit_list *list, void *handle)
 			i--;
 		}
 	}
-	list->idx = i;
+	list->usedCnt = i;
 
 	mutexUnlock(atexit_common.lock);
 }
