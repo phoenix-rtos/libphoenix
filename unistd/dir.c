@@ -174,13 +174,14 @@ static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, 
 		p = strchrnul(node, '/');
 		const size_t node_len = p - node;
 
-		/* skip trailing slashes to properly detect leaf node */
+		const int is_leaf = (*p == '\0') ? 1 : 0;
 		while (*p == '/') {
 			p += 1;
 		}
 
-		const int is_leaf = (*p == '\0') ? 1 : 0;
-
+		/* TODO: this is too permissive, because it allows creating files (not just directories)
+		 * with a path that has trailing slashes */
+		const int is_leaf_after_slashes = (*p == '\0') ? 1 : 0;
 		/* check for '.' and '..' */
 		if (node_len == 0) { /* multiple '/' */
 			continue;
@@ -203,11 +204,6 @@ static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, 
 		r += node_len;
 		*r = '\0';
 
-		if ((is_leaf != 0) && (resolve_last_symlink == 0)) {
-			/* WARN: slight inconsistency: we're not checking if the path actually exists in this case (TODO?) */
-			break;
-		}
-
 		/*
 		 * Number of initial unused `path` bytes that can be used to resolve current node. If link content is
 		 * longer we will not be able to merge it with remaining path and still fit in PATH_MAX buffer
@@ -219,11 +215,21 @@ static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, 
 		ssize_t symlink_len = _readlink_abs(result, path, readlink_max_len);
 
 		if (symlink_len < 0) {
-			if (errno == EINVAL) { /* not a symlink */
+			if (errno == EISDIR) {
 				errno = errsave;
 				continue;
 			}
-			else if ((errno == ENOENT) && (is_leaf != 0) && (allow_missing_leaf != 0)) { /* non-esixting leaf */
+
+			if (errno == EINVAL) { /* not a symlink or directory */
+				if (is_leaf == 0) {
+					return SET_ERRNO(-ENOTDIR);
+				}
+				else {
+					errno = errsave;
+					continue;
+				}
+			}
+			else if ((errno == ENOENT) && (is_leaf_after_slashes != 0) && (allow_missing_leaf != 0)) { /* non-existent leaf */
 				errno = errsave;
 				break;
 			}
@@ -231,6 +237,11 @@ static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, 
 				/* errno set by _readlink_abs */
 				return -1;
 			}
+		}
+
+		if ((is_leaf != 0) && (resolve_last_symlink == 0)) {
+			errno = errsave;
+			break;
 		}
 
 		if (symlink_len == 0) {
@@ -251,8 +262,11 @@ static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, 
 		}
 
 		/* prepend resolved symlink to remaining unresolved path */
-		p -= 1;
-		*p = '/';
+		if (is_leaf == 0) {
+			p -= 1;
+			*p = '/';
+		}
+
 		p -= symlink_len;
 		memmove(p, path, symlink_len);
 
@@ -596,7 +610,8 @@ static ssize_t _readlink_abs(const char *path, char *buf, size_t bufsiz)
 	}
 
 	if (!S_ISLNK(msg.o.attr.val)) {
-		return SET_ERRNO(-EINVAL);
+		ret = S_ISDIR(msg.o.attr.val) ? -EISDIR : -EINVAL;
+		return SET_ERRNO(ret);
 	}
 
 	memset(&msg, 0, sizeof(msg_t));
@@ -633,6 +648,11 @@ ssize_t readlink(const char *path, char *buf, size_t bufsiz)
 	free(canonical);
 
 	/* if error - errno set by _readlink_abs() */
+
+	if ((ret < 0) && (errno == EISDIR)) {
+		errno = EINVAL;
+	}
+
 	return ret;
 }
 
