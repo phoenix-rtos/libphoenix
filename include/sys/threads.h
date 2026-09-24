@@ -160,6 +160,9 @@ int semaphoreCount(semaphore_t *s);
 int semaphoreDown(semaphore_t *s, time_t timeout);
 
 
+int semaphoreDownAtClock(semaphore_t *s, time_t deadline, int clock);
+
+
 int semaphoreTryDown(semaphore_t *s);
 
 
