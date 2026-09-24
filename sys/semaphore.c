@@ -7,9 +7,7 @@
  * Copyright 2006 Pawel Pisarczyk
  * Author: Pawel Pisarczyk, Aleksander Kaminski
  *
- * This file is part of Phoenix-RTOS.
- *
- * %LICENSE%
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <stdbool.h>

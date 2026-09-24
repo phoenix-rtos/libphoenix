@@ -8,9 +8,7 @@
  * Copyright 2019 Phoenix Systems
  * Author: Andrzej Glowinski
  *
- * This file is part of Phoenix-RTOS.
- *
- * %LICENSE%
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef _LIMITS_H_
