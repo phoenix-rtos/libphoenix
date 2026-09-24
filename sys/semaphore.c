@@ -87,6 +87,46 @@ int semaphoreDown(semaphore_t *s, time_t timeout)
 }
 
 
+int semaphoreDownAtClock(semaphore_t *s, time_t deadline, int clock)
+{
+	int err;
+
+	if (s == NULL) {
+		return -EINVAL;
+	}
+
+	if ((clock != PH_CLOCK_REALTIME) && (clock != PH_CLOCK_MONOTONIC)) {
+		return -EINVAL;
+	}
+
+	mutexLock(s->mutex);
+
+	do {
+		if (s->v > 0) {
+			--s->v;
+			err = 0;
+			break;
+		}
+
+		/*
+		 * An absolute deadline at or before the epoch has always passed. It has
+		 * to be answered here: condClockWait() reads 0 as "no deadline" and
+		 * rejects a negative one with -EINVAL.
+		 */
+		if (deadline <= 0) {
+			err = -ETIME;
+			break;
+		}
+
+		err = condClockWait(s->cond, s->mutex, deadline, clock);
+	} while ((err == 0) || (err == -EINTR));
+
+	mutexUnlock(s->mutex);
+
+	return err;
+}
+
+
 int semaphoreTryDown(semaphore_t *s)
 {
 	int ret;
