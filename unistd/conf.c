@@ -38,6 +38,10 @@ long sysconf(int name)
 			return _PAGE_SIZE;
 		case _SC_SPIN_LOCKS:
 			return _POSIX_SPIN_LOCKS;
+		case _SC_SEM_VALUE_MAX:
+			return SEM_VALUE_MAX;
+		case _SC_SEM_NSEMS_MAX:
+			return SEM_NSEMS_MAX;
 		default:
 			errno = EINVAL;
 			return -1;
