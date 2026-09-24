@@ -215,21 +215,16 @@ static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, 
 		const size_t readlink_max_len = p - path;
 
 		/* (hackish) save some messsaging by not calling lstat, but directly readlink() and checking error code */
-		int errsave = errno;
 		ssize_t symlink_len = _readlink_abs(result, path, readlink_max_len);
-
 		if (symlink_len < 0) {
-			if (errno == EINVAL) { /* not a symlink */
-				errno = errsave;
+			if (symlink_len == -EINVAL) { /* not a symlink */
 				continue;
 			}
-			else if ((errno == ENOENT) && (is_leaf != 0) && (allow_missing_leaf != 0)) { /* non-esixting leaf */
-				errno = errsave;
+			else if ((symlink_len == -ENOENT) && (is_leaf != 0) && (allow_missing_leaf != 0)) { /* non-esixting leaf */
 				break;
 			}
 			else {
-				/* errno set by _readlink_abs */
-				return -1;
+				return SET_ERRNO(symlink_len);
 			}
 		}
 
@@ -577,7 +572,7 @@ static ssize_t _readlink_abs(const char *path, char *buf, size_t bufsiz)
 
 	int ret = safe_lookup(path, &oid, NULL);
 	if (ret < 0) {
-		return SET_ERRNO(ret);
+		return ret;
 	}
 
 	msg_t msg = {
@@ -588,15 +583,16 @@ static ssize_t _readlink_abs(const char *path, char *buf, size_t bufsiz)
 
 	ret = msgSend(oid.port, &msg);
 	if (ret != EOK) {
-		return SET_ERRNO(ret);
+		return ret;
 	}
 
 	if (msg.o.err < 0) {
-		return SET_ERRNO(msg.o.err);
+		return msg.o.err;
 	}
 
 	if (!S_ISLNK(msg.o.attr.val)) {
-		return SET_ERRNO(-EINVAL);
+		ret = S_ISDIR(msg.o.attr.val) ? -EISDIR : -EINVAL;
+		return ret;
 	}
 
 	memset(&msg, 0, sizeof(msg_t));
@@ -607,14 +603,10 @@ static ssize_t _readlink_abs(const char *path, char *buf, size_t bufsiz)
 	msg.o.data = buf;
 	ret = msgSend(oid.port, &msg);
 	if (ret != EOK) {
-		return SET_ERRNO(ret);
+		return ret;
 	}
 
-	if (msg.o.err < 0) {
-		return SET_ERRNO(msg.o.err);
-	}
-
-	/* number of bytes written without terminating NULL byte */
+	/* number of bytes written without terminating NULL byte or retcode */
 	return msg.o.err;
 }
 
@@ -632,8 +624,7 @@ ssize_t readlink(const char *path, char *buf, size_t bufsiz)
 
 	free(canonical);
 
-	/* if error - errno set by _readlink_abs() */
-	return ret;
+	return SET_ERRNO(ret);
 }
 
 
