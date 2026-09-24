@@ -34,7 +34,7 @@
 #define _POSIX_PIPE_BUF                     512
 #define _POSIX_RE_DUP_MAX                   255
 #define _POSIX_RTSIG_MAX                    8
-#define _POSIX_SEM_NSEMS_MAX                256
+#define _POSIX_SEM_NSEMS_MAX                128
 #define _POSIX_SEM_VALUE_MAX                32767
 #define _POSIX_SIGQUEUE_MAX                 32
 #define _POSIX_SSIZE_MAX                    32767
