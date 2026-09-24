@@ -5,8 +5,8 @@
  *
  * limits.h
  *
- * Copyright 2019 Phoenix Systems
- * Author: Andrzej Glowinski
+ * Copyright 2019, 2026 Phoenix Systems
+ * Author: Andrzej Glowinski, Michal Lach
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -33,5 +33,8 @@
 #include <phoenix/limits.h>
 
 #include <posix/limits.h>
+
+#define SEM_VALUE_MAX INT_MAX
+#define SEM_NSEMS_MAX _POSIX_SEM_NSEMS_MAX
 
 #endif
