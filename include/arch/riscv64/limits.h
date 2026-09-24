@@ -18,31 +18,36 @@
 
 #include "arch.h"
 
-#define SCHAR_MIN -128
+#define SCHAR_MIN (-128)
 #define SCHAR_MAX 127
 #define UCHAR_MAX 255
 
+#ifdef __CHAR_UNSIGNED__
+#define CHAR_MIN 0
+#define CHAR_MAX UCHAR_MAX
+#else
 #define CHAR_MIN SCHAR_MIN
 #define CHAR_MAX SCHAR_MAX
+#endif
 #define CHAR_BIT 8
 
 #define MB_LEN_MAX 4
 
-#define SHRT_MIN  -32768
+#define SHRT_MIN  (-32768)
 #define SHRT_MAX  32767
 #define USHRT_MAX 65535
 
-#define INT_MIN  -2147483648
+#define INT_MIN  (-INT_MAX - 1)
 #define INT_MAX  0x7fffffff
-#define UINT_MAX 0xffffffff
+#define UINT_MAX 0xffffffffU
 
-#define LONG_MIN  0x8000000000000000L
+#define LONG_MIN  (-LONG_MAX - 1L)
 #define LONG_MAX  0x7fffffffffffffffL
-#define ULONG_MAX 0xffffffffffffffffL
+#define ULONG_MAX 0xffffffffffffffffUL
 
-#define LONG_LONG_MIN  LONG_MIN
-#define LONG_LONG_MAX  LONG_MAX
-#define ULONG_LONG_MAX ULONG_MAX
+#define LONG_LONG_MIN  (-LONG_LONG_MAX - 1LL)
+#define LONG_LONG_MAX  0x7fffffffffffffffLL
+#define ULONG_LONG_MAX 0xffffffffffffffffULL
 #define LLONG_MIN      LONG_LONG_MIN
 #define LLONG_MAX      LONG_LONG_MAX
 #define ULLONG_MAX     ULONG_LONG_MAX
