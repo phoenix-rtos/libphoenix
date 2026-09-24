@@ -58,7 +58,7 @@ static unsigned long int strtoul_common(const char *nptr, char **endptr, int bas
 		cutoff = ULONG_MAX;
 	}
 	else {
-		cutoff = (negative != 0) ? -LONG_MIN : LONG_MAX;
+		cutoff = (negative != 0) ? -(unsigned long int)LONG_MIN : LONG_MAX;
 	}
 
 	cutlim = (int)(cutoff % base);

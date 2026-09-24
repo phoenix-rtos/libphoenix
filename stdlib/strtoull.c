@@ -77,7 +77,7 @@ static unsigned long long int strtoll_common(const char *nptr, char **endptr, in
 		cutoff = ULLONG_MAX;
 	}
 	else {
-		cutoff = (neg != 0) ? -LLONG_MIN : LLONG_MAX;
+		cutoff = (neg != 0) ? -(unsigned long long int)LLONG_MIN : LLONG_MAX;
 	}
 
 	cutlim = (int)(cutoff % base);
@@ -124,7 +124,7 @@ static unsigned long long int strtoll_common(const char *nptr, char **endptr, in
 			acc = ULLONG_MAX;
 		}
 		else {
-			acc = (neg != 0) ? -LLONG_MIN : LLONG_MAX;
+			acc = (neg != 0) ? -(unsigned long long int)LLONG_MIN : LLONG_MAX;
 		}
 	}
 	else if (neg != 0) {
