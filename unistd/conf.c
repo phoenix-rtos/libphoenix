@@ -118,9 +118,9 @@ long sysconf(int name)
 			/* Real-time signals are not supported. */
 			return -1;
 		case _SC_SEM_NSEMS_MAX:
+			return SEM_NSEMS_MAX;
 		case _SC_SEM_VALUE_MAX:
-			/* POSIX semaphores are not supported. */
-			return -1;
+			return SEM_VALUE_MAX;
 		case _SC_SS_REPL_MAX:
 			/* The Process Sporadic Server option is not supported. */
 			return -1;
