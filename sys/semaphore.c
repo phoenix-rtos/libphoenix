@@ -18,6 +18,22 @@
 #include <time.h>
 
 
+int semaphoreCount(semaphore_t *s)
+{
+	int ret;
+
+	if (s == NULL) {
+		return -EINVAL;
+	}
+
+	mutexLock(s->mutex);
+	ret = (int)s->v;
+	mutexUnlock(s->mutex);
+
+	return ret;
+}
+
+
 int semaphoreCreate(semaphore_t *s, unsigned int v)
 {
 	static const struct condAttr cAttr = { .clock = PH_CLOCK_MONOTONIC, .type = PH_COND_NORMAL };
@@ -68,6 +84,28 @@ int semaphoreDown(semaphore_t *s, time_t timeout)
 	mutexUnlock(s->mutex);
 
 	return err;
+}
+
+
+int semaphoreTryDown(semaphore_t *s)
+{
+	int ret;
+
+	if (s == NULL) {
+		return -EINVAL;
+	}
+
+	mutexLock(s->mutex);
+	if (s->v > 0) {
+		--s->v;
+		ret = EOK;
+	}
+	else {
+		ret = -EAGAIN;
+	}
+	mutexUnlock(s->mutex);
+
+	return ret;
 }
 
 
