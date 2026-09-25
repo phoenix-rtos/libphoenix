@@ -1,0 +1,7 @@
+#ifndef FEATURE_CONFIG
+#define FEATURE_CONFIG
+
+#undef LIBMCS_WANT_COMPLEX
+#undef LIBMCS_FPU_DAZ
+
+#endif
