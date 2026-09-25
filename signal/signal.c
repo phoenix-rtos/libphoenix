@@ -46,9 +46,13 @@ int kill(pid_t pid, int sig)
 }
 
 
+/*
+ * OS-LIMITATION: killpg(1, sig) maps to kill(-1, sig), which the kernel reads as
+ * the caller's whole session rather than process group 1.
+ */
 int killpg(pid_t pgrp, int sig)
 {
-	if (sig < 0 || sig >= NSIG) {
+	if (sig < 0 || sig >= NSIG || pgrp < 0) {
 		return SET_ERRNO(-EINVAL);
 	}
 	if (pgrp == 0) {
