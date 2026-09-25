@@ -74,11 +74,13 @@ LIBM_FEATURE_CONFIG := $(BUILD_DIR)/include/libm_feature_config.h
 
 LIBM_CFG_WANT_COMPLEX := $(if $(filter y,$(LIBM_WANT_COMPLEX)),\#define LIBMCS_WANT_COMPLEX 1,\#undef LIBMCS_WANT_COMPLEX)
 LIBM_CFG_FPU_DAZ := $(if $(filter y,$(LIBM_LIBMCS_DAZ)),\#define LIBMCS_FPU_DAZ 1,\#undef LIBMCS_FPU_DAZ)
+LIBM_CFG_MATH_ERRHANDLING := $(if $(filter y,$(LIBM_USE_LIBMCS)),\#define math_errhandling 0,\#define math_errhandling MATH_ERRNO)
 
 $(LIBM_FEATURE_CONFIG): $(LIBM_FEATURE_CONFIG_IN) FORCE
 	@mkdir -p $(@D)
 	$(SIL)$(SED) -e 's|\#undef LIBMCS_WANT_COMPLEX|$(LIBM_CFG_WANT_COMPLEX)|' \
-		-e 's|\#undef LIBMCS_FPU_DAZ|$(LIBM_CFG_FPU_DAZ)|' "$<" > "$@.tmp"
+		-e 's|\#undef LIBMCS_FPU_DAZ|$(LIBM_CFG_FPU_DAZ)|' \
+		-e 's|\#define math_errhandling MATH_ERRNO|$(LIBM_CFG_MATH_ERRHANDLING)|' "$<" > "$@.tmp"
 	$(SIL)if cmp -s "$@.tmp" "$@"; then \
 		rm -f "$@.tmp"; \
 	else \

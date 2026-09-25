@@ -3,5 +3,6 @@
 
 #undef LIBMCS_WANT_COMPLEX
 #undef LIBMCS_FPU_DAZ
+#define math_errhandling MATH_ERRNO
 
 #endif

@@ -41,13 +41,15 @@ ifeq ($(LIBM_USE_LIBMCS), y)
     SW_OBJS += $(addprefix $(PREFIX_O), $(patsubst %.c,%.o,$(wildcard libm/libmcs/libm/complexf/internal/*.c)))
     SW_OBJS += $(addprefix $(PREFIX_O), $(patsubst %.c,%.o,$(wildcard libm/libmcs/libm/complexf/*.c)))
   endif
-  
+
   # fenv.c implementation is target specific
   SW_OBJS += $(addprefix $(PREFIX_O), $(patsubst %.c,%.o, $(filter-out %fenv.c,$(wildcard libm/libmcs/libm/common/*.c))))
   SW_OBJS += $(addprefix $(PREFIX_O), $(patsubst %.c,%.o,$(wildcard libm/libmcs/libm/mathf/*.c)))
   SW_OBJS += $(addprefix $(PREFIX_O), $(patsubst %.c,%.o,$(wildcard libm/libmcs/libm/mathf/internal/*.c)))
   SW_OBJS += $(addprefix $(PREFIX_O), $(patsubst %.c,%.o,$(wildcard libm/libmcs/libm/mathd/*.c)))
   SW_OBJS += $(addprefix $(PREFIX_O), $(patsubst %.c,%.o,$(wildcard libm/libmcs/libm/mathd/internal/*.c)))
+
+  CFLAGS += -DLIBM_LIBMCS_IMPL
 else
   ifeq ($(LIBM_WANT_COMPLEX), y)
     SW_OBJS += $(addprefix $(PREFIX_O), $(patsubst %.c,%.o, libm/phoenix/complex.c))
@@ -62,5 +64,7 @@ else
 endif
 
 # Clear functions that already implemented in hardware
+# fixme: This currently clears long double versions from libmcs implementation for
+# math functions with hardware implementation.
 OBJS += $(foreach f,$(SW_OBJS),$(if $(filter $(notdir $(f)),$(notdir $(HW_OBJS))),,$(f)))
 OBJS += $(HW_OBJS)

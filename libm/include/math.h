@@ -16,7 +16,21 @@ extern "C"{
  */
 #define MATH_ERRNO          1
 #define MATH_ERREXCEPT      2
-#define math_errhandling    MATH_ERRNO
+/* 
+ FIXME: Since LIBMCS does not set errno, it should fallback
+ to error signalization via MATH_ERREXCEPT. This means that
+ we should advertise error handling via fenv.h implementation.
+ This however requires per platform implementation of fenv.h
+ which currently is not present. For now this definition is
+ moved to feature config.
+
+ It is advised to:
+ 1. Add per platform implementation of fenv.h
+ 2. Change this macro to advertise error signaling
+ via fenv.h interface
+*/
+// #define math_errhandling    MATH_ERRNO
+
 
 typedef float  float_t;
 typedef double double_t;
