@@ -5,12 +5,10 @@
  *
  * sys/threads
  *
- * Copyright 2017, 2018 Phoenix Systems
- * Author: Pawel Pisarczyk, Aleksander Kaminski
+ * Copyright 2017, 2018, 2026 Phoenix Systems
+ * Author: Pawel Pisarczyk, Aleksander Kaminski, Michal Lach
  *
- * This file is part of Phoenix-RTOS.
- *
- * %LICENSE%
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef _LIBPHOENIX_SYS_THREADS_H_
@@ -156,7 +154,16 @@ int mutexUnlock(handle_t h);
 int semaphoreCreate(semaphore_t *s, unsigned int v);
 
 
+int semaphoreCount(semaphore_t *s);
+
+
 int semaphoreDown(semaphore_t *s, time_t timeout);
+
+
+int semaphoreDownAtClock(semaphore_t *s, time_t deadline, int clock);
+
+
+int semaphoreTryDown(semaphore_t *s);
 
 
 int semaphoreUp(semaphore_t *s);
