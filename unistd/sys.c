@@ -324,7 +324,7 @@ int usleep(useconds_t usecs)
 	time_t sec = usecs / (1000 * 1000);
 	long nsec = (usecs % (1000 * 1000)) * 1000;
 
-	err = nsleep(&sec, &nsec, CLOCK_MONOTONIC, 0);
+	err = nsleep(&sec, &nsec, PH_CLOCK_MONOTONIC, 0);
 
 	SET_ERRNO(err);
 
@@ -339,7 +339,7 @@ unsigned sleep(unsigned seconds)
 	long nsec = 0;
 	unsigned unslept;
 
-	err = nsleep(&sec, &nsec, CLOCK_MONOTONIC, 0);
+	err = nsleep(&sec, &nsec, PH_CLOCK_MONOTONIC, 0);
 	unslept = (err == -EINTR) ? (unsigned)sec : 0;
 
 	return unslept;
