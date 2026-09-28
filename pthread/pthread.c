@@ -26,6 +26,7 @@
 #include <unistd.h>
 
 #include "../common/util.h"
+#include "../common/cpuclock.h"
 
 #define ALIGN(value, size) ((((value) + (size) - 1) / (size)) * (size))
 
@@ -595,6 +596,24 @@ static __attribute__((noreturn)) void pthread_do_exit(pthread_ctx *ctx, void *va
 __attribute__((noreturn)) void pthread_exit(void *value_ptr)
 {
 	pthread_do_exit((pthread_ctx *)pthread_self(), value_ptr, 1);
+}
+
+
+int pthread_getcpuclockid(pthread_t thread_id, clockid_t *clock_id)
+{
+	pthread_ctx *ctx = (pthread_ctx *)thread_id;
+
+	if (ctx == NULL || clock_id == NULL) {
+		return EINVAL;
+	}
+
+	if (!CPUCLOCK_ID_FITS(ctx->id)) {
+		return EINVAL;
+	}
+
+	*clock_id = CPUCLOCK_ID_THREAD(ctx->id);
+
+	return EOK;
 }
 
 
@@ -1316,13 +1335,6 @@ int sched_getscheduler(pid_t pid)
 }
 
 
-static void us_to_timespec(time_t abstime_us, struct timespec *__restrict time)
-{
-	time->tv_sec = abstime_us / (1000 * 1000);
-	time->tv_nsec = (abstime_us % (1000 * 1000)) * 1000;
-}
-
-
 int __getSystickInterval(void)
 {
 	return pthread_common.systick_interval;
@@ -1339,7 +1351,7 @@ int sched_rr_get_interval(pid_t pid, struct timespec *tp)
 		return SET_ERRNO(-ESRCH);
 	}
 
-	us_to_timespec(__getSystickInterval(), tp);
+	__usToTimespec(__getSystickInterval(), tp);
 	return EOK;
 }
 

@@ -24,10 +24,11 @@
 #define CLOCKS_PER_SEC 1000000
 
 
-#define CLOCK_MONOTONIC         (0U)
-#define CLOCK_MONOTONIC_RAW     (1U)
-#define CLOCK_REALTIME          (2U)
-#define CLOCK_THREAD_CPUTIME_ID (3U)
+#define CLOCK_MONOTONIC          (0U)
+#define CLOCK_MONOTONIC_RAW      (1U)
+#define CLOCK_REALTIME           (2U)
+#define CLOCK_THREAD_CPUTIME_ID  (3U)
+#define CLOCK_PROCESS_CPUTIME_ID (4U)
 
 
 #ifdef __cplusplus
@@ -103,7 +104,13 @@ extern time_t timelocal(struct tm *tm);
 extern time_t timegm(struct tm *tm);
 
 
+extern int clock_getres(clockid_t clock_id, struct timespec *res);
+
+
 extern int clock_gettime(clockid_t clk_id, struct timespec *tp);
+
+
+extern int clock_getcpuclockid(pid_t pid, clockid_t *clock_id);
 
 
 extern int clock_settime(clockid_t clock_id, const struct timespec *tp);
