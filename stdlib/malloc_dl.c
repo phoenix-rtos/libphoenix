@@ -30,15 +30,15 @@
 #include <unistd.h>
 #include <malloc.h>
 
-#define CEIL(value, size)          ((((value) + (size) - 1U) / (size)) * (size))
-#define FLOOR(value, size)         (((value) / (size)) * (size))
+#define CEIL(value, size)  ((((value) + (size) - 1U) / (size)) * (size))
+#define FLOOR(value, size) (((value) / (size)) * (size))
 
-#define CHUNK_PUSED                (1U)
-#define CHUNK_CUSED                (2U)
+#define CHUNK_PUSED (1U)
+#define CHUNK_CUSED (2U)
 
-#define CHUNK_OVERHEAD             CEIL(__builtin_offsetof(chunk_t, next), 8U)
-#define CHUNK_MIN_SIZE             CEIL(__builtin_offsetof(chunk_t, node) + sizeof(size_t), 8U)
-#define CHUNK_SMALLBIN_MAX_SIZE    (256U - CHUNK_OVERHEAD)
+#define CHUNK_OVERHEAD          CEIL(__builtin_offsetof(chunk_t, next), 8U)
+#define CHUNK_MIN_SIZE          CEIL(__builtin_offsetof(chunk_t, node) + sizeof(size_t), 8U)
+#define CHUNK_SMALLBIN_MAX_SIZE (256U - CHUNK_OVERHEAD)
 
 
 typedef struct {
@@ -49,7 +49,7 @@ typedef struct {
 
 
 typedef struct _chunk_t {
-/*	size_t prevSize; This is a foot field of the previous chunk! */
+	/*	size_t prevSize; This is a foot field of the previous chunk! */
 	size_t size;
 	heap_t *heap;
 
@@ -146,24 +146,24 @@ static inline unsigned int malloc_getlidx(size_t size)
 
 static inline bool malloc_chunkIsFirst(chunk_t *chunk)
 {
-	return (chunk->heap->space == (uint8_t*) chunk);
+	return (chunk->heap->space == (uint8_t *)chunk);
 }
 
 
 static bool malloc_chunkIsLast(chunk_t *chunk)
 {
-	return ((uintptr_t) chunk + malloc_chunkSize(chunk) + CHUNK_MIN_SIZE > (uintptr_t) chunk->heap + chunk->heap->size);
+	return ((uintptr_t)chunk + malloc_chunkSize(chunk) + CHUNK_MIN_SIZE > (uintptr_t)chunk->heap + chunk->heap->size);
 }
 
 
 static inline chunk_t *malloc_chunkPrev(chunk_t *chunk)
 {
-	unsigned int prevSize = (chunk->size & CHUNK_PUSED) ? 0U : *((size_t *) chunk - 1U);
+	unsigned int prevSize = (chunk->size & CHUNK_PUSED) ? 0U : *((size_t *)chunk - 1U);
 	if (prevSize == 0U) {
 		return NULL;
 	}
 
-	return (chunk_t *) ((uintptr_t) chunk - prevSize);
+	return (chunk_t *)((uintptr_t)chunk - prevSize);
 }
 
 
@@ -173,14 +173,14 @@ static inline chunk_t *malloc_chunkNext(chunk_t *chunk)
 		return NULL;
 	}
 
-	return (chunk_t *) ((uintptr_t) chunk + malloc_chunkSize(chunk));
+	return (chunk_t *)((uintptr_t)chunk + malloc_chunkSize(chunk));
 }
 
 
 static inline void malloc_chunkSetFooter(chunk_t *chunk)
 {
 	size_t size = malloc_chunkSize(chunk);
-	*((size_t *)((uintptr_t) chunk + size) - 1U) = size;
+	*((size_t *)((uintptr_t)chunk + size) - 1U) = size;
 }
 
 
@@ -274,7 +274,7 @@ static void _malloc_chunkSplit(chunk_t *chunk, size_t size)
 
 	_malloc_chunkRemove(chunk);
 
-	sibling = (chunk_t *) ((uintptr_t) chunk + size);
+	sibling = (chunk_t *)((uintptr_t)chunk + size);
 	malloc_chunkInit(sibling, chunk->heap, malloc_chunkSize(chunk) - size);
 
 	chunk->size = size | CHUNK_PUSED;
@@ -334,7 +334,7 @@ static heap_t *_malloc_heapAlloc(size_t size)
 		return NULL;
 	}
 
-	chunk = (chunk_t*) heap->space;
+	chunk = (chunk_t *)heap->space;
 
 	malloc_heapInit(heap, heapSize);
 
@@ -372,19 +372,21 @@ static inline void *_malloc_allocFrom(chunk_t *chunk, size_t size)
 		malloc_common.maxalloc = usable;
 	}
 
-	return (void *) ((uintptr_t) chunk + CHUNK_OVERHEAD);
+	return (void *)((uintptr_t)chunk + CHUNK_OVERHEAD);
 }
 
 
 static void *_malloc_allocLarge(size_t size)
 {
 	/* Lookup table to speed-up operation reverse to malloc_getlidx(). */
+	/* clang-format off */
 	static const size_t lookup[32] = {
-		   0x17f,    0x1ff,    0x2ff,    0x3ff,    0x5ff,    0x7ff,    0xbff,      0xfff,
-		  0x17ff,   0x1fff,   0x2fff,   0x3fff,   0x5fff,   0x7fff,   0xbfff,     0xffff,
-		 0x17fff,  0x1ffff,  0x2ffff,  0x3ffff,  0x5ffff,  0x7ffff,  0xbffff,    0xfffff,
-		0x17ffff, 0x1fffff, 0x2fffff, 0x3fffff, 0x5fffff, 0x7fffff, 0xbfffff,        0x0
+		   0x17f,    0x1ff,    0x2ff,    0x3ff,    0x5ff,    0x7ff,    0xbff,    0xfff,
+		  0x17ff,   0x1fff,   0x2fff,   0x3fff,   0x5fff,   0x7fff,   0xbfff,   0xffff,
+		 0x17fff,  0x1ffff,  0x2ffff,  0x3ffff,  0x5ffff,  0x7ffff,  0xbffff,  0xfffff,
+		0x17ffff, 0x1fffff, 0x2fffff, 0x3fffff, 0x5fffff, 0x7fffff, 0xbfffff,      0x0
 	};
+	/* clang-format on */
 
 	unsigned int idx = malloc_getlidx(size);
 	unsigned int binmap = malloc_common.lbinmap & ~((1U << idx) - 1U);
@@ -408,7 +410,7 @@ static void *_malloc_allocLarge(size_t size)
 			return NULL;
 		}
 
-		chunk = (chunk_t *) heap->space;
+		chunk = (chunk_t *)heap->space;
 	}
 
 	return _malloc_allocFrom(chunk, size);
@@ -440,7 +442,7 @@ static void *_malloc_allocSmall(size_t size)
 			return NULL;
 		}
 
-		chunk = (chunk_t *) heap->space;
+		chunk = (chunk_t *)heap->space;
 
 		if (malloc_chunkCanSplit(chunk, idxSize)) {
 			_malloc_chunkSplit(chunk, idxSize);
@@ -531,7 +533,7 @@ void free(void *ptr)
 
 	mutexLock(malloc_common.mutex);
 
-	chunk = (chunk_t *) ((uintptr_t) ptr - CHUNK_OVERHEAD);
+	chunk = (chunk_t *)((uintptr_t)ptr - CHUNK_OVERHEAD);
 	heap = chunk->heap;
 
 	if (!(chunk->size & CHUNK_CUSED)) {
@@ -552,7 +554,7 @@ void free(void *ptr)
 	_malloc_chunkJoin(chunk);
 
 	if (heap->freesz == heap->size - sizeof(heap_t)) {
-		chunk = (chunk_t *) heap->space;
+		chunk = (chunk_t *)heap->space;
 		_malloc_chunkRemove(chunk);
 		malloc_common.mapsz -= heap->size;
 		munmap(heap, heap->size);
@@ -587,13 +589,13 @@ void *realloc(void *ptr, size_t size)
 
 	mutexLock(malloc_common.mutex);
 
-	chunk = (chunk_t *) ((uintptr_t) ptr - CHUNK_OVERHEAD);
+	chunk = (chunk_t *)((uintptr_t)ptr - CHUNK_OVERHEAD);
 	heap = chunk->heap;
 	chunksz = malloc_chunkSize(chunk);
 
 
 	if (size < chunksz && malloc_chunkCanSplit(chunk, size)) {
-		sibling = (chunk_t *) ((uintptr_t) chunk + size);
+		sibling = (chunk_t *)((uintptr_t)chunk + size);
 		malloc_chunkInit(sibling, heap, chunksz - size);
 		sibling->size |= CHUNK_PUSED;
 		_malloc_chunkAdd(sibling);
@@ -656,11 +658,13 @@ void _malloc_init(void)
 }
 
 
-#define ASSERT(cond, ...) do {					\
-		if (!(cond)) {					\
-			printf(__VA_ARGS__);			\
-			for (;;) ;				\
-		}						\
+#define ASSERT(cond, ...) \
+	do { \
+		if (!(cond)) { \
+			printf(__VA_ARGS__); \
+			for (;;) \
+				; \
+		} \
 	} while (0)
 
 
@@ -696,7 +700,7 @@ static void malloc_test_lbin(int lidx, chunk_t *chunk)
 	ASSERT(malloc_getlidx(sz) == lidx, "malloc_dl: wrong chunk size (%zu) at lbin %d", sz, lidx);
 
 	c = chunk;
-	do  {
+	do {
 		ASSERT(!(c->size & CHUNK_CUSED), "malloc_dl: free chunk marked as used\n");
 		ASSERT(malloc_chunkSize(c) == sz, "malloc_dl: wrong chunk size at lidx %d\n", lidx);
 	} while (c->next != chunk && (c = c->next));
