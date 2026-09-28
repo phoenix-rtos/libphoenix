@@ -46,4 +46,11 @@ static inline time_t __timespecToUs(const struct timespec *time)
 }
 
 
+static inline void __usToTimespec(time_t abstime_us, struct timespec *__restrict time)
+{
+	time->tv_sec = abstime_us / (1000 * 1000);
+	time->tv_nsec = (abstime_us % (1000 * 1000)) * 1000;
+}
+
+
 #endif /* _LIBPHOENIX_COMMON_UTIL_H_ */

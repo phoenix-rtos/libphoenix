@@ -93,6 +93,9 @@ int pthread_equal(pthread_t t1, pthread_t t2);
 void pthread_exit(void *value_ptr);
 
 
+int pthread_getcpuclockid(pthread_t thread_id, clockid_t *clock_id);
+
+
 int pthread_attr_init(pthread_attr_t *attr);
 
 
