@@ -128,7 +128,7 @@ int clock_gettime(clockid_t clk_id, struct timespec *tp)
 				return SET_ERRNO(err);
 			}
 
-			now = info.cpuTime;
+			now = info.systemTime + info.userTime;
 			break;
 		default:
 			return SET_ERRNO(-EINVAL);
