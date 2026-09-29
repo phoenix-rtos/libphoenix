@@ -905,8 +905,9 @@ int fseeko(FILE *stream, off_t offset, int whence)
 static off_t ftell_unlocked(FILE *stream)
 {
 	off_t off;
+	int whence = (((stream->mode & O_APPEND) != 0) && ((stream->flags & F_WRITING) != 0)) ? SEEK_END : SEEK_CUR;
 
-	off = lseek(stream->fd, 0, SEEK_CUR);
+	off = lseek(stream->fd, 0, whence);
 	if (off == (off_t)-1) {
 		return -1;
 	}
