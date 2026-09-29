@@ -14,6 +14,7 @@
  */
 
 #include <errno.h>
+#include <time.h>
 #include <unistd.h>
 #include <sys/syslimits.h>
 #include <sys/statvfs.h>
@@ -30,6 +31,8 @@ long sysconf(int name)
 			/* value got from MAX_FD_COUNT (kernel) */
 			/* TODO: come up with a solution to access a macro defined in kernel posix module */
 			return 512;
+		case _SC_CLK_TCK:
+			return CLK_TCK;
 		case _SC_IOV_MAX:
 			return IOV_MAX;
 		case _SC_ATEXIT_MAX:
