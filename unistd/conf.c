@@ -12,6 +12,7 @@
  */
 
 #include <errno.h>
+#include <time.h>
 #include <limits.h>
 #include <unistd.h>
 #include <sys/statvfs.h>
@@ -44,7 +45,7 @@ long sysconf(int name)
 			/* we have no limit since we use lists */
 			return INT_MAX;
 		case _SC_CLK_TCK:
-			return -1;
+			return CLK_TCK;
 		case _SC_PAGESIZE:
 			/* _SC_PAGE_SIZE is synonym */
 			return _PAGE_SIZE;

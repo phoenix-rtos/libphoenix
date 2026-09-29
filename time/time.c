@@ -535,6 +535,7 @@ clock_t clock(void)
 	return (clock_t)-1;
 }
 
+
 char *strptime(const char *__restrict buf, const char *__restrict format, struct tm *__restrict tm)
 {
 	return NULL;
