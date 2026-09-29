@@ -39,6 +39,9 @@ extern "C" {
 #include <phoenix/time.h>
 
 
+#define CLK_TCK PH_CLK_TCK
+
+
 struct tm {
 	int tm_sec;
 	int tm_min;
