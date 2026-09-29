@@ -32,6 +32,9 @@ int schedGet(int pid, int tid, sched_params_t *params);
 int schedSet(int pid, int tid, int policy, sched_params_t *params);
 
 
+int __getSystickInterval(void);
+
+
 #ifdef __cplusplus
 }
 #endif

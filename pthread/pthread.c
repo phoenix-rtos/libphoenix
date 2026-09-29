@@ -89,9 +89,9 @@ static struct {
 	 * TODO: replace with an array indexed by SCHED_FIFO, SCHED_RR, etc. once more
 	 * sched policies get implemented
 	 */
-	int pthread_min_prio_rr;
-	int pthread_max_prio_rr;
-	int pthread_rr_interval;
+	int min_prio_rr;
+	int max_prio_rr;
+	int systick_interval;
 } pthread_common;
 
 
@@ -689,7 +689,7 @@ int pthread_attr_setschedparam(pthread_attr_t *attr, const struct sched_param *p
 		return ENOTSUP;
 	}
 
-	if (param->sched_priority > pthread_common.pthread_max_prio_rr || param->sched_priority < pthread_common.pthread_min_prio_rr) {
+	if (param->sched_priority > pthread_common.max_prio_rr || param->sched_priority < pthread_common.min_prio_rr) {
 		return EINVAL;
 	}
 
@@ -801,7 +801,7 @@ int pthread_setschedprio(pthread_t thread, int prio)
 		err = EINVAL;
 	}
 	else {
-		if (prio > pthread_common.pthread_max_prio_rr || prio < pthread_common.pthread_min_prio_rr) {
+		if (prio > pthread_common.max_prio_rr || prio < pthread_common.min_prio_rr) {
 			return EINVAL;
 		}
 		sched_params_t p = { 0 };
@@ -947,7 +947,7 @@ static int pthread_mutex_lazy_init(pthread_mutex_t *__restrict mutex, const pthr
 int pthread_mutex_setprioceiling(pthread_mutex_t *__restrict mutex, int prioceiling, int *__restrict old_ceiling)
 {
 	/* POSIX-DEVIATION: SCHED_RR priorities used instead of SCHED_FIFO. See note in pthread_mutexattr_setprioceiling() */
-	if (old_ceiling == NULL || prioceiling > pthread_common.pthread_max_prio_rr || prioceiling < pthread_common.pthread_min_prio_rr) {
+	if (old_ceiling == NULL || prioceiling > pthread_common.max_prio_rr || prioceiling < pthread_common.min_prio_rr) {
 		return EINVAL;
 	}
 
@@ -1107,7 +1107,7 @@ int pthread_mutexattr_init(pthread_mutexattr_t *attr)
 	 * Set prioceiling to the LOWEST criticality to force the caller to explicitly
 	 * configure it before trying to lock.
 	 */
-	attr->prioceiling = pthread_common.pthread_max_prio_rr;
+	attr->prioceiling = pthread_common.max_prio_rr;
 
 	return EOK;
 }
@@ -1143,7 +1143,7 @@ int pthread_mutexattr_setprioceiling(pthread_mutexattr_t *attr, int prioceiling)
 	 * SCHED_FIFO priorities. Kernel currently doesn't support SCHED_FIFO, so
 	 * check against SCHED_RR priorities instead.
 	 */
-	if (prioceiling > pthread_common.pthread_max_prio_rr || prioceiling < pthread_common.pthread_min_prio_rr) {
+	if (prioceiling > pthread_common.max_prio_rr || prioceiling < pthread_common.min_prio_rr) {
 		return EINVAL;
 	}
 
@@ -1246,7 +1246,7 @@ int sched_get_priority_max(int policy)
 		return SET_ERRNO(err);
 	}
 
-	return pthread_common.pthread_max_prio_rr;
+	return pthread_common.max_prio_rr;
 }
 
 
@@ -1257,7 +1257,7 @@ int sched_get_priority_min(int policy)
 		return SET_ERRNO(err);
 	}
 
-	return pthread_common.pthread_min_prio_rr;
+	return pthread_common.min_prio_rr;
 }
 
 
@@ -1322,6 +1322,12 @@ static void us_to_timespec(time_t abstime_us, struct timespec *__restrict time)
 }
 
 
+int __getSystickInterval(void)
+{
+	return pthread_common.systick_interval;
+}
+
+
 int sched_rr_get_interval(pid_t pid, struct timespec *tp)
 {
 	if (pid < 0 || tp == NULL) {
@@ -1333,7 +1339,7 @@ int sched_rr_get_interval(pid_t pid, struct timespec *tp)
 		return SET_ERRNO(-ESRCH);
 	}
 
-	us_to_timespec(pthread_common.pthread_rr_interval, tp);
+	us_to_timespec(__getSystickInterval(), tp);
 	return EOK;
 }
 
@@ -2252,9 +2258,9 @@ static void pthread_cache_policies(void)
 	(void)err;
 	assert(err == EOK);
 
-	pthread_common.pthread_min_prio_rr = info.minPriority;
-	pthread_common.pthread_max_prio_rr = info.maxPriority;
-	pthread_common.pthread_rr_interval = info.interval;
+	pthread_common.min_prio_rr = info.minPriority;
+	pthread_common.max_prio_rr = info.maxPriority;
+	pthread_common.systick_interval = info.interval;
 }
 
 
