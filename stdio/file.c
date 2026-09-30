@@ -385,6 +385,22 @@ static int __fflush_one(FILE *stream)
 }
 
 
+static int __fflush_exit_write(FILE *stream)
+{
+	int ret = __fflush_one(stream);
+
+	if (ret < 0) {
+		ret = EOF;
+	}
+	else {
+		stream->flags &= ~F_WRITING;
+		stream->bufpos = stream->bufeof = stream->bufsz;
+	}
+
+	return ret;
+}
+
+
 static inline size_t unbuffer_data(FILE *stream, void *ptr, size_t readsz)
 {
 	size_t bytes = min(stream->bufeof - stream->bufpos, readsz);
@@ -482,11 +498,9 @@ size_t fread_unlocked(void *ptr, size_t size, size_t nmemb, FILE *stream)
 
 	/* flush the write buffer if currently writing */
 	if ((stream->flags & F_WRITING) != 0) {
-		if (__fflush_one(stream) < 0) {
+		if (__fflush_exit_write(stream) < 0) {
 			return 0;
 		}
-		stream->flags &= ~F_WRITING;
-		stream->bufpos = stream->bufeof = stream->bufsz;
 	}
 
 	/* read from the buffer first */
@@ -814,7 +828,7 @@ static int __fflush_unlocked(FILE *stream, int lock)
 					mutexLock(iter->lock);
 				}
 				if ((iter->flags & F_WRITING) != 0) {
-					if (__fflush_one(iter) < 0) {
+					if (__fflush_exit_write(iter) < 0) {
 						ret = EOF;
 					}
 				}
@@ -827,9 +841,7 @@ static int __fflush_unlocked(FILE *stream, int lock)
 		mutexUnlock(file_common.lock);
 	}
 	else {
-		if (__fflush_one(stream) < 0) {
-			ret = EOF;
-		}
+		ret = __fflush_exit_write(stream);
 	}
 
 	return ret;
@@ -848,7 +860,7 @@ int fflush(FILE *stream)
 
 	if (stream != NULL) {
 		mutexLock(stream->lock);
-		ret = __fflush_one(stream);
+		ret = fflush_unlocked(stream);
 		mutexUnlock(stream->lock);
 	}
 	else {
@@ -862,13 +874,20 @@ int fflush(FILE *stream)
 static off_t fseek_unlocked(FILE *stream, off_t offset, int whence)
 {
 	int err;
+	off_t res;
 
 	err = __fflush_one(stream);
 	if (err < 0) {
 		return -1;
 	}
 
-	return lseek(stream->fd, offset, whence);
+	res = lseek(stream->fd, offset, whence);
+	if (res >= 0) {
+		stream->flags &= ~F_WRITING;
+		stream->bufpos = stream->bufeof = stream->bufsz;
+	}
+
+	return res;
 }
 
 
@@ -1062,11 +1081,9 @@ static int ungetc_unlocked(int c, FILE *stream)
 
 	/* flush the write buffer if currently writing */
 	if ((stream->flags & F_WRITING) != 0) {
-		if (__fflush_one(stream) < 0) {
+		if (__fflush_exit_write(stream) < 0) {
 			return EOF;
 		}
-		stream->flags &= ~F_WRITING;
-		stream->bufpos = stream->bufeof = stream->bufsz;
 	}
 
 	if (stream->bufpos > 0) {
