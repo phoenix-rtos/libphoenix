@@ -611,7 +611,8 @@ size_t strftime(char *__restrict s, size_t maxsize, const char *__restrict forma
 
 clock_t clock(void)
 {
-	return (clock_t)-1;
+	time_t cpuTime;
+	return (sys_cpuTime(0, 0, &cpuTime, NULL) < 0) ? (clock_t)-1 : (clock_t)cpuTime;
 }
 
 
