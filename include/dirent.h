@@ -70,6 +70,9 @@ void rewinddir(DIR *dirp);
 int closedir(DIR *dirp);
 
 
+int dirent(DIR *dirp);
+
+
 #ifdef __cplusplus
 }
 #endif

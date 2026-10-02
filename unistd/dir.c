@@ -567,6 +567,15 @@ int closedir(DIR *dirp)
 }
 
 
+int dirent(DIR *dirp)
+{
+	if (dirp == NULL) {
+		return SET_ERRNO(-EINVAL);
+	}
+	return dirp->fd;
+}
+
+
 /* readlink without path resolution, to be used internally */
 /* WARN: POSIX compliance: does not append '\0' */
 static ssize_t _readlink_abs(const char *path, char *buf, size_t bufsiz)
