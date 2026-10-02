@@ -36,4 +36,13 @@
 
 #include <posix/limits.h>
 
+/* TODO: supplementary group IDs are not implemented yet - getgroups() is a stub. */
+#define NGROUPS_MAX _POSIX_NGROUPS_MAX
+
+/* Bound enforced by regcomp(), see DUPMAX in regex/utils.h. */
+#define RE_DUP_MAX _POSIX2_RE_DUP_MAX
+
+/* Only "UTC" is ever reported, see tzset() in time/time.c. */
+#define TZNAME_MAX 3
+
 #endif
