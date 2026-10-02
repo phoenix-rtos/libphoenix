@@ -457,7 +457,7 @@ static void pthread_key_cleanup(pthread_ctx *ctx)
 
 	mutexLock(pthread_common.pthread_key_lock);
 
-	for (int i = 0; i <= PTHREAD_DESTRUCTOR_ITERATIONS; i++) {
+	for (int i = 0; i < PTHREAD_DESTRUCTOR_ITERATIONS; i++) {
 		int all_null = 1;
 		for (pthread_key_data_t *key_data = ctx->key_data_list; key_data != NULL; key_data = key_data->next) {
 			if (key_data->key == NULL) {

@@ -59,7 +59,7 @@ static inline int isleap(int year)
 
 void tzset(void)
 {
-	static char tznamestore[2][4];
+	static char tznamestore[2][TZNAME_MAX + 1];
 
 	/* TODO - env parsing */
 
