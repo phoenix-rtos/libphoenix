@@ -22,13 +22,15 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "userdb-internal.h"
+
 #define PASSWD_PATH "/etc/passwd"
 
 
 static struct {
 	FILE *pwdfp;
 	struct passwd pwentry;
-	char pwentrybuf[NAME_MAX + 128 /* pw_passwd */ + 128 /* pw_gecos */ + PATH_MAX + PATH_MAX];
+	char pwentrybuf[PWD_MAX_BUFSIZE];
 } pwd_common;
 
 

@@ -24,10 +24,9 @@
 #include <string.h>
 #include <pthread.h>
 
-#define GRP_PATH "/etc/group"
+#include "userdb-internal.h"
 
-#define GRP_DEFAULT_BUFSIZE 128
-#define GRP_MAX_BUFSIZE     2048
+#define GRP_PATH "/etc/group"
 
 
 static struct {
