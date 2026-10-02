@@ -86,7 +86,7 @@ int select(int nfds, fd_set *rd, fd_set *wr, fd_set *ex, struct timeval *to)
 			sec = min(to->tv_sec, POSIX_MAX_TIMEOUT_MS / 1000);
 			nsec = to->tv_usec * 1000;
 			if (sec != 0 || nsec != 0) {
-				rv = SET_ERRNO(nsleep(&sec, &nsec, CLOCK_MONOTONIC, 0));
+				rv = SET_ERRNO(nsleep(&sec, &nsec, PH_CLOCK_MONOTONIC, 0));
 			}
 			else {
 				rv = 0;

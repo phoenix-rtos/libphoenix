@@ -11,17 +11,24 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+#include <sys/sched.h>
 #include <sys/time.h>
 #include <sys/threads.h>
 #include <time.h>
+#include <unistd.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdio.h>
+#include <signal.h>
 #include <limits.h>
 
 #include "../common/util.h"
+#include "../common/cpuclock.h"
+
+
+int sys_cpuTime(pid_t pid, int tid, time_t *cpuTime, cpuTimes_t *cpuTimes);
 
 
 char *tzname[2];
@@ -95,43 +102,120 @@ time_t time(time_t *tp)
 }
 
 
-int clock_gettime(clockid_t clk_id, struct timespec *tp)
+int clock_getres(clockid_t clock_id, struct timespec *res)
 {
-	int err, tid;
-	time_t now, offs;
-	threadinfo_t info;
-
-	if (tp == NULL) {
+	if (clock_id < 0) {
 		return SET_ERRNO(-EINVAL);
 	}
 
-	switch (clk_id) {
-		case CLOCK_REALTIME:
-			/* fallthrough */
-		case CLOCK_MONOTONIC_RAW:
-			/* fallthrough */
-		case CLOCK_MONOTONIC:
-			err = gettime(&now, &offs);
-			if (err < 0) {
-				return SET_ERRNO(err);
-			}
-
-			if (clk_id == CLOCK_REALTIME) {
-				now += offs;
-			}
-
-			break;
-		case CLOCK_THREAD_CPUTIME_ID:
-			tid = gettid();
-			err = threadinfo(tid, PH_THREADINFO_CPUTIME, &info);
-			if (err != EOK) {
-				return SET_ERRNO(err);
-			}
-
-			now = info.cpuTime;
-			break;
-		default:
+	if (CPUCLOCK_IS_DYNAMIC(clock_id)) {
+		if (!CPUCLOCK_IS_THREAD(clock_id) && !CPUCLOCK_IS_PROCESS(clock_id)) {
 			return SET_ERRNO(-EINVAL);
+		}
+		/* TODO: validate that tid/pid pointed by the clock id exists? */
+	}
+	else if (clock_id != CLOCK_THREAD_CPUTIME_ID && clock_id != CLOCK_PROCESS_CPUTIME_ID &&
+			clock_id != CLOCK_REALTIME && clock_id != CLOCK_MONOTONIC && clock_id != CLOCK_MONOTONIC_RAW) {
+		return SET_ERRNO(-EINVAL);
+	}
+
+	/* Every supported clock is derived from the kernel timer of >=1us precision */
+	if (res != NULL) {
+		__usToTimespec(1, res);
+	}
+
+	return EOK;
+}
+
+
+int clock_getcpuclockid(pid_t pid, clockid_t *clock_id)
+{
+	int err;
+
+	if ((clock_id == NULL) || (pid < 0)) {
+		return EINVAL;
+	}
+
+	if (pid != 0) {
+		/* POSIX requires ESRCH for a process that does not exist. */
+		err = kill(pid, 0);
+		if (err < 0) {
+			return errno;
+		}
+	}
+
+	if (pid == 0) {
+		pid = getpid();
+	}
+
+	if (!CPUCLOCK_ID_FITS(pid)) {
+		return EINVAL;
+	}
+
+	*clock_id = (clockid_t)CPUCLOCK_ID_PROCESS(pid);
+
+	return EOK;
+}
+
+
+int clock_gettime(clockid_t clk_id, struct timespec *tp)
+{
+	int err;
+	time_t now, offs;
+
+	if ((tp == NULL) || (clk_id < 0)) {
+		return SET_ERRNO(-EINVAL);
+	}
+
+	if (CPUCLOCK_IS_DYNAMIC(clk_id)) {
+		unsigned int id = CPUCLOCK_ID_VALUE(clk_id);
+
+		if (CPUCLOCK_IS_THREAD(clk_id)) {
+			err = sys_cpuTime(0, (int)id, &now, NULL);
+		}
+		else if (CPUCLOCK_IS_PROCESS(clk_id)) {
+			err = sys_cpuTime((pid_t)id, 0, &now, NULL);
+		}
+		else {
+			return SET_ERRNO(-EINVAL);
+		}
+
+		if (err < 0) {
+			return SET_ERRNO(err);
+		}
+	}
+	else {
+		switch (clk_id) {
+			case CLOCK_REALTIME:
+				/* fallthrough */
+			case CLOCK_MONOTONIC_RAW:
+				/* fallthrough */
+			case CLOCK_MONOTONIC:
+				err = gettime(&now, &offs);
+				if (err < 0) {
+					return SET_ERRNO(err);
+				}
+
+				if (clk_id == CLOCK_REALTIME) {
+					now += offs;
+				}
+
+				break;
+			case CLOCK_THREAD_CPUTIME_ID:
+				err = sys_cpuTime(0, gettid(), &now, NULL);
+				if (err < 0) {
+					return SET_ERRNO(-EINVAL);
+				}
+				break;
+			case CLOCK_PROCESS_CPUTIME_ID:
+				err = sys_cpuTime(0, 0, &now, NULL);
+				if (err < 0) {
+					return SET_ERRNO(-EINVAL);
+				}
+				break;
+			default:
+				return SET_ERRNO(-EINVAL);
+		}
 	}
 
 	tp->tv_sec = now / (1000 * 1000);
@@ -532,8 +616,10 @@ size_t strftime(char *__restrict s, size_t maxsize, const char *__restrict forma
 
 clock_t clock(void)
 {
-	return (clock_t)-1;
+	time_t cpuTime;
+	return (sys_cpuTime(0, 0, &cpuTime, NULL) < 0) ? (clock_t)-1 : (clock_t)cpuTime;
 }
+
 
 char *strptime(const char *__restrict buf, const char *__restrict format, struct tm *__restrict tm)
 {
@@ -550,7 +636,7 @@ int nanosleep(const struct timespec *req, struct timespec *rem)
 	long nsec = req->tv_nsec;
 	int ret;
 
-	ret = nsleep(&sec, &nsec, CLOCK_MONOTONIC, 0);
+	ret = nsleep(&sec, &nsec, PH_CLOCK_MONOTONIC, 0);
 
 	if (ret == -EINTR && rem != NULL) {
 		rem->tv_sec = sec;
@@ -564,15 +650,35 @@ int nanosleep(const struct timespec *req, struct timespec *rem)
 /* clock_nanosleep() shall return **positive** errors codes directly, without setting errno */
 int clock_nanosleep(clockid_t clock, int flags, const struct timespec *req, struct timespec *rem)
 {
-	time_t sec = req->tv_sec;
-	long nsec = req->tv_nsec;
-
-	if (clock != CLOCK_MONOTONIC) {
-		/* Only CLOCK_MONOTONIC supported for now */
+	if (!__timespecValid(req) || req->tv_sec < 0) {
 		return EINVAL;
 	}
 
-	int ret = nsleep(&sec, &nsec, clock, flags);
+	time_t sec = req->tv_sec;
+	long nsec = req->tv_nsec;
+	int phxClock;
+
+	if (CPUCLOCK_IS_DYNAMIC(clock)) {
+		return ENOTSUP;
+	}
+
+	switch (clock) {
+		case CLOCK_MONOTONIC:
+		case CLOCK_MONOTONIC_RAW:
+			phxClock = PH_CLOCK_MONOTONIC;
+			break;
+
+		case CLOCK_REALTIME:
+			phxClock = PH_CLOCK_REALTIME;
+			break;
+		case CLOCK_PROCESS_CPUTIME_ID:
+		case CLOCK_THREAD_CPUTIME_ID:
+			return ENOTSUP;
+		default:
+			return EINVAL;
+	}
+
+	int ret = nsleep(&sec, &nsec, phxClock, flags);
 
 	if ((ret == -EINTR) && (rem != NULL) && ((flags & TIMER_ABSTIME) == 0)) {
 		rem->tv_sec = sec;
