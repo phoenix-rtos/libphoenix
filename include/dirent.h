@@ -49,25 +49,25 @@ struct dirent {
 
 
 /* These functions are not thread-safe */
-extern struct dirent *readdir(DIR *dirp);
+struct dirent *readdir(DIR *dirp);
 
 
-extern DIR *opendir(const char *dirname);
+DIR *opendir(const char *dirname);
 
 
-extern DIR *fdopendir(int fd);
+DIR *fdopendir(int fd);
 
 
-extern void seekdir(DIR *dirp, long loc);
+void seekdir(DIR *dirp, long loc);
 
 
-extern long telldir(DIR *dirp);
+long telldir(DIR *dirp);
 
 
-extern void rewinddir(DIR *dirp);
+void rewinddir(DIR *dirp);
 
 
-extern int closedir(DIR *dirp);
+int closedir(DIR *dirp);
 
 
 #ifdef __cplusplus
