@@ -55,6 +55,7 @@ int semaphoreCreate(semaphore_t *s, unsigned int v)
 	}
 
 	s->v = v;
+	s->waiters = 0;
 
 	return 0;
 }
@@ -79,7 +80,9 @@ int semaphoreDown(semaphore_t *s, time_t timeout)
 			break;
 		}
 
+		++s->waiters;
 		err = condWait(s->cond, s->mutex, deadline);
+		--s->waiters;
 	} while (err != -ETIME);
 	mutexUnlock(s->mutex);
 
@@ -118,7 +121,9 @@ int semaphoreDownAtClock(semaphore_t *s, time_t deadline, int clock)
 			break;
 		}
 
+		++s->waiters;
 		err = condClockWait(s->cond, s->mutex, deadline, clock);
+		--s->waiters;
 	} while ((err == 0) || (err == -EINTR));
 
 	mutexUnlock(s->mutex);
@@ -151,7 +156,7 @@ int semaphoreTryDown(semaphore_t *s)
 
 int semaphoreUp(semaphore_t *s)
 {
-	bool wasZero = false;
+	bool wakeup = false;
 	int ret = 0;
 
 	mutexLock(s->mutex);
@@ -159,8 +164,8 @@ int semaphoreUp(semaphore_t *s)
 		ret = -EOVERFLOW;
 	}
 	else {
-		wasZero = (s->v == 0);
 		++s->v;
+		wakeup = (s->waiters > 0);
 	}
 	mutexUnlock(s->mutex);
 
@@ -168,7 +173,7 @@ int semaphoreUp(semaphore_t *s)
 	 * so signal under mutex causes performance penalty.
 	 * Conditionals are sticky, so there's no race risk.
 	 */
-	if (wasZero) {
+	if (wakeup) {
 		condSignal(s->cond);
 	}
 

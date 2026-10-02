@@ -33,6 +33,7 @@ typedef struct {
 	handle_t mutex;
 	handle_t cond;
 	volatile unsigned int v;
+	unsigned int waiters;
 } semaphore_t;
 
 
