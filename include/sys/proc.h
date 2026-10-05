@@ -16,6 +16,8 @@
 #ifndef _LIBPHOENIX_SYS_PROC_H_
 #define _LIBPHOENIX_SYS_PROC_H_
 
+#include <stdbool.h>
+#include <sys/cdefs.h>
 #include <sys/types.h>
 #include <phoenix/posix-proc.h>
 
@@ -30,6 +32,18 @@ extern "C" {
  * value, at least one of pid/pgid/sid must be non-zero.
  */
 int procExists(pid_t pid, pid_t pgid, pid_t sid, unsigned int flags);
+
+
+__INLINE bool pidExists(pid_t pid)
+{
+	return procExists(pid, 0, 0, PROCQ_ALIVE) == 1;
+}
+
+
+__INLINE bool pgidExists(pid_t pgid)
+{
+	return procExists(0, pgid, 0, PROCQ_ALIVE) == 1;
+}
 
 
 /*

@@ -15,7 +15,7 @@
 
 #include <errno.h>
 #include <sched.h>
-#include <signal.h>
+#include <sys/proc.h>
 #include <sys/resource.h>
 
 
@@ -25,16 +25,24 @@
  */
 static int sched_rr_noop(int which, id_t who)
 {
-	if (which == PRIO_USER || which == PRIO_PGRP) {
-		return SET_ERRNO(-ESRCH);
-	}
-
-	if (which != PRIO_PROCESS) {
+	if (which != PRIO_USER && which != PRIO_PGRP && which != PRIO_PROCESS) {
 		return SET_ERRNO(-EINVAL);
 	}
 
-	/* Check that pid exists through kill */
-	if (who != 0 && kill((pid_t)who, 0) < 0) {
+	if (who == 0) {
+		return 0;
+	}
+
+	if (which == PRIO_USER) {
+		/* OS-LIMITATION: users are not supported */
+		return SET_ERRNO(-EINVAL);
+	}
+
+	if (which == PRIO_PROCESS && !pidExists((pid_t)who)) {
+		return SET_ERRNO(-ESRCH);
+	}
+
+	if (which == PRIO_PGRP && !pgidExists((pid_t)who)) {
 		return SET_ERRNO(-ESRCH);
 	}
 
