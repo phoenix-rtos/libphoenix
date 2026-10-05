@@ -654,6 +654,11 @@ int clock_nanosleep(clockid_t clock, int flags, const struct timespec *req, stru
 	int phxClock;
 
 	if (CPUCLOCK_IS_DYNAMIC(clock)) {
+		/* A CPU-time clock is known but cannot be slept on; anything else is no clock at all */
+		if (!CPUCLOCK_IS_THREAD(clock) && !CPUCLOCK_IS_PROCESS(clock)) {
+			return EINVAL;
+		}
+
 		return ENOTSUP;
 	}
 

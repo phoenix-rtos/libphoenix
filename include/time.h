@@ -40,7 +40,16 @@ extern "C" {
 #include <phoenix/time.h>
 
 
+struct sigevent;
+
+
 #define CLK_TCK PH_CLK_TCK
+
+
+struct itimerspec {
+	struct timespec it_interval;
+	struct timespec it_value;
+};
 
 
 struct tm {
@@ -132,6 +141,21 @@ extern int nanosleep(const struct timespec *req, struct timespec *rem);
 
 
 extern int clock_nanosleep(clockid_t clock, int flags, const struct timespec *req, struct timespec *rem);
+
+
+extern int timer_create(clockid_t clockid, struct sigevent *evp, timer_t *timerid);
+
+
+extern int timer_delete(timer_t timerid);
+
+
+extern int timer_settime(timer_t timerid, int flags, const struct itimerspec *value, struct itimerspec *ovalue);
+
+
+extern int timer_gettime(timer_t timerid, struct itimerspec *value);
+
+
+extern int timer_getoverrun(timer_t timerid);
 
 
 #ifdef __cplusplus

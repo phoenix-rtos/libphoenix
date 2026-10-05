@@ -5,100 +5,88 @@
  *
  * unistd: alarm()
  *
- * Copyright 2018 Phoenix Systems
- * Author: Jan Sikorski, Michal Miroslaw
+ * Copyright 2018, 2026 Phoenix Systems
+ * Author: Jan Sikorski, Michal Miroslaw, Adam Greloch
  *
  * This file is part of Phoenix-RTOS.
  *
  * %LICENSE%
  */
 
-#include <stdio.h>
-#include <unistd.h>
 #include <errno.h>
-#include <signal.h>
-#include <sys/threads.h>
-#include <sys/wait.h>
-#include <sys/time.h>
 #include <pthread.h>
-#include <sys/debug.h>
+#include <signal.h>
+#include <time.h>
+#include <limits.h>
+#include <unistd.h>
 
 
+/*
+ * One kernel timer serves every alarm() of the process. The kernel keeps the deadline and
+ * raises SIGALRM itself, so nothing here has to wait on it.
+ */
 static struct {
-	char stack[1024] __attribute__((aligned(8)));
-	handle_t cond, lock;
-	time_t wakeup;
-	handle_t tid;
-	pthread_once_t once_control;
+	timer_t id;
+	int created;
+	pthread_once_t onceControl;
 } alarm_common = {
-	.once_control = PTHREAD_ONCE_INIT
+	.onceControl = PTHREAD_ONCE_INIT
 };
 
 
-__attribute__((noreturn))
-static void alarm_thread(void *arg)
+static void alarm_create(void)
 {
-	time_t now;
-	long long int sleep;
+	struct sigevent evp;
 
-	mutexLock(alarm_common.lock);
+	evp.sigev_notify = SIGEV_SIGNAL;
+	evp.sigev_signo = SIGALRM;
+	evp.sigev_value.sival_int = 0;
+	evp.sigev_notify_function = NULL;
+	evp.sigev_notify_attributes = NULL;
 
-	for (;;) {
-		gettime(&now, NULL);
-		sleep = alarm_common.wakeup - now;
-
-		if (!alarm_common.wakeup) {
-			condWait(alarm_common.cond, alarm_common.lock, 0);
-		}
-		else if (sleep > 0) {
-			condWait(alarm_common.cond, alarm_common.lock, sleep);
-		}
-		else {
-			kill(getpid(), SIGALRM);
-			alarm_common.wakeup = 0;
-		}
-	}
+	alarm_common.created = (timer_create(CLOCK_MONOTONIC, &evp, &alarm_common.id) == 0) ? 1 : 0;
 }
 
 
-static void alarm_initThread(void)
+static void alarm_forkChild(void)
 {
-	sigset_t mask, orgMask;
-	alarm_common.wakeup = 0;
-
-	/* ensure alarm thread will inherit sigmask with all signals blocked */
-	sigfillset(&mask);
-	pthread_sigmask(SIG_BLOCK, &mask, &orgMask);
-	beginthreadex(alarm_thread, getPriority(), alarm_common.stack, sizeof(alarm_common.stack), NULL, &alarm_common.tid);
-	pthread_sigmask(SIG_SETMASK, &orgMask, NULL);
+	/* POSIX: alarms are cleared in the child, which inherits no timers either */
+	alarm_create();
 }
 
 
-static void alarm_init_once(void)
+static void alarm_initOnce(void)
 {
-	/* FIXME: handle errors from mutexCreate, condCreate and beginthreadex */
-	mutexCreate(&alarm_common.lock);
-	condCreate(&alarm_common.cond);
-	alarm_initThread();
-	/* There is no need to handle the mutex state during fork(), as Phoenix's mutexes are freed in a child process and no races can happen here */
-	pthread_atfork(NULL, NULL, alarm_initThread);
+	alarm_create();
+	(void)pthread_atfork(NULL, NULL, alarm_forkChild);
 }
 
 
 unsigned int alarm(unsigned int seconds)
 {
-	time_t now, previous;
-	pthread_once(&alarm_common.once_control, alarm_init_once);
+	struct itimerspec value, old;
+	unsigned int remaining;
 
-	mutexLock(alarm_common.lock);
-	previous = alarm_common.wakeup;
-	gettime(&now, NULL);
-	if (seconds)
-		alarm_common.wakeup = now + 1000LL * 1000LL * seconds;
-	else
-		alarm_common.wakeup = 0;
-	mutexUnlock(alarm_common.lock);
-	condSignal(alarm_common.cond);
+	pthread_once(&alarm_common.onceControl, alarm_initOnce);
 
-	return (previous && previous > now) ? (previous - now + (1000 * 1000 - 1)) / (1000 * 1000) : 0;
+	if (alarm_common.created == 0) {
+		return 0;
+	}
+
+	value.it_interval.tv_sec = 0;
+	value.it_interval.tv_nsec = 0;
+	value.it_value.tv_sec = (time_t)seconds;
+	value.it_value.tv_nsec = 0;
+
+	if (timer_settime(alarm_common.id, 0, &value, &old) < 0) {
+		return 0;
+	}
+
+	/* POSIX: a part of a second left over is reported as a whole second */
+	remaining = (unsigned int)old.it_value.tv_sec;
+	if ((old.it_value.tv_nsec != 0) && (remaining < UINT_MAX)) {
+		remaining++;
+	}
+
+	return remaining;
 }

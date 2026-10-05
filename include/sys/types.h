@@ -29,6 +29,8 @@ extern "C" {
 typedef int clock_t;
 typedef int clockid_t;
 
+typedef int timer_t; /* a handle of a kernel timer */
+
 typedef unsigned int useconds_t;
 typedef int suseconds_t;
 
