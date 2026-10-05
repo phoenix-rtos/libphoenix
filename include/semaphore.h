@@ -48,6 +48,9 @@ int sem_trywait(sem_t *sem);
 int sem_timedwait(sem_t *__restrict sem, const struct timespec *__restrict abs_timeout);
 
 
+int sem_clockwait(sem_t *__restrict sem, clockid_t clock_id, const struct timespec *__restrict abs_timeout);
+
+
 int sem_getvalue(sem_t *__restrict sem, int *__restrict value);
 
 
