@@ -20,6 +20,7 @@
 #include <sys/list.h>
 #include <sys/mman.h>
 #include <sys/minmax.h>
+#include <sys/proc.h>
 #include <sys/sched.h>
 #include <pthread.h>
 #include <unistd.h>
@@ -1328,8 +1329,7 @@ int sched_rr_get_interval(pid_t pid, struct timespec *tp)
 		return SET_ERRNO(-EINVAL);
 	}
 
-	/* Check that pid exists through kill */
-	if (pid != 0 && kill(pid, 0) < 0) {
+	if (pid != 0 && !pidExists(pid)) {
 		return SET_ERRNO(-ESRCH);
 	}
 
