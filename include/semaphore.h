@@ -16,6 +16,7 @@
 
 #include <time.h>
 #include <limits.h>
+#include <fcntl.h>
 #include <sys/threads.h>
 
 #ifdef __cplusplus
