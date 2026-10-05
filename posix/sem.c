@@ -160,10 +160,9 @@ sem_t *sem_open(const char *name, int oflag, ...)
 
 
 /*
- * POSIX-DEVIATION: sem_wait() and sem_timedwait() on named semaphores:
+ * POSIX-DEVIATION: sem_wait(), sem_timedwait() and sem_clockwait() on named semaphores:
  *
  *  - never fail with EINTR, whatever signal is delivered,
- *  - are not cancellation points (XSH 2.9.5),
  *  - cannot be killed while blocked, so a thread waiting on a semaphore that is
  *    never posted stays blocked until the process is torn down.
  *
@@ -214,10 +213,10 @@ int sem_trywait(sem_t *sem)
 }
 
 
-int sem_timedwait(sem_t *__restrict sem, const struct timespec *__restrict abstime)
+static int sem_waitInternal(sem_t *sem, int clock, const struct timespec *abstime)
 {
 	int ret;
-	time_t deadline;
+	sem_timeout_t timeout;
 
 	if (sem == NULL) {
 		return SET_ERRNO(-EINVAL);
@@ -228,17 +227,18 @@ int sem_timedwait(sem_t *__restrict sem, const struct timespec *__restrict absti
 	}
 
 	if (sem->type == smNamed) {
+		timeout.abstime = *abstime;
+		timeout.clock = clock;
+
 		/* errno set by ioctl() */
-		return ioctl(sem->fd, SEM_DOWN_TIMEOUT, (struct timespec *)abstime);
+		return ioctl(sem->fd, SEM_DOWN_TIMEOUT, &timeout);
 	}
 	else if (sem->type == smUnnamed) {
 		/*
 		 * FIXME: semaphoreDownAtClock() takes microseconds, so a tv_sec beyond
 		 * TIME_T_MAX / 1000000 overflows here.
 		 */
-		deadline = __timespecToUs(abstime);
-
-		ret = semaphoreDownAtClock(&sem->unnamed, deadline, PH_CLOCK_REALTIME);
+		ret = semaphoreDownAtClock(&sem->unnamed, __timespecToUs(abstime), clock);
 		if (ret == -ETIME) {
 			ret = -ETIMEDOUT;
 		}
@@ -248,6 +248,35 @@ int sem_timedwait(sem_t *__restrict sem, const struct timespec *__restrict absti
 	}
 
 	return SET_ERRNO(ret);
+}
+
+
+int sem_timedwait(sem_t *__restrict sem, const struct timespec *__restrict abstime)
+{
+	return sem_waitInternal(sem, PH_CLOCK_REALTIME, abstime);
+}
+
+
+int sem_clockwait(sem_t *__restrict sem, clockid_t clock_id, const struct timespec *__restrict abstime)
+{
+	int clock;
+
+	switch (clock_id) {
+		case CLOCK_REALTIME:
+			clock = PH_CLOCK_REALTIME;
+			break;
+
+		case CLOCK_MONOTONIC:
+			/* fallthrough */
+		case CLOCK_MONOTONIC_RAW:
+			clock = PH_CLOCK_MONOTONIC;
+			break;
+
+		default:
+			return SET_ERRNO(-EINVAL);
+	}
+
+	return sem_waitInternal(sem, clock, abstime);
 }
 
 

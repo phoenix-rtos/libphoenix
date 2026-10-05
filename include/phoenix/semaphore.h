@@ -35,10 +35,15 @@ static_assert(SEM_NSEMS_MAX >= _POSIX_SEM_NSEMS_MAX, "SEM_NSEMS_MAX shall be gre
  */
 static_assert(SEM_VALUE_MAX <= INT_MAX, "SEM_VALUE_MAX shall be smaller or equal to INT_MAX");
 
+typedef struct {
+	struct timespec abstime;
+	int clock; /* PH_CLOCK_REALTIME or PH_CLOCK_MONOTONIC */
+} sem_timeout_t;
+
 #define SEM_UP           _IO('s', 0x1)
 #define SEM_DOWN         _IO('s', 0x2)
 #define SEM_DOWN_TRY     _IO('s', 0x3)
-#define SEM_DOWN_TIMEOUT _IOW('s', 0x4, struct timespec) /* absolute CLOCK_REALTIME deadline */
+#define SEM_DOWN_TIMEOUT _IOW('s', 0x4, sem_timeout_t)
 #define SEM_GETVALUE     _IOR('s', 0x5, unsigned int)
 
 #ifdef __cplusplus
