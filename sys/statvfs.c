@@ -28,11 +28,21 @@ extern int sys_statvfs(const char *path, int fd, struct statvfs *buf);
 
 int statvfs(const char *path, struct statvfs *buf)
 {
+	size_t clen;
+	size_t plen = strlen(path);
+
 	char *canonical = resolve_path(path, NULL, 1, 0);
 	if (canonical == NULL) {
 		/* errno set by resolve_path() */
 		return -1;
 	}
+
+	if (plen > 1 && path[plen - 1] == '/') {
+		clen = strlen(canonical);
+		canonical[clen] = '/';
+		canonical[clen + 1] = '\0';
+	}
+
 	int res = sys_statvfs(canonical, -1, buf);
 
 	free(canonical);
