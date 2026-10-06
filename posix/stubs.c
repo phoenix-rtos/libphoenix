@@ -25,6 +25,7 @@
 #include <netinet/in.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <fenv.h>
 
 
 static struct {
@@ -214,6 +215,72 @@ int initgroups(const char *user, gid_t group)
 
 
 int issetugid(void)
+{
+	return 0;
+}
+
+
+int feclearexcept(int excepts)
+{
+	return 0;
+}
+
+
+int feraiseexcept(int excepts)
+{
+	return 0;
+}
+
+
+int fegetexceptflag(fexcept_t *flagp, int excepts)
+{
+	return 0;
+}
+
+
+int fesetexceptflag(const fexcept_t *flagp, int excepts)
+{
+	return 0;
+}
+
+
+int fegetround(void)
+{
+	return 0;
+}
+
+
+int fesetround(int rounding_mode)
+{
+	return 0;
+}
+
+
+int fegetenv(fenv_t *envp)
+{
+	return 0;
+}
+
+
+int fesetenv(const fenv_t *envp)
+{
+	return 0;
+}
+
+
+int feholdexcept(fenv_t *envp)
+{
+	return 0;
+}
+
+
+int feupdateenv(const fenv_t *envp)
+{
+	return 0;
+}
+
+
+int fetestexcept(int excepts)
 {
 	return 0;
 }
