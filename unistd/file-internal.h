@@ -54,4 +54,7 @@ int __safe_open(const char *path, int oflag, mode_t mode);
 int __safe_close(int fd);
 
 
+char *resolve_path_at(const char *path, char *resolved_path, int fd, int resolve_last_symlink, int allow_missing_leaf);
+
+
 #endif

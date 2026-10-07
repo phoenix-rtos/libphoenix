@@ -26,9 +26,6 @@ extern "C" {
 
 
 /* clang-format off */
-enum { otDir = 0, otFile, otDev, otSymlink, otUnknown };
-
-
 enum { mtMount = 0xf50, mtUmount, mtSync, /* Moved to kernel: mtStat ,*/ mtMountPoint = 0xf54 };
 /* clang-format on */
 

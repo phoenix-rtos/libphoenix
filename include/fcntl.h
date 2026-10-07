@@ -27,7 +27,13 @@ extern "C" {
 #endif
 
 
+#define AT_FDCWD -100
+
+
 int fcntl(int fildes, int cmd, ...);
+
+
+int openat(int fd, const char *path, int oflag, ...);
 
 
 int open(const char *path, int oflag, ...);

@@ -13,6 +13,8 @@
  * %LICENSE%
  */
 
+#include <limits.h>
+#include <dirent.h>
 #include <stdio.h>
 #include <fcntl.h>
 #include <poll.h>
@@ -29,6 +31,7 @@
 #include <termios.h>
 
 #include "posix/utils.h"
+#include "file-internal.h"
 #include "ioctl-helper.h"
 
 
@@ -331,21 +334,15 @@ int unlink(const char *path)
 }
 
 
-int open(const char *filename, int oflag, ...)
+static int __vopenat(int fd, const char *path, int oflag, va_list ap)
 {
-	va_list ap;
 	struct stat st;
 	mode_t mode = 0;
 	int err;
 	char *canonical;
 
-	/* FIXME: handle varargs properly */
-	va_start(ap, oflag);
-	mode = va_arg(ap, mode_t);
-	va_end(ap);
-
 	if (oflag & (O_WRONLY | O_RDWR)) {
-		if ((err = stat(filename, &st)) < 0) {
+		if ((err = stat(path, &st)) < 0) {
 			if (errno != ENOENT)
 				return err;
 		}
@@ -355,20 +352,54 @@ int open(const char *filename, int oflag, ...)
 	}
 
 	/* allow_missing_leaf = 1 -> open() may be creating a file */
-	canonical = resolve_path(filename, NULL, 1, 1);
+	canonical = resolve_path_at(path, NULL, fd, 1, 1);
 	if (canonical == NULL)
-		return -1; /* errno set by resolve_path */
+		return -1; /* errno set by resolve_path_at */
+
+#define SAFE_SYS_OPEN(path, oflag, ...) \
+	do { \
+		err = sys_open(canonical, oflag, ##__VA_ARGS__); \
+	} while (err == -EINTR)
 
 	if (oflag & O_CREAT) {
+		mode = va_arg(ap, mode_t);
 		mode &= ~__getumask();
+		SAFE_SYS_OPEN(canonical, oflag, mode);
+	}
+	else {
+		SAFE_SYS_OPEN(canonical, oflag);
 	}
 
-	do
-		err = sys_open(canonical, oflag, mode);
-	while (err == -EINTR);
+#undef SAFE_SYS_OPEN
 
 	free(canonical);
 	return SET_ERRNO(err);
+}
+
+
+int openat(int fd, const char *path, int oflag, ...)
+{
+	va_list ap;
+	int err;
+
+	va_start(ap, oflag);
+	err = __vopenat(fd, path, oflag, ap);
+	va_end(ap);
+
+	return err;
+}
+
+
+int open(const char *path, int oflag, ...)
+{
+	va_list ap;
+	int err;
+
+	va_start(ap, oflag);
+	err = __vopenat(AT_FDCWD, path, oflag, ap);
+	va_end(ap);
+
+	return err;
 }
 
 

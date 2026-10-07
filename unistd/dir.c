@@ -28,6 +28,8 @@
 #include <posix/utils.h>
 #include <fcntl.h>
 
+#include "file-internal.h"
+
 
 static struct {
 	char *cwd;
@@ -274,15 +276,21 @@ static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, 
 }
 
 
+char *resolve_path(const char *path, char *resolved_path, int resolve_last_symlink, int allow_missing_leaf)
+{
+	return resolve_path_at(path, resolved_path, AT_FDCWD, resolve_last_symlink, allow_missing_leaf);
+}
+
+
 /* Resolving path to absolute paths with '.', '..' and symlinks support. Additional params to satisfy multiple libc use cases.
  *   resolved_path: if NULL, will be allocated by malloc()
  *   allow_missing_leaf: don't return ENOENT if last path node is not existing
  *   resolve_last_symlink: if 0 return final symlink path instead of symlink destination
  */
-char *resolve_path(const char *path, char *resolved_path, int resolve_last_symlink, int allow_missing_leaf)
+char *resolve_path_at(const char *path, char *resolved_path, int fd, int resolve_last_symlink, int allow_missing_leaf)
 {
 	char *alloc_resolved_path = NULL; /* internally allocated path needed to be freed on error */
-	char *path_copy, *p;
+	char *path_copy = NULL, *p;
 	size_t pathlen;
 
 	if (!path) {
@@ -302,10 +310,25 @@ char *resolve_path(const char *path, char *resolved_path, int resolve_last_symli
 
 	pathlen = strlen(path);
 	if (path[0] != '/') {
-		if (getcwd(path_copy, PATH_MAX) == NULL) {
-			/* errno set by getcwd */
-			free(path_copy);
-			return NULL;
+		if (fd != AT_FDCWD) {
+			if (fd < 0) {
+				free(path_copy);
+				errno = EBADF;
+				return NULL;
+			}
+
+			if (fcntl(fd, F_GETPATH, path_copy) < 0) {
+				/* errno set by fcntl */
+				free(path_copy);
+				return NULL;
+			}
+		}
+		else {
+			if (getcwd(path_copy, PATH_MAX) == NULL) {
+				/* errno set by getcwd */
+				free(path_copy);
+				return NULL;
+			}
 		}
 
 		p = strchr(path_copy, 0);
@@ -406,44 +429,21 @@ DIR *opendir(const char *dirname)
 		return NULL; /* errno set by resolve_path */
 	}
 
-	if (!dirname[0] || (safe_lookup(canonical_name, NULL, &dirp->oid) < 0)) {
+	if (dirname[0] == '\0' || (safe_lookup(canonical_name, NULL, &dirp->oid) < 0)) {
 		free(canonical_name);
 		free(dirp);
 		errno = ENOENT;
 		return NULL;
 	}
 
-	free(canonical_name);
 	dirp->dirent = NULL;
-	/* Following field is only valid in fdopendir */
-	dirp->fd = -1;
 
-	msg_t msg = {
-		.type = mtGetAttr,
-		.oid = dirp->oid,
-		.i.attr.type = atType,
-	};
+	dirp->fd = __safe_open(canonical_name, O_RDONLY | O_DIRECTORY, DEFFILEMODE);
+	free(canonical_name);
 
-	if ((msgSend(dirp->oid.port, &msg) < 0) || (msg.o.err < 0)) {
+	if (dirp->fd == -1) {
 		free(dirp);
-		errno = EIO;
-		return NULL;
-	}
-
-	if (msg.o.attr.val != otDir) {
-		free(dirp);
-		errno = ENOTDIR;
-		return NULL;
-	}
-
-	memset(&msg, 0, sizeof(msg));
-	msg.type = mtOpen;
-	msg.oid = dirp->oid;
-	msg.i.openclose.flags = 0;
-
-	if (msgSend(dirp->oid.port, &msg) < 0 || (msg.o.err < 0)) {
-		free(dirp);
-		errno = EIO;
+		/* errno set by __safe_open */
 		return NULL;
 	}
 
@@ -545,25 +545,22 @@ int closedir(DIR *dirp)
 		return SET_ERRNO(-EBADF);
 	}
 
-	if (dirp->fd >= 0) {
-		ret = close(dirp->fd);
-	}
-	else {
-		msg_t msg = {
-			.type = mtClose,
-			.oid = dirp->oid
-		};
-
-		if ((msgSend(dirp->oid.port, &msg) < 0) || (msg.o.err < 0)) {
-			errno = EIO;
-			ret = -1;
-		}
-	}
+	ret = close(dirp->fd);
 
 	free(dirp->dirent);
 	free(dirp);
 
 	return ret;
+}
+
+
+int dirfd(DIR *dirp)
+{
+	if (dirp == NULL) {
+		return SET_ERRNO(-EBADF);
+	}
+
+	return dirp->fd;
 }
 
 
