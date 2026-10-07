@@ -107,7 +107,7 @@ int mkostemps(char *templt, int suffixlen, int flags)
 	}
 
 	flags &= ~(O_RDONLY | O_WRONLY);
-	fd = open(templt, flags | O_CREAT | O_RDWR | O_EXCL, DEFFILEMODE);
+	fd = open(templt, flags | O_CREAT | O_RDWR | O_EXCL, S_IRUSR | S_IWUSR);
 	if (fd < 0) {
 		return -1;
 	}
