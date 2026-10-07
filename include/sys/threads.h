@@ -15,6 +15,7 @@
 #define _LIBPHOENIX_SYS_THREADS_H_
 
 #include <sys/cdefs.h>
+#include <sys/features.h>
 #include <sys/types.h>
 #include <sys/rb.h>
 #include <stddef.h>

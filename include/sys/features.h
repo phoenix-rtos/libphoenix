@@ -33,5 +33,12 @@
  */
 #define __PHOENIX_SCHED_PRIO_POSIX 1
 
+/*
+ * setpriority()/getpriority()/nice() are no-ops succeeding for every existing
+ * process, as POSIX mandates for SCHED_RR. When undefined, setpriority()
+ * and nice() actually change the calling thread's priority (non-POSIX).
+ * Use sched_setparam()/pthread_setschedprio()/setPriority() instead.
+ */
+#define __PHOENIX_NICE_IGNORED 1
 
 #endif
