@@ -57,6 +57,12 @@ int sched_getscheduler(pid_t pid);
 int sched_rr_get_interval(pid_t pid, struct timespec *tp);
 
 
+int __phxToPosixPrio(int prio);
+
+
+int __posixToPhxPrio(int prio);
+
+
 #ifdef __cplusplus
 }
 #endif
