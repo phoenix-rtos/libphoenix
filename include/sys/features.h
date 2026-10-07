@@ -33,5 +33,12 @@
  */
 #define __PHOENIX_SCHED_PRIO_POSIX 1
 
+/*
+ * setpriority()/getpriority() are no-ops succeeding for every existing
+ * process, as POSIX mandates for SCHED_RR. When undefined, setpriority()
+ * actually changes the calling thread's priority (non-POSIX).
+ * Use sched_setparam()/pthread_setschedprio()/setPriority() instead.
+ */
+#define __PHOENIX_SETPRIORITY_NOOP 1
 
 #endif
