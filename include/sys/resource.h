@@ -16,6 +16,7 @@
 #ifndef _SYS_RESOURCE_H_
 #define _SYS_RESOURCE_H_
 
+#include <sys/features.h>
 #include <sys/time.h>
 #include <sys/types.h>
 
