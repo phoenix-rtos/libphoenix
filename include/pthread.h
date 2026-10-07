@@ -17,6 +17,7 @@
 #define _LIBPHOENIX_PTHREAD_H_
 
 
+#include <sys/features.h>
 #include <sys/types.h>
 #include <sys/threads.h>
 #include <sched.h>

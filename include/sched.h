@@ -18,6 +18,7 @@
 
 
 #include <errno.h>
+#include <sys/features.h>
 #include <phoenix/sched.h>
 #include <phoenix/posix-types.h>
 #include <phoenix/posix-timespec.h>
