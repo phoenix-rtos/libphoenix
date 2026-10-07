@@ -26,5 +26,12 @@
 
 #define __GNUC_PREREQ__(ma, mi) __GNUC_PREREQ(ma, mi)
 
+/*
+ * sched_* and pthread_* functions operate on POSIX priorities (greater value,
+ * more critical). When undefined, these functions take native Phoenix
+ * priorities, which are inverted and may be negative.
+ */
+#define __PHOENIX_SCHED_PRIO_POSIX 1
+
 
 #endif
