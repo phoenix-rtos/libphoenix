@@ -255,8 +255,7 @@ FILE *fdopen(int fd, const char *mode)
 	}
 
 	/* POSIX: check if mode argument is allowed by the file access mode of the FD (not necessarily exactly the same) */
-	fdm &= 0x7;
-	if ((fdm != O_RDWR) && (fdm != (m & 0x7))) {
+	if (((fdm & O_ACCMODE) != O_RDWR) && ((fdm & O_ACCMODE) != (m & O_ACCMODE))) {
 		errno = EINVAL;
 		return NULL;
 	}
@@ -276,6 +275,15 @@ FILE *fdopen(int fd, const char *mode)
 		free(f);
 		errno = -err;
 		return NULL;
+	}
+
+	if (((fdm & O_APPEND) == 0) && ((m & O_APPEND) != 0)) {
+		if (fcntl(fd, F_SETFL, fdm | O_APPEND) < 0) {
+			resourceDestroy(f->lock);
+			buffFree(f->buffer, BUFSIZ);
+			free(f);
+			return NULL;
+		}
 	}
 
 	f->bufsz = BUFSIZ;
