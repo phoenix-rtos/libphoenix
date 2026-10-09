@@ -14,6 +14,7 @@
  */
 
 #include <assert.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <limits.h>
@@ -617,6 +618,12 @@ int pthread_getcpuclockid(pthread_t thread_id, clockid_t *clock_id)
 }
 
 
+static bool bad_posix_prio(int prio)
+{
+	return prio < 0 || prio > __phxToPosixPrio(pthread_common.min_prio_rr);
+}
+
+
 #define DECLARE_PTHREAD_ATTR_GET_EX(attr_class, attr_name, attr_type, res, body) \
 	int pthread_##attr_class##_get##attr_name(const pthread_##attr_class##_t *__restrict attr, attr_type *__restrict res) \
 	{ \
@@ -632,7 +639,7 @@ int pthread_getcpuclockid(pthread_t thread_id, clockid_t *clock_id)
 
 DECLARE_PTHREAD_ATTR_GET(stackaddr, void *, stackaddr);
 DECLARE_PTHREAD_ATTR_GET(stacksize, size_t, stacksize);
-DECLARE_PTHREAD_ATTR_GET_EX(attr, schedparam, struct sched_param, param, { param->sched_priority = attr->priority; });
+DECLARE_PTHREAD_ATTR_GET_EX(attr, schedparam, struct sched_param, param, { param->sched_priority = __phxToPosixPrio(attr->priority); });
 DECLARE_PTHREAD_ATTR_GET(schedpolicy, int, policy);
 DECLARE_PTHREAD_ATTR_GET(detachstate, int, detachstate);
 DECLARE_PTHREAD_ATTR_GET(guardsize, size_t, guardsize);
@@ -709,11 +716,11 @@ int pthread_attr_setschedparam(pthread_attr_t *attr, const struct sched_param *p
 		return ENOTSUP;
 	}
 
-	if (param->sched_priority > pthread_common.max_prio_rr || param->sched_priority < pthread_common.min_prio_rr) {
+	if (bad_posix_prio(param->sched_priority)) {
 		return EINVAL;
 	}
 
-	attr->priority = param->sched_priority;
+	attr->priority = __posixToPhxPrio(param->sched_priority);
 
 	return 0;
 }
@@ -817,15 +824,12 @@ int pthread_setschedprio(pthread_t thread, int prio)
 	pthread_ctx *ctx = (pthread_ctx *)thread;
 	int err = EOK;
 
-	if (ctx == NULL) {
+	if (ctx == NULL || bad_posix_prio(prio)) {
 		err = EINVAL;
 	}
 	else {
-		if (prio > pthread_common.max_prio_rr || prio < pthread_common.min_prio_rr) {
-			return EINVAL;
-		}
 		sched_params_t p = { 0 };
-		p.priorityBase = prio;
+		p.priorityBase = __posixToPhxPrio(prio);
 		err = -schedSet(0, ctx->id, SCHED_RR, &p);
 	}
 
@@ -846,7 +850,7 @@ int pthread_getschedparam(pthread_t thread, int *policy, struct sched_param *__r
 		err = -schedGet(0, ctx->id, &p);
 		if (err == EOK) {
 			*policy = SCHED_RR; /* Nothing else supported for now */
-			param->sched_priority = p.priorityBase;
+			param->sched_priority = __phxToPosixPrio(p.priorityBase);
 		}
 	}
 
@@ -866,8 +870,12 @@ int pthread_setschedparam(pthread_t thread, int policy, const struct sched_param
 		return ENOTSUP;
 	}
 
+	if (bad_posix_prio(param->sched_priority)) {
+		return EINVAL;
+	}
+
 	sched_params_t p = { 0 };
-	p.priorityBase = param->sched_priority;
+	p.priorityBase = __posixToPhxPrio(param->sched_priority);
 	return -schedSet(0, ctx->id, SCHED_RR, &p);
 }
 
@@ -954,7 +962,13 @@ int pthread_mutex_getprioceiling(const pthread_mutex_t *__restrict mutex, int *_
 		return EINVAL;
 	}
 
-	return -mutexPrioCeiling(mutex->mutexh, PH_GET_PRIO, prioceiling);
+	int prio;
+	int err = -mutexPrioCeiling(mutex->mutexh, PH_GET_PRIO, &prio);
+	if (err == EOK) {
+		*prioceiling = __phxToPosixPrio(prio);
+	}
+
+	return err;
 }
 
 
@@ -967,7 +981,7 @@ static int pthread_mutex_lazy_init(pthread_mutex_t *__restrict mutex, const pthr
 int pthread_mutex_setprioceiling(pthread_mutex_t *__restrict mutex, int prioceiling, int *__restrict old_ceiling)
 {
 	/* POSIX-DEVIATION: SCHED_RR priorities used instead of SCHED_FIFO. See note in pthread_mutexattr_setprioceiling() */
-	if (old_ceiling == NULL || prioceiling > pthread_common.max_prio_rr || prioceiling < pthread_common.min_prio_rr) {
+	if (old_ceiling == NULL || bad_posix_prio(prioceiling)) {
 		return EINVAL;
 	}
 
@@ -976,7 +990,13 @@ int pthread_mutex_setprioceiling(pthread_mutex_t *__restrict mutex, int prioceil
 		return err;
 	}
 
-	return -mutexPrioCeiling(mutex->mutexh, prioceiling, old_ceiling);
+	int prio;
+	err = -mutexPrioCeiling(mutex->mutexh, __posixToPhxPrio(prioceiling), &prio);
+	if (err == EOK) {
+		*old_ceiling = __phxToPosixPrio(prio);
+	}
+
+	return err;
 }
 
 
@@ -1134,7 +1154,7 @@ int pthread_mutexattr_init(pthread_mutexattr_t *attr)
 
 
 #define DECLARE_PTHREAD_MUTEXATTR_GET(attr_name, attr_type, res) DECLARE_PTHREAD_ATTR_GET_EX(mutexattr, attr_name, attr_type, res, { *(res) = attr->attr_name; })
-DECLARE_PTHREAD_MUTEXATTR_GET(prioceiling, int, prioceiling);
+DECLARE_PTHREAD_ATTR_GET_EX(mutexattr, prioceiling, int, prioceiling, { *(prioceiling) = __phxToPosixPrio(attr->prioceiling); });
 DECLARE_PTHREAD_MUTEXATTR_GET(protocol, int, protocol);
 DECLARE_PTHREAD_MUTEXATTR_GET(robust, int, robust);
 DECLARE_PTHREAD_MUTEXATTR_GET(type, int, type);
@@ -1163,11 +1183,11 @@ int pthread_mutexattr_setprioceiling(pthread_mutexattr_t *attr, int prioceiling)
 	 * SCHED_FIFO priorities. Kernel currently doesn't support SCHED_FIFO, so
 	 * check against SCHED_RR priorities instead.
 	 */
-	if (prioceiling > pthread_common.max_prio_rr || prioceiling < pthread_common.min_prio_rr) {
+	if (bad_posix_prio(prioceiling)) {
 		return EINVAL;
 	}
 
-	attr->prioceiling = prioceiling;
+	attr->prioceiling = __posixToPhxPrio(prioceiling);
 
 	return EOK;
 }
@@ -1266,7 +1286,7 @@ int sched_get_priority_max(int policy)
 		return SET_ERRNO(err);
 	}
 
-	return pthread_common.max_prio_rr;
+	return __phxToPosixPrio(pthread_common.min_prio_rr);
 }
 
 
@@ -1277,7 +1297,7 @@ int sched_get_priority_min(int policy)
 		return SET_ERRNO(err);
 	}
 
-	return pthread_common.min_prio_rr;
+	return __phxToPosixPrio(pthread_common.max_prio_rr);
 }
 
 
@@ -1286,8 +1306,13 @@ int sched_setparam(pid_t pid, const struct sched_param *param)
 	if (pid < 0 || param == NULL) {
 		return SET_ERRNO(-EINVAL);
 	}
+
+	if (bad_posix_prio(param->sched_priority)) {
+		return SET_ERRNO(-EINVAL);
+	}
+
 	sched_params_t p = { 0 };
-	p.priorityBase = param->sched_priority;
+	p.priorityBase = __posixToPhxPrio(param->sched_priority);
 	int err = SET_ERRNO(schedSet(pid, 0, SCHED_RR, &p));
 	return err < 0 ? err : EOK;
 }
@@ -1303,7 +1328,7 @@ int sched_getparam(pid_t pid, struct sched_param *param)
 	if (err < 0) {
 		return err;
 	}
-	param->sched_priority = p.priorityBase;
+	param->sched_priority = __phxToPosixPrio(p.priorityBase);
 	return EOK;
 }
 
@@ -2258,6 +2283,18 @@ int pthread_spin_unlock(pthread_spinlock_t *lock)
 	__atomic_store_n(&lock->locked, 0, __ATOMIC_RELEASE);
 
 	return 0;
+}
+
+
+int __phxToPosixPrio(int prio)
+{
+	return pthread_common.max_prio_rr - prio;
+}
+
+
+int __posixToPhxPrio(int prio)
+{
+	return __phxToPosixPrio(prio);
 }
 
 
