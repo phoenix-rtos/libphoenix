@@ -14,6 +14,7 @@
  */
 
 #include <stdlib.h>
+#include <stdbool.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <stdio.h>
@@ -174,12 +175,12 @@ static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, 
 		p = strchrnul(node, '/');
 		const size_t node_len = p - node;
 
-		/* skip trailing slashes to properly detect leaf node */
+		const bool is_leaf_without_slash = *p == '\0';
 		while (*p == '/') {
 			p += 1;
 		}
 
-		const int is_leaf = (*p == '\0') ? 1 : 0;
+		const bool is_leaf = *p == '\0';
 
 		/* check for '.' and '..' */
 		if (node_len == 0) { /* multiple '/' */
@@ -203,37 +204,40 @@ static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, 
 		r += node_len;
 		*r = '\0';
 
-		if ((is_leaf != 0) && (resolve_last_symlink == 0)) {
-			/* WARN: slight inconsistency: we're not checking if the path actually exists in this case (TODO?) */
-			break;
-		}
-
 		/*
 		 * Number of initial unused `path` bytes that can be used to resolve current node. If link content is
 		 * longer we will not be able to merge it with remaining path and still fit in PATH_MAX buffer
 		 */
 		const size_t readlink_max_len = p - path;
+		/* In this case we use `_readlink_abs` only to check for file's existence and if it is a directory */
+		bool leaf_without_resolving = is_leaf && (resolve_last_symlink == 0);
 
 		/* (hackish) save some messsaging by not calling lstat, but directly readlink() and checking error code */
-		int errsave = errno;
-		ssize_t symlink_len = _readlink_abs(result, path, readlink_max_len);
+		ssize_t symlink_len = _readlink_abs(result, path, leaf_without_resolving ? 0 : readlink_max_len);
+		if (symlink_len == -EISDIR) {
+			/* is directory - continue resolving */
+			continue;
+		}
 
-		if (symlink_len < 0) {
-			if (errno == EINVAL) { /* not a symlink */
-				errno = errsave;
-				continue;
-			}
-			else if ((errno == ENOENT) && (is_leaf != 0) && (allow_missing_leaf != 0)) { /* non-esixting leaf */
-				errno = errsave;
+		if ((symlink_len == -EINVAL) || ((symlink_len >= 0) && leaf_without_resolving)) {
+			/* (not a symlink or directory) or (is symlink but we asked it to not be resolved) */
+			if (is_leaf_without_slash) {
+				/* Leaf reached - path resolved */
 				break;
 			}
 			else {
-				/* errno set by _readlink_abs */
-				return -1;
+				/* Not traversible or leaf ending with slash */
+				return SET_ERRNO(-ENOTDIR);
 			}
 		}
-
-		if (symlink_len == 0) {
+		else if ((symlink_len == -ENOENT) && is_leaf && (allow_missing_leaf != 0)) {
+			/* non-existent leaf */
+			break;
+		}
+		else if (symlink_len < 0) {
+			return SET_ERRNO(symlink_len);
+		}
+		else if (symlink_len == 0) {
 			/* NOTE: this case is not defined in POSIX */
 			/* see: https://lwn.net/Articles/551224/ */
 			return SET_ERRNO(-ENOENT);
@@ -251,8 +255,11 @@ static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, 
 		}
 
 		/* prepend resolved symlink to remaining unresolved path */
-		p -= 1;
-		*p = '/';
+		if (is_leaf_without_slash == 0) {
+			p -= 1;
+			*p = '/';
+		}
+
 		p -= symlink_len;
 		memmove(p, path, symlink_len);
 
@@ -577,7 +584,7 @@ static ssize_t _readlink_abs(const char *path, char *buf, size_t bufsiz)
 
 	int ret = safe_lookup(path, &oid, NULL);
 	if (ret < 0) {
-		return SET_ERRNO(ret);
+		return ret;
 	}
 
 	msg_t msg = {
@@ -588,15 +595,20 @@ static ssize_t _readlink_abs(const char *path, char *buf, size_t bufsiz)
 
 	ret = msgSend(oid.port, &msg);
 	if (ret != EOK) {
-		return SET_ERRNO(ret);
+		return ret;
 	}
 
 	if (msg.o.err < 0) {
-		return SET_ERRNO(msg.o.err);
+		return msg.o.err;
 	}
 
 	if (!S_ISLNK(msg.o.attr.val)) {
-		return SET_ERRNO(-EINVAL);
+		ret = S_ISDIR(msg.o.attr.val) ? -EISDIR : -EINVAL;
+		return ret;
+	}
+
+	if (bufsiz == 0) {
+		return 0;
 	}
 
 	memset(&msg, 0, sizeof(msg_t));
@@ -607,14 +619,10 @@ static ssize_t _readlink_abs(const char *path, char *buf, size_t bufsiz)
 	msg.o.data = buf;
 	ret = msgSend(oid.port, &msg);
 	if (ret != EOK) {
-		return SET_ERRNO(ret);
+		return ret;
 	}
 
-	if (msg.o.err < 0) {
-		return SET_ERRNO(msg.o.err);
-	}
-
-	/* number of bytes written without terminating NULL byte */
+	/* number of bytes written without terminating NULL byte or retcode */
 	return msg.o.err;
 }
 
@@ -632,8 +640,11 @@ ssize_t readlink(const char *path, char *buf, size_t bufsiz)
 
 	free(canonical);
 
-	/* if error - errno set by _readlink_abs() */
-	return ret;
+	if (ret == -EISDIR) {
+		ret = -EINVAL;
+	}
+
+	return SET_ERRNO(ret);
 }
 
 
