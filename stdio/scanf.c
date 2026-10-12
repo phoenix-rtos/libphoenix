@@ -5,8 +5,8 @@
  *
  * scanf.c
  *
- * Copyright 2017, 2022-2023 Phoenix Systems
- * Author: Adrian Kepka, Gerard Swiderski
+ * Copyright 2017, 2022-2023, 2026 Phoenix Systems
+ * Author: Adrian Kepka, Gerard Swiderski, Ziemowit Leszczynski
  *
  * This file is part of Phoenix-RTOS.
  *
@@ -33,6 +33,7 @@
 #define NOSKIP     0x20   /* [ or c: do not skip blanks */
 #define LONGLONG   0x400  /* ll: long long (+ deprecated q: quad) */
 #define PTRDIFF    0x800  /* t: ptrdiff_t */
+#define ALLOCATE   0x1000 /* m: allocate the converted string */
 #define SHORTSHORT 0x4000 /* hh: char */
 #define UNSIGNED   0x8000 /* %[oupxX] conversions */
 
@@ -49,6 +50,65 @@
 #define CT_INT    3 /* %[dioupxX] conversion */
 #define CT_FLOAT  4 /* %[aefgAEFG] conversion */
 #define CT_NONE   5 /* No conversion (ex. %n) */
+
+
+/* number of `%m` arguments that fit in the initial scanf_alloc_t table */
+#define SCANF_ALLOCN 16
+
+
+/*
+ * Tracks allocated `%m` arguments. If scanf() returns EOF, it must free them,
+ * so they are recorded as they are assigned. Grow the table before allocating
+ * the buffer to keep the failure path itself free of allocations.
+ */
+typedef struct {
+	char ***arg;  /* each entry holds allocated buffer for one argument */
+	size_t argsz; /* number of `arg` entries */
+	size_t cnt;   /* number of arguments tracked */
+} scanf_alloc_t;
+
+
+static char *scanf_alloc(scanf_alloc_t *alloc, char **dst, size_t size)
+{
+	char *p;
+
+	if (alloc->cnt == alloc->argsz) {
+		size_t argsz = (alloc->argsz == 0) ? SCANF_ALLOCN : (alloc->argsz * 2);
+
+		char ***arg = realloc(alloc->arg, argsz * sizeof(*arg));
+		if (arg == NULL) {
+			/* errno set by realloc */
+			return NULL;
+		}
+
+		alloc->arg = arg;
+		alloc->argsz = argsz;
+	}
+
+	p = malloc(size);
+	if (p == NULL) {
+		/* errno set by malloc */
+		return NULL;
+	}
+
+	*dst = p;
+	alloc->arg[alloc->cnt++] = dst;
+
+	return p;
+}
+
+
+static void scanf_allocFree(scanf_alloc_t *alloc)
+{
+	size_t i;
+
+	for (i = 0; i < alloc->cnt; i++) {
+		free(*alloc->arg[i]);
+		*alloc->arg[i] = NULL;
+	}
+
+	alloc->cnt = 0;
+}
 
 
 static const unsigned char *__sccl(char *tab, const unsigned char *fmt)
@@ -106,12 +166,12 @@ static const unsigned char *__sccl(char *tab, const unsigned char *fmt)
 }
 
 
-static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0, va_list ap)
+static int scanf_parse(scanf_alloc_t *alloc, char *ccltab, const char *inp, int *inr, char const *fmt0, va_list ap)
 {
 	const unsigned char *fmt = (const unsigned char *)fmt0;
-	int c, n, flags, nassigned, nconversions, nread, base;
-	size_t width;
-	char *p, *p0;
+	int c, flags, nassigned, nconversions, nread, base;
+	size_t width, len;
+	char *p;
 	char buf[32];
 
 	static const short basefix[17] = { 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
@@ -208,6 +268,10 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 					if (sizeof(size_t) == sizeof(uint64_t)) {
 						flags |= LONGLONG;
 					}
+					continue;
+
+				case 'm':
+					flags |= ALLOCATE;
 					continue;
 
 				case 'h':
@@ -336,6 +400,11 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 			break;
 		}
 
+		if (((flags & ALLOCATE) != 0) && (convType != CT_STRING) && (convType != CT_CCL) && (convType != CT_CHAR)) {
+			/* `m` modifier is only valid with %s, %[ and %c conversions */
+			return nassigned;
+		}
+
 		if (convType == CT_NONE) {
 			continue;
 		}
@@ -369,12 +438,23 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 					return (nconversions != 0 ? nassigned : -1);
 				}
 
-				if (width > *inr) {
+				if (width > (size_t)*inr) {
 					width = *inr;
 				}
 
 				if ((flags & SUPPRESS) == 0) {
-					memcpy(va_arg(ap, char *), inp, width);
+					if ((flags & ALLOCATE) != 0) {
+						p = scanf_alloc(alloc, va_arg(ap, char **), width);
+						if (p == NULL) {
+							/* errno set by scanf_alloc */
+							return -1;
+						}
+					}
+					else {
+						p = va_arg(ap, char *);
+					}
+
+					memcpy(p, inp, width);
 					nassigned++;
 				}
 
@@ -388,49 +468,34 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 				if (width == 0) {
 					width = (size_t)~0; /* `infinity' */
 				}
-				if ((flags & SUPPRESS) != 0) {
-					n = 0;
-					while (ccltab[(unsigned char)*inp] != 0) {
-						n++;
-						(*inr)--;
-						inp++;
-						if (--width == 0) {
-							break;
-						}
-						if (*inr <= 0) {
-							if (n == 0) {
-								return (nconversions != 0 ? nassigned : -1);
-							}
-							break;
-						}
-					}
-					if (n == 0) {
-						return nassigned;
-					}
+
+				for (len = 0; (len < width) && (len < (size_t)*inr) && (ccltab[(unsigned char)inp[len]] != 0); len++) {
 				}
-				else {
-					p0 = p = va_arg(ap, char *);
-					while (ccltab[(unsigned char)*inp] != 0) {
-						(*inr)--;
-						*p++ = *inp++;
-						if (--width == 0) {
-							break;
-						}
-						if (*inr <= 0) {
-							if (p == p0) {
-								return (nconversions != 0 ? nassigned : -1);
-							}
-							break;
+
+				if (len == 0) {
+					return nassigned;
+				}
+
+				if ((flags & SUPPRESS) == 0) {
+					if ((flags & ALLOCATE) != 0) {
+						p = scanf_alloc(alloc, va_arg(ap, char **), len + 1);
+						if (p == NULL) {
+							/* errno set by scanf_alloc */
+							return -1;
 						}
 					}
-					n = p - p0;
-					if (n == 0) {
-						return nassigned;
+					else {
+						p = va_arg(ap, char *);
 					}
-					*p = 0;
+
+					memcpy(p, inp, len);
+					p[len] = '\0';
 					nassigned++;
 				}
-				nread += n;
+
+				*inr -= len;
+				inp += len;
+				nread += len;
 				nconversions++;
 				break;
 
@@ -438,37 +503,32 @@ static int scanf_parse(char *ccltab, const char *inp, int *inr, char const *fmt0
 				if (width == 0) {
 					width = (size_t)~0;
 				}
-				if ((flags & SUPPRESS) != 0) {
-					while (isspace(*inp) == 0) {
-						nread++;
-						(*inr)--;
-						inp++;
-						if (--width == 0) {
-							break;
-						}
-						if (*inr <= 0) {
-							break;
-						}
-					}
+
+				for (len = 0; (len < width) && (len < (size_t)*inr) && (isspace((unsigned char)inp[len]) == 0); len++) {
 				}
-				else {
-					p0 = p = va_arg(ap, char *);
-					while (isspace(*inp) == 0) {
-						(*inr)--;
-						*p++ = *inp++;
-						if (--width == 0) {
-							break;
-						}
-						if (*inr <= 0) {
-							break;
+
+				if ((flags & SUPPRESS) == 0) {
+					if ((flags & ALLOCATE) != 0) {
+						p = scanf_alloc(alloc, va_arg(ap, char **), len + 1);
+						if (p == NULL) {
+							/* errno set by scanf_alloc */
+							return -1;
 						}
 					}
-					*p = 0;
-					nread += p - p0;
+					else {
+						p = va_arg(ap, char *);
+					}
+
+					memcpy(p, inp, len);
+					p[len] = '\0';
 					nassigned++;
 				}
+
+				*inr -= len;
+				inp += len;
+				nread += len;
 				nconversions++;
-				continue;
+				break;
 
 			case CT_INT:
 				if (((flags & POINTER) != 0) && ((*inr) >= FORMAT_NIL_STR_LEN) && (strncmp(FORMAT_NIL_STR, inp, FORMAT_NIL_STR_LEN) == 0)) {
@@ -718,6 +778,7 @@ int vfscanf(FILE *stream, const char *format, va_list ap)
 {
 	int ret, nremain;
 	size_t n = 0;
+	scanf_alloc_t alloc = { 0 };
 	char *lineptr = NULL;
 	char *ccltab;
 
@@ -733,11 +794,15 @@ int vfscanf(FILE *stream, const char *format, va_list ap)
 
 	ret = getline(&lineptr, &n, stream);
 	if (ret > 0) {
-		ret = scanf_parse(ccltab, lineptr, &nremain, format, ap);
+		ret = scanf_parse(&alloc, ccltab, lineptr, &nremain, format, ap);
 		ungetstr(stream, lineptr, nremain);
 		free(lineptr);
 	}
+	if (ret < 0) {
+		scanf_allocFree(&alloc);
+	}
 
+	free(alloc.arg);
 	free(ccltab);
 
 	return ret;
@@ -747,6 +812,7 @@ int vfscanf(FILE *stream, const char *format, va_list ap)
 int vsscanf(const char *str, const char *format, va_list ap)
 {
 	int ret, nremain;
+	scanf_alloc_t alloc = { 0 };
 	char *ccltab = malloc(256);
 
 	if (ccltab == NULL) {
@@ -754,7 +820,12 @@ int vsscanf(const char *str, const char *format, va_list ap)
 		return -1;
 	}
 
-	ret = scanf_parse(ccltab, str, &nremain, format, ap);
+	ret = scanf_parse(&alloc, ccltab, str, &nremain, format, ap);
+	if (ret < 0) {
+		scanf_allocFree(&alloc);
+	}
+
+	free(alloc.arg);
 	free(ccltab);
 
 	return ret;
