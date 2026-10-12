@@ -358,13 +358,11 @@ pid_t fork(void)
 		release();
 		_pthread_atfork_child();
 	}
-	else if (pid < 0) {
-		return SET_ERRNO(pid);
-	}
 	else {
 		_pthread_atfork_parent();
 	}
-	return pid;
+
+	return SET_ERRNO(pid);
 }
 
 
