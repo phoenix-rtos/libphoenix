@@ -350,12 +350,32 @@ extern pid_t sys_fork(void);
 extern void release(void);
 
 
+/* OS-LIMITATION: on NOMMU targets the kernel cannot copy the address space, so fork() fails with ENOSYS */
+static pid_t __fork(void)
+{
+	pid_t pid = sys_fork();
+
+	if (pid == 0) {
+		release();
+	}
+
+	return pid;
+}
+
+
+pid_t _Fork(void)
+{
+	return SET_ERRNO(__fork());
+}
+
+
 pid_t fork(void)
 {
 	pid_t pid;
+
 	_pthread_atfork_prepare();
-	if (!(pid = sys_fork())) {
-		release();
+	pid = __fork();
+	if (pid == 0) {
 		_pthread_atfork_child();
 	}
 	else {
