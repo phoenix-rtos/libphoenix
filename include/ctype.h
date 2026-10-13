@@ -77,7 +77,8 @@ int ispunct(int c);
 
 /* This function checks whether the passed character is white-space. */
 int isspace(int c);
-#define __isspace(c) (((c) == ' ' || (c) == '\f' || (c) == '\t' || (c) == '\n' || (c) == '\r' || (c) == '\v') ? 1 : 0)
+/* '\t' '\n' '\v' '\f' '\r' are contiguous, so the set is a range plus one value */
+#define __isspace(c) (((((c) >= '\t') && ((c) <= '\r')) || ((c) == ' ')) ? 1 : 0)
 #define isspace(c)   __isspace(c)
 
 
