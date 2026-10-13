@@ -34,7 +34,8 @@ static struct {
 	char *cwd;
 } dir_common;
 
-static ssize_t _readlink_abs(const char *path, char *buf, size_t bufsiz);
+static int _getMode_abs(const char *path, oid_t *oid_out, long long *mode_out);
+static ssize_t _readlink_oid(const oid_t *oid, char *buf, size_t bufsiz);
 static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, int allow_missing_leaf);
 
 
@@ -204,37 +205,43 @@ static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, 
 		r += node_len;
 		*r = '\0';
 
-		/*
-		 * Number of initial unused `path` bytes that can be used to resolve current node. If link content is
-		 * longer we will not be able to merge it with remaining path and still fit in PATH_MAX buffer
-		 */
-		const size_t readlink_max_len = p - path;
-		/* In this case we use `_readlink_abs` only to check for file's existence and if it is a directory */
-		bool leaf_without_resolving = is_leaf_without_slash && (resolve_last_symlink == 0);
+		oid_t oid;
+		long long mode;
 
-		/* (hackish) save some messsaging by not calling lstat, but directly readlink() and checking error code */
-		ssize_t symlink_len = _readlink_abs(result, path, leaf_without_resolving ? 0 : readlink_max_len);
-		if (symlink_len == -EISDIR) {
+		int ret = _getMode_abs(result, &oid, &mode);
+		if (ret < 0) {
+			if ((ret == -ENOENT) && is_leaf && (allow_missing_leaf != 0)) {
+				/* non-existent leaf, but we allow it */
+				break;
+			}
+
+			return SET_ERRNO(ret);
+		}
+
+		if (S_ISDIR(mode)) {
 			/* is directory - continue resolving */
 			continue;
 		}
 
-		if ((symlink_len == -EINVAL) || ((symlink_len >= 0) && leaf_without_resolving)) {
-			/* (not a symlink or directory) or (is symlink but we asked it to not be resolved) */
+		if (!S_ISLNK(mode) || (is_leaf_without_slash && (resolve_last_symlink == 0))) {
+			/* not a symlink or is symlink but we don't want to resolve it */
 			if (is_leaf_without_slash) {
 				/* Leaf reached - path resolved */
 				break;
 			}
-			else {
-				/* Not traversible or leaf ending with slash */
-				return SET_ERRNO(-ENOTDIR);
-			}
+
+			/* Not traversible or leaf ending with slash */
+			return SET_ERRNO(-ENOTDIR);
 		}
-		else if ((symlink_len == -ENOENT) && is_leaf && (allow_missing_leaf != 0)) {
-			/* non-existent leaf */
-			break;
-		}
-		else if (symlink_len < 0) {
+
+		/*
+		 * At this point S_ISLNK(mode) and we want to resolve it.
+		 * Number of initial unused `path` bytes that can be used to resolve symlink. If link content is
+		 * longer we will not be able to merge it with remaining path and still fit in PATH_MAX buffer
+		 */
+		const size_t readlink_max_len = p - path;
+		ssize_t symlink_len = _readlink_oid(&oid, path, readlink_max_len);
+		if (symlink_len < 0) {
 			return SET_ERRNO(symlink_len);
 		}
 		else if (symlink_len == 0) {
@@ -574,26 +581,23 @@ int closedir(DIR *dirp)
 }
 
 
-/* readlink without path resolution, to be used internally */
-/* WARN: POSIX compliance: does not append '\0' */
-static ssize_t _readlink_abs(const char *path, char *buf, size_t bufsiz)
+/* Look up OID for a given absolute path and get the object's mode, to be used internally */
+static int _getMode_abs(const char *path, oid_t *oid_out, long long *mode_out)
 {
-	oid_t oid;
-
 	assert(path && path[0] == '/');
 
-	int ret = safe_lookup(path, &oid, NULL);
+	int ret = safe_lookup(path, oid_out, NULL);
 	if (ret < 0) {
 		return ret;
 	}
 
 	msg_t msg = {
 		.type = mtGetAttr,
-		.oid = oid,
+		.oid = *oid_out,
 		.i.attr.type = atMode
 	};
 
-	ret = msgSend(oid.port, &msg);
+	ret = msgSend(oid_out->port, &msg);
 	if (ret != EOK) {
 		return ret;
 	}
@@ -602,22 +606,25 @@ static ssize_t _readlink_abs(const char *path, char *buf, size_t bufsiz)
 		return msg.o.err;
 	}
 
-	if (!S_ISLNK(msg.o.attr.val)) {
-		ret = S_ISDIR(msg.o.attr.val) ? -EISDIR : -EINVAL;
-		return ret;
-	}
+	*mode_out = msg.o.attr.val;
+	return 0;
+}
 
-	if (bufsiz == 0) {
-		return 0;
-	}
 
+/* readlink from given OID without error checking, to be used internally */
+/* WARN: POSIX compliance: does not append '\0' */
+static ssize_t _readlink_oid(const oid_t *oid, char *buf, size_t bufsiz)
+{
+	int ret;
+	msg_t msg;
 	memset(&msg, 0, sizeof(msg_t));
-	msg.type = mtRead;
-	msg.oid = oid;
 
+	msg.type = mtRead;
+	msg.oid = *oid;
 	msg.o.size = bufsiz;
 	msg.o.data = buf;
-	ret = msgSend(oid.port, &msg);
+
+	ret = msgSend(oid->port, &msg);
 	if (ret != EOK) {
 		return ret;
 	}
@@ -632,18 +639,23 @@ ssize_t readlink(const char *path, char *buf, size_t bufsiz)
 	/* resolve_last_symlink = 0 -> read a symlink value */
 	char *canonical = resolve_path(path, NULL, 0, 0);
 	ssize_t ret;
+	oid_t oid;
+	long long mode;
 
-	if (canonical == NULL)
+	if (canonical == NULL) {
 		return -1; /* errno set by resolve_path */
-
-	ret = _readlink_abs(canonical, buf, bufsiz);
-
-	free(canonical);
-
-	if (ret == -EISDIR) {
-		ret = -EINVAL;
 	}
 
+	ret = (ssize_t)_getMode_abs(canonical, &oid, &mode);
+	if (ret == 0) {
+		ret = S_ISLNK(mode) ? 0 : -EINVAL;
+	}
+
+	if (ret == 0) {
+		ret = _readlink_oid(&oid, buf, bufsiz);
+	}
+
+	free(canonical);
 	return SET_ERRNO(ret);
 }
 
