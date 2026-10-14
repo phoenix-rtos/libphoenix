@@ -1,0 +1,18 @@
+sys/Makefile
+  h_fc26ad17182140 7
+sys/interrupt.c
+  h_fc26ad17182140 1-50
+include/sys/interrupt.h
+  h_fc26ad17182140 28-40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "682233b6b9d6864cdae0626509ce5dd984d3ad3f",
+  "prompts": {},
+  "humans": {
+    "h_fc26ad17182140": {
+      "author": "Lukasz Leczkowski <lukasz.leczkowski@phoenix-rtos.com>"
+    }
+  }
+}
