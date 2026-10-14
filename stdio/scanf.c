@@ -760,6 +760,9 @@ static int scanf_parse(scanf_src_t *src, scanf_alloc_t *alloc, char **ccltab, ch
 			}
 
 			if (c == '%') {
+				/* `%%` is a conversion specification, so it skips leading white spaces */
+				nread += scanf_spaceSkip(src);
+
 				if (scanf_fill(src, 1) == 0) {
 					return (nconversions != 0 ? nassigned : -1);
 				}
