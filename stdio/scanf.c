@@ -711,7 +711,7 @@ static const unsigned char *__sccl(char *tab, const unsigned char *fmt)
 }
 
 
-static int scanf_parse(scanf_src_t *src, scanf_alloc_t *alloc, char *ccltab, char const *fmt0, va_list ap)
+static int scanf_parse(scanf_src_t *src, scanf_alloc_t *alloc, char **ccltab, char const *fmt0, va_list ap)
 {
 	const unsigned char *fmt = (const unsigned char *)fmt0;
 	int c, flags, nassigned, nconversions, nread, base;
@@ -888,7 +888,15 @@ static int scanf_parse(scanf_src_t *src, scanf_alloc_t *alloc, char *ccltab, cha
 					break;
 
 				case '[':
-					fmt = __sccl(ccltab, fmt);
+					if (*ccltab == NULL) {
+						*ccltab = malloc(256);
+						if (*ccltab == NULL) {
+							/* errno set by malloc */
+							return -1;
+						}
+					}
+
+					fmt = __sccl(*ccltab, fmt);
 					flags |= NOSKIP;
 					convType = CT_CCL;
 					break;
@@ -1002,10 +1010,10 @@ static int scanf_parse(scanf_src_t *src, scanf_alloc_t *alloc, char *ccltab, cha
 
 				/* the run of characters present in the scanset */
 				if ((flags & SUPPRESS) == 0) {
-					len = scanf_charset(src, ccltab, width);
+					len = scanf_charset(src, *ccltab, width);
 				}
 				else {
-					len = scanf_charsetSkip(src, ccltab, width);
+					len = scanf_charsetSkip(src, *ccltab, width);
 				}
 
 				if (len == 0) {
@@ -1344,17 +1352,11 @@ int vfscanf(FILE *stream, const char *format, va_list ap)
 	int ret;
 	scanf_src_t src = { 0 };
 	scanf_alloc_t alloc = { 0 };
-	char *ccltab;
+	char *ccltab = NULL;
 	char buf[SCANF_BUFSZ];
 
 	if (strlen(format) == 0) {
 		return 0;
-	}
-
-	ccltab = malloc(256);
-	if (ccltab == NULL) {
-		/* errno set by malloc */
-		return -1;
 	}
 
 	buf[0] = '\0';
@@ -1365,7 +1367,7 @@ int vfscanf(FILE *stream, const char *format, va_list ap)
 	src.input = buf;
 	src.flags = SCANF_ONSTACK;
 
-	ret = scanf_parse(&src, &alloc, ccltab, format, ap);
+	ret = scanf_parse(&src, &alloc, &ccltab, format, ap);
 
 	if ((src.flags & SCANF_ENOMEM) != 0) {
 		/* The input could not be buffered, so the result cannot be trusted */
@@ -1393,17 +1395,12 @@ int vsscanf(const char *str, const char *format, va_list ap)
 	int ret;
 	scanf_src_t src = { 0 };
 	scanf_alloc_t alloc = { 0 };
-	char *ccltab = malloc(256);
-
-	if (ccltab == NULL) {
-		/* errno set by malloc */
-		return -1;
-	}
+	char *ccltab = NULL;
 
 	src.input = str;
 	src.len = strlen(str);
 
-	ret = scanf_parse(&src, &alloc, ccltab, format, ap);
+	ret = scanf_parse(&src, &alloc, &ccltab, format, ap);
 	if (ret < 0) {
 		scanf_allocFree(&alloc);
 	}
