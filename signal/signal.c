@@ -25,6 +25,9 @@
 extern int sys_tkill(int pid, int tid, int signal);
 
 
+extern unsigned int signalPending(void);
+
+
 extern void _signal_trampoline(void);
 
 
@@ -125,6 +128,17 @@ int sigprocmask(int how, const sigset_t *set, sigset_t *oldset)
 int sigsuspend(const sigset_t *sigmask)
 {
 	return SET_ERRNO(signalSuspend(*sigmask));
+}
+
+
+int sigpending(sigset_t *set)
+{
+	if (set == NULL) {
+		return SET_ERRNO(-EINVAL);
+	}
+
+	*set = signalPending();
+	return 0;
 }
 
 
