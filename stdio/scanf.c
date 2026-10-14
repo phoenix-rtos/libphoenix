@@ -913,7 +913,6 @@ static int scanf_parse(scanf_src_t *src, scanf_alloc_t *alloc, char **ccltab, ch
 					break;
 
 				case 'n':
-					nconversions++;
 					if ((flags & SUPPRESS) != 0) {
 						break;
 					}
