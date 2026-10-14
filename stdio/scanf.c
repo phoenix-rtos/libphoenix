@@ -1190,7 +1190,7 @@ static int scanf_parse(scanf_src_t *src, scanf_alloc_t *alloc, char **ccltab, ch
 					src->pos++;
 				}
 				if ((flags & NDIGITS) != 0) {
-					return (nconversions != 0 ? nassigned : -1);
+					return nassigned;
 				}
 
 				c = (unsigned char)src->input[src->pos - 1];
@@ -1318,7 +1318,7 @@ static int scanf_parse(scanf_src_t *src, scanf_alloc_t *alloc, char **ccltab, ch
 				}
 
 				if (is_zero && (srcbuf == p)) {
-					return (nconversions != 0 ? nassigned : -1);
+					return nassigned;
 				}
 
 				int consumed = p - srcbuf;
