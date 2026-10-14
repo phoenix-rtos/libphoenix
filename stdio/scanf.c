@@ -1087,16 +1087,17 @@ static int scanf_parse(scanf_src_t *src, scanf_alloc_t *alloc, char **ccltab, ch
 					break;
 				}
 
-				if (--width > (sizeof(buf) - 2)) {
-					width = sizeof(buf) - 2;
+				if ((flags & SUPPRESS) == 0) {
+					if ((width == 0) || (width > (sizeof(buf) - 1))) {
+						width = sizeof(buf) - 1;
+					}
 				}
-				width++;
-
-				if ((flags & SUPPRESS) != 0) {
-					width = ~0;
+				else if (width == 0) {
+					width = (size_t)~0; /* infinity */
 				}
 
 				flags |= SIGNOK | NDIGITS | NZDIGITS;
+				len = 0;
 				for (p = buf; width != 0; width--) {
 					int ok = 0;
 
@@ -1171,7 +1172,7 @@ static int scanf_parse(scanf_src_t *src, scanf_alloc_t *alloc, char **ccltab, ch
 
 						case 'x':
 						case 'X':
-							if (((flags & PFXOK) != 0) && (p == buf + 1)) {
+							if (((flags & PFXOK) != 0) && (len == 1)) {
 								base = 16; /* if %i */
 								flags &= ~PFXOK;
 								ok = 1;
@@ -1185,15 +1186,20 @@ static int scanf_parse(scanf_src_t *src, scanf_alloc_t *alloc, char **ccltab, ch
 						*p++ = c;
 					}
 
+					len++;
 					src->pos++;
 				}
 				if ((flags & NDIGITS) != 0) {
 					return (nconversions != 0 ? nassigned : -1);
 				}
 
-				c = ((unsigned char *)p)[-1];
+				c = (unsigned char)src->input[src->pos - 1];
 				if ((c == 'x') || (c == 'X')) {
-					--p;
+					if ((flags & SUPPRESS) == 0) {
+						p--;
+					}
+
+					len--;
 					src->pos--;
 				}
 
@@ -1231,7 +1237,7 @@ static int scanf_parse(scanf_src_t *src, scanf_alloc_t *alloc, char **ccltab, ch
 					nassigned++;
 				}
 
-				nread += p - buf;
+				nread += len;
 				nconversions++;
 				break;
 
