@@ -58,6 +58,27 @@ static void _signal_terminate(int sig)
 {
 	int phxsig = _signals_posix2phx[sig];
 
+	switch (sig) {
+		case SIGABRT:
+		case SIGBUS:
+		case SIGFPE:
+		case SIGILL:
+		case SIGQUIT:
+		case SIGSEGV:
+		case SIGSYS:
+		case SIGTRAP:
+		case SIGXCPU:
+		case SIGXFSZ:
+			/* Default action is termination with a coredump - let the kernel terminate
+			 * the process, it does so for such signals when no signal handler is installed */
+			signalHandle(NULL);
+			(void)sys_tkill(getpid(), gettid(), phxsig);
+			break;
+
+		default:
+			break;
+	}
+
 	_exit(((phxsig) & 0x7f) << 8);
 }
 
