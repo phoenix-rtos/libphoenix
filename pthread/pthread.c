@@ -61,7 +61,7 @@ typedef struct pthread_ctx {
 	struct __errno_t e;
 	int refcount;
 	struct pthread_key_data_t *key_data_list;
-	struct _pthread_cleanup_t *cleanup_list;
+	struct __pthread_cleanup *cleanup_list; /* WARN: records allocated on the thread stack */
 	int exiting;
 } pthread_ctx;
 
@@ -108,13 +108,6 @@ typedef struct pthread_key_data_t {
 	void *value;
 	struct pthread_key_data_t *next;
 } pthread_key_data_t;
-
-
-typedef struct _pthread_cleanup_t {
-	void (*routine)(void *);
-	void *arg;
-	struct _pthread_cleanup_t *next;
-} pthread_cleanup_t;
 
 
 static const pthread_attr_t pthread_attr_default = {
@@ -187,12 +180,11 @@ static void pthread_start_point(void *args)
 
 static void _pthread_do_cleanup(pthread_ctx *ctx)
 {
-	pthread_cleanup_t *head = ctx->cleanup_list;
+	struct __pthread_cleanup *head = ctx->cleanup_list;
 	while (head != NULL) {
 		void (*routine)(void *) = head->routine;
 		void *arg = head->arg;
 		ctx->cleanup_list = head->next;
-		free(head);
 		mutexUnlock(pthread_common.pthread_list_lock);
 		routine(arg);
 		mutexLock(pthread_common.pthread_list_lock);
@@ -340,11 +332,7 @@ static void _pthread_release(pthread_ctx *ctx, int self)
 	void *stack = ctx->stack;
 	size_t stacksize = ctx->stacksize;
 
-	while (ctx->cleanup_list != NULL) {
-		pthread_cleanup_t *head = ctx->cleanup_list;
-		ctx->cleanup_list = head->next;
-		free(head);
-	}
+	ctx->cleanup_list = NULL;
 
 	_errno_remove(&ctx->e);
 
@@ -1831,59 +1819,44 @@ void _pthread_atfork_child(void)
 }
 
 
-void pthread_cleanup_push(void (*routine)(void *), void *arg)
+void __pthread_cleanup_push(struct __pthread_cleanup *cb, void (*routine)(void *), void *arg)
 {
 	pthread_ctx *ctx = pthread_find(gettid());
 
+	cb->routine = routine;
+	cb->arg = arg;
+	cb->next = NULL;
+
 	if (ctx == NULL) {
+		/* Not a pthread */
 		return;
 	}
 
 	mutexLock(pthread_common.pthread_list_lock);
-
-	pthread_cleanup_t *head = (pthread_cleanup_t *)malloc(sizeof(pthread_cleanup_t));
-	if (head == NULL) {
-		_pthread_ctx_put(ctx);
-		return;
-	}
-
-	head->next = ctx->cleanup_list;
-	ctx->cleanup_list = head;
-
-	ctx->cleanup_list->routine = routine;
-	ctx->cleanup_list->arg = arg;
-
+	cb->next = ctx->cleanup_list;
+	ctx->cleanup_list = cb;
 	_pthread_ctx_put(ctx);
 }
 
 
-void pthread_cleanup_pop(int execute)
+void __pthread_cleanup_pop(struct __pthread_cleanup *cb, int execute)
 {
 	pthread_ctx *ctx = pthread_find(gettid());
 
-	if (ctx == NULL) {
-		return;
-	}
-
-	mutexLock(pthread_common.pthread_list_lock);
-
-	if (ctx->cleanup_list == NULL) {
+	if (ctx != NULL) {
+		mutexLock(pthread_common.pthread_list_lock);
+		if (ctx->cleanup_list == cb) {
+			ctx->cleanup_list = cb->next;
+		}
+		else {
+			/* pthread_cancel() has already taken the handler off the stack */
+			execute = 0;
+		}
 		_pthread_ctx_put(ctx);
-		return;
 	}
-
-	pthread_cleanup_t *head = ctx->cleanup_list;
-	ctx->cleanup_list = head->next;
-	_pthread_ctx_put(ctx);
 
 	if (execute != 0) {
-		void (*routine)(void *) = head->routine;
-		void *arg = head->arg;
-		free(head);
-		routine(arg);
-	}
-	else {
-		free(head);
+		cb->routine(cb->arg);
 	}
 }
 
