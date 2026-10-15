@@ -309,6 +309,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 	ctx->cancelstate = PTHREAD_CANCEL_ENABLE;
 	ctx->cancelled = 0;
 	ctx->cleanup_list = NULL;
+	ctx->exiting = 0;
 	*thread = (pthread_t)ctx;
 
 	mutexLock(pthread_common.pthread_list_lock);
@@ -456,8 +457,6 @@ int pthread_setcancelstate(int state, int *oldstate)
 
 static void pthread_key_cleanup(pthread_ctx *ctx)
 {
-	ctx->exiting = 1;
-
 	mutexLock(pthread_common.pthread_key_lock);
 
 	for (int i = 0; i < PTHREAD_DESTRUCTOR_ITERATIONS; i++) {
@@ -509,6 +508,10 @@ int pthread_cancel(pthread_t thread)
 		self = pthread_self();
 		mutexLock(pthread_common.pthread_list_lock);
 		_pthread_ctx_get(ctx);
+		if (__atomic_load_n(&ctx->exiting, __ATOMIC_RELAXED) != 0) {
+			_pthread_ctx_put(ctx);
+			return 0;
+		}
 		ctx->cancelled = 1;
 		if (thread == self) {
 			if (ctx->cancelstate == PTHREAD_CANCEL_ENABLE) {
@@ -520,6 +523,10 @@ int pthread_cancel(pthread_t thread)
 		}
 		else {
 			if (ctx->cancelstate == PTHREAD_CANCEL_ENABLE) {
+				if (__atomic_exchange_n(&ctx->exiting, 1, __ATOMIC_RELAXED) != 0) {
+					_pthread_ctx_put(ctx);
+					return 0;
+				}
 				_pthread_do_cleanup(ctx);
 				ctx->retval = (void *)PTHREAD_CANCELED;
 				id = ctx->id;
@@ -574,6 +581,13 @@ int pthread_equal(pthread_t t1, pthread_t t2)
 static __attribute__((noreturn)) void pthread_do_exit(pthread_ctx *ctx, void *value_ptr, int cleanup)
 {
 	if (ctx != NULL) {
+		if (__atomic_exchange_n(&ctx->exiting, 1, __ATOMIC_RELAXED) != 0) {
+			/* pthread_cancel() does the teardown already */
+			for (;;) {
+				sleep(1);
+			}
+		}
+
 		if (cleanup != 0) {
 			mutexLock(pthread_common.pthread_list_lock);
 			_pthread_do_cleanup(ctx);
@@ -1645,7 +1659,7 @@ int pthread_key_delete(pthread_key_t key)
 			pthread_key_data_t *prev = NULL;
 			while (head != NULL) {
 				if (head->key == key) {
-					if (curr->exiting == 0) {
+					if (__atomic_load_n(&curr->exiting, __ATOMIC_RELAXED) == 0) {
 						if (prev == NULL) {
 							curr->key_data_list = head->next;
 						}
