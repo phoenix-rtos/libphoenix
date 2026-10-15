@@ -1722,6 +1722,17 @@ void *pthread_getspecific(pthread_key_t key)
 }
 
 
+static void pthread_once_cancelled(void *arg)
+{
+	pthread_once_t *once_control = arg;
+
+	pthread_mutex_lock(&pthread_common.pthread_once_lock);
+	*once_control = PTHREAD_ONCE_INIT;
+	pthread_cond_broadcast(&pthread_common.pthread_once_cond);
+	pthread_mutex_unlock(&pthread_common.pthread_once_lock);
+}
+
+
 int pthread_once(pthread_once_t *once_control, void (*init_routine)(void))
 {
 	pthread_mutex_lock(&pthread_common.pthread_once_lock);
@@ -1731,7 +1742,11 @@ int pthread_once(pthread_once_t *once_control, void (*init_routine)(void))
 	if (*once_control == PTHREAD_ONCE_INIT) {
 		*once_control = PTHREAD_ONCE_IN_PROGRESS;
 		pthread_mutex_unlock(&pthread_common.pthread_once_lock);
+
+		pthread_cleanup_push(pthread_once_cancelled, once_control);
 		init_routine();
+		pthread_cleanup_pop(0);
+
 		pthread_mutex_lock(&pthread_common.pthread_once_lock);
 		*once_control = PTHREAD_ONCE_DONE;
 	}
