@@ -234,10 +234,6 @@ static int sem_waitInternal(sem_t *sem, int clock, const struct timespec *abstim
 		return ioctl(sem->fd, SEM_DOWN_TIMEOUT, &timeout);
 	}
 	else if (sem->type == smUnnamed) {
-		/*
-		 * FIXME: semaphoreDownAtClock() takes microseconds, so a tv_sec beyond
-		 * TIME_T_MAX / 1000000 overflows here.
-		 */
 		ret = semaphoreDownAtClock(&sem->unnamed, __timespecToUs(abstime), clock);
 		if (ret == -ETIME) {
 			ret = -ETIMEDOUT;
