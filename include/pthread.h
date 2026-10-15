@@ -304,6 +304,9 @@ void _pthread_atfork_parent(void);
 void _pthread_atfork_child(void);
 
 
+void _pthread_forkChild(int ptid);
+
+
 void pthread_cleanup_push(void (*routine)(void *), void *arg);
 
 

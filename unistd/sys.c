@@ -348,23 +348,45 @@ unsigned sleep(unsigned seconds)
 
 extern pid_t sys_fork(void);
 extern void release(void);
+extern void _alarm_forkChild(void);
+
+
+/* OS-LIMITATION: on NOMMU targets the kernel cannot copy the address space, so fork() fails with ENOSYS */
+static pid_t __fork(void)
+{
+	int ptid = gettid();
+	pid_t pid = sys_fork();
+
+	if (pid == 0) {
+		release();
+		_pthread_forkChild(ptid);
+		_alarm_forkChild();
+	}
+
+	return pid;
+}
+
+
+pid_t _Fork(void)
+{
+	return SET_ERRNO(__fork());
+}
 
 
 pid_t fork(void)
 {
 	pid_t pid;
+
 	_pthread_atfork_prepare();
-	if (!(pid = sys_fork())) {
-		release();
+	pid = __fork();
+	if (pid == 0) {
 		_pthread_atfork_child();
-	}
-	else if (pid < 0) {
-		return SET_ERRNO(pid);
 	}
 	else {
 		_pthread_atfork_parent();
 	}
-	return pid;
+
+	return SET_ERRNO(pid);
 }
 
 

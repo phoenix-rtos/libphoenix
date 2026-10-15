@@ -224,6 +224,9 @@ int vfork(void);
 pid_t fork(void);
 
 
+pid_t _Fork(void);
+
+
 int execl(const char *path, const char *arg, ...);
 
 
