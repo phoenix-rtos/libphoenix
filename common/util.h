@@ -14,6 +14,7 @@
 #ifndef _LIBPHOENIX_COMMON_UTIL_H_
 #define _LIBPHOENIX_COMMON_UTIL_H_
 
+#include <limits.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,9 +41,19 @@ static inline bool __timespecValid(const struct timespec *ts)
 }
 
 
+/* assumes timespec is valid (see __timespecValid()) */
 static inline time_t __timespecToUs(const struct timespec *time)
 {
-	return (time->tv_sec * 1000000 + (time->tv_nsec + 999) / 1000);
+	_Static_assert(sizeof(time_t) == sizeof(long long int), "__timespecToUs assumes time_t to be the same size as long long int");
+
+	time_t us = (time->tv_nsec + 999) / 1000;
+	time_t res;
+
+	if (__builtin_mul_overflow(time->tv_sec, 1000000, &res)) {
+		return (time->tv_sec < 0) ? LLONG_MIN : LLONG_MAX;
+	}
+
+	return __builtin_add_overflow(res, us, &res) ? LLONG_MAX : res;
 }
 
 
