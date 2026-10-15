@@ -304,10 +304,30 @@ void _pthread_atfork_parent(void);
 void _pthread_atfork_child(void);
 
 
-void pthread_cleanup_push(void (*routine)(void *), void *arg);
+struct __pthread_cleanup {
+	void (*routine)(void *);
+	void *arg;
+	struct __pthread_cleanup *next;
+};
 
 
-void pthread_cleanup_pop(int execute);
+void __pthread_cleanup_push(struct __pthread_cleanup *cb, void (*routine)(void *), void *arg);
+
+
+void __pthread_cleanup_pop(struct __pthread_cleanup *cb, int execute);
+
+
+/* clang-format off */
+#define pthread_cleanup_push(routine, arg) \
+	do { \
+		struct __pthread_cleanup __pthread_cleanup_cb; \
+		__pthread_cleanup_push(&__pthread_cleanup_cb, (routine), (arg))
+
+
+#define pthread_cleanup_pop(execute) \
+		__pthread_cleanup_pop(&__pthread_cleanup_cb, (execute)); \
+	} while (0)
+/* clang-format on */
 
 
 int pthread_rwlock_rdlock(pthread_rwlock_t *rwlock);
