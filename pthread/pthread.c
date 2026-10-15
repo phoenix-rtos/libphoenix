@@ -1634,7 +1634,6 @@ int pthread_key_create(pthread_key_t *key, void (*destructor)(void *))
 
 int pthread_key_delete(pthread_key_t key)
 {
-	int err = EINVAL;
 	mutexLock(pthread_common.pthread_list_lock);
 
 	pthread_ctx *first = pthread_common.pthread_list, *curr = pthread_common.pthread_list;
@@ -1646,7 +1645,6 @@ int pthread_key_delete(pthread_key_t key)
 			pthread_key_data_t *prev = NULL;
 			while (head != NULL) {
 				if (head->key == key) {
-					err = 0;
 					if (curr->exiting == 0) {
 						if (prev == NULL) {
 							curr->key_data_list = head->next;
@@ -1671,7 +1669,7 @@ int pthread_key_delete(pthread_key_t key)
 	}
 	mutexUnlock(pthread_common.pthread_list_lock);
 	free(key);
-	return err;
+	return 0;
 }
 
 
