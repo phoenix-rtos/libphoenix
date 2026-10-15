@@ -1269,6 +1269,9 @@ int pthread_mutex_consistent(pthread_mutex_t *mutex)
 
 	if (err == EOK) {
 		err = -mutexConsistent(mutex->mutexh);
+		if (err == EPERM) {
+			err = EINVAL;
+		}
 	}
 
 	return err;
