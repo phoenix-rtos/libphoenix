@@ -1081,8 +1081,11 @@ static int scanf_parse(scanf_src_t *src, scanf_alloc_t *alloc, char **ccltab, ch
 
 			case CT_INT:
 				if (((flags & POINTER) != 0) && (scanf_isNil(src) != 0)) {
-					*va_arg(ap, void **) = NULL;
-					nassigned++;
+					if ((flags & SUPPRESS) == 0) {
+						*va_arg(ap, void **) = NULL;
+						nassigned++;
+					}
+
 					nconversions++;
 					nread += FORMAT_NIL_STR_LEN;
 					src->pos += FORMAT_NIL_STR_LEN;
