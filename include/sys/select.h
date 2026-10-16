@@ -18,17 +18,12 @@
 
 #include <time.h>
 #include <stdint.h>
+#include <phoenix/posix-timeval.h>
 
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-
-struct timeval {
-	time_t tv_sec;
-	suseconds_t tv_usec;
-};
 
 
 #ifndef FD_SETSIZE

@@ -29,9 +29,6 @@ extern "C" {
 typedef int clock_t;
 typedef int clockid_t;
 
-typedef unsigned int useconds_t;
-typedef int suseconds_t;
-
 typedef char *caddr_t;
 
 typedef unsigned char u_char;
