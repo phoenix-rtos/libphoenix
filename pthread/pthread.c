@@ -61,7 +61,7 @@ typedef struct pthread_ctx {
 	struct __errno_t e;
 	int refcount;
 	struct pthread_key_data_t *key_data_list;
-	struct _pthread_cleanup_t *cleanup_list;
+	struct __pthread_cleanup *cleanup_list; /* WARN: records allocated on the thread stack */
 	int exiting;
 } pthread_ctx;
 
@@ -108,13 +108,6 @@ typedef struct pthread_key_data_t {
 	void *value;
 	struct pthread_key_data_t *next;
 } pthread_key_data_t;
-
-
-typedef struct _pthread_cleanup_t {
-	void (*routine)(void *);
-	void *arg;
-	struct _pthread_cleanup_t *next;
-} pthread_cleanup_t;
 
 
 static const pthread_attr_t pthread_attr_default = {
@@ -187,12 +180,11 @@ static void pthread_start_point(void *args)
 
 static void _pthread_do_cleanup(pthread_ctx *ctx)
 {
-	pthread_cleanup_t *head = ctx->cleanup_list;
+	struct __pthread_cleanup *head = ctx->cleanup_list;
 	while (head != NULL) {
 		void (*routine)(void *) = head->routine;
 		void *arg = head->arg;
 		ctx->cleanup_list = head->next;
-		free(head);
 		mutexUnlock(pthread_common.pthread_list_lock);
 		routine(arg);
 		mutexLock(pthread_common.pthread_list_lock);
@@ -309,6 +301,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 	ctx->cancelstate = PTHREAD_CANCEL_ENABLE;
 	ctx->cancelled = 0;
 	ctx->cleanup_list = NULL;
+	ctx->exiting = 0;
 	*thread = (pthread_t)ctx;
 
 	mutexLock(pthread_common.pthread_list_lock);
@@ -328,7 +321,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 		mutexUnlock(pthread_common.pthread_list_lock);
 	}
 
-	return -err;
+	return (err == -ENOMEM) ? EAGAIN : -err;
 }
 
 
@@ -339,11 +332,7 @@ static void _pthread_release(pthread_ctx *ctx, int self)
 	void *stack = ctx->stack;
 	size_t stacksize = ctx->stacksize;
 
-	while (ctx->cleanup_list != NULL) {
-		pthread_cleanup_t *head = ctx->cleanup_list;
-		ctx->cleanup_list = head->next;
-		free(head);
-	}
+	ctx->cleanup_list = NULL;
 
 	_errno_remove(&ctx->e);
 
@@ -456,7 +445,7 @@ int pthread_setcancelstate(int state, int *oldstate)
 
 static void pthread_key_cleanup(pthread_ctx *ctx)
 {
-	ctx->exiting = 1;
+	__atomic_store_n(&ctx->exiting, 1, __ATOMIC_RELEASE);
 
 	mutexLock(pthread_common.pthread_key_lock);
 
@@ -509,6 +498,10 @@ int pthread_cancel(pthread_t thread)
 		self = pthread_self();
 		mutexLock(pthread_common.pthread_list_lock);
 		_pthread_ctx_get(ctx);
+		if (__atomic_load_n(&ctx->exiting, __ATOMIC_ACQUIRE) != 0) {
+			_pthread_ctx_put(ctx);
+			return 0;
+		}
 		ctx->cancelled = 1;
 		if (thread == self) {
 			if (ctx->cancelstate == PTHREAD_CANCEL_ENABLE) {
@@ -1269,6 +1262,9 @@ int pthread_mutex_consistent(pthread_mutex_t *mutex)
 
 	if (err == EOK) {
 		err = -mutexConsistent(mutex->mutexh);
+		if (err == EPERM) {
+			err = EINVAL;
+		}
 	}
 
 	return err;
@@ -1631,7 +1627,6 @@ int pthread_key_create(pthread_key_t *key, void (*destructor)(void *))
 
 int pthread_key_delete(pthread_key_t key)
 {
-	int err = EINVAL;
 	mutexLock(pthread_common.pthread_list_lock);
 
 	pthread_ctx *first = pthread_common.pthread_list, *curr = pthread_common.pthread_list;
@@ -1643,8 +1638,7 @@ int pthread_key_delete(pthread_key_t key)
 			pthread_key_data_t *prev = NULL;
 			while (head != NULL) {
 				if (head->key == key) {
-					err = 0;
-					if (curr->exiting == 0) {
+					if (__atomic_load_n(&curr->exiting, __ATOMIC_ACQUIRE) == 0) {
 						if (prev == NULL) {
 							curr->key_data_list = head->next;
 						}
@@ -1668,7 +1662,7 @@ int pthread_key_delete(pthread_key_t key)
 	}
 	mutexUnlock(pthread_common.pthread_list_lock);
 	free(key);
-	return err;
+	return 0;
 }
 
 
@@ -1728,6 +1722,17 @@ void *pthread_getspecific(pthread_key_t key)
 }
 
 
+static void pthread_once_cancelled(void *arg)
+{
+	pthread_once_t *once_control = arg;
+
+	pthread_mutex_lock(&pthread_common.pthread_once_lock);
+	*once_control = PTHREAD_ONCE_INIT;
+	pthread_cond_broadcast(&pthread_common.pthread_once_cond);
+	pthread_mutex_unlock(&pthread_common.pthread_once_lock);
+}
+
+
 int pthread_once(pthread_once_t *once_control, void (*init_routine)(void))
 {
 	pthread_mutex_lock(&pthread_common.pthread_once_lock);
@@ -1737,7 +1742,11 @@ int pthread_once(pthread_once_t *once_control, void (*init_routine)(void))
 	if (*once_control == PTHREAD_ONCE_INIT) {
 		*once_control = PTHREAD_ONCE_IN_PROGRESS;
 		pthread_mutex_unlock(&pthread_common.pthread_once_lock);
+
+		pthread_cleanup_push(pthread_once_cancelled, once_control);
 		init_routine();
+		pthread_cleanup_pop(0);
+
 		pthread_mutex_lock(&pthread_common.pthread_once_lock);
 		*once_control = PTHREAD_ONCE_DONE;
 	}
@@ -1825,59 +1834,44 @@ void _pthread_atfork_child(void)
 }
 
 
-void pthread_cleanup_push(void (*routine)(void *), void *arg)
+void __pthread_cleanup_push(struct __pthread_cleanup *cb, void (*routine)(void *), void *arg)
 {
 	pthread_ctx *ctx = pthread_find(gettid());
 
+	cb->routine = routine;
+	cb->arg = arg;
+	cb->next = NULL;
+
 	if (ctx == NULL) {
+		/* Not a pthread */
 		return;
 	}
 
 	mutexLock(pthread_common.pthread_list_lock);
-
-	pthread_cleanup_t *head = (pthread_cleanup_t *)malloc(sizeof(pthread_cleanup_t));
-	if (head == NULL) {
-		_pthread_ctx_put(ctx);
-		return;
-	}
-
-	head->next = ctx->cleanup_list;
-	ctx->cleanup_list = head;
-
-	ctx->cleanup_list->routine = routine;
-	ctx->cleanup_list->arg = arg;
-
+	cb->next = ctx->cleanup_list;
+	ctx->cleanup_list = cb;
 	_pthread_ctx_put(ctx);
 }
 
 
-void pthread_cleanup_pop(int execute)
+void __pthread_cleanup_pop(struct __pthread_cleanup *cb, int execute)
 {
 	pthread_ctx *ctx = pthread_find(gettid());
 
-	if (ctx == NULL) {
-		return;
-	}
-
-	mutexLock(pthread_common.pthread_list_lock);
-
-	if (ctx->cleanup_list == NULL) {
+	if (ctx != NULL) {
+		mutexLock(pthread_common.pthread_list_lock);
+		if (ctx->cleanup_list == cb) {
+			ctx->cleanup_list = cb->next;
+		}
+		else {
+			/* pthread_cancel() has already taken the handler off the stack */
+			execute = 0;
+		}
 		_pthread_ctx_put(ctx);
-		return;
 	}
-
-	pthread_cleanup_t *head = ctx->cleanup_list;
-	ctx->cleanup_list = head->next;
-	_pthread_ctx_put(ctx);
 
 	if (execute != 0) {
-		void (*routine)(void *) = head->routine;
-		void *arg = head->arg;
-		free(head);
-		routine(arg);
-	}
-	else {
-		free(head);
+		cb->routine(cb->arg);
 	}
 }
 
