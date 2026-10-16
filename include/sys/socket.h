@@ -37,11 +37,6 @@ struct sockaddr_storage {
 } __attribute__((aligned(8)));               /* Align to allow safe sockaddr_* casting */
 
 
-struct linger {
-	int l_onoff;
-	int l_linger;
-};
-
 /* has to be included after sockaddr is defined */
 #include <sys/sockios.h>
 
