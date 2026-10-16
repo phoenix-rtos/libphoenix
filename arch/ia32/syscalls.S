@@ -16,11 +16,11 @@
 #define __ASSEMBLY__
 #include <phoenix/syscalls.h>
 
-.text
 
 #define SYSCALLNUM(sym) syscalls_num_ ## sym
 
 #define SYSCALLDEF(sym, sn) \
+.section .text.sym, "ax", %progbits; \
 .equ SYSCALLNUM(sym), sn; \
 .globl sym; \
 .type sym, @function; \
@@ -34,6 +34,7 @@ sym: \
 .size sym, .-sym
 
 
+.section .text.vfork, "ax", %progbits
 .globl vfork
 .type vfork, @function
 .align 4, 0x90
