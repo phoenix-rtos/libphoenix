@@ -1378,37 +1378,76 @@ void setbuf(FILE *stream, char *buf)
 }
 
 
+static void __popenCleanup(popen_FILE *pf, int fd[2])
+{
+	int err = errno;
+
+	if (pf != NULL) {
+		if (pf->file.lock != 0) {
+			resourceDestroy(pf->file.lock);
+		}
+		if (pf->file.buffer != NULL && pf->file.buffer != MAP_FAILED) {
+			munmap(pf->file.buffer, BUFSIZ);
+		}
+		free(pf);
+	}
+
+	if (fd[0] != -1) {
+		close(fd[0]);
+	}
+	if (fd[1] != -1) {
+		close(fd[1]);
+	}
+
+	errno = err;
+}
+
+
 FILE *popen(const char *command, const char *mode)
 {
-	int fd[2], pid;
-	popen_FILE *pf;
+	int fd[2] = { -1, -1 }, pid, err;
+	popen_FILE *pf = NULL;
 
 	if (pipe(fd) < 0) {
+		/* errno set by pipe */
 		return NULL;
 	}
 
-	if ((pf = calloc(1, sizeof(popen_FILE))) == NULL) {
-		goto failed;
+	pf = calloc(1, sizeof(popen_FILE));
+	if (pf == NULL) {
+		/* errno set by calloc */
+		__popenCleanup(pf, fd);
+		return NULL;
 	}
 
-	if ((pf->file.mode = string2mode(mode)) < 0) {
-		goto failed;
+	pf->file.mode = string2mode(mode);
+	if (pf->file.mode < 0) {
+		__popenCleanup(pf, fd);
+		errno = EINVAL;
+		return NULL;
 	}
 
-	if (mutexCreateWithAttr(&pf->file.lock, &flockAttr) < 0) {
-		pf->file.lock = 0;
-		goto failed;
+	err = mutexCreateWithAttr(&pf->file.lock, &flockAttr);
+	if (err < 0) {
+		__popenCleanup(pf, fd);
+		errno = -err;
+		return NULL;
 	}
 
 	pf->file.buffer = mmap(NULL, BUFSIZ, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, -1, 0);
 	if (pf->file.buffer == MAP_FAILED) {
-		goto failed;
+		__popenCleanup(pf, fd);
+		errno = ENOMEM;
+		return NULL;
 	}
 
-	if ((pid = vfork()) < 0) {
-		goto failed;
+	pid = vfork();
+	if (pid < 0) {
+		/* errno set by vfork */
+		__popenCleanup(pf, fd);
+		return NULL;
 	}
-	else if (!pid) {
+	else if (pid == 0) {
 		if (mode[0] == 'r') {
 			dup2(fd[1], 1);
 		}
@@ -1442,19 +1481,6 @@ FILE *popen(const char *command, const char *mode)
 	mutexUnlock(file_common.lock);
 
 	return &pf->file;
-
-failed:
-
-	if (pf->file.lock) {
-		resourceDestroy(pf->file.lock);
-	}
-	if (pf->file.buffer != MAP_FAILED) {
-		munmap(pf->file.buffer, BUFSIZ);
-	}
-	free(pf);
-	close(fd[0]);
-	close(fd[1]);
-	return NULL;
 }
 
 
