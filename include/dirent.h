@@ -40,11 +40,11 @@ extern "C" {
 
 
 struct dirent {
-	ino_t  d_ino;
+	ino_t d_ino;
 	uint32_t d_type;
 	uint16_t d_reclen;
 	uint16_t d_namlen;
-	char   d_name[];
+	char d_name[];
 };
 
 
@@ -65,6 +65,13 @@ long telldir(DIR *dirp);
 
 
 void rewinddir(DIR *dirp);
+
+
+int alphasort(const struct dirent **d1, const struct dirent **d2);
+
+
+int scandir(const char *dir, struct dirent ***namelist, int (*sel)(const struct dirent *),
+		int (*compar)(const struct dirent **, const struct dirent **));
 
 
 int closedir(DIR *dirp);

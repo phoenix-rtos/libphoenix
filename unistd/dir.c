@@ -23,6 +23,7 @@
 #include <assert.h>
 #include <string.h>
 #include <libgen.h>
+#include <sys/minmax.h>
 #include <sys/msg.h>
 #include <sys/stat.h>
 #include <sys/file.h>
@@ -548,6 +549,115 @@ void rewinddir(DIR *dirp)
 	}
 
 	dirp->pos = 0;
+}
+
+
+int alphasort(const struct dirent **d1, const struct dirent **d2)
+{
+	return strcoll((*d1)->d_name, (*d2)->d_name);
+}
+
+
+static void __scandirCleanup(DIR *dp, struct dirent **names, size_t nameslen)
+{
+	/* preserve errno value on cleanup (may be changed by e.g. closedir) */
+	int oldErrno = errno;
+
+	if (names != NULL) {
+		for (size_t i = 0; i < nameslen; i++) {
+			free(names[i]);
+		}
+		free(names);
+	}
+	closedir(dp);
+
+	errno = oldErrno;
+}
+
+
+int scandir(const char *dir, struct dirent ***namelist, int (*sel)(const struct dirent *),
+		int (*compar)(const struct dirent **, const struct dirent **))
+{
+	if (namelist == NULL) {
+		return SET_ERRNO(-EINVAL);
+	}
+
+	struct dirent **names = NULL;
+	size_t nameslen = 0, namescap = 0, entrylen, namlen;
+	void *alloc;
+	struct dirent *entry;
+	int oldErrno = errno;
+
+	DIR *dp = opendir(dir);
+	if (dp == NULL) {
+		/* errno set by opendir */
+		return -1;
+	}
+
+	for (;;) {
+		errno = 0;
+		entry = readdir(dp);
+
+		if (entry == NULL) {
+			if (errno != 0) {
+				__scandirCleanup(dp, names, nameslen);
+				return -1;
+			}
+			break;
+		}
+
+		if (sel != NULL && sel(entry) == 0) {
+			continue;
+		}
+
+		if (nameslen + 1 > INT_MAX) {
+			__scandirCleanup(dp, names, nameslen);
+			return SET_ERRNO(-EOVERFLOW);
+		}
+
+		if (nameslen + 1 > namescap) {
+			namescap = max(namescap * 2, 1);
+			alloc = realloc(names, sizeof(struct dirent *) * namescap);
+			if (alloc == NULL) {
+				__scandirCleanup(dp, names, nameslen);
+				return SET_ERRNO(-ENOMEM);
+			}
+			names = alloc;
+		}
+
+		namlen = strnlen(entry->d_name, NAME_MAX);
+		entrylen = sizeof(*entry) + namlen + 1;
+		alloc = malloc(entrylen);
+		if (alloc == NULL) {
+			__scandirCleanup(dp, names, nameslen);
+			return SET_ERRNO(-ENOMEM);
+		}
+		memcpy(alloc, entry, entrylen);
+		names[nameslen] = alloc;
+		names[nameslen]->d_reclen = (uint16_t)entrylen;
+		names[nameslen]->d_namlen = (uint16_t)namlen;
+		names[nameslen]->d_name[namlen] = '\0';
+		nameslen++;
+	}
+
+	if (namescap > nameslen) {
+		alloc = realloc(names, sizeof(struct dirent *) * nameslen);
+		if (alloc != NULL) {
+			names = alloc;
+		}
+		/* else: return the unshrunk memory on last realloc fail */
+	}
+
+	if (compar != NULL && nameslen > 1) {
+		qsort(names, nameslen, sizeof(*names), (int (*)(const void *, const void *))compar);
+	}
+
+	closedir(dp);
+
+	*namelist = names;
+	errno = oldErrno;
+
+	return (int)nameslen;
 }
 
 
