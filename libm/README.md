@@ -3,11 +3,11 @@ This directory contains implementation of math library. It currently links to li
 - libphoenix implementation is not complete.
 - version for critical systems is nice to have :)
 
-Usage: For each project it is suggested to set following
-- ```LIBM_USE_LIBMCS ?= y/n``` - select implementation of math library for critical systems (if not set will use phoenix implementation)
-- ```LIBM_WANT_COMPLEX ?= y/n``` - select if project wants implementation of complex routines
-- ```LIBM_LIBMCS_DAZ ?= y/n``` - (applicable only for libmcs) select whether denormals are zero. This is especially useful if underlying FPU has limited functionalities implemented.
-- ```LIBM_USE_HW ?= y``` - enable hardware intrinsics for math functions
+Usage: For each project it is suggested to set following:
+- ```LIBM_USE_LIBMCS ?= y/n``` - select implementation of math library for critical systems (if not set will use phoenix implementation),
+- ```LIBM_WANT_COMPLEX ?= y/n``` - select if project wants implementation of complex routines,
+- ```LIBM_LIBMCS_DAZ ?= y/n``` - (applicable only for libmcs) select whether denormals are zero. This is especially useful if underlying FPU has limited functionalities implemented,
+- ```LIBM_USE_HW ?= dp/sp/n``` - `dp` and `sp` enable hardware intrinsics for math functions (double or single precision respectively). `n` selects purely software implementations in all cases.
 
 **Note:** Build headers are located in `libm/include/`. These mirror `libm/libmcs/libm/include`, where changes from the original libmcs headers are tracked in a submodule.
 When updating the libmcs version:
@@ -15,7 +15,7 @@ When updating the libmcs version:
 2. Once verified, migrate those changes to libphoenix as well
 
 # Architecture specific code
-Some targets might support instructions that implement parts of `math.h` required functions. Such implementation may be placed `arch/<target_name>`, and they will take precedence before software implementation, unless stated otherwise via appropriate flags. Please refer to already existing code if new architecture specific implementation is to be added. 
+Some targets might support instructions that implement parts of `math.h` required functions. Such implementation may be placed `arch/<target_name>`, and they will take precedence before software implementation, unless stated otherwise via appropriate flags. Please refer to already existing code if new architecture specific implementation is to be added. Single precision implementations shall be suffixed with `f` (e.g. `sqrtf()`).
 
 # LIBMCS
 This is a copy of libmcs math library implementation from https://gitlab.com/gtd-gmbh/libmcs (v1.3.1)

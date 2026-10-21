@@ -12,12 +12,13 @@
 LIBM_USE_LIBMCS ?= n
 LIBM_LIBMCS_DAZ ?= n
 LIBM_WANT_COMPLEX ?= y
-LIBM_USE_HW ?= y
+LIBM_USE_HW ?= dp
 
 CFLAGS += -Ilibm/include
 CFLAGS += -I$(BUILD_DIR)/include
 
-$(foreach v,LIBM_USE_LIBMCS LIBM_USE_HW LIBM_WANT_COMPLEX LIBM_LIBMCS_DAZ, $(if $(filter-out y n,$($(v))),$(error $(v) must be set to 'y' or 'n', got '$($(v))')))
+$(foreach v,LIBM_USE_LIBMCS LIBM_WANT_COMPLEX LIBM_LIBMCS_DAZ, $(if $(filter-out y n,$($(v))),$(error $(v) must be set to 'y' or 'n', got '$($(v))')))
+$(if $(filter-out dp sp n,$(LIBM_USE_HW)),$(error LIBM_USE_HW must be set to 'dp', 'sp' or 'n', got '$(LIBM_USE_HW)'))
 
 # Assert on invalid configuration
 ifeq ($(LIBM_USE_LIBMCS), n)
@@ -28,8 +29,11 @@ endif
 
 # Add source files for hardware accelerated math
 HW_OBJS :=
-ifeq ($(LIBM_USE_HW), y)
+ifneq ($(LIBM_USE_HW), n)
   include libm/arch/Makefile
+  ifeq ($(LIBM_USE_HW), sp)
+    HW_OBJS := $(filter %f.o,$(HW_OBJS))
+  endif
 endif
 
 SW_OBJS := 
