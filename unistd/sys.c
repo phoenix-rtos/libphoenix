@@ -326,9 +326,7 @@ int usleep(useconds_t usecs)
 
 	err = nsleep(&sec, &nsec, PH_CLOCK_MONOTONIC, 0);
 
-	SET_ERRNO(err);
-
-	return err; /* FIXME - should return 0 or -1. Fix would be a potentially breaking change */
+	return SET_ERRNO(err);
 }
 
 
