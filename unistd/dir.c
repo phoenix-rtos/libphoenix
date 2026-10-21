@@ -598,7 +598,7 @@ static int _getMode_abs(const char *path, oid_t *oid_out, long long *mode_out)
 	};
 
 	ret = msgSend(oid_out->port, &msg);
-	if (ret != EOK) {
+	if (ret < 0) {
 		return ret;
 	}
 
@@ -625,7 +625,7 @@ static ssize_t _readlink_oid(const oid_t *oid, char *buf, size_t bufsiz)
 	msg.o.data = buf;
 
 	ret = msgSend(oid->port, &msg);
-	if (ret != EOK) {
+	if (ret < 0) {
 		return ret;
 	}
 
