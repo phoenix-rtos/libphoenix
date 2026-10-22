@@ -29,6 +29,7 @@ static struct {
 	handle_t cond, lock;
 	time_t wakeup;
 	handle_t tid;
+	int running;
 	pthread_once_t once_control;
 } alarm_common = {
 	.once_control = PTHREAD_ONCE_INIT
@@ -61,16 +62,24 @@ static void alarm_thread(void *arg)
 }
 
 
-static void alarm_initThread(void)
+static void alarm_startThread(void)
 {
 	sigset_t mask, orgMask;
-	alarm_common.wakeup = 0;
 
 	/* ensure alarm thread will inherit sigmask with all signals blocked */
 	sigfillset(&mask);
 	pthread_sigmask(SIG_BLOCK, &mask, &orgMask);
-	beginthreadex(alarm_thread, getPriority(), alarm_common.stack, sizeof(alarm_common.stack), NULL, &alarm_common.tid);
+	if (beginthreadex(alarm_thread, getPriority(), alarm_common.stack, sizeof(alarm_common.stack), NULL, &alarm_common.tid) == 0) {
+		alarm_common.running = 1;
+	}
 	pthread_sigmask(SIG_SETMASK, &orgMask, NULL);
+}
+
+
+void _alarm_forkChild(void)
+{
+	alarm_common.wakeup = 0;
+	alarm_common.running = 0;
 }
 
 
@@ -79,9 +88,6 @@ static void alarm_init_once(void)
 	/* FIXME: handle errors from mutexCreate, condCreate and beginthreadex */
 	mutexCreate(&alarm_common.lock);
 	condCreate(&alarm_common.cond);
-	alarm_initThread();
-	/* There is no need to handle the mutex state during fork(), as Phoenix's mutexes are freed in a child process and no races can happen here */
-	pthread_atfork(NULL, NULL, alarm_initThread);
 }
 
 
@@ -91,6 +97,9 @@ unsigned int alarm(unsigned int seconds)
 	pthread_once(&alarm_common.once_control, alarm_init_once);
 
 	mutexLock(alarm_common.lock);
+	if ((seconds != 0) && (alarm_common.running == 0)) {
+		alarm_startThread();
+	}
 	previous = alarm_common.wakeup;
 	gettime(&now, NULL);
 	if (seconds)

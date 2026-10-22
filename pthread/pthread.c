@@ -1825,6 +1825,35 @@ void _pthread_atfork_child(void)
 }
 
 
+void _pthread_forkChild(int ptid)
+{
+	pthread_ctx *ctx = pthread_common.pthread_list, *self = NULL;
+
+	if (ctx != NULL) {
+		do {
+			if (ctx->id == ptid) {
+				self = ctx;
+			}
+			else if (ctx->stack != NULL) {
+				munmap(ctx->stack, ctx->stacksize);
+			}
+			/*
+			 * Must leak other thread contexts as free()/_errno_remove() take locks,
+			 * so they are not async-signal-safe. Could be done once we adopt POSIX.1-2024,
+			 * though, as it drops this requirement for the child process.
+			 */
+			ctx = ctx->next;
+		} while (ctx != pthread_common.pthread_list);
+	}
+
+	pthread_common.pthread_list = NULL;
+	if (self != NULL) {
+		self->id = gettid();
+		LIST_ADD(&pthread_common.pthread_list, self);
+	}
+}
+
+
 void pthread_cleanup_push(void (*routine)(void *), void *arg)
 {
 	pthread_ctx *ctx = pthread_find(gettid());
