@@ -24,6 +24,8 @@
 #include <phoenix/arch/armv8m/stm32/n6/stm32n6.h>
 #elif defined(__CPU_STM32U3)
 #include <phoenix/arch/armv8m/stm32/u3/stm32u3.h>
+#elif defined(__CPU_STM32H5)
+#include <phoenix/arch/armv8m/stm32/h5/stm32h5.h>
 #else
 #error "Unsupported TARGET"
 #endif
