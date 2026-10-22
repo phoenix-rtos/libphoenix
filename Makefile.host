@@ -1,7 +1,7 @@
 #
 # Makefile for minimal libphoenix prepared for host
 #
-# Copyright 2018-2021 Phoenix Systems
+# Copyright 2018-2025 Phoenix Systems
 #
 # %LICENSE%
 #
@@ -12,13 +12,13 @@ MAKEFLAGS += --no-print-directory
 include ../phoenix-rtos-build/Makefile.common
 
 # establish sysroot
+INCLUDE_HOST := include_host
 LIBNAME := libphoenix.a
 
-CFLAGS += -Iinclude -fno-builtin-malloc
+CFLAGS := -I$(INCLUDE_HOST) -fno-builtin-malloc $(CFLAGS)
 
-HEADERS := sys/rb.h
-HEADERS := $(patsubst %,$(PREFIX_H)%,$(HEADERS))
-OBJS := sys/rb.o
+HEADERS := $(patsubst $(INCLUDE_HOST)%,$(PREFIX_H)%,$(shell find $(INCLUDE_HOST) -name '*.h' 2>/dev/null))
+OBJS := sys/rb.o sys/list.o posix/idtree.o src_host/sys/msg.o
 OBJS := $(patsubst %,$(PREFIX_O)%,$(OBJS))
 
 
@@ -27,8 +27,10 @@ all: $(PREFIX_A)$(LIBNAME) $(HEADERS)
 $(PREFIX_A)$(LIBNAME): $(OBJS)
 	$(ARCH)
 
-$(PREFIX_H)%.h: include/%.h
-	$(HEADER)
+$(PREFIX_H)%.h: $(INCLUDE_HOST)/%.h
+	$(SIL)mkdir -p $(@D); \
+	printf "HEADER %-24s\n" "$<"; \
+	cp -pRL "$<" "$@"
 
 .PHONY: clean
 clean:
