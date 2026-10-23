@@ -1052,7 +1052,7 @@ int putc_unlocked(int c, FILE *stream)
 		return EOF;
 	}
 
-	return c;
+	return (int)cc;
 }
 
 
@@ -1073,7 +1073,7 @@ int putchar_unlocked(int c)
 		return EOF;
 	}
 
-	return c;
+	return (int)cc;
 }
 
 
