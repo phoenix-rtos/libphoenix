@@ -27,4 +27,8 @@
 #define __GNUC_PREREQ__(ma, mi) __GNUC_PREREQ(ma, mi)
 
 
+#define PHOENIX_MSG_SETUP            1
+#define PHOENIX_MSG_RESPOND_AND_RECV 1
+
+
 #endif
