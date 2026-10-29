@@ -339,17 +339,13 @@ int open(const char *filename, int oflag, ...)
 	int err;
 	char *canonical;
 	enum leaf_policy lp;
+	enum symlink_policy sp;
 
-	if ((oflag & (O_WRONLY | O_RDWR)) != 0) {
-		err = stat(filename, &st);
-		if (err < 0) {
-			if (errno != ENOENT) {
-				return err;
-			}
-		}
-		else if (S_ISDIR(st.st_mode)) {
-			return SET_ERRNO(-EISDIR);
-		}
+	if ((oflag & O_NOFOLLOW) != 0) {
+		sp = spNofollow;
+	}
+	else {
+		sp = spResolveAll;
 	}
 
 	if ((oflag & O_CREAT) != 0) {
@@ -364,9 +360,23 @@ int open(const char *filename, int oflag, ...)
 		lp = lpExists;
 	}
 
-	canonical = resolve_path(filename, NULL, 1, lp);
+	canonical = resolve_path(filename, NULL, sp, lp);
 	if (canonical == NULL) {
 		return -1; /* errno set by resolve_path */
+	}
+
+	if ((oflag & (O_WRONLY | O_RDWR)) != 0) {
+		err = stat(canonical, &st);
+		if (err < 0) {
+			if (errno != ENOENT) {
+				free(canonical);
+				return err;
+			}
+		}
+		else if (S_ISDIR(st.st_mode)) {
+			free(canonical);
+			return SET_ERRNO(-EISDIR);
+		}
 	}
 
 	if ((oflag & O_CREAT) != 0) {
