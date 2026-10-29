@@ -338,34 +338,50 @@ int open(const char *filename, int oflag, ...)
 	mode_t mode = 0;
 	int err;
 	char *canonical;
+	enum leaf_policy lp;
 
-	/* FIXME: handle varargs properly */
-	va_start(ap, oflag);
-	mode = va_arg(ap, mode_t);
-	va_end(ap);
-
-	if (oflag & (O_WRONLY | O_RDWR)) {
-		if ((err = stat(filename, &st)) < 0) {
-			if (errno != ENOENT)
+	if ((oflag & (O_WRONLY | O_RDWR)) != 0) {
+		err = stat(filename, &st);
+		if (err < 0) {
+			if (errno != ENOENT) {
 				return err;
+			}
 		}
 		else if (S_ISDIR(st.st_mode)) {
 			return SET_ERRNO(-EISDIR);
 		}
 	}
 
-	/* allow_missing_leaf = 1 -> open() may be creating a file */
-	canonical = resolve_path(filename, NULL, 1, 1);
-	if (canonical == NULL)
-		return -1; /* errno set by resolve_path */
-
-	if (oflag & O_CREAT) {
-		mode &= ~__getumask();
+	if ((oflag & O_CREAT) != 0) {
+		if ((oflag & O_EXCL) != 0) {
+			lp = lpAbsent;
+		}
+		else {
+			lp = lpAny;
+		}
+	}
+	else {
+		lp = lpExists;
 	}
 
-	do
+	canonical = resolve_path(filename, NULL, 1, lp);
+	if (canonical == NULL) {
+		return -1; /* errno set by resolve_path */
+	}
+
+	if ((oflag & O_CREAT) != 0) {
+		va_start(ap, oflag);
+		mode = va_arg(ap, mode_t);
+		va_end(ap);
+		mode &= ~__getumask();
+	}
+	else {
+		mode = 0;
+	}
+
+	do {
 		err = sys_open(canonical, oflag, mode);
-	while (err == -EINTR);
+	} while (err == -EINTR);
 
 	free(canonical);
 	return SET_ERRNO(err);
