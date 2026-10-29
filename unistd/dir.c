@@ -37,7 +37,7 @@ static struct {
 
 static int _getMode_abs(const char *path, oid_t *oid_out, long long *mode_out);
 static ssize_t _readlink_oid(const oid_t *oid, char *buf, size_t bufsiz);
-static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, int allow_missing_leaf);
+static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, enum leaf_policy lp);
 
 
 /* stop-gap for waitpid POSIX incompatibilty (spurious SIGCHLD delivered during other syscalls) */
@@ -156,7 +156,7 @@ char *canonicalize_file_name(const char *path)
 /* resolves absolute paths (with symlinks)
  * buffers pointed by path and result need to be at least PATH_MAX in size
  * path might be rewritten as a part of the path resolving */
-static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, int allow_missing_leaf)
+static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, enum leaf_policy lp)
 {
 	char *r = result; /* r -  first unused result byte */
 	char *p = path;   /* p - first byte of remaining unresolved path */
@@ -211,12 +211,16 @@ static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, 
 
 		int ret = _getMode_abs(result, &oid, &mode);
 		if (ret < 0) {
-			if ((ret == -ENOENT) && is_leaf && (allow_missing_leaf != 0)) {
+			if ((ret == -ENOENT) && is_leaf && (lp != lpExists)) {
 				/* non-existent leaf, but we allow it */
 				break;
 			}
 
 			return SET_ERRNO(ret);
+		}
+
+		if (is_leaf && (lp == lpAbsent)) {
+			return SET_ERRNO(-EEXIST);
 		}
 
 		if (S_ISDIR(mode)) {
@@ -291,16 +295,19 @@ static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, 
 
 /* Resolving path to absolute paths with '.', '..' and symlinks support. Additional params to satisfy multiple libc use cases.
  *   resolved_path: if NULL, will be allocated by malloc()
- *   allow_missing_leaf: don't return ENOENT if last path node is not existing
  *   resolve_last_symlink: if 0 return final symlink path instead of symlink destination
+ *   lp: return error according to the selected leaf_policy:
+ *     - lpExists: ENOENT on missing leaf
+ *     - lpAny: no error on missing leaf
+ *     - lpAbsent: EEXIST on existing leaf
  */
-char *resolve_path(const char *path, char *resolved_path, int resolve_last_symlink, int allow_missing_leaf)
+char *resolve_path(const char *path, char *resolved_path, int resolve_last_symlink, enum leaf_policy lp)
 {
 	char *alloc_resolved_path = NULL; /* internally allocated path needed to be freed on error */
 	char *path_copy, *p;
 	size_t pathlen;
 
-	if (!path) {
+	if (!path || ((lp != lpExists) && (lp != lpAny) && (lp != lpAbsent))) {
 		errno = EINVAL;
 		return NULL;
 	}
@@ -344,7 +351,7 @@ char *resolve_path(const char *path, char *resolved_path, int resolve_last_symli
 		resolved_path = alloc_resolved_path;
 	}
 
-	if (_resolve_abspath(path_copy, resolved_path, resolve_last_symlink, allow_missing_leaf) < 0) {
+	if (_resolve_abspath(path_copy, resolved_path, resolve_last_symlink, lp) < 0) {
 		/* proper errno set by resolve_path */
 		free(alloc_resolved_path);
 		free(path_copy);

@@ -183,8 +183,7 @@ int mkdir(const char *path, mode_t mode)
 		return SET_ERRNO(-EINVAL);
 	}
 
-	/* allow_missing_leaf = 1 -> we will be creating a dir */
-	char *canonical_name = resolve_path(path, NULL, 1, 1);
+	char *canonical_name = resolve_path(path, NULL, 1, lpAny);
 	if (canonical_name == NULL) {
 		return -1; /* errno set by resolve_path */
 	}

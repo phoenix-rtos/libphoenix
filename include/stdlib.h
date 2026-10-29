@@ -28,13 +28,14 @@ extern "C" {
 #endif
 
 
-#define RAND_MAX   2147483647
+#define RAND_MAX 2147483647
 
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1
 
 #define MB_CUR_MAX 1
 #define MB_LEN_MAX 4
+
 
 typedef struct {
 	int quot;
@@ -48,11 +49,17 @@ typedef struct {
 } ldiv_t;
 
 
-typedef struct
-{
+typedef struct {
 	long long int quot;
 	long long int rem;
 } lldiv_t;
+
+
+enum leaf_policy {
+	lpExists = 0,
+	lpAny = 1,
+	lpAbsent,
+};
 
 
 /* Converts the string pointed to by the argument str to a floating-point number (type double). */
@@ -269,7 +276,7 @@ char *realpath(const char *path, char *resolved_path);
 
 /* Resolve path to absolute path with '.', '..' and symlinks support. Additional params to satisfy multiple libc use cases.
  * NOTE: stack usage: ~PATH_MAX */
-char *resolve_path(const char *path, char *resolved_path, int resolve_last_symlink, int allow_missing_leaf);
+char *resolve_path(const char *path, char *resolved_path, int resolve_last_symlink, enum leaf_policy lp);
 
 
 /* random number generator */
