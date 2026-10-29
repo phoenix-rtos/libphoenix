@@ -55,6 +55,13 @@ typedef struct {
 } lldiv_t;
 
 
+enum symlink_policy {
+	spSkipLast = 0,
+	spResolveAll = 1,
+	spNofollow,
+};
+
+
 enum leaf_policy {
 	lpExists = 0,
 	lpAny = 1,
@@ -276,7 +283,7 @@ char *realpath(const char *path, char *resolved_path);
 
 /* Resolve path to absolute path with '.', '..' and symlinks support. Additional params to satisfy multiple libc use cases.
  * NOTE: stack usage: ~PATH_MAX */
-char *resolve_path(const char *path, char *resolved_path, int resolve_last_symlink, enum leaf_policy lp);
+char *resolve_path(const char *path, char *resolved_path, enum symlink_policy sp, enum leaf_policy lp);
 
 
 /* random number generator */

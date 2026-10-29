@@ -37,7 +37,7 @@ static struct {
 
 static int _getMode_abs(const char *path, oid_t *oid_out, long long *mode_out);
 static ssize_t _readlink_oid(const oid_t *oid, char *buf, size_t bufsiz);
-static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, enum leaf_policy lp);
+static int _resolve_abspath(char *path, char *result, enum symlink_policy sp, enum leaf_policy lp);
 
 
 /* stop-gap for waitpid POSIX incompatibilty (spurious SIGCHLD delivered during other syscalls) */
@@ -156,7 +156,7 @@ char *canonicalize_file_name(const char *path)
 /* resolves absolute paths (with symlinks)
  * buffers pointed by path and result need to be at least PATH_MAX in size
  * path might be rewritten as a part of the path resolving */
-static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, enum leaf_policy lp)
+static int _resolve_abspath(char *path, char *result, enum symlink_policy sp, enum leaf_policy lp)
 {
 	char *r = result; /* r -  first unused result byte */
 	char *p = path;   /* p - first byte of remaining unresolved path */
@@ -228,7 +228,11 @@ static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, 
 			continue;
 		}
 
-		if (!S_ISLNK(mode) || (is_leaf_without_slash && (resolve_last_symlink == 0))) {
+		if (S_ISLNK(mode) && sp == spNofollow) {
+			return SET_ERRNO(-ELOOP);
+		}
+
+		if (!S_ISLNK(mode) || (is_leaf_without_slash && (sp == spSkipLast))) {
 			/* not a symlink or is symlink but we don't want to resolve it */
 			if (is_leaf_without_slash) {
 				/* Leaf reached - path resolved */
@@ -295,19 +299,32 @@ static int _resolve_abspath(char *path, char *result, int resolve_last_symlink, 
 
 /* Resolving path to absolute paths with '.', '..' and symlinks support. Additional params to satisfy multiple libc use cases.
  *   resolved_path: if NULL, will be allocated by malloc()
- *   resolve_last_symlink: if 0 return final symlink path instead of symlink destination
+ *   sp: symlink policy: resolve symlinks according to the policy:
+ *     - spSkipLast: resolve all but last symlink
+ *     - spResolveAll: resolve all symlinks
+ *     - spNofollow: return ELOOP if path names a symlink
  *   lp: return error according to the selected leaf_policy:
  *     - lpExists: ENOENT on missing leaf
  *     - lpAny: no error on missing leaf
  *     - lpAbsent: EEXIST on existing leaf
  */
-char *resolve_path(const char *path, char *resolved_path, int resolve_last_symlink, enum leaf_policy lp)
+char *resolve_path(const char *path, char *resolved_path, enum symlink_policy sp, enum leaf_policy lp)
 {
 	char *alloc_resolved_path = NULL; /* internally allocated path needed to be freed on error */
 	char *path_copy, *p;
 	size_t pathlen;
 
-	if (!path || ((lp != lpExists) && (lp != lpAny) && (lp != lpAbsent))) {
+	if (path == NULL) {
+		errno = EINVAL;
+		return NULL;
+	}
+
+	if ((lp != lpExists) && (lp != lpAny) && (lp != lpAbsent)) {
+		errno = EINVAL;
+		return NULL;
+	}
+
+	if ((sp != spSkipLast) && (sp != spResolveAll) && (sp != spNofollow)) {
 		errno = EINVAL;
 		return NULL;
 	}
@@ -351,7 +368,7 @@ char *resolve_path(const char *path, char *resolved_path, int resolve_last_symli
 		resolved_path = alloc_resolved_path;
 	}
 
-	if (_resolve_abspath(path_copy, resolved_path, resolve_last_symlink, lp) < 0) {
+	if (_resolve_abspath(path_copy, resolved_path, sp, lp) < 0) {
 		/* proper errno set by resolve_path */
 		free(alloc_resolved_path);
 		free(path_copy);
