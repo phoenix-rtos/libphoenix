@@ -5,6 +5,8 @@
 #ifndef LIBMCS_FENV_H
 #define LIBMCS_FENV_H
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C"{
 #endif
