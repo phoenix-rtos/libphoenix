@@ -932,8 +932,15 @@ static int format_sprintf_num(void *ctx, feedfunc feed, uint64_t num64, uint32_t
 	}
 
 	if (((flags & FLAG_HEX) != 0) && (num64 != 0) && ((flags & FLAG_ALTERNATE) != 0)) {
-		*tmp++ = prefix[0];
-		*tmp++ = prefix[1];
+		if ((flags & FLAG_ZERO) != 0) {
+			CHECK_FAIL(ret, feed(ctx, prefix[1]));
+			CHECK_FAIL(ret, feed(ctx, prefix[0]));
+			minFieldWidth -= 2;
+		}
+		else {
+			*tmp++ = prefix[0];
+			*tmp++ = prefix[1];
+		}
 	}
 
 	CHECK_FAIL(ret, format_printBuffer(ctx, feed, flags, minFieldWidth, tmp, tmp_buf, sign));
