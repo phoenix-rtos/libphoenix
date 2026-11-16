@@ -86,6 +86,7 @@ static struct {
 	struct {
 		void *stack;
 		size_t stacksize;
+		handle_t id;
 	} to_cleanup;
 
 	/*
@@ -329,6 +330,7 @@ static void _pthread_release(pthread_ctx *ctx, int self)
 {
 	void *prev_stack = pthread_common.to_cleanup.stack;
 	size_t prev_stacksize = pthread_common.to_cleanup.stacksize;
+	handle_t prev_id = pthread_common.to_cleanup.id;
 	void *stack = ctx->stack;
 	size_t stacksize = ctx->stacksize;
 
@@ -341,13 +343,19 @@ static void _pthread_release(pthread_ctx *ctx, int self)
 	if (self != 0) {
 		pthread_common.to_cleanup.stack = ctx->stack;
 		pthread_common.to_cleanup.stacksize = ctx->stacksize;
+		pthread_common.to_cleanup.id = ctx->id;
 	}
 	else {
 		pthread_common.to_cleanup.stack = NULL;
+		pthread_common.to_cleanup.id = 0;
 	}
 
 	_pthread_ctx_put(ctx);
 
+	if (prev_id != 0) {
+		while (threadJoin(prev_id, 0) == -EINTR) {
+		}
+	}
 	if (prev_stack != NULL) {
 		munmap(prev_stack, prev_stacksize);
 	}
@@ -2335,4 +2343,5 @@ void _pthread_init(void)
 	pthread_create_main();
 	pthread_cache_policies();
 	pthread_common.to_cleanup.stack = NULL;
+	pthread_common.to_cleanup.id = 0;
 }
