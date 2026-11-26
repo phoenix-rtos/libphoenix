@@ -352,17 +352,16 @@ pid_t fork(void)
 {
 	pid_t pid;
 	_pthread_atfork_prepare();
-	if (!(pid = sys_fork())) {
+	pid = sys_fork();
+	if (pid == 0) {
 		release();
 		_pthread_atfork_child();
+		return 0;
 	}
-	else if (pid < 0) {
-		return SET_ERRNO(pid);
-	}
-	else {
-		_pthread_atfork_parent();
-	}
-	return pid;
+
+	_pthread_atfork_parent();
+
+	return SET_ERRNO(pid);
 }
 
 
