@@ -51,6 +51,10 @@ void _errno_new(struct __errno_t *e);
 void _errno_remove(struct __errno_t *e);
 
 
+/* Clears all registered errno records (fork child only) */
+void _errno_reset(void);
+
+
 int gettid(void);
 
 

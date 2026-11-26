@@ -89,6 +89,14 @@ void _errno_remove(struct __errno_t *e)
 }
 
 
+void _errno_reset(void)
+{
+#ifndef __LIBPHOENIX_ARCH_TLS_SUPPORTED
+	lib_rbInit(&errno_common.tree, errno_cmp, NULL);
+#endif
+}
+
+
 void _errno_init(void)
 {
 #ifndef __LIBPHOENIX_ARCH_TLS_SUPPORTED
