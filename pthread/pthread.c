@@ -86,7 +86,9 @@ static struct {
 	struct {
 		void *stack;
 		size_t stacksize;
+		handle_t id;
 	} to_cleanup;
+	handle_t fork_tid;
 
 	/*
 	 * TODO: replace with an array indexed by SCHED_FIFO, SCHED_RR, etc. once more
@@ -221,6 +223,7 @@ static int pthread_create_main(void)
 		return ENOMEM;
 	}
 	ctx->id = gettid();
+	ctx->start_routine = NULL;
 	ctx->arg = NULL;
 	ctx->retval = NULL;
 	ctx->stack = NULL;
@@ -329,6 +332,7 @@ static void _pthread_release(pthread_ctx *ctx, int self)
 {
 	void *prev_stack = pthread_common.to_cleanup.stack;
 	size_t prev_stacksize = pthread_common.to_cleanup.stacksize;
+	handle_t prev_id = pthread_common.to_cleanup.id;
 	void *stack = ctx->stack;
 	size_t stacksize = ctx->stacksize;
 
@@ -341,13 +345,19 @@ static void _pthread_release(pthread_ctx *ctx, int self)
 	if (self != 0) {
 		pthread_common.to_cleanup.stack = ctx->stack;
 		pthread_common.to_cleanup.stacksize = ctx->stacksize;
+		pthread_common.to_cleanup.id = ctx->id;
 	}
 	else {
 		pthread_common.to_cleanup.stack = NULL;
+		pthread_common.to_cleanup.id = 0;
 	}
 
 	_pthread_ctx_put(ctx);
 
+	if (prev_id != 0) {
+		while (threadJoin(prev_id, 0) == -EINTR) {
+		}
+	}
 	if (prev_stack != NULL) {
 		munmap(prev_stack, prev_stacksize);
 	}
@@ -1803,12 +1813,24 @@ void _pthread_atfork_prepare(void)
 		} while (curr != last);
 	}
 	mutexUnlock(pthread_common.pthread_atfork_lock);
+
+	/*
+	 * Keep pthread state consistent across fork(). Parent unlocks through
+	 * _pthread_atfork_parent(), child doesn't care (locks get recreated
+	 * unlocked by the kernel in the child).
+	 */
+	mutexLock(pthread_common.pthread_list_lock);
+	mutexLock(pthread_common.pthread_key_lock);
+	pthread_common.fork_tid = gettid();
 }
 
 
 /* parent and child functions must be called in order */
 void _pthread_atfork_parent(void)
 {
+	mutexUnlock(pthread_common.pthread_key_lock);
+	mutexUnlock(pthread_common.pthread_list_lock);
+
 	mutexLock(pthread_common.pthread_atfork_lock);
 	pthread_fork_handlers_t *first = pthread_common.pthread_fork_handlers;
 
@@ -1825,8 +1847,63 @@ void _pthread_atfork_parent(void)
 }
 
 
+static void pthread_ctx_drop_forked(pthread_ctx *ctx)
+{
+	pthread_key_data_t *key_data = ctx->key_data_list, *next;
+
+	while (key_data != NULL) {
+		next = key_data->next;
+		free(key_data);
+		key_data = next;
+	}
+
+	if (ctx->stack != NULL) {
+		munmap(ctx->stack, ctx->stacksize);
+	}
+
+	free(ctx);
+}
+
+
+static void pthread_atfork_child_reinit(void)
+{
+	pthread_ctx *ctx, *self = NULL;
+
+	if (pthread_common.to_cleanup.stack != NULL) {
+		munmap(pthread_common.to_cleanup.stack, pthread_common.to_cleanup.stacksize);
+		pthread_common.to_cleanup.stack = NULL;
+	}
+	pthread_common.to_cleanup.id = 0;
+
+	_errno_reset();
+
+	while ((ctx = pthread_common.pthread_list) != NULL) {
+		LIST_REMOVE(&pthread_common.pthread_list, ctx);
+		if (ctx->id == pthread_common.fork_tid) {
+			self = ctx;
+		}
+		else {
+			pthread_ctx_drop_forked(ctx);
+		}
+	}
+
+	if (self != NULL) {
+		self->id = gettid();
+		self->refcount = 1;
+		if (self->start_routine != NULL) {
+			int no = self->e.no;
+			_errno_new(&self->e);
+			self->e.no = no;
+		}
+		LIST_ADD(&pthread_common.pthread_list, self);
+	}
+}
+
+
 void _pthread_atfork_child(void)
 {
+	pthread_atfork_child_reinit();
+
 	mutexLock(pthread_common.pthread_atfork_lock);
 	pthread_fork_handlers_t *first = pthread_common.pthread_fork_handlers;
 
@@ -2335,4 +2412,5 @@ void _pthread_init(void)
 	pthread_create_main();
 	pthread_cache_policies();
 	pthread_common.to_cleanup.stack = NULL;
+	pthread_common.to_cleanup.id = 0;
 }
